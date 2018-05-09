@@ -24,13 +24,18 @@ public class Storage {
 			.build());
 
 	public static boolean saveImage(String img, String bucket, String name) {
-		GcsFileOptions instance = GcsFileOptions.getDefaultInstance();
 		GcsFilename fileName = new GcsFilename(bucket, name);
+		GcsFileOptions options = new GcsFileOptions.Builder()
+                .mimeType("image/jpg")
+                .acl("public-read")
+                .build();
 		GcsOutputChannel outputChannel;
 		try {
-			outputChannel = gcsService.createOrReplace(fileName, instance);
+			outputChannel = gcsService.createOrReplace(fileName, options);
 			copy(new ByteArrayInputStream(img.getBytes()), Channels.newOutputStream(outputChannel));
-		} catch (IOException e) {return false;}
+		} catch (IOException e) {
+			return false;
+		}
 		
 		return true;
 	}

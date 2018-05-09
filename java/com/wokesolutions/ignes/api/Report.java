@@ -114,13 +114,13 @@ public class Report {
 			if(data.report_description != null)
 				report.setProperty(DSUtils.REPORT_DESCRIPTION, data.report_description);
 
-			String imgid = DSUtils.IMG_FOLDER + DSUtils.REPORT_FOLDER + reportid;
+			String imgid = DSUtils.IMG_FOLDER + DSUtils.REPORT_FOLDER + reportid + ".jpg";
 			if(!Storage.saveImage(data.report_img, DSUtils.BUCKET, imgid))
 				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
 			report.setProperty(DSUtils.REPORT_IMG, imgid);
 			
-			String thumbnailid = DSUtils.IMG_FOLDER + DSUtils.REPORT_FOLDER + DSUtils.THUMBNAIL_FOLDER + reportid;
+			String thumbnailid = DSUtils.IMG_FOLDER + DSUtils.REPORT_FOLDER + DSUtils.THUMBNAIL_FOLDER + reportid + ".jpg";
 			if(!Storage.saveImage(data.report_thumbnail, DSUtils.BUCKET, thumbnailid))
 				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
