@@ -1,0 +1,169 @@
+@font-face {
+    font-family: "Playlist";
+    src:url('../fonts/Playlist_Script.otf') format("opentype");
+}
+
+@font-face {
+    font-family: "Quicksand";
+    src:url('../fonts/Quicksand_Light.otf') format("opentype");
+}
+
+@font-face {
+    font-family: "Quicksand Bold";
+    src:url('../fonts/Quicksand_Bold.otf') format("opentype");
+}
+
+.navbar-light .navbar-brand{
+    color: #AD363B;
+    font-family: "Playlist";
+    font-size: 60px;
+}
+
+.navbar-light .navbar-nav .nav-link{
+    color: #f5f5f5;
+    font-family: "Quicksand Bold";
+    font-size: 20px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+.navbar, navbar-light, navbar-expand-lg{
+    background-color: rgba(0, 0, 0, 0.18);
+    padding: 0;
+    width: 100%;
+}
+
+.floating-label-form-group {
+    font-size: 14px;
+    position: relative;
+    margin-bottom: 0;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.floating-label-form-group input,
+.floating-label-form-group textarea {
+    font-size: 1rem;
+    position: relative;
+    z-index: 1;
+    padding: 0;
+    resize: none;
+    border: none;
+    border-radius: 0;
+    background: none;
+    box-shadow: none !important;
+    font-family:"Quicksand";
+}
+
+.section-heading{
+    font-size: 3rem;
+    text-align: center;
+    font-family: "Quicksand Bold";
+    color: #AD363B;
+    margin-bottom: 70px;
+}
+
+.divisoria {
+    margin-top: 30px;
+    margin-bottom: 30px;
+    background-color: #a5a4a4;
+    width:76%;
+    padding: 0.1rem 0;
+}
+label{
+    font-size: 1rem;
+    font-family: "Quicksand Bold";
+}
+
+.help-block {
+    font-family: "Quicksand Bold";
+    margin-bottom: 40px;
+}
+
+.textbtn{
+    font-family: "Quicksand Bold";
+    font-size: 1rem;
+}
+
+.lg{
+    margin-bottom: 4rem;
+}
+
+.imgbtn{
+    height: 3rem;
+    width: auto;
+}
+
+
+.login{
+    margin-bottom: 30px ;
+}
+
+footer a{
+    color: black!important;
+}
+
+.btn-primary{
+    background-color: #3B5998;
+    border-color: #3B5998;
+}
+
+.btn-primary:hover{
+    background-color:#eeeeee;
+    border-color: #eeeeee;
+    color: #3B5998;
+}
+
+.btn1:hover{
+    background-color:#eeeeee;
+    border-color: #eeeeee;
+}
+
+.footer{
+    font-family: Quicksand;
+}
+
+.classfooter{
+    font-family: "Quicksand Bold" !important;
+    color: #AD363B !important;
+
+}
+
+#footermargin{
+    margin-top: 3rem;
+
+}
+
+.footerblack{
+    font-family: "Quicksand Bold"!important;
+    color: black !important;
+}
+
+.redessociais{
+    margin-bottom: 2rem;
+}
+
+
+.btn1{
+    background-color: #AD363B;
+    border-color: #AD363B;
+    color: white;
+}
+
+a:hover {
+    color: #AD363B;
+}
+
+.checkboxtitle{
+    font-family: Quicksand;
+}
+
+#firestation{
+    font-family: "Quicksand Bold";
+    color:#000000;
+    margin-top: 1rem;
+}
+
+#fireStation{
+    margin-top: 1rem;
+    margin-right: 1rem;
+}

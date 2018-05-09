@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	version="2.5">
+	<servlet>
+		<servlet-name>jerseyServlet</servlet-name>
+		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+		<init-param>
+			<param-name>jersey.config.server.provider.packages</param-name>
+			<param-value>com.wokesolutions.ignes.filters;com.wokesolutions.ignes.api</param-value>
+		</init-param>
+		<init-param>
+			<param-name>jersey.config.server.provider.contextPath</param-name>
+			<param-value>/api/*</param-value>
+		</init-param>
+		<init-param>
+			<param-name>jersey.config.server.provider.scanning.recursive</param-name>
+			<param-value>false</param-value>
+		</init-param>
+		<init-param>
+			<param-name>jersey.config.server.tracing.type</param-name>
+			<param-value>ALL</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>jerseyServlet</servlet-name>
+		<url-pattern>/api/*</url-pattern>
+	</servlet-mapping>
+
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+	</welcome-file-list>
+
+	<!-- Filters -->
+
+	<filter>
+		<filter-name>UserFilter</filter-name>
+		<filter-class>com.wokesolutions.ignes.filters.UserFilter</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>UserFilter</filter-name>
+		<url-pattern>/api/report/create</url-pattern>
+		<url-pattern>/api/report/vote/*</url-pattern>
+	</filter-mapping>
+
+	<filter>
+		<filter-name>AdminFilter</filter-name>
+		<filter-class>com.wokesolutions.ignes.filters.AdminFilter</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>AdminFilter</filter-name>
+		<url-pattern>/api/adminmanager/*</url-pattern>
+	</filter-mapping>
+
+	<filter>
+		<filter-name>OrgFilter</filter-name>
+		<filter-class>com.wokesolutions.ignes.filters.OrgFilter</filter-class>
+	</filter>
+	
+	<filter-mapping>
+		<filter-name>OrgFilter</filter-name>
+		<url-pattern>/api/orgcode/*</url-pattern>
+	</filter-mapping>
+</web-app>
