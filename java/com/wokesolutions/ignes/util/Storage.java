@@ -66,13 +66,13 @@ public class Storage {
 		}
 	}
 	
-	public static byte[] getImage(String path) {
+	public static String getImage(String path) {
 		GcsFilename gcsFilename = new GcsFilename(BUCKET, path);
 		GcsInputChannel readChannel = gcsService.openPrefetchingReadChannel(gcsFilename, 0, BUFFER_SIZE);
 	    try {
 	    	ByteArrayOutputStream out = new ByteArrayOutputStream();
 			copy(Channels.newInputStream(readChannel), out);
-			return out.toByteArray();
+			return out.toString();
 		} catch (IOException e) {
 			return null;
 		}

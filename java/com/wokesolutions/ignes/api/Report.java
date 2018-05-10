@@ -345,10 +345,17 @@ public class Report {
 			for(Entity report : results) {
 				Map<String, Object> props = report.getProperties();
 				JSONObject reportJson = new JSONObject();
-				for(Entry<String, Object> prop : props.entrySet())
+				String thumbnail = null;
+				for(Entry<String, Object> prop : props.entrySet()) {
+					if(prop.getKey().equals(DSUtils.REPORT_THUMBNAIL)) {
+						thumbnail = Storage.getImage((String) prop.getValue());
+					}
 					reportJson.put(prop.getKey(), prop.getValue().toString());
+				}
 				if(append)
 					appendVotes(reportJson, report);
+				if(thumbnail != null)
+					reportJson.put("thumbnail", thumbnail);
 				reportList.put(reportJson);
 			}
 
