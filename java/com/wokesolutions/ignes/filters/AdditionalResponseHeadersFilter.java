@@ -8,6 +8,7 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.ext.Provider;
 
 @Provider
+
 public class AdditionalResponseHeadersFilter implements ContainerResponseFilter {
 
 	public AdditionalResponseHeadersFilter() {}
@@ -17,7 +18,8 @@ public class AdditionalResponseHeadersFilter implements ContainerResponseFilter 
 			throws IOException {
 		responseContext.getHeaders().add("Access-Control-Expose-Headers", "*");
 		responseContext.getHeaders().add("Access-Control-Allow-Origin", "*");
-		responseContext.getHeaders().add("Access-Control-Allow-Headers", "Content-Type, X-Requested-With");
+		responseContext.getHeaders().add("Access-Control-Allow-Headers",
+				"Content-Type, X-Requested-With, Authorization");
 	}
 
 }

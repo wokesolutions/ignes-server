@@ -1,19 +1,31 @@
 package com.wokesolutions.ignes.util;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.Channels;
 
+import com.google.appengine.api.images.ImagesService;
+import com.google.appengine.api.images.ImagesServiceFactory;
+import com.google.appengine.api.images.ServingUrlOptions;
 import com.google.appengine.tools.cloudstorage.GcsFileOptions;
 import com.google.appengine.tools.cloudstorage.GcsFilename;
+import com.google.appengine.tools.cloudstorage.GcsInputChannel;
 import com.google.appengine.tools.cloudstorage.GcsOutputChannel;
 import com.google.appengine.tools.cloudstorage.GcsService;
 import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
 import com.google.appengine.tools.cloudstorage.RetryParams;
 
 public class Storage {
+	
+	public static final String BUCKET = "wokesolutions_ignes";
+	public static final String IMG_FOLDER = "img/";
+	public static final String THUMBNAIL_FOLDER = "thumbnail/";
+	public static final String PROFILE_FOLDER = "profile/";
+	public static final String REPORT_FOLDER = "report/";
+	public static final String EVENT_FOLDER = "event/";
 
 	private final static int BUFFER_SIZE = 1024 * 1024;
 
@@ -51,6 +63,18 @@ public class Storage {
 		} finally {
 			input.close();
 			output.close();
+		}
+	}
+	
+	public static byte[] getImage(String path) {
+		GcsFilename gcsFilename = new GcsFilename(BUCKET, path);
+		GcsInputChannel readChannel = gcsService.openPrefetchingReadChannel(gcsFilename, 0, BUFFER_SIZE);
+	    try {
+	    	ByteArrayOutputStream out = new ByteArrayOutputStream();
+			copy(Channels.newInputStream(readChannel), out);
+			return out.toByteArray();
+		} catch (IOException e) {
+			return null;
 		}
 	}
 }

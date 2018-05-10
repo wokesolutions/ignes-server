@@ -1,5 +1,6 @@
 package com.wokesolutions.ignes.api;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -100,6 +101,8 @@ public class Report {
 			report.setProperty(DSUtils.REPORT_LAT, data.report_lat);
 			report.setProperty(DSUtils.REPORT_LNG, data.report_lng);
 			report.setProperty(DSUtils.REPORT_CREATIONTIME, new Date(creationtime));
+			report.setProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED,
+					new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(creationtime));
 			report.setProperty(DSUtils.REPORT_STATUS, PropertyValue.OPEN);
 			report.setProperty(DSUtils.REPORT_USERNAME, username);
 			report.setUnindexedProperty(DSUtils.REPORT_CREATIONLATLNG, request.getHeader(CustomHeader.APPENGINE_LATLNG));
@@ -114,14 +117,14 @@ public class Report {
 			if(data.report_description != null)
 				report.setProperty(DSUtils.REPORT_DESCRIPTION, data.report_description);
 
-			String imgid = DSUtils.IMG_FOLDER + DSUtils.REPORT_FOLDER + reportid + ".jpg";
-			if(!Storage.saveImage(data.report_img, DSUtils.BUCKET, imgid))
+			String imgid = Storage.IMG_FOLDER + Storage.REPORT_FOLDER + reportid;
+			if(!Storage.saveImage(data.report_img, Storage.BUCKET, imgid))
 				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
 			report.setProperty(DSUtils.REPORT_IMG, imgid);
 			
-			String thumbnailid = DSUtils.IMG_FOLDER + DSUtils.REPORT_FOLDER + DSUtils.THUMBNAIL_FOLDER + reportid + ".jpg";
-			if(!Storage.saveImage(data.report_thumbnail, DSUtils.BUCKET, thumbnailid))
+			String thumbnailid = Storage.IMG_FOLDER + Storage.REPORT_FOLDER + Storage.THUMBNAIL_FOLDER + reportid;
+			if(!Storage.saveImage(data.report_thumbnail, Storage.BUCKET, thumbnailid))
 				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
 			report.setProperty(DSUtils.REPORT_THUMBNAIL, thumbnailid);
@@ -203,8 +206,14 @@ public class Report {
 				if((double) props.get(DSUtils.REPORT_LNG) < maxlng
 						&& (double) props.get(DSUtils.REPORT_LNG) > minlng) {
 					JSONObject reportJson = new JSONObject();
-					for(Entry<String, Object> prop : props.entrySet())
-						reportJson.put(prop.getKey(), prop.getValue().toString());
+					for(Entry<String, Object> prop : props.entrySet()) {
+						if(prop.getKey().equals(DSUtils.REPORT_CREATIONTIME)) {
+							String[] split = prop.getValue().toString().split(" ");
+							String date = split[1] + "/" + split[2] + "/" + split[5];
+							reportJson.put(prop.getKey(), date);
+						} else
+							reportJson.put(prop.getKey(), prop.getValue().toString());
+					}
 					if(append)
 						appendVotes(reportJson, report);
 					reportList.put(reportJson);

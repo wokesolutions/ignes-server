@@ -131,6 +131,7 @@ public class DSUtils {
 		public static final String REPORT_LOCALITY = "report_locality";
 		public static final String REPORT_USERNAME = "report_username";
 		public static final String REPORT_CREATIONTIME = "report_creationtime";
+		public static final String REPORT_CREATIONTIMEFORMATTED = "report_creationtimeformatted";
 		public static final String REPORT_GRAVITY = "report_gravity";
 		public static final String REPORT_STATUS = "report_status";
 		public static final String REPORT_DESCRIPTION = "report_description";
@@ -141,12 +142,4 @@ public class DSUtils {
 	// ReportVotes
 		public static final String REPORT_VOTES_UP = "reportvotes_up";
 		public static final String REPORT_VOTES_DOWN = "reportvotes_down";
-		
-	// Storage
-		public static final String BUCKET = "wokesolutions_ignes";
-		public static final String IMG_FOLDER = "img/";
-		public static final String THUMBNAIL_FOLDER = "thumbnail/";
-		public static final String PROFILE_FOLDER = "profile/";
-		public static final String REPORT_FOLDER = "report/";
-		public static final String EVENT_FOLDER = "event/";
 }
