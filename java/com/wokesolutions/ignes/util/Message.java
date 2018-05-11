@@ -17,6 +17,7 @@ public class Message {
 	// Error Report
 		public static final String DUPLICATE_REPORT = "Ocorrência já reportada";
 		public static final String REPORT_NOT_FOUND = "Ocorrência não encontrada";
+		public static final String REPORT_COMMENT_NOT_FOUND = "Erro nos comentários";
 	
 	// Error Admin
 		public static final String MOTER_NOT_ADMIN = "Utilizador a fazer alterações não é administrador";

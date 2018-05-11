@@ -18,6 +18,7 @@ public class DSUtils {
 		public static final String ORGCODE = "OrgCode";
 		public static final String REPORT = "Report";
 		public static final String REPORT_VOTES = "ReportVotes";
+		public static final String REPORT_COMMENTS = "ReportComments";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -136,10 +137,17 @@ public class DSUtils {
 		public static final String REPORT_STATUS = "report_status";
 		public static final String REPORT_DESCRIPTION = "report_description";
 		public static final String REPORT_CREATIONLATLNG = "report_creationlatlng";
+		public static final String REPORT_IMGPATH = "report_imgpath";
 		public static final String REPORT_IMG = "report_img";
+		public static final String REPORT_THUMBNAILPATH = "report_thumbnailpath";
 		public static final String REPORT_THUMBNAIL = "report_thumbnail";
 		
 	// ReportVotes
 		public static final String REPORT_VOTES_UP = "reportvotes_up";
 		public static final String REPORT_VOTES_DOWN = "reportvotes_down";
+		
+	// ReportComments
+		public static final String REPORTCOMMENTS_NUM = "reportcomments_num";
+		public static final String REPORTCOMMENTS_TEXT = "reportcomments_text";
+		public static final String REPORTCOMMENTS_TIME = "reportcomments_time";
 }

@@ -4,8 +4,6 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -101,7 +99,7 @@ public class Report {
 			report.setProperty(DSUtils.REPORT_LAT, data.report_lat);
 			report.setProperty(DSUtils.REPORT_LNG, data.report_lng);
 			report.setProperty(DSUtils.REPORT_CREATIONTIME, new Date(creationtime));
-			report.setProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED,
+			report.setUnindexedProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED,
 					new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(creationtime));
 			report.setProperty(DSUtils.REPORT_STATUS, PropertyValue.OPEN);
 			report.setProperty(DSUtils.REPORT_USERNAME, username);
@@ -115,23 +113,26 @@ public class Report {
 			if(data.report_gravity >= 1 && data.report_gravity <= 5)
 				report.setProperty(DSUtils.REPORT_GRAVITY, data.report_gravity);
 			if(data.report_description != null)
-				report.setProperty(DSUtils.REPORT_DESCRIPTION, data.report_description);
+				report.setUnindexedProperty(DSUtils.REPORT_DESCRIPTION, data.report_description);
 
 			String imgid = Storage.IMG_FOLDER + Storage.REPORT_FOLDER + reportid;
 			if(!Storage.saveImage(data.report_img, Storage.BUCKET, imgid))
 				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
-			report.setProperty(DSUtils.REPORT_IMG, imgid);
-			
+			report.setUnindexedProperty(DSUtils.REPORT_IMGPATH, imgid);
+
 			String thumbnailid = Storage.IMG_FOLDER + Storage.REPORT_FOLDER + Storage.THUMBNAIL_FOLDER + reportid;
 			if(!Storage.saveImage(data.report_thumbnail, Storage.BUCKET, thumbnailid))
 				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
-			report.setProperty(DSUtils.REPORT_THUMBNAIL, thumbnailid);
+			report.setUnindexedProperty(DSUtils.REPORT_THUMBNAILPATH, thumbnailid);
 
 			Entity reportVotes = new Entity(DSUtils.REPORT_VOTES, reportKey);
 			reportVotes.setProperty(DSUtils.REPORT_VOTES_UP, 0L);
 			reportVotes.setProperty(DSUtils.REPORT_VOTES_DOWN, 0L);
+
+			Entity reportComments = new Entity(DSUtils.REPORT_COMMENTS, reportKey);
+			reportComments.setProperty(DSUtils.REPORTCOMMENTS_NUM, 0);
 
 			List<Entity> entities = Arrays.asList(report, reportVotes);
 
@@ -199,8 +200,15 @@ public class Report {
 		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
 		else {
+			JSONArray reportsJson = null;
+			try {
+				reportsJson = reportJsonList(reports, append);
+			} catch(DatastoreException e) {
+				LOG.info(Message.REPORT_NOT_FOUND);
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
 			return Response.ok()
-					.entity(reportJsonList(reports, append)).build();
+					.entity(reportsJson).build();
 		}
 	}
 
@@ -256,8 +264,15 @@ public class Report {
 		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
 		else {
+			JSONArray reportsJson = null;
+			try {
+				reportsJson = reportJsonList(reports, append);
+			} catch(DatastoreException e) {
+				LOG.info(Message.REPORT_NOT_FOUND);
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
 			return Response.ok()
-					.entity(reportJsonList(reports, append)).build();
+					.entity(reportsJson).build();
 		}
 	}
 
@@ -307,8 +322,15 @@ public class Report {
 		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
 		else {
+			JSONArray reportsJson = null;
+			try {
+				reportsJson = reportJsonList(reports, append);
+			} catch(DatastoreException e) {
+				LOG.info(Message.REPORT_NOT_FOUND);
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
 			return Response.ok()
-					.entity(reportJsonList(reports, append)).build();
+					.entity(reportsJson).build();
 		}
 	}
 
@@ -413,53 +435,69 @@ public class Report {
 		return Response.ok(object).build();
 	}
 
-	private void appendVotes(JSONObject reportJson, Entity report) {
+	private void appendVotes(JSONObject reportJson, Entity report) 
+			throws DatastoreException {
 		Entity votes = getReportVotesEntity(report.getKey().getName());
-		reportJson.put(DSUtils.REPORT_VOTES_UP, votes.getProperty(DSUtils.REPORT_VOTES_UP));
-		reportJson.put(DSUtils.REPORT_VOTES_DOWN, votes.getProperty(DSUtils.REPORT_VOTES_DOWN));
+		reportJson.put(DSUtils.REPORT_VOTES_UP, votes.getProperty(DSUtils.REPORT_VOTES_UP).toString());
+		reportJson.put(DSUtils.REPORT_VOTES_DOWN, votes.getProperty(DSUtils.REPORT_VOTES_DOWN).toString());
 	}
-	
-	private Entity getReportVotesEntity(String reportid) {
+
+	private Entity getReportVotesEntity(String reportid) 
+			throws DatastoreException {
 		Key reportKey = KeyFactory.createKey(DSUtils.REPORT, reportid);
 		Query votesQuery = new Query(DSUtils.REPORT_VOTES).setAncestor(reportKey);
 		List<Entity> results = datastore.prepare(votesQuery).asList(FetchOptions.Builder.withDefaults());
 		if(results.isEmpty()) {
 			LOG.info(Message.REPORT_NOT_FOUND);
-			return null;
+			throw new DatastoreException(null);
 		}
 
 		return results.get(0);
 	}
-	
-	private JSONArray reportJsonList(List<Entity> list, boolean append) {
+
+	private JSONArray reportJsonList(List<Entity> list, boolean append) 
+			throws DatastoreException {
 		JSONArray reportList = new JSONArray();
-		
+
 		for(Entity report : list) {
 			JSONObject reportJson = new JSONObject();
-			
-			reportJson.put(DSUtils.REPORT_LAT, report.getProperty(DSUtils.REPORT_LAT));
-			reportJson.put(DSUtils.REPORT_LNG, report.getProperty(DSUtils.REPORT_LNG));
-			reportJson.put(DSUtils.REPORT_STATUS, report.getProperty(DSUtils.REPORT_STATUS));
-			reportJson.put(DSUtils.REPORT_ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+
+			Filter numFilter =
+					new Query.FilterPredicate(DSUtils.REPORTCOMMENTS_NUM, FilterOperator.GREATER_THAN_OR_EQUAL, 0);
+
+			Query commentQuery = new Query(DSUtils.REPORT_COMMENTS)
+					.setFilter(numFilter);
+
+			List<Entity> comment =
+					datastore.prepare(commentQuery).asList(FetchOptions.Builder.withDefaults());
+
+			if(comment.isEmpty()) {
+				throw new DatastoreException(null);
+			}
+
+			reportJson.put(DSUtils.REPORT_LAT, report.getProperty(DSUtils.REPORT_LAT).toString());
+			reportJson.put(DSUtils.REPORT_LNG, report.getProperty(DSUtils.REPORT_LNG).toString());
+			reportJson.put(DSUtils.REPORT_STATUS, report.getProperty(DSUtils.REPORT_STATUS).toString());
+			reportJson.put(DSUtils.REPORT_ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS).toString());
 			reportJson.put(DSUtils.REPORT_CREATIONTIMEFORMATTED,
-					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
-			reportJson.put(DSUtils.REPORT_USERNAME, report.getProperty(DSUtils.REPORT_USERNAME));
+					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED).toString());
+			reportJson.put(DSUtils.REPORT_USERNAME, report.getProperty(DSUtils.REPORT_USERNAME).toString());
 			if(report.hasProperty(DSUtils.REPORT_GRAVITY))
-				reportJson.put(DSUtils.REPORT_GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+				reportJson.put(DSUtils.REPORT_GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY).toString());
 			if(report.hasProperty(DSUtils.REPORT_DESCRIPTION))
-				reportJson.put(DSUtils.REPORT_DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION));
+				reportJson.put(DSUtils.REPORT_DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION).toString());
 			if(report.hasProperty(DSUtils.REPORT_TITLE))
-				reportJson.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE));
-			
-			reportJson.put("thumbnail", Storage.getImage((String)
-					report.getProperty(DSUtils.REPORT_THUMBNAIL)));
-			
+				reportJson.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE).toString());
+
+			reportJson.put(DSUtils.REPORT_THUMBNAIL, Storage.getImage((String)
+					report.getProperty(DSUtils.REPORT_THUMBNAILPATH)));
+
 			if(append)
 				appendVotes(reportJson, report);
-			
-			reportList.put(reportJson);
+
+			reportList.put(reportJson.toString());
 		}
-		
+
 		return reportList;
 	}
 }
