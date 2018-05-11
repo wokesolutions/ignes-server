@@ -175,3 +175,97 @@ footer a{
     size:20rem;
     font-size: 60px;
 }
+
+#expBrand{
+    font-size: 3rem;
+    color: white !important;
+
+}
+
+#expText{
+    font-size:1rem;
+}
+
+#expText:hover{
+    color: #000;
+}
+
+#navbarDef{
+    background-color: #AD363B;
+}
+
+#cont{
+    max-width: 1340px;
+}
+
+.btn-colorRed{
+    color:white !important;
+    background-color: #AD363B !important;
+    font-family: "Quicksand Bold" !important;
+    margin-top: 1rem;
+}
+#searchType{
+    margin-top: 2rem;
+}
+
+#iconMarker {
+    font-size: 6rem;
+    color:#AD363B;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+#thisform{
+    margin-top: 2rem;
+}
+
+.btn-circle {
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 12px;
+    line-height: 1.428571429;
+    border-radius: 15px;
+    background-color: #AD363B;
+    border-color: #AD363B;
+
+}
+
+.btn-circle.btn-xl {
+    width: 70px;
+    height: 70px;
+    padding: 10px 16px;
+    font-size: 24px;
+    line-height: 1.33;
+    border-radius: 35px;
+    background-color: #AD363B;
+    border-color: #AD363B;
+    margin-top: 1rem;
+}
+
+#confirm{
+    font-family: "Quicksand Bold";
+    color: white;
+    font-size: 1rem;
+}
+
+.place{
+    width: 40px;
+    padding: 20px;
+    border: 1px solid blue;
+    background: red;
+    color: yellow;
+}
+
+#efectone{
+    font-family: "Quicksand Bold";
+}
+
+#efecttwo{
+    font-family: "Quicksand Bold";
+    color:#AD363B;
+}
+
+#iconcheck{
+    color: white;
+}

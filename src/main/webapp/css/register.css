@@ -14,7 +14,7 @@
 }
 
 .navbar-light .navbar-brand{
-    color: #AD363B;
+    color: #AD363B !important;
     font-family: "Playlist";
     font-size: 60px;
 }
@@ -70,7 +70,7 @@
     padding: 0.1rem 0;
 }
 label{
-    font-size: 1rem;
+    font-size: 1rem !important;
     font-family: "Quicksand Bold";
 }
 
