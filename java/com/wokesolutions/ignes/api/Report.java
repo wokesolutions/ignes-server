@@ -191,36 +191,16 @@ public class Report {
 		Query latlngQuery = new Query(DSUtils.REPORT)
 				.setFilter(allFilters);
 
-		List<Entity> results =
+		List<Entity> reports =
 				datastore.prepare(latlngQuery).asList(FetchOptions.Builder.withDefaults());
-
-		JSONArray reportList = new JSONArray();
 
 		boolean append = request.getAttribute(CustomHeader.LEVEL) != null;
 
-		if(results.isEmpty())
+		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
 		else {
-			for(Entity report : results) {
-				Map<String, Object> props = report.getProperties();
-				if((double) props.get(DSUtils.REPORT_LNG) < maxlng
-						&& (double) props.get(DSUtils.REPORT_LNG) > minlng) {
-					JSONObject reportJson = new JSONObject();
-					for(Entry<String, Object> prop : props.entrySet()) {
-						if(prop.getKey().equals(DSUtils.REPORT_CREATIONTIME)) {
-							String[] split = prop.getValue().toString().split(" ");
-							String date = split[1] + "/" + split[2] + "/" + split[5];
-							reportJson.put(prop.getKey(), date);
-						} else
-							reportJson.put(prop.getKey(), prop.getValue().toString());
-					}
-					if(append)
-						appendVotes(reportJson, report);
-					reportList.put(reportJson);
-				}
-			}
-
-			return Response.ok().entity(reportList.toString()).build();
+			return Response.ok()
+					.entity(reportJsonList(reports, append)).build();
 		}
 	}
 
@@ -268,29 +248,16 @@ public class Report {
 		Query latlngQuery = new Query(DSUtils.REPORT)
 				.setFilter(allFilters);
 
-		List<Entity> results =	
+		List<Entity> reports =	
 				datastore.prepare(latlngQuery).asList(FetchOptions.Builder.withDefaults());
-
-		JSONArray reportList = new JSONArray();
 
 		boolean append = request.getAttribute(CustomHeader.LEVEL) != null;
 
-		if(results.isEmpty())
+		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
 		else {
-			for(Entity report : results) {
-				Map<String, Object> props = report.getProperties();
-				if((double) props.get(DSUtils.REPORT_LNG) < bound.maxlng
-						&& (double) props.get(DSUtils.REPORT_LNG) > bound.minlng) {
-					JSONObject reportJson = new JSONObject();
-					for(Entry<String, Object> prop : props.entrySet())
-						reportJson.put(prop.getKey(), prop.getValue().toString());
-					if(append)
-						appendVotes(reportJson, report);
-					reportList.put(reportJson);
-				}
-			}
-			return Response.ok().entity(reportList.toString()).build();
+			return Response.ok()
+					.entity(reportJsonList(reports, append)).build();
 		}
 	}
 
@@ -332,34 +299,16 @@ public class Report {
 		Query latlngQuery = new Query(DSUtils.REPORT)
 				.setFilter(allFilters);
 
-		List<Entity> results =
+		List<Entity> reports =
 				datastore.prepare(latlngQuery).asList(FetchOptions.Builder.withDefaults());
-
-		JSONArray reportList = new JSONArray();
 
 		boolean append = request.getAttribute(CustomHeader.LEVEL) != null;
 
-		if(results.isEmpty())
+		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
 		else {
-			for(Entity report : results) {
-				Map<String, Object> props = report.getProperties();
-				JSONObject reportJson = new JSONObject();
-				String thumbnail = null;
-				for(Entry<String, Object> prop : props.entrySet()) {
-					if(prop.getKey().equals(DSUtils.REPORT_THUMBNAIL)) {
-						thumbnail = Storage.getImage((String) prop.getValue());
-					}
-					reportJson.put(prop.getKey(), prop.getValue().toString());
-				}
-				if(append)
-					appendVotes(reportJson, report);
-				if(thumbnail != null)
-					reportJson.put("thumbnail", thumbnail);
-				reportList.put(reportJson);
-			}
-
-			return Response.ok().entity(reportList.toString()).build();
+			return Response.ok()
+					.entity(reportJsonList(reports, append)).build();
 		}
 	}
 
@@ -449,15 +398,12 @@ public class Report {
 	}
 
 	public Response getVotesRetry(String reportid) {
-		Key reportKey = KeyFactory.createKey(DSUtils.REPORT, reportid);
-		Query votesQuery = new Query(DSUtils.REPORT_VOTES).setAncestor(reportKey);
-		List<Entity> results = datastore.prepare(votesQuery).asList(FetchOptions.Builder.withDefaults());
-		if(results.isEmpty()) {
+		Entity report = getReportVotesEntity(reportid);
+		if(report == null) {
 			LOG.info(Message.REPORT_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
-		Entity report = results.get(0);
 		JSONObject object = new JSONObject();
 		object.put(DSUtils.REPORT, report.getKey().getParent().getName());
 		object.put(DSUtils.REPORT_VOTES_UP, report.getProperty(DSUtils.REPORT_VOTES_UP));
@@ -468,11 +414,52 @@ public class Report {
 	}
 
 	private void appendVotes(JSONObject reportJson, Entity report) {
-		Query votesQuery = new Query(DSUtils.REPORT_VOTES).setAncestor(report.getKey());
-		List<Entity> results = datastore.prepare(votesQuery).asList(FetchOptions.Builder.withDefaults());
-
-		Entity votes = results.get(0);
+		Entity votes = getReportVotesEntity(report.getKey().getName());
 		reportJson.put(DSUtils.REPORT_VOTES_UP, votes.getProperty(DSUtils.REPORT_VOTES_UP));
 		reportJson.put(DSUtils.REPORT_VOTES_DOWN, votes.getProperty(DSUtils.REPORT_VOTES_DOWN));
+	}
+	
+	private Entity getReportVotesEntity(String reportid) {
+		Key reportKey = KeyFactory.createKey(DSUtils.REPORT, reportid);
+		Query votesQuery = new Query(DSUtils.REPORT_VOTES).setAncestor(reportKey);
+		List<Entity> results = datastore.prepare(votesQuery).asList(FetchOptions.Builder.withDefaults());
+		if(results.isEmpty()) {
+			LOG.info(Message.REPORT_NOT_FOUND);
+			return null;
+		}
+
+		return results.get(0);
+	}
+	
+	private JSONArray reportJsonList(List<Entity> list, boolean append) {
+		JSONArray reportList = new JSONArray();
+		
+		for(Entity report : list) {
+			JSONObject reportJson = new JSONObject();
+			
+			reportJson.put(DSUtils.REPORT_LAT, report.getProperty(DSUtils.REPORT_LAT));
+			reportJson.put(DSUtils.REPORT_LNG, report.getProperty(DSUtils.REPORT_LNG));
+			reportJson.put(DSUtils.REPORT_STATUS, report.getProperty(DSUtils.REPORT_STATUS));
+			reportJson.put(DSUtils.REPORT_ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+			reportJson.put(DSUtils.REPORT_CREATIONTIMEFORMATTED,
+					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
+			reportJson.put(DSUtils.REPORT_USERNAME, report.getProperty(DSUtils.REPORT_USERNAME));
+			if(report.hasProperty(DSUtils.REPORT_GRAVITY))
+				reportJson.put(DSUtils.REPORT_GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+			if(report.hasProperty(DSUtils.REPORT_DESCRIPTION))
+				reportJson.put(DSUtils.REPORT_DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION));
+			if(report.hasProperty(DSUtils.REPORT_TITLE))
+				reportJson.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE));
+			
+			reportJson.put("thumbnail", Storage.getImage((String)
+					report.getProperty(DSUtils.REPORT_THUMBNAIL)));
+			
+			if(append)
+				appendVotes(reportJson, report);
+			
+			reportList.put(reportJson);
+		}
+		
+		return reportList;
 	}
 }
