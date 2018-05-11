@@ -142,7 +142,7 @@ public class Register {
 			org.setUnindexedProperty(DSUtils.ORG_CREATIONTIME, new Date());
 
 			Entity orgCode = new Entity(DSUtils.ORGCODE , org.getKey());
-			orgCode.setProperty(DSUtils.ORGCODE_CODE, null);
+			orgCode.setProperty(DSUtils.ORGCODE_ACTIVE, false);
 
 			List<Entity> org_and_code = Arrays.asList(org, orgCode);
 

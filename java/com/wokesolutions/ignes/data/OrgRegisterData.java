@@ -10,7 +10,7 @@ public class OrgRegisterData {
 	public String org_email;
 	public String org_phone;
 	public boolean org_isfirestation;
-	public String[] org_services;
+	public String org_services;
 	public String org_password;
 
 	public OrgRegisterData() {}
