@@ -20,6 +20,8 @@ import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.Filter;
+import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Message;
@@ -53,11 +55,17 @@ public class OrgCode {
 
 			String codeStr = initials + String.valueOf(System.currentTimeMillis()).substring(7 - initials.length());
 
-			Query statsQuery = new Query(DSUtils.ORGCODE).setAncestor(orgKey);
-			List<Entity> results = datastore.prepare(statsQuery).asList(FetchOptions.Builder.withDefaults());
-			if(!results.isEmpty())
-				return Response.status(Status.CONFLICT).entity(Message.ORG_CODE_ALREADY_EXISTS).build();
-			else {
+			Query codeQuery = new Query(DSUtils.ORGCODE).setAncestor(orgKey);
+			Filter active =
+					new Query.FilterPredicate(DSUtils.ORGCODE_ACTIVE, FilterOperator.EQUAL, true);
+			codeQuery.setFilter(active);
+			List<Entity> results = datastore.prepare(codeQuery).asList(FetchOptions.Builder.withDefaults());
+
+			if(!results.isEmpty()) {
+				String code = results.get(0).getProperty(DSUtils.ORGCODE_CODE).toString();
+				return Response.status(Status.CONFLICT).entity(Message.ORG_CODE_ALREADY_EXISTS)
+						.entity(code).build();
+			} else {
 				Entity orgCode = new Entity(DSUtils.ORGCODE, orgKey);
 				LOG.info(codeStr);
 				orgCode.setProperty(DSUtils.ORGCODE_CODE, codeStr);
