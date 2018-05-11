@@ -12,6 +12,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.json.JSONObject;
+
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
@@ -63,6 +65,8 @@ public class OrgCode {
 
 			if(!results.isEmpty()) {
 				String code = results.get(0).getProperty(DSUtils.ORGCODE_CODE).toString();
+				JSONObject obj = new JSONObject();
+				obj.put("code", code);
 				return Response.status(Status.CONFLICT).entity(Message.ORG_CODE_ALREADY_EXISTS)
 						.entity(code).build();
 			} else {
