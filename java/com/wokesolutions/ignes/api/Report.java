@@ -1,5 +1,6 @@
 package com.wokesolutions.ignes.api;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -19,7 +20,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.google.appengine.api.datastore.DatastoreService;
@@ -134,7 +134,7 @@ public class Report {
 			Entity reportComments = new Entity(DSUtils.REPORT_COMMENTS, reportKey);
 			reportComments.setProperty(DSUtils.REPORTCOMMENTS_NUM, 0);
 
-			List<Entity> entities = Arrays.asList(report, reportVotes);
+			List<Entity> entities = Arrays.asList(report, reportVotes, reportComments);
 
 			LOG.info(Message.REPORT_CREATED + reportid);
 			datastore.put(txn, entities);
@@ -200,7 +200,7 @@ public class Report {
 		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
 		else {
-			JSONArray reportsJson = null;
+			String reportsJson = null;
 			try {
 				reportsJson = reportJsonList(reports, append);
 			} catch(DatastoreException e) {
@@ -264,7 +264,7 @@ public class Report {
 		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
 		else {
-			JSONArray reportsJson = null;
+			String reportsJson = null;
 			try {
 				reportsJson = reportJsonList(reports, append);
 			} catch(DatastoreException e) {
@@ -322,7 +322,7 @@ public class Report {
 		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
 		else {
-			JSONArray reportsJson = null;
+			String reportsJson = null;
 			try {
 				reportsJson = reportJsonList(reports, append);
 			} catch(DatastoreException e) {
@@ -449,15 +449,15 @@ public class Report {
 		List<Entity> results = datastore.prepare(votesQuery).asList(FetchOptions.Builder.withDefaults());
 		if(results.isEmpty()) {
 			LOG.info(Message.REPORT_NOT_FOUND);
-			throw new DatastoreException(null);
+			throw new DatastoreException(new IOException());
 		}
 
 		return results.get(0);
 	}
 
-	private JSONArray reportJsonList(List<Entity> list, boolean append) 
+	private String reportJsonList(List<Entity> list, boolean append) 
 			throws DatastoreException {
-		JSONArray reportList = new JSONArray();
+		String reportList = "[";
 
 		for(Entity report : list) {
 			JSONObject reportJson = new JSONObject();
@@ -472,10 +472,11 @@ public class Report {
 					datastore.prepare(commentQuery).asList(FetchOptions.Builder.withDefaults());
 
 			if(comment.isEmpty()) {
-				throw new DatastoreException(null);
+				throw new DatastoreException(new IOException());
 			}
 
 			reportJson.put(DSUtils.REPORT_LAT, report.getProperty(DSUtils.REPORT_LAT).toString());
+			LOG.info(reportJson.getString(DSUtils.REPORT_LAT));
 			reportJson.put(DSUtils.REPORT_LNG, report.getProperty(DSUtils.REPORT_LNG).toString());
 			reportJson.put(DSUtils.REPORT_STATUS, report.getProperty(DSUtils.REPORT_STATUS).toString());
 			reportJson.put(DSUtils.REPORT_ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS).toString());
@@ -494,10 +495,13 @@ public class Report {
 
 			if(append)
 				appendVotes(reportJson, report);
+			
+			String reportString = reportJson.toString();
 
-			reportList.put(reportJson.toString());
+			reportList += reportString + ", ";
 		}
 
+		reportList = reportList.substring(0, reportList.length() - 2) + "]";
 		return reportList;
 	}
 }
