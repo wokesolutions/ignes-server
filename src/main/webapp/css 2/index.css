@@ -1,0 +1,271 @@
+@font-face {
+    font-family: "Playlist";
+    src:url('../fonts/Playlist_Script.otf') format("opentype");
+}
+
+@font-face {
+    font-family: "Quicksand";
+    src:url('../fonts/Quicksand_Light.otf') format("opentype");
+}
+
+@font-face {
+    font-family: "Quicksand Bold";
+    src:url('../fonts/Quicksand_Bold.otf') format("opentype");
+}
+.navbar-light .navbar-nav .nav-link{
+    color: #f5f5f5;
+    font-family: "Quicksand Bold";
+    font-size: 20px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+.navbar, navbar-light, navbar-expand-lg{
+    background-color: rgba(0, 0, 0, 0.18);
+    padding: 0;
+    width: 100%;
+}
+
+body,html{
+
+    witdh:100%;
+    overflow-x: hidden;
+
+}
+.navbar-light .navbar-brand{
+    color: #f5f5f5;
+    font-family: "Playlist";
+    font-size: 60px;
+}
+
+#mainNav.navbar-shrink {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    background: black;
+}
+header.masthead {
+    padding-top: 10rem;
+    padding-bottom: calc(10rem - 56px);
+    background-image: url('/images/breaking-sun-forest-plain.jpg');
+    background-position: center center;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+}
+
+
+
+header.masthead hr {
+    margin-top: 30px;
+    margin-bottom: 30px;
+    background-color: #AD363B;
+
+}
+header.masthead h1 {
+    font-size: 4rem;
+    text-align: center;
+    font-family: "Quicksand";
+    color: #ffffff;
+}
+
+header.masthead p {
+    font-weight: 300;
+    font-family: "Georgia";
+}
+
+header.masthead .site-heading {
+    padding: 200px 0;
+    text-align: center;
+}
+
+#qs{
+    font-size: 4rem;
+    font-family: "Playlist";
+    color: #AD363B;
+
+}
+
+#junte{
+    font-size: 4rem;
+    font-family: "Playlist";
+    color: #AD363B;
+    margin-bottom: 8rem;
+    margin-top: 8rem;
+}
+
+.texticon {
+    font-size: 2rem;
+    font-family: "Quicksand Bold";
+    color: #414040;
+}
+#nos{
+    font-size: 15px;
+    font-family: "Quicksand Bold";
+}
+
+.text{
+
+    font-family: "Quicksand";
+    font-size:1rem
+}
+
+.esquema{
+    width: 300px;
+    height: auto;
+}
+
+.divisoria {
+    margin-top: 30px;
+    margin-bottom: 30px;
+    background-color: #a5a4a4;
+    width:76%;
+    padding: 0.1rem 0;
+}
+
+
+#oquefazemos{
+    background-color: #f9f9f9;
+}
+
+.img-flame{
+    height: 12rem;
+    width: auto;
+}
+
+.flame:hover {
+    /* Start the shake animation and make the animation last for 0.5 seconds */
+    animation: shake 1s;
+    /* When the animation is finished, start again */
+    animation-iteration-count: infinite;
+}
+
+@keyframes shake {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    10% { transform: translate(-1px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(3px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(3px, 1px) rotate(-1deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    90% { transform: translate(1px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+.flame{
+    padding: 1rem 6rem;
+
+}
+
+.pointer-finger{
+    cursor:pointer
+}
+
+footer{
+    margin-top: 10rem;
+    background-color: rgba(229, 229, 229, 0.36);
+}
+footer a{
+    color: black !important;
+}
+
+.fa-fwindex {
+    width: 1.28571429em;
+    text-align: center;
+    size:20rem;
+    font-size: 60px;
+}
+
+#expBrand{
+    font-size: 3rem;
+    color: white !important;
+
+}
+
+#expText{
+    font-size:1rem;
+}
+
+#expText:hover{
+    color: #000;
+}
+
+#navbarDef{
+    background-color: #AD363B;
+}
+
+#cont{
+    max-width: 1340px;
+}
+
+.btn-colorRed{
+    color:white !important;
+    background-color: #AD363B !important;
+    font-family: "Quicksand Bold" !important;
+    margin-top: 1rem;
+}
+#searchType{
+    margin-top: 2rem;
+}
+
+#iconMarker {
+    font-size: 6rem;
+    color:#AD363B;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+#thisform{
+    margin-top: 2rem;
+}
+
+.btn-circle {
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 12px;
+    line-height: 1.428571429;
+    border-radius: 15px;
+    background-color: #AD363B;
+    border-color: #AD363B;
+
+}
+
+.btn-circle.btn-xl {
+    width: 70px;
+    height: 70px;
+    padding: 10px 16px;
+    font-size: 24px;
+    line-height: 1.33;
+    border-radius: 35px;
+    background-color: #AD363B;
+    border-color: #AD363B;
+    margin-top: 1rem;
+}
+
+#confirm{
+    font-family: "Quicksand Bold";
+    color: white;
+    font-size: 1rem;
+}
+
+.place{
+    width: 40px;
+    padding: 20px;
+    border: 1px solid blue;
+    background: red;
+    color: yellow;
+}
+
+#efectone{
+    font-family: "Quicksand Bold";
+}
+
+#efecttwo{
+    font-family: "Quicksand Bold";
+    color:#AD363B;
+}
+
+#iconcheck{
+    color: white;
+}
