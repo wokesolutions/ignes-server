@@ -22,6 +22,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.json.JSONObject;
 
+import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
@@ -29,6 +30,7 @@ import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.datastore.Query.Filter;
@@ -50,6 +52,7 @@ public class Report {
 
 	private static final Logger LOG = Logger.getLogger(Report.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+	private static final int BATCH = 10;
 
 	public Report() {}
 
@@ -157,13 +160,14 @@ public class Report {
 			@QueryParam(ParamName.MINLNG) double minlng,
 			@QueryParam(ParamName.MAXLAT) double maxlat,
 			@QueryParam(ParamName.MAXLNG) double maxlng,
+			@QueryParam(ParamName.CURSOR) String cursor,
 			@Context HttpServletRequest request) {
 		if(minlat == 0 || minlng == 0 || maxlat == 0 || maxlng == 0)
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		int retries = 5;
 		while(true) {
 			try {
-				return getReportsWithinBoundariesRetry(minlat, minlng, maxlat, maxlng, request);
+				return getReportsWithinBoundariesRetry(minlat, minlng, maxlat, maxlng, cursor, request);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -173,7 +177,8 @@ public class Report {
 	}
 
 	private Response getReportsWithinBoundariesRetry(double minlat, double minlng,
-			double maxlat, double maxlng, HttpServletRequest request) {
+			double maxlat, double maxlng, String cursor,
+			HttpServletRequest request) {
 		LOG.info(Message.ATTEMPT_GIVE_ALL_REPORTS);
 
 		Filter minlatFilter =
@@ -202,7 +207,7 @@ public class Report {
 		else {
 			String reportsJson = null;
 			try {
-				reportsJson = reportJsonList(reports, append);
+				reportsJson = reportJsonList(reports, append, cursor);
 			} catch(DatastoreException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -219,13 +224,14 @@ public class Report {
 			@QueryParam(ParamName.LAT) double lat,
 			@QueryParam(ParamName.LNG) double lng,
 			@QueryParam(ParamName.RADIUS) double radius,
+			@QueryParam(ParamName.CURSOR) String cursor,
 			@Context HttpServletRequest request) {
 		if(lat == 0 || lng == 0 || radius == 0)
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		int retries = 5;
 		while(true) {
 			try {
-				return getReportsWithinRadiusRetry(lat, lng, radius, request);
+				return getReportsWithinRadiusRetry(lat, lng, radius, cursor, request);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -235,7 +241,8 @@ public class Report {
 	}
 
 	private Response getReportsWithinRadiusRetry(double lat, double lng,
-			double radius, HttpServletRequest request) {
+			double radius, String cursor,
+			HttpServletRequest request) {
 		LOG.info(Message.ATTEMPT_GIVE_ALL_REPORTS);
 
 		Boundaries bound = Haversine.getBoundaries(lat, lng, radius);
@@ -266,7 +273,7 @@ public class Report {
 		else {
 			String reportsJson = null;
 			try {
-				reportsJson = reportJsonList(reports, append);
+				reportsJson = reportJsonList(reports, append, cursor);
 			} catch(DatastoreException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -280,13 +287,14 @@ public class Report {
 	@Path("/getinlocation")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getReportsInLocation(@QueryParam(ParamName.LOCATION) String district,
+			@QueryParam(ParamName.CURSOR) String cursor,
 			@Context HttpServletRequest request) {
 		if(district == null)
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		int retries = 5;
 		while(true) {
 			try {
-				return getReportsInLocationRetry(district, request);
+				return getReportsInLocationRetry(district, cursor, request);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -295,7 +303,8 @@ public class Report {
 		}
 	}
 
-	private Response getReportsInLocationRetry(String location, HttpServletRequest request) {
+	private Response getReportsInLocationRetry(String location,
+			String cursor, HttpServletRequest request) {
 		LOG.info(Message.ATTEMPT_GIVE_ALL_REPORTS);
 
 		Filter cityFilter =
@@ -324,7 +333,7 @@ public class Report {
 		else {
 			String reportsJson = null;
 			try {
-				reportsJson = reportJsonList(reports, append);
+				reportsJson = reportJsonList(reports, append, cursor);
 			} catch(DatastoreException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -455,26 +464,32 @@ public class Report {
 		return results.get(0);
 	}
 
-	private String reportJsonList(List<Entity> list, boolean append) 
+	private String reportJsonList(List<Entity> list, boolean append, String startCursor) 
 			throws DatastoreException {
 		String reportList = "[";
 
 		for(Entity report : list) {
 			JSONObject reportJson = new JSONObject();
+			
+			FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH);
+			
+			if(startCursor != null)
+				fetchOptions.startCursor(Cursor.fromWebSafeString(startCursor));
 
 			Filter numFilter =
-					new Query.FilterPredicate(DSUtils.REPORTCOMMENTS_NUM, FilterOperator.GREATER_THAN_OR_EQUAL, 0);
+					new Query.FilterPredicate(DSUtils.REPORTCOMMENTS_NUM,
+							FilterOperator.GREATER_THAN_OR_EQUAL, 0);
 
 			Query commentQuery = new Query(DSUtils.REPORT_COMMENTS)
-					.setFilter(numFilter);
-
-			List<Entity> comment =
-					datastore.prepare(commentQuery).asList(FetchOptions.Builder.withDefaults());
+					.setFilter(numFilter).setAncestor(report.getKey());
+			
+			List<Entity> comment = datastore.prepare(commentQuery).asList(arg0)
 
 			if(comment.isEmpty()) {
 				throw new DatastoreException(new IOException());
 			}
 
+			reportJson.put(DSUtils.REPORT, report.getKey().getName());
 			reportJson.put(DSUtils.REPORT_LAT, report.getProperty(DSUtils.REPORT_LAT).toString());
 			LOG.info(reportJson.getString(DSUtils.REPORT_LAT));
 			reportJson.put(DSUtils.REPORT_LNG, report.getProperty(DSUtils.REPORT_LNG).toString());
@@ -489,9 +504,6 @@ public class Report {
 				reportJson.put(DSUtils.REPORT_DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION).toString());
 			if(report.hasProperty(DSUtils.REPORT_TITLE))
 				reportJson.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE).toString());
-
-			reportJson.put(DSUtils.REPORT_THUMBNAIL, Storage.getImage((String)
-					report.getProperty(DSUtils.REPORT_THUMBNAILPATH)));
 
 			if(append)
 				appendVotes(reportJson, report);
