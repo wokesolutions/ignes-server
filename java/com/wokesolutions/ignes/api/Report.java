@@ -207,7 +207,7 @@ public class Report {
 		else {
 			String reportsJson = null;
 			try {
-				reportsJson = reportJsonList(reports, append, cursor);
+				reportsJson = reportJsonList(reports, append);
 			} catch(DatastoreException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -273,7 +273,7 @@ public class Report {
 		else {
 			String reportsJson = null;
 			try {
-				reportsJson = reportJsonList(reports, append, cursor);
+				reportsJson = reportJsonList(reports, append);
 			} catch(DatastoreException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -319,12 +319,17 @@ public class Report {
 		Filter visibilityFilters = CompositeFilterOperator.or(openFilter, showFilter);
 		Filter locationFilter = CompositeFilterOperator.or(cityFilter, localityFilter);
 		Filter allFilters = CompositeFilterOperator.and(locationFilter, visibilityFilters);
+		
+		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH);
+		
+		if(cursor != null)
+			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
 
 		Query latlngQuery = new Query(DSUtils.REPORT)
 				.setFilter(allFilters);
 
 		List<Entity> reports =
-				datastore.prepare(latlngQuery).asList(FetchOptions.Builder.withDefaults());
+				datastore.prepare(latlngQuery).asQueryResultList(fetchOptions);
 
 		boolean append = request.getAttribute(CustomHeader.LEVEL) != null;
 
@@ -333,7 +338,7 @@ public class Report {
 		else {
 			String reportsJson = null;
 			try {
-				reportsJson = reportJsonList(reports, append, cursor);
+				reportsJson = reportJsonList(reports, append);
 			} catch(DatastoreException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -464,17 +469,12 @@ public class Report {
 		return results.get(0);
 	}
 
-	private String reportJsonList(List<Entity> list, boolean append, String startCursor) 
+	private String reportJsonList(List<Entity> list, boolean append) 
 			throws DatastoreException {
 		String reportList = "[";
 
 		for(Entity report : list) {
 			JSONObject reportJson = new JSONObject();
-			
-			FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH);
-			
-			if(startCursor != null)
-				fetchOptions.startCursor(Cursor.fromWebSafeString(startCursor));
 
 			Filter numFilter =
 					new Query.FilterPredicate(DSUtils.REPORTCOMMENTS_NUM,
@@ -508,6 +508,9 @@ public class Report {
 			if(report.hasProperty(DSUtils.REPORT_TITLE))
 				reportJson.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE).toString());
 			reportJson.put(DSUtils.REPORT_COMMENTSNUM, numComments);
+			
+			reportJson.put(DSUtils.REPORT_THUMBNAIL, Storage.getImage((String)
+					report.getProperty(DSUtils.REPORT_THUMBNAILPATH)));
 
 			if(append)
 				appendVotes(reportJson, report);
