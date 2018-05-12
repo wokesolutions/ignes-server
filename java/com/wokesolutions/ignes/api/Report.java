@@ -495,10 +495,10 @@ public class Report {
 
 			List<Entity> comment = datastore.prepare(commentQuery).asList(FetchOptions.Builder.withDefaults());
 
-			int numComments = 0;
+			String numComments = "0";
 
 			if(!comment.isEmpty()) {
-				numComments = (int) comment.get(0).getProperty(DSUtils.REPORTCOMMENTS_NUM);
+				numComments = comment.get(0).getProperty(DSUtils.REPORTCOMMENTS_NUM).toString();
 				// throw new DatastoreException(new IOException());
 			}
 
