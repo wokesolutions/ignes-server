@@ -483,10 +483,13 @@ public class Report {
 			Query commentQuery = new Query(DSUtils.REPORT_COMMENTS)
 					.setFilter(numFilter).setAncestor(report.getKey());
 			
-			List<Entity> comment = datastore.prepare(commentQuery).asList(arg0)
+			List<Entity> comment = datastore.prepare(commentQuery).asList(FetchOptions.Builder.withDefaults());
 
-			if(comment.isEmpty()) {
-				throw new DatastoreException(new IOException());
+			int numComments = 0;
+			
+			if(!comment.isEmpty()) {
+				numComments = (int) comment.get(0).getProperty(DSUtils.REPORTCOMMENTS_NUM);
+				// throw new DatastoreException(new IOException());
 			}
 
 			reportJson.put(DSUtils.REPORT, report.getKey().getName());
@@ -504,6 +507,7 @@ public class Report {
 				reportJson.put(DSUtils.REPORT_DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION).toString());
 			if(report.hasProperty(DSUtils.REPORT_TITLE))
 				reportJson.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE).toString());
+			reportJson.put(DSUtils.REPORT_COMMENTSNUM, numComments);
 
 			if(append)
 				appendVotes(reportJson, report);

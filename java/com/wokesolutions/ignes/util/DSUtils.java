@@ -141,6 +141,7 @@ public class DSUtils {
 		public static final String REPORT_IMG = "report_img";
 		public static final String REPORT_THUMBNAILPATH = "report_thumbnailpath";
 		public static final String REPORT_THUMBNAIL = "report_thumbnail";
+		public static final String REPORT_COMMENTSNUM = "report_commentsnum";
 		
 	// ReportVotes
 		public static final String REPORT_VOTES_UP = "reportvotes_up";
