@@ -30,11 +30,11 @@ import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
-import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
+import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.ReportData;
@@ -194,11 +194,16 @@ public class Report {
 		Filter visibilityFilters = CompositeFilterOperator.or(openFilter, showFilter);
 		Filter allFilters = CompositeFilterOperator.and(positionFilters, visibilityFilters);
 
+		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH);
+
+		if(cursor != null)
+			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
+
 		Query latlngQuery = new Query(DSUtils.REPORT)
 				.setFilter(allFilters);
 
-		List<Entity> reports =
-				datastore.prepare(latlngQuery).asList(FetchOptions.Builder.withDefaults());
+		QueryResultList<Entity> reports =
+				datastore.prepare(latlngQuery).asQueryResultList(fetchOptions);
 
 		boolean append = request.getAttribute(CustomHeader.LEVEL) != null;
 
@@ -260,11 +265,16 @@ public class Report {
 		Filter visibilityFilters = CompositeFilterOperator.or(openFilter, showFilter);
 		Filter allFilters = CompositeFilterOperator.and(positionFilters, visibilityFilters);
 
+		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH);
+
+		if(cursor != null)
+			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
+
 		Query latlngQuery = new Query(DSUtils.REPORT)
 				.setFilter(allFilters);
 
-		List<Entity> reports =	
-				datastore.prepare(latlngQuery).asList(FetchOptions.Builder.withDefaults());
+		QueryResultList<Entity> reports =
+				datastore.prepare(latlngQuery).asQueryResultList(fetchOptions);
 
 		boolean append = request.getAttribute(CustomHeader.LEVEL) != null;
 
@@ -319,16 +329,16 @@ public class Report {
 		Filter visibilityFilters = CompositeFilterOperator.or(openFilter, showFilter);
 		Filter locationFilter = CompositeFilterOperator.or(cityFilter, localityFilter);
 		Filter allFilters = CompositeFilterOperator.and(locationFilter, visibilityFilters);
-		
+
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH);
-		
+
 		if(cursor != null)
 			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
 
 		Query latlngQuery = new Query(DSUtils.REPORT)
 				.setFilter(allFilters);
 
-		List<Entity> reports =
+		QueryResultList<Entity> reports =
 				datastore.prepare(latlngQuery).asQueryResultList(fetchOptions);
 
 		boolean append = request.getAttribute(CustomHeader.LEVEL) != null;
@@ -469,9 +479,9 @@ public class Report {
 		return results.get(0);
 	}
 
-	private String reportJsonList(List<Entity> list, boolean append) 
+	private String reportJsonList(QueryResultList<Entity> list, boolean append) 
 			throws DatastoreException {
-		String reportList = "[";
+		String reportList = "[{" + ParamName.CURSOR + ": " + list.getCursor() + "}, ";
 
 		for(Entity report : list) {
 			JSONObject reportJson = new JSONObject();
@@ -482,11 +492,11 @@ public class Report {
 
 			Query commentQuery = new Query(DSUtils.REPORT_COMMENTS)
 					.setFilter(numFilter).setAncestor(report.getKey());
-			
+
 			List<Entity> comment = datastore.prepare(commentQuery).asList(FetchOptions.Builder.withDefaults());
 
 			int numComments = 0;
-			
+
 			if(!comment.isEmpty()) {
 				numComments = (int) comment.get(0).getProperty(DSUtils.REPORTCOMMENTS_NUM);
 				// throw new DatastoreException(new IOException());
@@ -508,13 +518,13 @@ public class Report {
 			if(report.hasProperty(DSUtils.REPORT_TITLE))
 				reportJson.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE).toString());
 			reportJson.put(DSUtils.REPORT_COMMENTSNUM, numComments);
-			
+
 			reportJson.put(DSUtils.REPORT_THUMBNAIL, Storage.getImage((String)
 					report.getProperty(DSUtils.REPORT_THUMBNAILPATH)));
 
 			if(append)
 				appendVotes(reportJson, report);
-			
+
 			String reportString = reportJson.toString();
 
 			reportList += reportString + ", ";

@@ -4,4 +4,7 @@
 		<property name="user_login_time" direction="desc" />
 		<property name="user_login_ip" direction="asc" />
 	</datastore-index>
+	<datastore-index kind="ReportComments" ancestor="true" source="manual">
+        <property name="reportcomments_num" direction="asc"/>
+    </datastore-index>
 </datastore-indexes>
