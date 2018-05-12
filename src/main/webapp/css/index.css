@@ -203,6 +203,7 @@ footer a{
     background-color: #AD363B !important;
     font-family: "Quicksand Bold" !important;
     margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 #searchType{
     margin-top: 2rem;
@@ -268,4 +269,12 @@ footer a{
 
 #iconcheck{
     color: white;
+}
+
+.marker{
+    color: #000000;
+    font-family: "Quicksand Bold";
+    font-size:16px;
+    background-color: #AD363B;
+
 }
