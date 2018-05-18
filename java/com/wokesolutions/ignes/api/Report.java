@@ -446,10 +446,8 @@ public class Report {
 		
 		JSONArray subReports = new JSONArray();
 		
-		for(int i = offset; i < endset; i++) {
-			LOG.info(Integer.toString(i));
-			subReports.put(jsonReports.get(i));
-		}
+		for(int i = offset; i < endset; i++)
+			subReports.put(jsonReports.get(i + 1));
 		
 		int subReportsSize = subReports.toList().size();
 		
@@ -460,13 +458,10 @@ public class Report {
 
 		if(endset == reportsSize)
 			endset = -1;
-
+		
 		for(Object report : subReports) {
 			JSONObject jsonReport = new JSONObject(report.toString());
-			if(!jsonReport.has(DSUtils.REPORT))
-				continue;
 			Key key = KeyFactory.createKey(DSUtils.REPORT, jsonReport.getString(DSUtils.REPORT));
-			LOG.info(key.getName());
 			keys.add(key);
 		}
 
