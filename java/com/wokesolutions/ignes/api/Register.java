@@ -207,9 +207,11 @@ public class Register {
 					return Response.status(Status.EXPECTATION_FAILED).entity(Message.ORG_CODE_NOT_FOUND).build();
 				}
 
-				orgCode.setProperty(DSUtils.ORGCODE_ACTIVE, false);
-
 				Key userKey = KeyFactory.createKey(DSUtils.USER, registerData.worker_username);
+
+				orgCode.setProperty(DSUtils.ORGCODE_ACTIVE, false);
+				orgCode.setProperty(DSUtils.ORGCODE_WORKER, userKey);
+
 				Entity user = new Entity(userKey);
 				user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(registerData.worker_password));
 				user.setUnindexedProperty(DSUtils.USER_EMAIL, registerData.worker_email);

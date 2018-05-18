@@ -13,8 +13,11 @@ public class ParamName {
 		public static final String DISTRICT = "district";
 		public static final String USERNAME = "username";
 		public static final String LOCATION = "location";
-		public static final String CURSOR = "cursor";
 
 	// Path
 		public static final String REPORT = "report";
+		
+	// Response
+		public static final String REQUESTID = "requestid";
+		public static final String OFFSET = "offset";
 }

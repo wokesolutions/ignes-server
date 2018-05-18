@@ -119,6 +119,7 @@ public class DSUtils {
 	// OrgCode
 		public static final String ORGCODE_CODE = "orgcode_code";
 		public static final String ORGCODE_ACTIVE = "orgcode_active";
+		public static final String ORGCODE_WORKER = "orgcode_worker";
 
 	// UserPoints
 		public static final String USERPOINTS_POINTS = "userpoints_points";
@@ -144,8 +145,8 @@ public class DSUtils {
 		public static final String REPORT_COMMENTSNUM = "report_commentsnum";
 		
 	// ReportVotes
-		public static final String REPORT_VOTES_UP = "reportvotes_up";
-		public static final String REPORT_VOTES_DOWN = "reportvotes_down";
+		public static final String REPORTVOTES_UP = "reportvotes_up";
+		public static final String REPORTVOTES_DOWN = "reportvotes_down";
 		
 	// ReportComments
 		public static final String REPORTCOMMENTS_NUM = "reportcomments_num";

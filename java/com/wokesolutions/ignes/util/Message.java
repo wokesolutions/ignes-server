@@ -83,6 +83,7 @@ public class Message {
 		
 	// Info Storage
 		public static final String STORAGE_SAVED_IMG_REPORT = "Gravou a imagem de, com nome: ";
+		public static final String USING_CACHE = "A usar a cache";
 		
 	// Email
 		public static final String EMAIL_ERROR = "Erro a enviar a email";
