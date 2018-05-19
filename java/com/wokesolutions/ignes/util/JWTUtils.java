@@ -8,7 +8,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 public class JWTUtils {
 
 	public final static String ISSUER = "Ignes";
-	public final static String SECRET = "Não há fogo nas cuecas do Diogo.";
 	
 	public final static String AUTHORIZATION = "Authorization";
 
@@ -28,7 +27,7 @@ public class JWTUtils {
 	public static final String PHONE = "phn";
 	
 	public static String createJWT(String username, String level) throws IllegalArgumentException, UnsupportedEncodingException {
-		Algorithm algorithm = Algorithm.HMAC256(JWTUtils.SECRET);
+		Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 		String token = null;
 		
 		if(level.equals(UserLevel.ADMIN)) {

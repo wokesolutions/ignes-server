@@ -16,7 +16,7 @@ public class Email {
 
 		Configuration configuration = new Configuration()
 				.domain(DOMAIN)
-				.apiKey(ApiKeys.MAILGUN)
+				.apiKey(Secrets.MAILGUN)
 				.from("WokeSolutions", EMAIL);
 
 		Mail.using(configuration)
