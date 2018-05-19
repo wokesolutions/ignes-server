@@ -29,6 +29,7 @@ import com.wokesolutions.ignes.data.OrgRegisterData;
 import com.wokesolutions.ignes.data.UserRegisterData;
 import com.wokesolutions.ignes.data.WorkerRegisterData;
 import com.wokesolutions.ignes.util.DSUtils;
+import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.UserLevel;
 
@@ -88,6 +89,9 @@ public class Register {
 			
 			LOG.info(Message.USER_REGISTERED + registerData.user_username);
 			txn.commit();
+			
+			Email.sendSimpleMessage(registerData.user_email, "OLA AMIGOS");
+			
 			return Response.ok().build();
 		} finally {
 			if (txn.isActive() ) {

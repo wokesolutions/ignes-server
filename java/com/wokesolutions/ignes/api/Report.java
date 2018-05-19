@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,6 +26,7 @@ import javax.ws.rs.core.Response.Status;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
@@ -318,19 +318,23 @@ public class Report {
 		if(cache.contains(requestid)) {
 			LOG.info(Message.USING_CACHE);
 			JSONArray reports = new JSONArray(cache.get(requestid).toString());
-			List<Object> reportlist = reports.toList();
 			
-			if(offset >= reportlist.size())
+			int size = reports.length();
+			
+			if(offset >= size)
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			
 			int endset = offset + 10;
-			if(endset > reportlist.size())
-				endset = reportlist.size();
+			if(endset > size)
+				endset = size;
 			
-			reportlist = reportlist.subList(offset, endset);
-			reports = new JSONArray(reportlist);
+			JSONArray subReports = new JSONArray();
 			
-			return Response.ok().entity(reports).build();
+			for(int i = offset; i < endset; i++) {
+				subReports.put(reports.getJSONObject(i));
+			}
+			
+			return Response.ok().entity(subReports).build();
 		}
 		
 		int retries = 5;
@@ -435,21 +439,18 @@ public class Report {
 						offset, request).getEntity().toString());
 		}
 		
-		int reportsSize = jsonReports.toList().size();
+		int reportsSize = jsonReports.length();
 
 		int endset = offset + 10;
 		if(endset > reportsSize)
 			endset = reportsSize;
-		
-		LOG.info(Integer.toString(offset));
-		LOG.info(Integer.toString(endset));
 		
 		JSONArray subReports = new JSONArray();
 		
 		for(int i = offset; i < endset; i++)
 			subReports.put(jsonReports.get(i + 1));
 		
-		int subReportsSize = subReports.toList().size();
+		int subReportsSize = subReports.length();
 		
 		if(offset >= reportsSize)
 			return Response.status(Status.EXPECTATION_FAILED).build();
@@ -478,8 +479,6 @@ public class Report {
 		}
 
 		thumbnails = new JSONObject(map);
-
-		cache.put(requestid, jsonReports.toString());
 
 		return Response.ok().entity(thumbnails.toString()).build();
 	}
