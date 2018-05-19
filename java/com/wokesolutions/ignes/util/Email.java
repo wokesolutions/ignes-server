@@ -1,13 +1,10 @@
 package com.wokesolutions.ignes.util;
 
-import com.mashape.unirest.http.exceptions.UnirestException;
-
 import net.sargue.mailgun.Configuration;
 import net.sargue.mailgun.Mail;
 
 public class Email {
 
-	private static final String KEY = "key-262ff22fead02704a1095c0200b53716";
 	private static final String DOMAIN = "mg.wokesolutionsignes.com";
 	private static final String EMAIL = "wokesolutions@gmail.com";
 	
@@ -19,7 +16,7 @@ public class Email {
 
 		Configuration configuration = new Configuration()
 				.domain(DOMAIN)
-				.apiKey(KEY)
+				.apiKey(ApiKeys.MAILGUN)
 				.from("WokeSolutions", EMAIL);
 
 		Mail.using(configuration)
@@ -28,11 +25,5 @@ public class Email {
 		.text(TEXT + "\n\n" + code)
 		.build()
 		.send();
-	}
-
-	public static void main(String[] args) throws UnirestException {
-		sendSimpleMessage("g.roxo@campus.fct.unl.pt", "FUNCIONA CRL");
-		sendSimpleMessage("f.elisa@campus.fct.unl.pt", "FUNCIONA CRL");
-		sendSimpleMessage("mbc.silva@campus.fct.unl.pt", "FUNCIONA CRL");
 	}
 }
