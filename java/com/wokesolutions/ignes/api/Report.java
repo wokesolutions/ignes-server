@@ -213,7 +213,8 @@ public class Report {
 		QueryResultList<Entity> reports =
 				datastore.prepare(latlngQuery).asQueryResultList(fetchOptions);
 
-		JSONArray jsonReports = null;
+		JSONArray jsonReports;
+		JSONArray jsonReportsFull = new JSONArray();
 
 		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
@@ -222,9 +223,9 @@ public class Report {
 				String requestId = codeRequestId(
 						codeCoordsBoundaries(minlat, minlng, maxlat, maxlng), 0, "");
 
-				jsonReports = buildJsonReports(reports, requestId, offset);
+				jsonReports = buildJsonReports(reports, requestId, offset, jsonReportsFull);
 
-				cache.put(requestId, jsonReports.toString());
+				cache.put(requestId, jsonReportsFull.toString());
 			} catch(DatastoreException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -284,7 +285,8 @@ public class Report {
 		List<Entity> reports =
 				datastore.prepare(latlngQuery).asList(FetchOptions.Builder.withDefaults());
 
-		JSONArray jsonReports = null;
+		JSONArray jsonReports;
+		JSONArray jsonReportsFull = new JSONArray();
 
 		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
@@ -292,9 +294,9 @@ public class Report {
 			try {
 				String requestId = codeRequestId(codeCoordsRadius(lat, lng, radius), 0, "");
 
-				jsonReports = buildJsonReports(reports, requestId, offset);
+				jsonReports = buildJsonReports(reports, requestId, offset, jsonReportsFull);
 
-				cache.put(requestId, jsonReports.toString());
+				cache.put(requestId, jsonReportsFull.toString());
 			} catch(DatastoreException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -313,29 +315,38 @@ public class Report {
 			@Context HttpServletRequest request) {
 		if(location == null || requestid == null || offset < 0)
 			return Response.status(Status.EXPECTATION_FAILED).build();
-		
+
 		if(cache.contains(requestid)) {
 			LOG.info(Message.USING_CACHE);
 			JSONArray reports = new JSONArray(cache.get(requestid).toString());
-			
+
 			int size = reports.length();
-			
+
 			if(offset >= size)
 				return Response.status(Status.EXPECTATION_FAILED).build();
-			
+
 			int endset = offset + 10;
-			if(endset > size)
-				endset = size;
-			
-			JSONArray subReports = new JSONArray();
-			
-			for(int i = offset; i < endset; i++) {
-				subReports.put(reports.getJSONObject(i));
+			int sendEndset = endset;
+			if(endset >= size) {
+				endset = size - 1;
+				sendEndset = -1;
 			}
 			
-			return Response.ok().entity(subReports).build();
+			String jsonReports = "[{" + "\"offset\":" + sendEndset + ", \"requestid\":\""
+			+ requestid + "\"}, ";
+			
+			for(int i = offset; i < endset; i++) {
+				jsonReports += reports.getJSONObject(i + 1).toString();
+				jsonReports += ", ";
+			}
+			
+			jsonReports = jsonReports.substring(0, jsonReports.length() - 2);
+			
+			jsonReports += "]";
+
+			return Response.ok().entity(jsonReports).build();
 		}
-		
+
 		int retries = 5;
 		while(true) {
 			try {
@@ -374,7 +385,8 @@ public class Report {
 		List<Entity> reports =
 				datastore.prepare(latlngQuery).asList(fetchOptions);
 
-		JSONArray jsonReports = null;
+		JSONArray jsonReports;
+		JSONArray jsonReportsFull = new JSONArray();
 
 		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
@@ -382,9 +394,9 @@ public class Report {
 			try {
 				String requestId = codeRequestId(location, 0, "");
 
-				jsonReports = buildJsonReports(reports, requestId, offset);
+				jsonReports = buildJsonReports(reports, requestId, offset, jsonReportsFull);
 
-				cache.put(requestId, jsonReports.toString());
+				cache.put(requestId, jsonReportsFull.toString());
 			} catch(InternalServerErrorException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -401,10 +413,10 @@ public class Report {
 	public Response getThumbnails(@QueryParam (ParamName.REQUESTID) String requestid,
 			@QueryParam (ParamName.OFFSET) int offset,
 			@Context HttpServletRequest request) {
-		
+
 		if(requestid == null || offset < 0)
 			return Response.status(Status.EXPECTATION_FAILED).build();
-		
+
 		int retries = 5;
 		while(true) {
 			try {
@@ -423,6 +435,8 @@ public class Report {
 
 		if(cache.contains(requestid)) {
 			jsonReports = new JSONArray((String) cache.get(requestid));
+			
+			LOG.info(jsonReports.toString());
 		} else {
 			ReportRequest reportRequest = decodeRequestId(requestid);
 			if(reportRequest.type.equals(ReportRequest.L))
@@ -437,20 +451,20 @@ public class Report {
 						reportRequest.minlng, reportRequest.maxlat, reportRequest.maxlng,
 						offset, request).getEntity().toString());
 		}
-		
+
 		int reportsSize = jsonReports.length();
 
 		int endset = offset + 10;
-		if(endset > reportsSize)
-			endset = reportsSize;
-		
+		if(endset >= reportsSize)
+			endset = reportsSize - 1;
+
 		JSONArray subReports = new JSONArray();
-		
+
 		for(int i = offset; i < endset; i++)
 			subReports.put(jsonReports.get(i + 1));
-		
+
 		int subReportsSize = subReports.length();
-		
+
 		if(offset >= reportsSize)
 			return Response.status(Status.EXPECTATION_FAILED).build();
 
@@ -458,7 +472,7 @@ public class Report {
 
 		if(endset == reportsSize)
 			endset = -1;
-		
+
 		for(Object report : subReports) {
 			JSONObject jsonReport = new JSONObject(report.toString());
 			Key key = KeyFactory.createKey(DSUtils.REPORT, jsonReport.getString(DSUtils.REPORT));
@@ -482,12 +496,11 @@ public class Report {
 		return Response.ok().entity(thumbnails.toString()).build();
 	}
 
-	private JSONArray buildJsonReports(List<Entity> reports, String id, int offset) {
+	private JSONArray buildJsonReports(List<Entity> reports, String id,
+			int offset, JSONArray jsonReportsFull) {
 		int endset = offset + 10;
 		if(endset > reports.size())
 			endset = reports.size();
-
-		List<Entity> subReports = reports.subList(offset, endset);
 
 		if(endset == reports.size())
 			endset = -1;
@@ -496,11 +509,9 @@ public class Report {
 				.put(ParamName.REQUESTID, id)
 				.put(ParamName.OFFSET, endset);
 
-		JSONArray jsonReports = new JSONArray();
+		jsonReportsFull.put(jsonId);
 
-		jsonReports.put(jsonId);
-
-		for(Entity report : subReports) {
+		for(Entity report : reports) {
 			JSONObject jsonReport = new JSONObject();
 			jsonReport.put(DSUtils.REPORT, report.getKey().getName());
 			jsonReport.put(DSUtils.REPORT_LAT, report.getProperty(DSUtils.REPORT_LAT).toString());
@@ -518,9 +529,16 @@ public class Report {
 				jsonReport.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE).toString());
 
 			appendVotesAndComments(jsonReport, report);
-				
-			jsonReports.put(jsonReport);
+
+			jsonReportsFull.put(new JSONObject(jsonReport.toString()));
 		}
+
+		JSONArray jsonReports = new JSONArray();
+
+		jsonReports.put(jsonId);
+
+		for(int i = offset; i < endset; i++)
+			jsonReports.put(jsonReportsFull.getJSONObject(i + 1));
 
 		return jsonReports;
 	}
