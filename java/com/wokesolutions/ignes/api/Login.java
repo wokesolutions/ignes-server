@@ -33,6 +33,7 @@ import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.OrgLoginData;
 import com.wokesolutions.ignes.data.UserLoginData;
 import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Secrets;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.JWTUtils;
 
@@ -221,7 +222,7 @@ public class Login {
 				
 				// Return token		
 				try {
-					Algorithm algorithm = Algorithm.HMAC256(JWTUtils.SECRET);
+					Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 					String token = JWT.create()
 							.withIssuer(JWTUtils.ISSUER)
 							.withClaim(JWTUtils.ORG, true)

@@ -30,6 +30,7 @@ import com.google.appengine.api.datastore.Transaction;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.JWTUtils;
 import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Secrets;
 
 @Path("/logout")
 public class Logout {
@@ -43,7 +44,7 @@ public class Logout {
 		
 		Transaction txn = datastore.beginTransaction();
 		try {
-			Algorithm algorithm = Algorithm.HMAC256(JWTUtils.SECRET);
+			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
 					.build();
@@ -112,7 +113,7 @@ public class Logout {
 		Transaction txn = datastore.beginTransaction();
 
 		try {
-			Algorithm algorithm = Algorithm.HMAC256(JWTUtils.SECRET);
+			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
 					.withClaim(JWTUtils.ORG, true)

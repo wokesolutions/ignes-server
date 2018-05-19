@@ -19,6 +19,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.JWTUtils;
 import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Secrets;
 import com.wokesolutions.ignes.util.UserLevel;
 
 public class User3Filter implements Filter {
@@ -33,7 +34,7 @@ public class User3Filter implements Filter {
 		LOG.info(this.getClass().getSimpleName() + Message.FILTER_VERIFYING + req.toString());
 		
 		try {
-			Algorithm algorithm = Algorithm.HMAC256(JWTUtils.SECRET);
+			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
 					.withClaim(JWTUtils.LEVEL3, UserLevel.LEVEL3)

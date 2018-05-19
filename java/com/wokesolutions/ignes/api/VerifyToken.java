@@ -19,6 +19,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.JWTUtils;
 import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Secrets;
 import com.wokesolutions.ignes.util.UserLevel;
 
 @Path("/verifytoken")
@@ -32,7 +33,7 @@ public class VerifyToken {
 	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
 	public Response verifyToken(@Context HttpHeaders headers) {
 		try {
-			Algorithm algorithm = Algorithm.HMAC256(JWTUtils.SECRET);
+			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
 					.build();
@@ -52,7 +53,7 @@ public class VerifyToken {
 	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
 	public Response verifyTokenUser(@Context HttpHeaders headers) {
 		try {
-			Algorithm algorithm = Algorithm.HMAC256(JWTUtils.SECRET);
+			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
 					.withClaim(JWTUtils.LEVEL1, UserLevel.LEVEL1)
@@ -73,7 +74,7 @@ public class VerifyToken {
 	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
 	public Response verifyTokenUser2(@Context HttpHeaders headers) {
 		try {
-			Algorithm algorithm = Algorithm.HMAC256(JWTUtils.SECRET);
+			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
 					.withClaim(JWTUtils.LEVEL2, UserLevel.LEVEL2)
@@ -94,7 +95,7 @@ public class VerifyToken {
 	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
 	public Response verifyTokenUser3(@Context HttpHeaders headers) {
 		try {
-			Algorithm algorithm = Algorithm.HMAC256(JWTUtils.SECRET);
+			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
 					.withClaim(JWTUtils.LEVEL3, UserLevel.LEVEL3)
@@ -115,7 +116,7 @@ public class VerifyToken {
 	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
 	public Response verifyTokenAdmin(@Context HttpHeaders headers) {
 		try {
-			Algorithm algorithm = Algorithm.HMAC256(JWTUtils.SECRET);
+			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
 					.withClaim(JWTUtils.ADMIN, UserLevel.ADMIN)
@@ -136,7 +137,7 @@ public class VerifyToken {
 	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
 	public Response verifyTokenWorker(@Context HttpHeaders headers) {
 		try {
-			Algorithm algorithm = Algorithm.HMAC256(JWTUtils.SECRET);
+			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
 					.withClaim(JWTUtils.WORKER, UserLevel.WORKER)
@@ -157,7 +158,7 @@ public class VerifyToken {
 	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
 	public Response verifyTokenOrg(@Context HttpHeaders headers) {
 		try {
-			Algorithm algorithm = Algorithm.HMAC256(JWTUtils.SECRET);
+			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
 					.withClaim(JWTUtils.ORG, true)
