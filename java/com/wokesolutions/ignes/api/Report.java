@@ -1,5 +1,6 @@
 package com.wokesolutions.ignes.api;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -326,14 +327,15 @@ public class Report {
 				return Response.status(Status.EXPECTATION_FAILED).build();
 
 			int endset = offset + 10;
-			int sendEndset = endset;
+			boolean finished = false;
 			if(endset >= size) {
 				endset = size - 1;
-				sendEndset = -1;
+				finished = true;
 			}
 			
-			String jsonReports = "[{" + "\"offset\":" + sendEndset + ", \"requestid\":\""
-			+ requestid + "\"}, ";
+			String jsonReports = "[{" + "\"" + ParamName.OFFSET + "\":" + endset +
+					", \"" + ParamName.REQUESTID + "\":\""
+					+ requestid + "\", \"" + ParamName.FINISHED + "\":\"" + finished + "\"}, ";
 			
 			for(int i = offset; i < endset; i++) {
 				jsonReports += reports.getJSONObject(i + 1).toString();
@@ -414,7 +416,7 @@ public class Report {
 			@QueryParam (ParamName.OFFSET) int offset,
 			@Context HttpServletRequest request) {
 
-		if(requestid == null || offset < 0)
+		if(requestid == null || requestid == "" || offset < 0)
 			return Response.status(Status.EXPECTATION_FAILED).build();
 
 		int retries = 5;
@@ -435,10 +437,14 @@ public class Report {
 
 		if(cache.contains(requestid)) {
 			jsonReports = new JSONArray((String) cache.get(requestid));
-			
-			LOG.info(jsonReports.toString());
 		} else {
-			ReportRequest reportRequest = decodeRequestId(requestid);
+			ReportRequest reportRequest = null;
+			try {
+				reportRequest = decodeRequestId(requestid);
+			} catch(Exception e) {
+				return Response.status(Status.EXPECTATION_FAILED).build();
+			}
+			
 			if(reportRequest.type.equals(ReportRequest.L))
 				jsonReports = new JSONArray(getReportsInLocationRetry(reportRequest.location, offset,
 						requestid, request).getEntity().toString());
@@ -455,8 +461,11 @@ public class Report {
 		int reportsSize = jsonReports.length();
 
 		int endset = offset + 10;
-		if(endset >= reportsSize)
+		boolean finished = false;
+		if(endset >= reportsSize) {
 			endset = reportsSize - 1;
+			finished = true;
+		}
 
 		JSONArray subReports = new JSONArray();
 
@@ -470,9 +479,6 @@ public class Report {
 
 		List<Key> keys = new ArrayList<Key>(subReportsSize);
 
-		if(endset == reportsSize)
-			endset = -1;
-
 		for(Object report : subReports) {
 			JSONObject jsonReport = new JSONObject(report.toString());
 			Key key = KeyFactory.createKey(DSUtils.REPORT, jsonReport.getString(DSUtils.REPORT));
@@ -484,6 +490,7 @@ public class Report {
 
 		map.put(ParamName.OFFSET, String.valueOf(endset));
 		map.put(ParamName.REQUESTID, requestid);
+		map.put(ParamName.FINISHED, Boolean.toString(finished));
 
 		for(Entry<Key, Entity> report : entities.entrySet()) {
 			String thumbnail = Storage.getImage(report.getValue()
@@ -499,15 +506,18 @@ public class Report {
 	private JSONArray buildJsonReports(List<Entity> reports, String id,
 			int offset, JSONArray jsonReportsFull) {
 		int endset = offset + 10;
-		if(endset > reports.size())
-			endset = reports.size();
+		if(endset >= reports.size())
+			endset = reports.size() - 1;
 
+		boolean finished = false;
 		if(endset == reports.size())
-			endset = -1;
+			finished = true;
 
 		JSONObject jsonId = new JSONObject()
 				.put(ParamName.REQUESTID, id)
-				.put(ParamName.OFFSET, endset);
+				.put(ParamName.OFFSET, endset)
+				.put(ParamName.FINISHED, Boolean.toString(finished));
+		
 
 		jsonReportsFull.put(jsonId);
 

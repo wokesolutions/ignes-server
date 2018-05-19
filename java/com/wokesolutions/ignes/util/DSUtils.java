@@ -36,6 +36,8 @@ public class DSUtils {
 		public static final String USER_EMAIL = "user_email";
 		public static final String USER_LEVEL = "user_level";
 		public static final String USER_CREATIONTIME = "user_creationtime";
+		public static final String USER_CONFIRMED = "user_confirmed";
+		public static final String USER_CODE = "user_code";
 
 	// UserOptional
 		public static final String USEROPTIONAL_NAME = "useroptional_name";

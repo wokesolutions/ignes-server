@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ignes</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="css/index.css" rel="stylesheet">
+
+    <style>
+        #map {
+            height: 70%;
+
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <nav class="navbar navbar-expand-lg navbar-light" id = "navbarDef">
+        <div class="container" id="cont">
+            <a class = "navbar-brand js-scroll-trigger"  id ="expBrand" href="#page-top"> Ignes </a>
+            <div class="collapse navbar-collapse" id="navbarResponsive">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  ><a class="fa fa-user"> </a>  Perfil</a></li>
+                    <li class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  /><a class="fa fa-newspaper-o"> </a>  Feed</a></li>
+                    <li id = "mapButton" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  /><a class="fa fa-map-o"> </a>  Mapa</a></li>
+                    <li id = "reportDashboard" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-map-marker"> </a>  Reportar</a></li>
+                    <li class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  ><a class="fa fa-comments-o"> </a>  Espaçinho das Dicas do Vizinho</a></li>
+                    <li class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-phone"> </a>  Contactos</a></li>
+                    <li class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-wrench"> </a>  Definições</a></li>
+                    <li id = "logoutBut" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"><a class="fa fa-power-off"> </a>  Terminar Sessão</a></li>
+                </ul>
+            </div>
+
+        </div>
+    </nav>
+
+
+    <div class="container" id = "searchBar">
+        <div class="row" id="searchType">
+            <div class ="col-lg-12 col-sm-12 text-center">
+                <div class="form-group floating-label-form-group controls">
+                    <input type="text" id="location" class="form-control" placeholder="Inserir localização"/>
+                </div>
+                <button type="submit" class="btn btn-default btn-colorRed" id="searchLocation" > Procurar</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class ="login" style="display: none" id="reportForm">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 col-md-12 mx-auto">
+                <div class="row" >
+                    <div class="col-lg-6 col-md-2 mx-auto">
+                    </div>
+                    <div class="col-lg-8 col-md-4 mx-auto text-center">
+                        <i class="fa fa-map-marker" id ="iconMarker"> </i>
+                    </div>
+                    <div class="col-lg-6 col-md-2 mx-auto"></div>
+                </div>
+
+                <div class="col-lg-8 col-md-4 mx-auto text-center">
+
+                    <div class="col-lg-6 col-md-2 mx-auto"> <div class="slidecontainer">
+                        <label >Gravidade</label>  <input type="range" name="inputGravity" id="gravityId" min="1" max="5" value="1" class="slider" oninput="outputGravity.value = gravityId.value">
+                        <output name="gravityOut" id="outputGravity">1</output>
+                    </div></div>
+                </div>
+
+                <div class="col-lg-8 col-md-4 mx-auto text-center">
+                <div name="sentMessage" id="singupForm">
+                    <div class="form-group floating-label-form-group controls text-center">
+                        <label >Titulo </label> <input type="text" class="form-control"
+                                                       placeholder="Titulo (*)" id="titulo"/>
+                    </div>
+
+                    <div class="form-group floating-label-form-group controls text-center" >
+                        <label >Morada</label> <input type="text"
+                                                      class="form-control" placeholder="Morada (*)" id="address"/>
+                    </div>
+
+                    <div class="form-group floating-label-form-group controls text-center">
+                        <label >Descrição</label> <input type="text"
+                                                         class="form-control" placeholder="Descrição (*)" id="descricao"/>
+                    </div>
+
+                    <div class="form-group floating-label-form-group controls text-center" >
+                        <label>Upload Fotografia</label>
+                        <div class="row">
+                            <div class="col-lg-2 col-md-2 mx-auto"></div>
+                            <div class="col-lg-4 col-md-4 mx-auto text-center">
+                                <input type="file" id="imagem"/>
+                            </div>
+                            <div class="col-lg-2 col-md-2 mx-auto"></div>
+
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-12 mx-lg-auto text-center">
+                            <button id="addReport" type="button" class="btn btn-circle btn-xl"><i class="fa fa-check" id="iconcheck"> </i> </button>
+                        </div>
+                    </div>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div id ="map"/>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAfHsLp6fKLK4YZ2WSoXO0KsM58Clspg8k"></script>
+<script src="js/Dashboard.js"></script>
+</body>
+</html>

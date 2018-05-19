@@ -77,6 +77,11 @@ public class Register {
 			user.setUnindexedProperty(DSUtils.USER_EMAIL, registerData.user_email);
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1.toString());
 			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, new Date());
+			user.setProperty(DSUtils.USER_CONFIRMED, false);
+			
+			String code = Long.toString(System.currentTimeMillis()).substring(6, 13);
+			
+			user.setUnindexedProperty(DSUtils.USER_CODE, code);
 			
 			Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
 			userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
@@ -90,7 +95,7 @@ public class Register {
 			LOG.info(Message.USER_REGISTERED + registerData.user_username);
 			txn.commit();
 			
-			Email.sendSimpleMessage(registerData.user_email, "OLA AMIGOS");
+			Email.sendSimpleMessage(registerData.user_email, code);
 			
 			return Response.ok().build();
 		} finally {

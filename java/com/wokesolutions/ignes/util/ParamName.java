@@ -20,4 +20,5 @@ public class ParamName {
 	// Response
 		public static final String REQUESTID = "requestid";
 		public static final String OFFSET = "offset";
+		public static final String FINISHED = "finished";
 }

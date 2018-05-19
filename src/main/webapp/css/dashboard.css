@@ -13,6 +13,11 @@
     src:url('../fonts/Quicksand_Bold.otf') format("opentype");
 }
 
+.l {
+    margin-right: 30px;
+}
+
+
 :focus {
     outline: none;
 }
@@ -399,6 +404,8 @@ label {
     padding-bottom: 2rem;
 }
 
+body{margin:40px;}
+
 
 
 .btn-circle {
@@ -427,3 +434,5 @@ label {
     font-family: "Quicksand Bold";
     color: #AD363B;
 }
+
+
