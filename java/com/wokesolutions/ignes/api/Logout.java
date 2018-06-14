@@ -1,36 +1,31 @@
 package com.wokesolutions.ignes.api;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
-import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Transaction;
+import com.google.cloud.datastore.DatastoreException;
+import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
-import com.wokesolutions.ignes.util.JWTUtils;
 import com.wokesolutions.ignes.util.Message;
-import com.wokesolutions.ignes.util.Secrets;
 
 @Path("/logout")
 public class Logout {
@@ -38,35 +33,40 @@ public class Logout {
 	private static final Logger LOG = Logger.getLogger(Logout.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-	@GET
-	public Response logoutUser(@Context HttpServletRequest request,
-			@Context HttpHeaders headers) {
-		
+	@POST
+	public Response logoutUser(@Context HttpHeaders headers,
+			@Context HttpServletRequest request) {
+
+		String username = request.getAttribute(CustomHeader.USERNAME).toString();
+
+		int retries = 5;
+		while(true) {
+			try {
+				return logoutUserRetry(username, request, headers);
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+
+	public Response logoutUserRetry(String username, HttpServletRequest request, HttpHeaders headers) {
+
 		Transaction txn = datastore.beginTransaction();
 		try {
-			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
-			JWTVerifier verifier = JWT.require(algorithm)
-					.withIssuer(JWTUtils.ISSUER)
-					.build();
-
-			String token = request.getHeader(JWTUtils.AUTHORIZATION);
-			verifier.verify(token);
-			
-			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
-
 			LOG.info(Message.LOGGING_OUT + username);
-			
+
 			Key userKey = KeyFactory.createKey(DSUtils.USER, username);
-			
+
 			// Obtain the user login statistics
 			Query statsQuery = new Query(DSUtils.USERSTATS).setAncestor(userKey);
-			List<Entity> results = datastore.prepare(statsQuery).asList(FetchOptions.Builder.withDefaults());
-			Entity stats = null;
-			if (results.isEmpty()) {
+			Entity stats;
+			try {
+				 stats = datastore.prepare(statsQuery).asSingleEntity();
+			} catch(TooManyResultsException e2) {
 				txn.rollback();
 				return Response.status(Status.EXPECTATION_FAILED).build();
-			} else {
-				stats = results.get(0);
 			}
 
 			try {
@@ -81,8 +81,9 @@ public class Logout {
 				log.setProperty(DSUtils.USERLOG_COUNTRY, headers.getHeaderString("X-AppEngine-Country"));
 				log.setProperty(DSUtils.USERLOG_TIME, new Date());
 
-				stats.setProperty(DSUtils.USERSTATS_LOGOUTS, 1L + (long) stats.getProperty(DSUtils.USERSTATS_LOGOUTS));
-				
+				stats.setProperty(DSUtils.USERSTATS_LOGOUTS,
+						1 + (long) stats.getProperty(DSUtils.USERSTATS_LOGOUTS));
+
 				List<Entity> list = Arrays.asList(stats, log);
 				datastore.put(txn, list);
 				txn.commit();
@@ -91,12 +92,6 @@ public class Logout {
 				txn.rollback();
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
-		} catch (UnsupportedEncodingException e){
-			txn.rollback();
-			return Response.status(Status.EXPECTATION_FAILED).build();
-		} catch (JWTVerificationException e){
-			txn.rollback();
-			return Response.status(Status.EXPECTATION_FAILED).build();
 		} finally {
 			if(txn.isActive()) {
 				txn.rollback();
@@ -107,36 +102,40 @@ public class Logout {
 	}
 
 	@Path("/org")
-	@GET
-	public Response logoutOrg(@Context HttpServletRequest request,
-			@Context HttpHeaders headers) {
+	@POST
+	public Response logoutOrg(@Context HttpHeaders headers,
+			@Context HttpServletRequest request) {
+
+		String nif = request.getAttribute(CustomHeader.NIF).toString();
+
+		int retries = 5;
+		while(true) {
+			try {
+				return logoutOrgRetry(nif, request, headers);
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+	
+	public Response logoutOrgRetry(String nif, HttpServletRequest request, HttpHeaders headers) {
 		Transaction txn = datastore.beginTransaction();
 
 		try {
-			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
-			JWTVerifier verifier = JWT.require(algorithm)
-					.withIssuer(JWTUtils.ISSUER)
-					.withClaim(JWTUtils.ORG, true)
-					.build();
-
-			String token = request.getHeader(JWTUtils.AUTHORIZATION);
-			verifier.verify(token);
-			
-			String nif = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
-
 			LOG.info(Message.LOGGING_OUT);
-			
+
 			Key orgKey = KeyFactory.createKey(DSUtils.ORG, nif);
-			
+
 			// Obtain the org login statistics
 			Query statsQuery = new Query(DSUtils.ORGSTATS).setAncestor(orgKey);
-			List<Entity> results = datastore.prepare(statsQuery).asList(FetchOptions.Builder.withDefaults());
-			Entity stats = null;
-			if (results.isEmpty()) {
+			Entity stats;
+			try {
+				 stats = datastore.prepare(statsQuery).asSingleEntity();
+			} catch(TooManyResultsException e2) {
 				txn.rollback();
 				return Response.status(Status.EXPECTATION_FAILED).build();
-			} else {
-				stats = results.get(0);
 			}
 
 			try {
@@ -151,8 +150,9 @@ public class Logout {
 				log.setProperty(DSUtils.ORGLOG_COUNTRY, headers.getHeaderString("X-AppEngine-Country"));
 				log.setProperty(DSUtils.ORGLOG_TIME, new Date());
 
-				stats.setProperty("orgstats_logouts", 1L + (long) stats.getProperty("orgstats_logouts"));
-				
+				stats.setProperty(DSUtils.ORGSTATS_LOGOUTS,
+						1 + (long) stats.getProperty(DSUtils.ORGSTATS_LOGOUTS));
+
 				List<Entity> list = Arrays.asList(stats, log);
 				datastore.put(txn, list);
 				txn.commit();
@@ -160,13 +160,7 @@ public class Logout {
 			} catch(EntityNotFoundException e) {
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
-			
-		} catch (UnsupportedEncodingException e){
-			txn.rollback();
-			return Response.status(Status.EXPECTATION_FAILED).build();
-		} catch (JWTVerificationException e){
-			txn.rollback();
-			return Response.status(Status.EXPECTATION_FAILED).build();
+
 		} finally {
 			if(txn.isActive()) {
 				txn.rollback();

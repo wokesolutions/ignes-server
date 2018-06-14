@@ -12,13 +12,18 @@ public class DSUtils {
 		public static final String USERLOG = "UserLog";
 		public static final String USERPOINTS = "UserPoints";
 		public static final String WORKER = "Worker";
+		public static final String DELETEDWORKER = "DeletedWorker";
 		public static final String ORG = "Org";
 		public static final String ORGSTATS = "OrgStats";
 		public static final String ORGLOG = "OrgLog";
 		public static final String ORGCODE = "OrgCode";
 		public static final String REPORT = "Report";
-		public static final String REPORT_VOTES = "ReportVotes";
-		public static final String REPORT_COMMENTS = "ReportComments";
+		public static final String CLOSEDREPORT = "ClosedReport";
+		public static final String REPORTVOTES = "ReportVotes";
+		public static final String USERVOTE = "UserVotes";
+		public static final String REPORTCOMMENTS = "ReportComments";
+		public static final String SPAMMEDREPORT = "SpammedReport";
+		public static final String SKILL = "Skill";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -36,7 +41,6 @@ public class DSUtils {
 		public static final String USER_EMAIL = "user_email";
 		public static final String USER_LEVEL = "user_level";
 		public static final String USER_CREATIONTIME = "user_creationtime";
-		public static final String USER_CONFIRMED = "user_confirmed";
 		public static final String USER_CODE = "user_code";
 
 	// UserOptional
@@ -90,6 +94,16 @@ public class DSUtils {
 
 	// Worker
 		public static final String WORKER_ORG = "worker_org";
+		public static final String WORKER_JOB = "worker_job";
+		public static final String WORKER_CREATIONTIME = "worker_creationtime";
+		public static final String WORKER_PASSWORD = "worker_password";
+		
+	// DeletedWorker
+		public static final String DELETEDWORKER_ORG = "deletedworker_org";
+		public static final String DELETEDWORKER_JOB = "deletedworker_job";
+		public static final String DELETEDWORKER_CREATIONTIME = "deletedworker_creationtime";
+		public static final String DELETEDWORKER_PASSWORD = "deletedworker_password";
+		public static final String DELETEDWORKER_DELETIONTIME = "deletedworker_deletiontime";
 
 	// Org
 		public static final String ORG_NAME = "org_name";
@@ -137,7 +151,6 @@ public class DSUtils {
 		public static final String REPORT_CREATIONTIME = "report_creationtime";
 		public static final String REPORT_CREATIONTIMEFORMATTED = "report_creationtimeformatted";
 		public static final String REPORT_GRAVITY = "report_gravity";
-		public static final String REPORT_STATUS = "report_status";
 		public static final String REPORT_DESCRIPTION = "report_description";
 		public static final String REPORT_CREATIONLATLNG = "report_creationlatlng";
 		public static final String REPORT_IMGPATH = "report_imgpath";
@@ -145,13 +158,46 @@ public class DSUtils {
 		public static final String REPORT_THUMBNAILPATH = "report_thumbnailpath";
 		public static final String REPORT_THUMBNAIL = "report_thumbnail";
 		public static final String REPORT_COMMENTSNUM = "report_commentsnum";
+		public static final String REPORT_STATUS = "report_status";
+		
+		public static final String REPORT_P0LAT = "report_p0lat";
+		public static final String REPORT_P1LAT = "report_p1lat";
+		public static final String REPORT_P2LAT = "report_p2lat";
+		public static final String REPORT_P3LAT = "report_p3lat";
+		public static final String REPORT_P4LAT = "report_p4lat";
+		public static final String REPORT_P5LAT = "report_p5lat";
+		public static final String REPORT_P6LAT = "report_p6lat";
+		public static final String REPORT_P7LAT = "report_p7lat";
+		public static final String REPORT_P8LAT = "report_p8lat";
+		
+		public static final String REPORT_P0LNG = "report_p0lng";
+		public static final String REPORT_P1LNG = "report_p1lng";
+		public static final String REPORT_P2LNG = "report_p2lng";
+		public static final String REPORT_P3LNG = "report_p3lng";
+		public static final String REPORT_P4LNG = "report_p4lng";
+		public static final String REPORT_P5LNG = "report_p5lng";
+		public static final String REPORT_P6LNG = "report_p6lng";
+		public static final String REPORT_P7LNG = "report_p7lng";
+		public static final String REPORT_P8LNG = "report_p8lng";
 		
 	// ReportVotes
 		public static final String REPORTVOTES_UP = "reportvotes_up";
 		public static final String REPORTVOTES_DOWN = "reportvotes_down";
+		public static final String REPORTVOTES_SPAM = "reportvotes_spam";
+		public static final String REPORTVOTES_RELEVANCE = "reportvotes_relevance";
+		
+	// UserVotes
+		public static final String USERVOTE_USER = "uservote_user";
+		public static final String USERVOTE_REPORT = "uservote_report";
+		public static final String USERVOTE_EVENT = "uservote_event";
+		public static final String USERVOTE_COMMENT = "uservote_comment";
+		public static final String USERVOTE_TYPE = "uservote_type";
 		
 	// ReportComments
 		public static final String REPORTCOMMENTS_NUM = "reportcomments_num";
 		public static final String REPORTCOMMENTS_TEXT = "reportcomments_text";
 		public static final String REPORTCOMMENTS_TIME = "reportcomments_time";
+		
+	// Skill
+		public static final String SKILL_NUMBEROFPEOPLE = "skill_numberofpeople";
 }

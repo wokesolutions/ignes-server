@@ -1,9 +1,12 @@
 package com.wokesolutions.ignes.util;
 
+import java.util.logging.Logger;
+
 public class Haversine {
+
+	private static final Logger LOG = Logger.getLogger(Haversine.class.getName());
 	
     private static final int EARTH_RADIUS = 6371;
-    private static final double EARTH_PER = Math.PI * EARTH_RADIUS * EARTH_RADIUS;
     
     public static double distance(double startLat, double startLong,
                                   double endLat, double endLong) {
@@ -24,8 +27,24 @@ public class Haversine {
         return Math.pow(Math.sin(val / 2), 2);
     }
     
-    public static Boundaries getBoundaries(double lat, double lng, double radius) {
-    	double degrees = radius * (360 / EARTH_PER);
-    	return new Boundaries(lat + degrees, lat - degrees, lng + degrees, lng - degrees);
+    public static int getPrecision(double lat, double lng, double radius) {
+    	double latDist = radius / 110.574;
+    	double lngDist = radius / (111.320 * Math.cos(lat * Math.PI / 180));
+    	
+    	double furthest = lat + latDist;
+    	if(lat + lngDist > furthest)
+    		furthest = lat + lngDist;
+    	
+    	double diff = Math.abs(lat - furthest) * 10;
+    	
+    	LOG.info("diff = " + Double.toString(diff));
+    	
+    	int i = 0;
+    	while(diff < 1) {
+    		diff *= 10;
+    		i++;
+    	}
+    	
+    	return i;
     }
 }

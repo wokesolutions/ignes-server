@@ -1,14 +1,12 @@
 package com.wokesolutions.ignes.api;
 
-import java.io.IOException;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,16 +15,18 @@ import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
@@ -34,25 +34,27 @@ import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
+import com.google.appengine.api.datastore.PropertyContainer;
+import com.google.appengine.api.datastore.PropertyProjection;
 import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Transaction;
+import com.google.appengine.api.datastore.TransactionOptions;
+import com.google.appengine.api.memcache.Expiration;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.ReportData;
-import com.wokesolutions.ignes.util.Boundaries;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Haversine;
 import com.wokesolutions.ignes.util.Message;
-import com.wokesolutions.ignes.util.PropertyValue;
-import com.wokesolutions.ignes.util.ReportRequest;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Storage;
+import com.wokesolutions.ignes.util.UserLevel;
 
 @Path("/report")
 public class Report {
@@ -60,13 +62,17 @@ public class Report {
 	private static final Logger LOG = Logger.getLogger(Report.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
+	private static final int BATCH_SIZE = 10;
+
+	public static final String OPEN = "open";
+	public static final String CLOSED = "closed";
+	public static final String STANDBY = "standby";
 
 	public Report() {}
 
 	@POST
 	@Path("/create")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response createReport(ReportData data,
 			@Context HttpServletRequest request) {
 		if(!data.isValid())
@@ -85,75 +91,117 @@ public class Report {
 		}
 	}
 
-	private Response createReportRetry(ReportData data, HttpServletRequest request) {
+	private Response createReportRetry(ReportData data, HttpServletRequest request) { //TODO grav constants
 		String username = null;
 		Key reportKey = null;
 		long creationtime = System.currentTimeMillis();
 		String reportid = null;
 		Transaction txn = datastore.beginTransaction();
 
+		String level = request.getAttribute(CustomHeader.LEVEL).toString();
+
 		try {
 			username = request.getAttribute(CustomHeader.USERNAME).toString();
+
 			reportid = ReportData.generateId(username, creationtime);
 			LOG.info(Message.ATTEMPT_CREATE_REPORT + reportid);
 			reportKey = KeyFactory.createKey(DSUtils.REPORT, reportid);
 			datastore.get(reportKey);
 			txn.rollback();
 			return Response.status(Status.CONFLICT).entity(Message.DUPLICATE_REPORT).build();
-		} catch (EntityNotFoundException e) {
-			if(username == null || reportKey == null)
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			Entity report = new Entity(DSUtils.REPORT, reportid);
+		} catch (EntityNotFoundException e1) {
+			try {
+				reportKey = KeyFactory.createKey(DSUtils.REPORT, reportid);
+				datastore.get(reportKey);
+				txn.rollback();
+				return Response.status(Status.CONFLICT).entity(Message.DUPLICATE_REPORT).build();
+			} catch(EntityNotFoundException e2) {
+				if(username == null || reportKey == null)
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 
-			report.setProperty(DSUtils.REPORT_ADDRESS, data.report_address);
-			report.setProperty(DSUtils.REPORT_LAT, data.report_lat);
-			report.setProperty(DSUtils.REPORT_LNG, data.report_lng);
-			report.setProperty(DSUtils.REPORT_CREATIONTIME, new Date(creationtime));
-			report.setUnindexedProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED,
-					new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(creationtime));
-			report.setProperty(DSUtils.REPORT_STATUS, PropertyValue.OPEN);
-			report.setProperty(DSUtils.REPORT_USERNAME, username);
-			report.setUnindexedProperty(DSUtils.REPORT_CREATIONLATLNG, request.getHeader(CustomHeader.APPENGINE_LATLNG));
-			if(data.report_title != null)
-				report.setUnindexedProperty(DSUtils.REPORT_TITLE, data.report_title);
-			if(data.report_locality != null)
-				report.setProperty(DSUtils.REPORT_LOCALITY, data.report_locality);
-			if(data.report_city != null)
-				report.setProperty(DSUtils.REPORT_DISTRICT, data.report_city);
-			if(data.report_gravity >= 1 && data.report_gravity <= 5)
-				report.setProperty(DSUtils.REPORT_GRAVITY, data.report_gravity);
-			if(data.report_description != null)
-				report.setUnindexedProperty(DSUtils.REPORT_DESCRIPTION, data.report_description);
+				Entity report = new Entity(DSUtils.REPORT, reportid);
 
-			String imgid = Storage.IMG_FOLDER + Storage.REPORT_FOLDER + reportid;
-			if(!Storage.saveImage(data.report_img, Storage.BUCKET, imgid))
-				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
+				report.setProperty(DSUtils.REPORT_LAT, data.report_lat);
+				report.setProperty(DSUtils.REPORT_LNG, data.report_lng);
+				report.setProperty(DSUtils.REPORT_CREATIONTIME, new Date(creationtime));
+				report.setProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED,
+						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(creationtime));
+				report.setProperty(DSUtils.REPORT_USERNAME, username);
+				
+				if(level.equals(UserLevel.LEVEL1))
+					report.setProperty(DSUtils.REPORT_STATUS, STANDBY);
+				else
+					report.setProperty(DSUtils.REPORT_STATUS, OPEN);
+				
+				report.setUnindexedProperty(DSUtils.REPORT_CREATIONLATLNG,
+						request.getHeader(CustomHeader.APPENGINE_LATLNG));
 
-			report.setUnindexedProperty(DSUtils.REPORT_IMGPATH, imgid);
+				if(data.report_gravity >= 1 && data.report_gravity <= 5)
+					report.setProperty(DSUtils.REPORT_GRAVITY, data.report_gravity);
+				else {
+					Query userpointsQ = new Query(DSUtils.USERPOINTS)
+							.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
 
-			String thumbnailid = Storage.IMG_FOLDER + Storage.REPORT_FOLDER + Storage.THUMBNAIL_FOLDER + reportid;
-			if(!Storage.saveImage(data.report_thumbnail, Storage.BUCKET, thumbnailid))
-				return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
+					int points;
+					try {
+						Entity pointsE = datastore.prepare(userpointsQ).asSingleEntity();
 
-			report.setUnindexedProperty(DSUtils.REPORT_THUMBNAILPATH, thumbnailid);
+						points = Integer.parseInt(pointsE.getProperty(DSUtils.USERPOINTS_POINTS).toString());
+					} catch(TooManyResultsException e3) {
+						LOG.info(Message.UNEXPECTED_ERROR);
+						txn.rollback();
+						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+					}
 
-			Entity reportVotes = new Entity(DSUtils.REPORT_VOTES, reportKey);
-			reportVotes.setProperty(DSUtils.REPORTVOTES_UP, 0L);
-			reportVotes.setProperty(DSUtils.REPORTVOTES_DOWN, 0L);
+					int gravity = 3;
+					if(points < 10)
+						gravity = 1;
 
-			Entity reportComments = new Entity(DSUtils.REPORT_COMMENTS, reportKey);
-			reportComments.setProperty(DSUtils.REPORTCOMMENTS_NUM, 0);
+					report.setProperty(DSUtils.REPORT_GRAVITY, gravity);
+				}
 
-			List<Entity> entities = Arrays.asList(report, reportVotes, reportComments);
+				if(data.report_address != null)
+					report.setProperty(DSUtils.REPORT_ADDRESS, data.report_address);
+				if(data.report_title != null)
+					report.setProperty(DSUtils.REPORT_TITLE, data.report_title);
+				if(data.report_locality != null)
+					report.setProperty(DSUtils.REPORT_LOCALITY, data.report_locality);
+				if(data.report_city != null)
+					report.setProperty(DSUtils.REPORT_DISTRICT, data.report_city);
+				if(data.report_description != null)
+					report.setUnindexedProperty(DSUtils.REPORT_DESCRIPTION, data.report_description);
 
-			LOG.info(Message.REPORT_CREATED + reportid);
-			datastore.put(txn, entities);
-			txn.commit();
+				String imgid = Storage.IMG_FOLDER + Storage.REPORT_FOLDER + reportid;
+				if(!Storage.saveImage(data.report_img, Storage.BUCKET, imgid))
+					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
-			if(cache.get(data.report_locality) != null)
-				cache.clearAll();
+				report.setUnindexedProperty(DSUtils.REPORT_IMGPATH, imgid);
 
-			return Response.ok().build();
+				String thumbnailid = Storage.IMG_FOLDER + Storage.REPORT_FOLDER + Storage.THUMBNAIL_FOLDER + reportid;
+				if(!Storage.saveImage(data.report_thumbnail, Storage.BUCKET, thumbnailid))
+					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
+
+				report.setUnindexedProperty(DSUtils.REPORT_THUMBNAILPATH, thumbnailid);
+
+				Entity reportVotes = new Entity(DSUtils.REPORTVOTES, reportKey);
+				reportVotes.setProperty(DSUtils.REPORTVOTES_UP, 0L);
+				reportVotes.setProperty(DSUtils.REPORTVOTES_DOWN, 0L);
+				reportVotes.setProperty(DSUtils.REPORTVOTES_DOWN, 0L);
+				reportVotes.setProperty(DSUtils.REPORTVOTES_RELEVANCE, 0);
+
+				Entity reportComments = new Entity(DSUtils.REPORTCOMMENTS, reportKey);
+				reportComments.setProperty(DSUtils.REPORTCOMMENTS_NUM, 0L);
+
+				report.setPropertiesFrom(makeCoordProps(data.report_lat, data.report_lng));
+
+				List<Entity> entities = Arrays.asList(report, reportVotes, reportComments);
+
+				LOG.info(Message.REPORT_CREATED + reportid);
+				datastore.put(txn, entities);
+				txn.commit();
+
+				return Response.ok().build();
+			}
 		} finally {
 			if(txn.isActive()) {
 				LOG.info(Message.TXN_ACTIVE);
@@ -163,6 +211,7 @@ public class Report {
 		}
 	}
 
+	/*
 	@GET
 	@Path("/getwithinboundaries")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -171,14 +220,13 @@ public class Report {
 			@QueryParam(ParamName.MINLNG) double minlng,
 			@QueryParam(ParamName.MAXLAT) double maxlat,
 			@QueryParam(ParamName.MAXLNG) double maxlng,
-			@QueryParam (ParamName.OFFSET) int offset,
 			@Context HttpServletRequest request) {
 		if(minlat == 0 || minlng == 0 || maxlat == 0 || maxlng == 0)
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		int retries = 5;
 		while(true) {
 			try {
-				return getReportsWithinBoundariesRetry(minlat, minlng, maxlat, maxlng, offset, request);
+				return getReportsWithinBoundariesRetry(minlat, minlng, maxlat, maxlng, request);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -189,7 +237,6 @@ public class Report {
 
 	private Response getReportsWithinBoundariesRetry(double minlat, double minlng,
 			double maxlat, double maxlng,
-			int offset,
 			HttpServletRequest request) {
 		LOG.info(Message.ATTEMPT_GIVE_ALL_REPORTS);
 
@@ -197,36 +244,24 @@ public class Report {
 				new Query.FilterPredicate(DSUtils.REPORT_LAT, FilterOperator.GREATER_THAN, minlat);
 		Filter maxlatFilter =
 				new Query.FilterPredicate(DSUtils.REPORT_LAT, FilterOperator.LESS_THAN, maxlat);
-		Filter openFilter = 
-				new Query.FilterPredicate(DSUtils.REPORT_STATUS, FilterOperator.EQUAL, PropertyValue.OPEN);
-		Filter showFilter = 
-				new Query.FilterPredicate(DSUtils.REPORT_STATUS, FilterOperator.EQUAL, PropertyValue.SHOW);
 
 		Filter positionFilters = CompositeFilterOperator.and(minlatFilter, maxlatFilter);
-		Filter visibilityFilters = CompositeFilterOperator.or(openFilter, showFilter);
-		Filter allFilters = CompositeFilterOperator.and(positionFilters, visibilityFilters);
 
 		FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
 
-		Query latlngQuery = new Query(DSUtils.REPORT)
-				.setFilter(allFilters);
+		Query latlngQuery = new Query(DSUtils.OPENREPORT)
+				.setFilter(positionFilters);
 
 		QueryResultList<Entity> reports =
 				datastore.prepare(latlngQuery).asQueryResultList(fetchOptions);
 
 		JSONArray jsonReports;
-		JSONArray jsonReportsFull = new JSONArray();
 
 		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
 		else {
 			try {
-				String requestId = codeRequestId(
-						codeCoordsBoundaries(minlat, minlng, maxlat, maxlng), 0, "");
-
-				jsonReports = buildJsonReports(reports, requestId, offset, jsonReportsFull);
-
-				cache.put(requestId, jsonReportsFull.toString());
+				jsonReports = buildJsonReports(reports);
 			} catch(DatastoreException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -235,22 +270,22 @@ public class Report {
 					.entity(jsonReports.toString()).build();
 		}
 	}
+	 */
 
 	@GET
 	@Path("/getwithinradius")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response getReportsWithinRadius(
 			@QueryParam(ParamName.LAT) double lat,
 			@QueryParam(ParamName.LNG) double lng,
 			@QueryParam(ParamName.RADIUS) double radius,
-			@QueryParam (ParamName.OFFSET) int offset,
-			@Context HttpServletRequest request) {
+			@QueryParam(ParamName.CURSOR) String cursor) {
 		if(lat == 0 || lng == 0 || radius == 0)
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		int retries = 5;
 		while(true) {
 			try {
-				return getReportsWithinRadiusRetry(lat, lng, radius, offset, request);
+				return getReportsWithinRadiusRetry(lat, lng, radius, cursor);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -260,99 +295,93 @@ public class Report {
 	}
 
 	private Response getReportsWithinRadiusRetry(double lat, double lng,
-			double radius,
-			int offset,
-			HttpServletRequest request) {
+			double radius, String cursor) {
 		LOG.info(Message.ATTEMPT_GIVE_ALL_REPORTS);
 
-		Boundaries bound = Haversine.getBoundaries(lat, lng, radius);
+		int precision = Haversine.getPrecision(lat, lng, radius);
+		
+		LOG.info("precision " + Integer.toString(precision));
 
-		Filter minlatFilter =
-				new Query.FilterPredicate(DSUtils.REPORT_LAT, FilterOperator.GREATER_THAN, bound.minlat);
-		Filter maxlatFilter =
-				new Query.FilterPredicate(DSUtils.REPORT_LAT, FilterOperator.LESS_THAN, bound.maxlat);
-		Filter openFilter = 
-				new Query.FilterPredicate(DSUtils.REPORT_STATUS, FilterOperator.EQUAL, PropertyValue.OPEN);
-		Filter showFilter = 
-				new Query.FilterPredicate(DSUtils.REPORT_STATUS, FilterOperator.EQUAL, PropertyValue.SHOW);
+		String latValue = doubleToProp(lat, precision);
+		String lngValue = doubleToProp(lng, precision);
 
-		Filter positionFilters = CompositeFilterOperator.and(minlatFilter, maxlatFilter);
-		Filter visibilityFilters = CompositeFilterOperator.or(openFilter, showFilter);
-		Filter allFilters = CompositeFilterOperator.and(positionFilters, visibilityFilters);
+		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 
-		Query latlngQuery = new Query(DSUtils.REPORT)
-				.setFilter(allFilters);
+		if(cursor != null && !cursor.equals(""))
+			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
 
-		List<Entity> reports =
-				datastore.prepare(latlngQuery).asList(FetchOptions.Builder.withDefaults());
+		String pPropLat = "report_p" + precision + "lat";
+		String pPropLng = "report_p" + precision + "lng";
+
+		Filter latFilter =
+				new Query.FilterPredicate(pPropLat,
+						FilterOperator.EQUAL, latValue);
+
+		Filter lngFilter =
+				new Query.FilterPredicate(pPropLng,
+						FilterOperator.EQUAL, lngValue);
+
+		Query reportQuery = new Query(DSUtils.REPORT)
+				.setFilter(latFilter).setFilter(lngFilter);
+
+		LOG.info(Message.SEARCHING_IN_COORDS + pPropLat + " - " + latValue +
+				" | " + pPropLng + " - " + lngValue);
+
+		reportQuery
+		.addProjection(new PropertyProjection(DSUtils.REPORT_TITLE, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_ADDRESS, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_USERNAME, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_GRAVITY, Integer.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class));
+
+		QueryResultList<Entity> reports =
+				datastore.prepare(reportQuery).asQueryResultList(fetchOptions);
+
+		cursor = reports.getCursor().toWebSafeString();
 
 		JSONArray jsonReports;
-		JSONArray jsonReportsFull = new JSONArray();
 
 		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
 		else {
 			try {
-				String requestId = codeRequestId(codeCoordsRadius(lat, lng, radius), 0, "");
-
-				jsonReports = buildJsonReports(reports, requestId, offset, jsonReportsFull);
-
-				cache.put(requestId, jsonReportsFull.toString());
+				jsonReports = buildJsonReports(reports);
 			} catch(DatastoreException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 			return Response.ok()
-					.entity(jsonReports.toString()).build();
+					.entity(jsonReports.toString()).header(CustomHeader.CURSOR, cursor).build();
 		}
 	}
 
 	@GET
 	@Path("/getinlocation")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response getReportsInLocation(@QueryParam(ParamName.LOCATION) String location,
-			@QueryParam(ParamName.REQUESTID) String requestid,
-			@QueryParam(ParamName.OFFSET) int offset,
-			@Context HttpServletRequest request) {
-		if(location == null || requestid == null || offset < 0)
+			@QueryParam(ParamName.CURSOR) String cursor) {
+		if(location == null || location == "")
 			return Response.status(Status.EXPECTATION_FAILED).build();
 
-		if(cache.contains(requestid)) {
+		String cacheKey = encodeCacheKey(true, location, cursor);
+
+		if(cache.contains(cacheKey)) {
 			LOG.info(Message.USING_CACHE);
-			JSONArray reports = new JSONArray(cache.get(requestid).toString());
 
-			int size = reports.length();
+			String cacheKeyNum = cacheKey + "#";
+			if(cache.increment(cacheKeyNum, 1L) == null)
+				cache.put(cacheKeyNum, 0, Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(15)));
 
-			if(offset >= size)
-				return Response.status(Status.EXPECTATION_FAILED).build();
-
-			int endset = offset + 10;
-			boolean finished = false;
-			if(endset >= size) {
-				endset = size - 1;
-				finished = true;
-			}
-			
-			String jsonReports = "[{" + "\"" + ParamName.OFFSET + "\":" + endset +
-					", \"" + ParamName.REQUESTID + "\":\""
-					+ requestid + "\", \"" + ParamName.FINISHED + "\":\"" + finished + "\"}, ";
-			
-			for(int i = offset; i < endset; i++) {
-				jsonReports += reports.getJSONObject(i + 1).toString();
-				jsonReports += ", ";
-			}
-			
-			jsonReports = jsonReports.substring(0, jsonReports.length() - 2);
-			
-			jsonReports += "]";
-
-			return Response.ok().entity(jsonReports).build();
+			return Response.ok().entity(cache.get(cacheKey)).build();
 		}
 
 		int retries = 5;
 		while(true) {
 			try {
-				return getReportsInLocationRetry(location, offset, requestid, request);
+				return getReportsInLocationRetry(location, cursor, cacheKey);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -361,68 +390,75 @@ public class Report {
 		}
 	}
 
-	private Response getReportsInLocationRetry(String location,
-			int offset, String requestid,
-			HttpServletRequest request) {
+	private Response getReportsInLocationRetry(String location, String cursor, String cacheKey) {
 		LOG.info(Message.ATTEMPT_GIVE_ALL_REPORTS);
 
-		Filter cityFilter =
-				new Query.FilterPredicate(DSUtils.REPORT_DISTRICT, FilterOperator.EQUAL, location);
 		Filter localityFilter =
-				new Query.FilterPredicate(DSUtils.REPORT_LOCALITY, FilterOperator.EQUAL, location);
-		Filter openFilter =
-				new Query.FilterPredicate(DSUtils.REPORT_STATUS, FilterOperator.EQUAL, PropertyValue.OPEN);
-		Filter showFilter =
-				new Query.FilterPredicate(DSUtils.REPORT_STATUS, FilterOperator.EQUAL, PropertyValue.SHOW);
+				new Query.FilterPredicate(DSUtils.REPORT_LOCALITY,
+						FilterOperator.EQUAL, location);
 
-		Filter visibilityFilters = CompositeFilterOperator.or(openFilter, showFilter);
-		Filter locationFilter = CompositeFilterOperator.or(cityFilter, localityFilter);
-		Filter allFilters = CompositeFilterOperator.and(locationFilter, visibilityFilters);
+		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 
-		FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
+		if(cursor != null && !cursor.equals(""))
+			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
 
-		Query latlngQuery = new Query(DSUtils.REPORT)
-				.setFilter(allFilters);
+		Query reportQuery = new Query(DSUtils.REPORT).setFilter(localityFilter);
 
-		List<Entity> reports =
-				datastore.prepare(latlngQuery).asList(fetchOptions);
+		reportQuery.addProjection(new PropertyProjection(DSUtils.REPORT_TITLE, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_ADDRESS, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_USERNAME, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_GRAVITY, Integer.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, Integer.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class));
+
+		QueryResultList<Entity> reports =
+				datastore.prepare(reportQuery).asQueryResultList(fetchOptions);
 
 		JSONArray jsonReports;
-		JSONArray jsonReportsFull = new JSONArray();
 
 		if(reports.isEmpty())
 			return Response.status(Status.NO_CONTENT).build();
 		else {
 			try {
-				String requestId = codeRequestId(location, 0, "");
-
-				jsonReports = buildJsonReports(reports, requestId, offset, jsonReportsFull);
-
-				cache.put(requestId, jsonReportsFull.toString());
+				jsonReports = buildJsonReports(reports);
 			} catch(InternalServerErrorException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
+			String cacheKeyNum = cacheKey + "#";
+			if(cache.increment(cacheKeyNum, 1L) == null)
+				cache.put(cacheKeyNum, 0L, Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(15)));
+
+			if((long) cache.get(cacheKeyNum) >= 5L)
+				cache.put(cacheKey, jsonReports.toString(),
+						Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(15)));
+
+			cursor = reports.getCursor().toWebSafeString();
+
 			return Response.ok()
-					.entity(jsonReports.toString()).build();
+					.entity(jsonReports.toString()).header(CustomHeader.CURSOR, cursor).build();
 		}
 	}
 
 	@GET
 	@Path("/thumbnails")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getThumbnails(@QueryParam (ParamName.REQUESTID) String requestid,
-			@QueryParam (ParamName.OFFSET) int offset,
-			@Context HttpServletRequest request) {
-
-		if(requestid == null || requestid == "" || offset < 0)
-			return Response.status(Status.EXPECTATION_FAILED).build();
-
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response getThumbnails(@Context HttpHeaders headers) {
 		int retries = 5;
+
+		String header = headers.getHeaderString(CustomHeader.REPORTS);
+
+		if(header == null || header.equals("") || header.contains(",")) {
+			LOG.info(Message.NO_REPORTS_IN_HEADER);
+			return Response.status(Status.BAD_REQUEST).build();
+		}
+
 		while(true) {
 			try {
-				return getThumbnailsRetry(requestid, offset, request);
+				return getThumbnailsRetry(header);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -431,126 +467,120 @@ public class Report {
 		}
 	}
 
-	private Response getThumbnailsRetry(String requestid, int offset, HttpServletRequest request) {
-		JSONObject thumbnails = null;
-		JSONArray jsonReports = null;
+	private Response getThumbnailsRetry(String header) {
+		List<String> ids = decodeReportsHeader(header);
+		if(ids.size() > 10) {
+			LOG.info(Message.TOO_MANY_REPORTS);
+			return Response.status(Status.BAD_REQUEST).build();
+		}
 
-		if(cache.contains(requestid)) {
-			jsonReports = new JSONArray((String) cache.get(requestid));
-		} else {
-			ReportRequest reportRequest = null;
+		JSONObject thumbnails = new JSONObject();
+
+		for(String id : ids) {
+			Entity report;
+
 			try {
-				reportRequest = decodeRequestId(requestid);
-			} catch(Exception e) {
-				return Response.status(Status.EXPECTATION_FAILED).build();
+				report = datastore.get(KeyFactory.createKey(DSUtils.REPORT, id));
+			} catch (EntityNotFoundException e) {
+				LOG.info(Message.REPORT_NOT_FOUND + " - " + id);
+
+				thumbnails.put(id, "NOT_FOUND");
+
+				continue;
 			}
-			
-			if(reportRequest.type.equals(ReportRequest.L))
-				jsonReports = new JSONArray(getReportsInLocationRetry(reportRequest.location, offset,
-						requestid, request).getEntity().toString());
-			else if(reportRequest.type.equals(ReportRequest.R))
-				jsonReports = new JSONArray(getReportsWithinRadiusRetry(reportRequest.lat,
-						reportRequest.lng, reportRequest.radius, offset,
-						request).getEntity().toString());
-			else
-				jsonReports = new JSONArray(getReportsWithinBoundariesRetry(reportRequest.minlat,
-						reportRequest.minlng, reportRequest.maxlat, reportRequest.maxlng,
-						offset, request).getEntity().toString());
+
+			String tnPath = report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString();
+
+			String tn = Storage.getImage(tnPath);
+
+			thumbnails.put(id, tn);
 		}
 
-		int reportsSize = jsonReports.length();
-
-		int endset = offset + 10;
-		boolean finished = false;
-		if(endset >= reportsSize) {
-			endset = reportsSize - 1;
-			finished = true;
-		}
-
-		JSONArray subReports = new JSONArray();
-
-		for(int i = offset; i < endset; i++)
-			subReports.put(jsonReports.get(i + 1));
-
-		int subReportsSize = subReports.length();
-
-		if(offset >= reportsSize)
-			return Response.status(Status.EXPECTATION_FAILED).build();
-
-		List<Key> keys = new ArrayList<Key>(subReportsSize);
-
-		for(Object report : subReports) {
-			JSONObject jsonReport = new JSONObject(report.toString());
-			Key key = KeyFactory.createKey(DSUtils.REPORT, jsonReport.getString(DSUtils.REPORT));
-			keys.add(key);
-		}
-
-		Map<Key, Entity> entities = datastore.get(keys);
-		Map<String, String> map = new HashMap<String, String>(entities.size() + 2);
-
-		map.put(ParamName.OFFSET, String.valueOf(endset));
-		map.put(ParamName.REQUESTID, requestid);
-		map.put(ParamName.FINISHED, Boolean.toString(finished));
-
-		for(Entry<Key, Entity> report : entities.entrySet()) {
-			String thumbnail = Storage.getImage(report.getValue()
-					.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
-			map.put(report.getKey().getName(), thumbnail);
-		}
-
-		thumbnails = new JSONObject(map);
-
-		return Response.ok().entity(thumbnails.toString()).build();
+		return Response.ok(thumbnails.toString()).build();
 	}
 
-	private JSONArray buildJsonReports(List<Entity> reports, String id,
-			int offset, JSONArray jsonReportsFull) {
-		int endset = offset + 10;
-		if(endset >= reports.size())
-			endset = reports.size() - 1;
+	private List<String> decodeReportsHeader(String header) {
+		String[] ids = header.split("&");
+		return Arrays.asList(ids);
+	}
 
-		boolean finished = false;
-		if(endset == reports.size())
-			finished = true;
+	@POST
+	@Path("/close/{report}")
+	public Response closeReport(@PathParam("report") String report) {
+		int retries = 5;
 
-		JSONObject jsonId = new JSONObject()
-				.put(ParamName.REQUESTID, id)
-				.put(ParamName.OFFSET, endset)
-				.put(ParamName.FINISHED, Boolean.toString(finished));
-		
+		if(report == null || report.equals(""))
+			return Response.status(Status.BAD_REQUEST).build();
 
-		jsonReportsFull.put(jsonId);
+		while(true) {
+			try {
+				return closeReportRetry(report);
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+
+	private Response closeReportRetry(String report) {
+		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
+
+		try {
+			Entity reportEnt;
+			Key key = KeyFactory.createKey(DSUtils.REPORT, report);
+
+			try {
+				reportEnt = datastore.get(key);
+			} catch (EntityNotFoundException e) {
+				LOG.info(Message.REPORT_NOT_FOUND);
+				txn.rollback();
+				return Response.status(Status.EXPECTATION_FAILED).build();
+			}
+
+			Entity closedRep = new Entity(DSUtils.CLOSEDREPORT, report);
+
+			closedRep.setPropertiesFrom(reportEnt);
+			closedRep.setProperty(DSUtils.REPORT_STATUS, CLOSED);
+
+			datastore.delete(txn, key);
+			
+			datastore.put(txn, closedRep);
+			
+			txn.commit();
+			return Response.ok().build();
+		} finally {
+			if(txn.isActive()) {
+				LOG.info(Message.TXN_ACTIVE);
+				txn.rollback();
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
+		}
+	}
+
+	private JSONArray buildJsonReports(QueryResultList<Entity> reports) {
+		JSONArray array = new JSONArray();
 
 		for(Entity report : reports) {
 			JSONObject jsonReport = new JSONObject();
+
 			jsonReport.put(DSUtils.REPORT, report.getKey().getName());
-			jsonReport.put(DSUtils.REPORT_LAT, report.getProperty(DSUtils.REPORT_LAT).toString());
-			jsonReport.put(DSUtils.REPORT_LNG, report.getProperty(DSUtils.REPORT_LNG).toString());
-			jsonReport.put(DSUtils.REPORT_STATUS, report.getProperty(DSUtils.REPORT_STATUS).toString());
-			jsonReport.put(DSUtils.REPORT_ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS).toString());
+			jsonReport.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE));
+			jsonReport.put(DSUtils.REPORT_ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+			jsonReport.put(DSUtils.REPORT_USERNAME, report.getProperty(DSUtils.REPORT_USERNAME));
+			jsonReport.put(DSUtils.REPORT_LAT, report.getProperty(DSUtils.REPORT_LAT));
+			jsonReport.put(DSUtils.REPORT_LNG, report.getProperty(DSUtils.REPORT_LNG));
+			jsonReport.put(DSUtils.REPORT_GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+			jsonReport.put(DSUtils.REPORT_STATUS, report.getProperty(DSUtils.REPORT_STATUS));
 			jsonReport.put(DSUtils.REPORT_CREATIONTIMEFORMATTED,
-					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED).toString());
-			jsonReport.put(DSUtils.REPORT_USERNAME, report.getProperty(DSUtils.REPORT_USERNAME).toString());
-			if(report.hasProperty(DSUtils.REPORT_GRAVITY))
-				jsonReport.put(DSUtils.REPORT_GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY).toString());
-			if(report.hasProperty(DSUtils.REPORT_DESCRIPTION))
-				jsonReport.put(DSUtils.REPORT_DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION).toString());
-			if(report.hasProperty(DSUtils.REPORT_TITLE))
-				jsonReport.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE).toString());
+					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
 
 			appendVotesAndComments(jsonReport, report);
 
-			jsonReportsFull.put(new JSONObject(jsonReport.toString()));
+			array.put(jsonReport);
 		}
 
-		JSONArray jsonReports = new JSONArray();
-
-		jsonReports.put(jsonId);
-
-		for(int i = offset; i < endset; i++)
-			jsonReports.put(jsonReportsFull.getJSONObject(i + 1));
-
-		return jsonReports;
+		return array;
 	}
 
 	private void appendVotesAndComments(JSONObject jsonReport, Entity report) {
@@ -558,88 +588,114 @@ public class Report {
 				new Query.FilterPredicate(DSUtils.REPORTCOMMENTS_NUM,
 						FilterOperator.GREATER_THAN_OR_EQUAL, 0);
 
-		Query commentQuery = new Query(DSUtils.REPORT_COMMENTS)
+		Query commentQuery = new Query(DSUtils.REPORTCOMMENTS)
 				.setFilter(numFilter).setAncestor(report.getKey());
 
-		List<Entity> comment = datastore.prepare(commentQuery).asList(FetchOptions.Builder.withDefaults());
+		Entity comment;
 
-		String numComments = "0";
-
-		if(!comment.isEmpty())
-			numComments = comment.get(0).getProperty(DSUtils.REPORTCOMMENTS_NUM).toString();
-		else
+		try {
+			comment = datastore.prepare(commentQuery).asSingleEntity();
+		} catch(TooManyResultsException e) {
+			LOG.info(Message.TOO_MANY_RESULTS);
 			throw new InternalServerErrorException();
+		}
 
-		Query votesQuery = new Query(DSUtils.REPORT_VOTES)
+		long numComments = 0;
+
+		numComments = (long) comment.getProperty(DSUtils.REPORTCOMMENTS_NUM);
+
+		Query votesQuery = new Query(DSUtils.REPORTVOTES)
 				.setAncestor(report.getKey());
 
-		List<Entity> votes = datastore.prepare(votesQuery).asList(FetchOptions.Builder.withDefaults());
+		Entity votes;
 
-		String numUpvotes = "0";
-		String numDownvotes = "0";
-
-		if(!votes.isEmpty()) {
-			numUpvotes = votes.get(0).getProperty(DSUtils.REPORTVOTES_UP).toString();
-			numDownvotes = votes.get(0).getProperty(DSUtils.REPORTVOTES_DOWN).toString();
-		} else
+		try {
+			votes = datastore.prepare(votesQuery).asSingleEntity();
+		} catch(TooManyResultsException e) {
+			LOG.info(Message.TOO_MANY_RESULTS);
 			throw new InternalServerErrorException();
+		}
+
+		long numUpvotes = 0;
+		long numDownvotes = 0;
+
+		numUpvotes = (long) votes.getProperty(DSUtils.REPORTVOTES_UP);
+		numDownvotes = (long) votes.getProperty(DSUtils.REPORTVOTES_DOWN);
 
 		jsonReport.put(DSUtils.REPORT_COMMENTSNUM, numComments);
 		jsonReport.put(DSUtils.REPORTVOTES_UP, numUpvotes);
 		jsonReport.put(DSUtils.REPORTVOTES_DOWN, numDownvotes);
 	}
 
-	private String codeRequestId(String location, int gravity, String user) {
-		String l = location;
-		String g = "|" + gravity;
-		String u = "|" + user;
+	private PropertyContainer makeCoordProps(double lat, double lng) {
+		PropertyContainer props = new Entity("x", "x");
 
-		return l + g + u;
+		String p0lat = doubleToProp(lat, 0);
+		String p1lat = doubleToProp(lat, 1);
+		String p2lat = doubleToProp(lat, 2);
+		String p3lat = doubleToProp(lat, 3);
+		String p4lat = doubleToProp(lat, 4);
+		String p5lat = doubleToProp(lat, 5);
+		String p6lat = doubleToProp(lat, 6);
+		String p7lat = doubleToProp(lat, 7);
+		String p8lat = doubleToProp(lat, 8);
+
+		String p0lng = doubleToProp(lng, 0);
+		String p1lng = doubleToProp(lng, 1);
+		String p2lng = doubleToProp(lng, 2);
+		String p3lng = doubleToProp(lng, 3);
+		String p4lng = doubleToProp(lng, 4);
+		String p5lng = doubleToProp(lng, 5);
+		String p6lng = doubleToProp(lng, 6);
+		String p7lng = doubleToProp(lng, 7);
+		String p8lng = doubleToProp(lng, 8);
+
+		props.setProperty(DSUtils.REPORT_P0LAT, p0lat);
+		props.setProperty(DSUtils.REPORT_P1LAT, p1lat);
+		props.setProperty(DSUtils.REPORT_P2LAT, p2lat);
+		props.setProperty(DSUtils.REPORT_P3LAT, p3lat);
+		props.setProperty(DSUtils.REPORT_P4LAT, p4lat);
+		props.setProperty(DSUtils.REPORT_P5LAT, p5lat);
+		props.setProperty(DSUtils.REPORT_P6LAT, p6lat);
+		props.setProperty(DSUtils.REPORT_P7LAT, p7lat);
+		props.setProperty(DSUtils.REPORT_P8LAT, p8lat);
+
+		props.setProperty(DSUtils.REPORT_P0LNG, p0lng);
+		props.setProperty(DSUtils.REPORT_P1LNG, p1lng);
+		props.setProperty(DSUtils.REPORT_P2LNG, p2lng);
+		props.setProperty(DSUtils.REPORT_P3LNG, p3lng);
+		props.setProperty(DSUtils.REPORT_P4LNG, p4lng);
+		props.setProperty(DSUtils.REPORT_P5LNG, p5lng);
+		props.setProperty(DSUtils.REPORT_P6LNG, p6lng);
+		props.setProperty(DSUtils.REPORT_P7LNG, p7lng);
+		props.setProperty(DSUtils.REPORT_P8LNG, p8lng);
+
+		return props;
 	}
 
-	private ReportRequest decodeRequestId(String requestid) {
-		int first = requestid.indexOf("|");
-		int second = requestid.indexOf("|", first);
+	public String doubleToProp(double d, int precision) {
+		String format = "#.";
+		if(precision == 0)
+			format = "#";
+		else
+			for(int i = 0; i < precision; i++)
+				format += "#";
 
-		String location = requestid.substring(0, first);
-		String gravity = requestid.substring(first + 1, second);
-		String user = requestid.substring(second + 1, requestid.length());
+		DecimalFormat df = new DecimalFormat(format);
+		df.setRoundingMode(RoundingMode.HALF_UP);
 
-		ReportRequest request;
-
-		if(location.startsWith(".r")) {
-			request = new ReportRequest(ReportRequest.R);
-			int firstComma = location.indexOf(",");
-			int secondComma = location.indexOf(",", firstComma);
-			request.lat = Double.parseDouble(location.substring(2, firstComma));
-			request.lng = Double.parseDouble(location.substring(firstComma + 2, secondComma));
-			request.radius = Double.parseDouble(location.substring(secondComma + 2, location.length()));
-		} else if(location.startsWith(".b")) {
-			request = new ReportRequest(ReportRequest.B);
-			int firstComma = location.indexOf(",");
-			int secondComma = location.indexOf(",", firstComma);
-			int thirdComma = location.indexOf(",", secondComma);
-			request.minlat = Double.parseDouble(location.substring(2, firstComma));
-			request.minlng = Double.parseDouble(location.substring(firstComma + 2, secondComma));
-			request.maxlat = Double.parseDouble(location.substring(secondComma + 2, thirdComma));
-			request.maxlng = Double.parseDouble(location.substring(thirdComma + 2, location.length()));
-		} else {
-			request = new ReportRequest(ReportRequest.L);
-			request.location = location.substring(2, location.length());
-		}
-
-		request.gravity = Integer.parseInt(gravity);
-		request.user = user;
-
-		return request;
+		return df.format(d);
 	}
 
-	private String codeCoordsRadius(double lat, double lng, double radius) {
-		return ".r" + Double.toString(lat) + ", " + Double.toString(lng) + ", " + Double.toString(radius);
-	}
+	private String encodeCacheKey(boolean type, String request, String cursor) {
+		String key;
+		if(type)
+			key = "l";
+		else
+			key = "r";
 
-	private String codeCoordsBoundaries(double lat, double lng, double lat2, double lng2) {
-		return ".b" + Double.toString(lat) + ", " + Double.toString(lng)
-		+ ", " + Double.toString(lat2) + ", " + Double.toString(lng2);
+		key += request + "|" + cursor;
+
+		return key;
 	}
 }

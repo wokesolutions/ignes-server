@@ -8,7 +8,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -30,7 +29,7 @@ public class VerifyToken {
 	public VerifyToken() {}
 	
 	@GET
-	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response verifyToken(@Context HttpHeaders headers) {
 		try {
 			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
@@ -50,7 +49,7 @@ public class VerifyToken {
 	
 	@GET
 	@Path("/user")
-	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response verifyTokenUser(@Context HttpHeaders headers) {
 		try {
 			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
@@ -71,7 +70,7 @@ public class VerifyToken {
 	
 	@GET
 	@Path("/user2")
-	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response verifyTokenUser2(@Context HttpHeaders headers) {
 		try {
 			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
@@ -92,7 +91,7 @@ public class VerifyToken {
 	
 	@GET
 	@Path("/user3")
-	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response verifyTokenUser3(@Context HttpHeaders headers) {
 		try {
 			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
@@ -113,7 +112,7 @@ public class VerifyToken {
 	
 	@GET
 	@Path("/admin")
-	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response verifyTokenAdmin(@Context HttpHeaders headers) {
 		try {
 			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
@@ -134,7 +133,7 @@ public class VerifyToken {
 	
 	@GET
 	@Path("/worker")
-	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response verifyTokenWorker(@Context HttpHeaders headers) {
 		try {
 			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
@@ -155,7 +154,7 @@ public class VerifyToken {
 	
 	@GET
 	@Path("/org")
-	@Produces(MediaType.APPLICATION_JSON + CustomHeader.CHARSET_UTF8)
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response verifyTokenOrg(@Context HttpHeaders headers) {
 		try {
 			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);

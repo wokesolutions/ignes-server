@@ -7,8 +7,8 @@
 	<packaging>war</packaging>
 	<version>0.1.0-SNAPSHOT</version>
 
-	<groupId>firstwebapp</groupId>
-	<artifactId>firstwebapp</artifactId>
+	<groupId>wokesolutions</groupId>
+	<artifactId>ignes</artifactId>
 
 	<properties>
 		<appengine.maven.plugin.version>1.3.2</appengine.maven.plugin.version>
