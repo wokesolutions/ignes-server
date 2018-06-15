@@ -47,6 +47,7 @@ import com.google.appengine.api.memcache.Expiration;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.cloud.datastore.DatastoreException;
+import com.wokesolutions.ignes.callbacks.LevelManager;
 import com.wokesolutions.ignes.data.ReportData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
@@ -67,6 +68,9 @@ public class Report {
 	public static final String OPEN = "open";
 	public static final String CLOSED = "closed";
 	public static final String STANDBY = "standby";
+
+	private static final int DEFAULT_GRAVITY = 2;
+	private static final int NO_TRUST_GRAVITY = 1;
 
 	public Report() {}
 
@@ -127,35 +131,39 @@ public class Report {
 				report.setProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED,
 						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(creationtime));
 				report.setProperty(DSUtils.REPORT_USERNAME, username);
-				
+
 				if(level.equals(UserLevel.LEVEL1))
 					report.setProperty(DSUtils.REPORT_STATUS, STANDBY);
 				else
 					report.setProperty(DSUtils.REPORT_STATUS, OPEN);
-				
+
 				report.setUnindexedProperty(DSUtils.REPORT_CREATIONLATLNG,
 						request.getHeader(CustomHeader.APPENGINE_LATLNG));
 
-				if(data.report_gravity >= 1 && data.report_gravity <= 5)
+				Query userpointsQ = new Query(DSUtils.USERPOINTS)
+						.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
+
+				int points;
+				try {
+					Entity pointsE = datastore.prepare(userpointsQ).asSingleEntity();
+
+					points = Integer.parseInt(pointsE.getProperty(DSUtils.USERPOINTS_POINTS).toString());
+				} catch(TooManyResultsException e3) {
+					LOG.info(Message.UNEXPECTED_ERROR);
+					txn.rollback();
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+				}
+
+				if(data.report_gravity >= 1 && data.report_gravity <= 5) {
 					report.setProperty(DSUtils.REPORT_GRAVITY, data.report_gravity);
-				else {
-					Query userpointsQ = new Query(DSUtils.USERPOINTS)
-							.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
 
-					int points;
-					try {
-						Entity pointsE = datastore.prepare(userpointsQ).asSingleEntity();
+					if(data.report_gravity == 5 && level.equals(UserLevel.LEVEL2))
+						report.setProperty(DSUtils.REPORT_STATUS, STANDBY);
 
-						points = Integer.parseInt(pointsE.getProperty(DSUtils.USERPOINTS_POINTS).toString());
-					} catch(TooManyResultsException e3) {
-						LOG.info(Message.UNEXPECTED_ERROR);
-						txn.rollback();
-						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-					}
-
-					int gravity = 3;
-					if(points < 10)
-						gravity = 1;
+				} else {
+					int gravity = DEFAULT_GRAVITY;
+					if(points < LevelManager.LEVEL2_POINTS)
+						gravity = NO_TRUST_GRAVITY;
 
 					report.setProperty(DSUtils.REPORT_GRAVITY, gravity);
 				}
@@ -164,6 +172,9 @@ public class Report {
 					report.setProperty(DSUtils.REPORT_ADDRESS, data.report_address);
 				if(data.report_title != null)
 					report.setProperty(DSUtils.REPORT_TITLE, data.report_title);
+				else
+					report.setProperty(DSUtils.REPORT_TITLE, "");
+				
 				if(data.report_locality != null)
 					report.setProperty(DSUtils.REPORT_LOCALITY, data.report_locality);
 				if(data.report_city != null)
@@ -273,6 +284,38 @@ public class Report {
 	 */
 
 	@GET
+	@Path("/thumbnail/{report}")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response getThumbnail(@PathParam(ParamName.REPORT) String report) {
+		int retries = 5;
+		while(true) {
+			try {
+				return getThumbnailRetry(report);
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+
+	private Response getThumbnailRetry(String report) {
+		Entity rep;
+
+		try {
+			rep = datastore.get(KeyFactory.createKey(DSUtils.REPORT, report));
+		} catch(EntityNotFoundException e) {
+			LOG.info(Message.REPORT_NOT_FOUND);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+
+		JSONObject obj = new JSONObject();
+		obj.put(DSUtils.REPORT_THUMBNAIL,
+				Storage.getImage(rep.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString()));
+		return Response.ok(obj.toString()).build();
+	}
+
+	@GET
 	@Path("/getwithinradius")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response getReportsWithinRadius(
@@ -299,7 +342,7 @@ public class Report {
 		LOG.info(Message.ATTEMPT_GIVE_ALL_REPORTS);
 
 		int precision = Haversine.getPrecision(lat, lng, radius);
-		
+
 		LOG.info("precision " + Integer.toString(precision));
 
 		String latValue = doubleToProp(lat, precision);
@@ -348,11 +391,16 @@ public class Report {
 			return Response.status(Status.NO_CONTENT).build();
 		else {
 			try {
-				jsonReports = buildJsonReports(reports);
+				jsonReports = buildJsonReports(reports, false);
 			} catch(DatastoreException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
+
+			if(jsonReports.length() < BATCH_SIZE)
+				return Response.ok()
+						.entity(jsonReports.toString()).build();
+
 			return Response.ok()
 					.entity(jsonReports.toString()).header(CustomHeader.CURSOR, cursor).build();
 		}
@@ -422,7 +470,7 @@ public class Report {
 			return Response.status(Status.NO_CONTENT).build();
 		else {
 			try {
-				jsonReports = buildJsonReports(reports);
+				jsonReports = buildJsonReports(reports, false);
 			} catch(InternalServerErrorException e) {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -437,6 +485,9 @@ public class Report {
 						Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(15)));
 
 			cursor = reports.getCursor().toWebSafeString();
+
+			if(jsonReports.length() < BATCH_SIZE)
+				return Response.ok(jsonReports.toString()).build();
 
 			return Response.ok()
 					.entity(jsonReports.toString()).header(CustomHeader.CURSOR, cursor).build();
@@ -544,9 +595,9 @@ public class Report {
 			closedRep.setProperty(DSUtils.REPORT_STATUS, CLOSED);
 
 			datastore.delete(txn, key);
-			
+
 			datastore.put(txn, closedRep);
-			
+
 			txn.commit();
 			return Response.ok().build();
 		} finally {
@@ -558,7 +609,7 @@ public class Report {
 		}
 	}
 
-	private JSONArray buildJsonReports(QueryResultList<Entity> reports) {
+	public static JSONArray buildJsonReports(QueryResultList<Entity> reports, boolean withTn) {
 		JSONArray array = new JSONArray();
 
 		for(Entity report : reports) {
@@ -575,6 +626,12 @@ public class Report {
 			jsonReport.put(DSUtils.REPORT_CREATIONTIMEFORMATTED,
 					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
 
+			if(withTn) {
+				String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
+
+				jsonReport.put(DSUtils.REPORT_THUMBNAIL, tn);
+			}
+
 			appendVotesAndComments(jsonReport, report);
 
 			array.put(jsonReport);
@@ -583,7 +640,7 @@ public class Report {
 		return array;
 	}
 
-	private void appendVotesAndComments(JSONObject jsonReport, Entity report) {
+	public static void appendVotesAndComments(JSONObject jsonReport, Entity report) {
 		Filter numFilter =
 				new Query.FilterPredicate(DSUtils.REPORTCOMMENTS_NUM,
 						FilterOperator.GREATER_THAN_OR_EQUAL, 0);
@@ -674,12 +731,12 @@ public class Report {
 	}
 
 	public String doubleToProp(double d, int precision) {
-		String format = "#.";
+		String format = "0.";
 		if(precision == 0)
-			format = "#";
+			format = "0";
 		else
 			for(int i = 0; i < precision; i++)
-				format += "#";
+				format += "0";
 
 		DecimalFormat df = new DecimalFormat(format);
 		df.setRoundingMode(RoundingMode.HALF_UP);

@@ -11,10 +11,13 @@ public class ParamName {
 		public static final String LNG = "lng";
 		public static final String RADIUS = "radius";
 		public static final String DISTRICT = "district";
-		public static final String USERNAME = "username";
 		public static final String LOCATION = "location";
 		public static final String CURSOR = "cursor";
 
 	// Path
 		public static final String REPORT = "report";
+		public static final String NIF = "nif";
+		
+	// Both
+		public static final String USERNAME = "username";
 }

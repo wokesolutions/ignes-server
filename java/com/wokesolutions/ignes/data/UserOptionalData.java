@@ -10,7 +10,7 @@ public class UserOptionalData {
 	public String useroptional_zip;
 	public String useroptional_birth;
 	public String useroptional_job;
-	public String[] useroptional_skills;
+	public String useroptional_skills;
 	
 	public UserOptionalData() {}
 

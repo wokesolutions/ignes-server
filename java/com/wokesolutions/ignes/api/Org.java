@@ -69,7 +69,6 @@ public class Org {
 		LOG.info(Message.ATTEMPT_REGISTER_WORKER + registerData.worker_name);
 
 		String email = registerData.worker_email;
-		Key workerKey = KeyFactory.createKey(DSUtils.WORKER, email);
 
 		Filter emailFilter =
 				new Query.FilterPredicate(DSUtils.USER_EMAIL, FilterOperator.EQUAL, email);
@@ -89,7 +88,7 @@ public class Org {
 
 		String pw = WorkerRegisterData.generateCode(org, email);
 
-		Entity worker = new Entity(DSUtils.WORKER, workerKey);
+		Entity worker = new Entity(DSUtils.WORKER, email);
 		worker.setUnindexedProperty(DSUtils.WORKER_PASSWORD, DigestUtils.sha256Hex(pw));
 		worker.setProperty(DSUtils.WORKER_ORG, org);
 		worker.setProperty(DSUtils.WORKER_JOB, registerData.worker_job);

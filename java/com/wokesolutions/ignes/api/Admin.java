@@ -11,6 +11,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -349,6 +350,9 @@ public class Admin {
 		}
 		
 		cursor = list.getCursor().toWebSafeString();
+		
+		if(array.length() < BATCH_SIZE)
+			return Response.ok(array.toString()).build();
 
 		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 	}
@@ -400,6 +404,9 @@ public class Admin {
 		}
 		
 		cursor = list.getCursor().toWebSafeString();
+		
+		if(array.length() < BATCH_SIZE)
+			return Response.ok(array.toString()).build();
 
 		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 	}
@@ -467,7 +474,40 @@ public class Admin {
 		}
 		
 		cursor = list.getCursor().toWebSafeString();
+		
+		if(array.length() < BATCH_SIZE)
+			return Response.ok(array.toString()).build();
 
 		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
+	}
+	
+	@POST
+	@Path("/confirmorg/{nif}")
+	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
+	public Response confirmOrg(@PathParam(ParamName.NIF) String org) {
+		int retries = 5;
+
+		while(true) {
+			try {
+				Key orgkey = KeyFactory.createKey(DSUtils.ORG, org);
+				
+				try {
+					Entity orgE = datastore.get(orgkey);
+					
+					orgE.setProperty(DSUtils.ORG_CONFIRMED, true);
+					
+					return Response.ok().build();
+				} catch (EntityNotFoundException e) {
+					LOG.info(Message.ORG_NOT_FOUND);
+					return Response.status(Status.NOT_FOUND).build();
+				}
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+				retries--;
+			}
+		}
 	}
 }

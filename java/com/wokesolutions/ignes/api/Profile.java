@@ -4,15 +4,18 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
@@ -29,7 +32,10 @@ import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.PropertyProjection;
 import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
+import com.google.appengine.api.datastore.Query.Filter;
+import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Transaction;
@@ -47,6 +53,10 @@ public class Profile {
 
 	private static final Logger LOG = Logger.getLogger(Profile.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+	private static final int BATCH_SIZE = 20;
+
+	public static final String ACTIVATED = "activated";
 
 	@POST
 	@Path("/update/{username}")
@@ -233,11 +243,11 @@ public class Profile {
 		Query query = new Query(DSUtils.USERVOTE).setAncestor(userKey);
 
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(20);
-		
+
 		String cursor = headers.getHeaderString(CustomHeader.CURSOR);
 		if(cursor != null && !cursor.equals(""))
 			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
-		
+
 		QueryResultList<Entity> allVotes = datastore.prepare(query).asQueryResultList(fetchOptions);
 
 		JSONArray jsonarray = new JSONArray();
@@ -259,9 +269,12 @@ public class Profile {
 			jsonarray.put(voteJson);
 		}
 
+		if(jsonarray.length() < BATCH_SIZE)
+			return Response.ok(jsonarray.toString()).build();
+
 		return Response.ok()
 				.header(CustomHeader.CURSOR, allVotes.getCursor().toWebSafeString())
-				.entity(jsonarray).build();
+				.entity(jsonarray.toString()).build();
 	}
 
 	@POST
@@ -292,9 +305,14 @@ public class Profile {
 			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
-		
+
 		LOG.info("code - " + code);
-		
+
+		JSONObject codejson = new JSONObject(code);
+		code = codejson.getString("code");
+
+		LOG.info("new code - " + code);
+
 		Key userkey = KeyFactory.createKey(DSUtils.USER, username);
 		Entity user;
 		try {
@@ -303,30 +321,27 @@ public class Profile {
 			LOG.info(Message.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
-		
+
 		boolean bool = code.equals(user.getProperty(DSUtils.USER_CODE));
-		if(!bool) {
-			LOG.info(Boolean.toString(bool));
+		if(!bool)
 			return Response.status(Status.EXPECTATION_FAILED).build();
-		}
-		
-		user.setProperty(DSUtils.USER_CODE, "activated");
-		
+
+		user.setProperty(DSUtils.USER_CODE, ACTIVATED);
+
 		datastore.put(user);
-		
+
 		return Response.ok().build();
 	}
-	
+
 	@GET
-	@Path("/activated")
+	@Path("/activated/{username}")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
-	public Response isActivated(@Context HttpServletRequest request) {
+	public Response isActivated(@PathParam(ParamName.USERNAME) String username,
+			@Context HttpServletRequest request) {
 		int retries = 5;
-		
-		String user = request.getAttribute(CustomHeader.USERNAME).toString();
-		
+
 		try {
-			sameUserOrAdmin(request, user);
+			sameUserOrAdmin(request, username);
 		} catch(NotSameNorAdminException e2) {
 			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
@@ -334,7 +349,7 @@ public class Profile {
 
 		while(true) {
 			try {
-				return isActivatedRetry(user);
+				return isActivatedRetry(username);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Message.TOO_MANY_RETRIES);
@@ -345,20 +360,69 @@ public class Profile {
 			}
 		}
 	}
-	
+
 	private Response isActivatedRetry(String user) {
 		Entity entUser;
-		
+
 		try {
 			entUser = datastore.get(KeyFactory.createKey(DSUtils.USER, user));
 		} catch (EntityNotFoundException e) {
 			LOG.info(Message.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
-		
-		boolean yes =  entUser.getProperty(DSUtils.USER_CODE).toString().equals("activated");
-		
+
+		boolean yes =  entUser.getProperty(DSUtils.USER_CODE).toString().equals(ACTIVATED);
+
 		return Response.ok().entity(yes).build();
+	}
+
+	@GET
+	@Path("/view/{username}")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response getUserProfile(@Context HttpServletRequest request,
+			@PathParam(ParamName.USERNAME) String username) {
+		int retries = 5;
+
+		try {
+			sameUserOrAdmin(request, username);
+		} catch(NotSameNorAdminException e) {
+			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
+			return Response.status(Status.FORBIDDEN).build();
+		}
+
+		while(true) {
+			try {
+				return getUserProfileRetry(username);
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
+
+	private Response getUserProfileRetry(String username) {
+		Entity user;
+
+		try {
+			user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
+		} catch(EntityNotFoundException e) {
+			LOG.info(Message.USER_NOT_FOUND);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+
+		JSONObject object = new JSONObject();
+
+		object.put(DSUtils.USER, username);
+
+		for(Entry<String, Object> prop : user.getProperties().entrySet()) {
+			object.put(prop.getKey(), prop.getValue().toString());
+		}
+
+		return Response.ok(object.toString()).build();
 	}
 
 	public static String sameUserOrAdmin(HttpServletRequest request, String username)
@@ -371,5 +435,70 @@ public class Profile {
 			throw new NotSameNorAdminException();
 
 		return requester;
+	}
+
+	@GET
+	@Path("/reports/{username}")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response getAllReports(@PathParam(ParamName.USERNAME) String username,
+			@QueryParam(ParamName.CURSOR) String cursor) {
+		int retries = 5;
+
+		while(true) {
+			try {
+				return getAllReportsRetry(username, cursor);
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
+
+	private Response getAllReportsRetry(String username, String cursor) {
+		Query reportQuery = new Query(DSUtils.REPORT);
+		
+		Filter userFilter = new Query.FilterPredicate(DSUtils.REPORT_USERNAME,
+				FilterOperator.EQUAL, username);
+		
+		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
+
+		if(cursor != null && !cursor.equals(""))
+			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
+		
+		reportQuery.setFilter(userFilter);
+		
+		reportQuery
+		.addProjection(new PropertyProjection(DSUtils.REPORT_TITLE, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_ADDRESS, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_USERNAME, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_GRAVITY, Integer.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class));
+		
+		QueryResultList<Entity> reports = datastore.prepare(reportQuery).asQueryResultList(fetchOptions);
+		
+		if(reports.isEmpty()) {
+			LOG.info(Message.NO_REPORTS_FOUND);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+		
+		JSONArray array = new JSONArray();
+		
+		try {
+			array = Report.buildJsonReports(reports, true);
+		} catch(InternalServerErrorException e) {
+			LOG.info(Message.REPORT_NOT_FOUND);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+
+		cursor = reports.getCursor().toWebSafeString();
+		
+		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 	}
 }

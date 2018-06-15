@@ -7,12 +7,14 @@ public class Message {
 		public static final String USER_ALREADY_ADMIN = "Este utilizador já é administrador";
 		public static final String USER_NOT_FOUND = "Utilizador não existe";
 		public static final String USER_NOT_ADMIN = "Utilizador não é administrador";
+		public static final String NO_TOKENS_FOUND = "Nenhum token encontrado para o utilizador";
 	
 	// Error Org
 		public static final String ORG_ALREADY_EXISTS = "Este NIF já está a ser usado por outra organização";
 		public static final String ORG_CODE_NOT_FOUND = "Não foi encontrada nenhuma empresa com este código ativo";
 		public static final String ORG_NOT_FOUND = "Organização não existe";
 		public static final String ORG_CODE_ALREADY_EXISTS = "Erro a gerar código. Tente de novo";
+		public static final String ORG_NOT_CONFIRMED = "Organização ainda não confirmada";
 	
 	// Error Report
 		public static final String DUPLICATE_REPORT = "Ocorrência já reportada";
@@ -20,6 +22,7 @@ public class Message {
 		public static final String REPORT_COMMENT_NOT_FOUND = "Erro nos comentários";
 		public static final String NO_REPORTS_IN_HEADER = "Header não contem ocorrências";
 		public static final String TOO_MANY_REPORTS = "Header contém demasiados reports";
+		public static final String NO_REPORTS_FOUND = "Não foram encontradas ocorrências";
 	
 	// Error Admin
 		public static final String MOTER_NOT_ADMIN = "Utilizador a fazer alterações não é administrador";
@@ -39,6 +42,8 @@ public class Message {
 		public static final String GOOGLE_MAPS_ERROR = "Erro do Google Maps";
 		public static final String EMAIL_ALREADY_IN_USE = "Email já está em uso";
 		public static final String UNEXPECTED_ERROR = "Erro inesperado";
+		public static final String INVALID_EMAIL = "Email inválido";
+		public static final String INVALID_USERNAME = "Nome de utilizador inválido";
 		
 	
 	// Info User
@@ -71,6 +76,11 @@ public class Message {
 		public static final String ATTEMPT_GIVE_ALL_REPORTS = "Tentando dar todas as ocorrências";
 		public static final String VOTED_REPORT = "Ocorrência votada com sucesso";
 		public static final String SEARCHING_IN_COORDS = "Procurando nas seguintes coords: ";
+		
+	// Info Levels
+		public static final String TRYING_TO_CHANGE_LEVEL1 = "Tentando mudar para nível 1 o utilizador: ";
+		public static final String TRYING_TO_CHANGE_LEVEL2 = "Tentando mudar para nível 2 o utilizador: ";
+		public static final String TRYING_TO_CHANGE_LEVEL3 = "Tentando mudar para nível 3 o utilizador: ";
 	
 	// Info General
 		public static final String UPLOADED_LOG_STATS = "Upload das estatísticas e registos do utilizador para a BD concluído";

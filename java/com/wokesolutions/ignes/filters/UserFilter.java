@@ -1,6 +1,7 @@
 package com.wokesolutions.ignes.filters;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.servlet.*;
@@ -11,7 +12,14 @@ import javax.ws.rs.core.Response.Status;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.FetchOptions;
+import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.Query;
 import com.wokesolutions.ignes.util.CustomHeader;
+import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.JWTUtils;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.Secrets;
@@ -20,6 +28,7 @@ import com.wokesolutions.ignes.util.UserLevel;
 public class UserFilter implements Filter {
 
 	public static final Logger LOG = Logger.getLogger(UserFilter.class.getName());
+	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
 	public void init(FilterConfig arg0) throws ServletException {}  
 
@@ -43,13 +52,30 @@ public class UserFilter implements Filter {
 			verifier.verify(token);
 			
 			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
+			
+			Query query = new Query(DSUtils.TOKEN)
+					.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
+			
+			List<Entity> allTokens = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
+			
+			boolean has = false;
+			for(Entity oneToken : allTokens)
+				if(oneToken.getProperty(DSUtils.TOKEN_STRING).equals(token)) {
+					has = true;
+					break;
+				}
+			
+			if(!has) {
+				throw new Exception();
+			}
+			
 			req.setAttribute(CustomHeader.USERNAME, username);
 			req.setAttribute(CustomHeader.LEVEL, JWTUtils.LEVEL1);
 
 			chain.doFilter(req, resp);
 		} catch (Exception e){
 			byte[] responseToSend = Message.INVALID_TOKEN.getBytes();
-			((HttpServletResponse) resp).setHeader("Content-Type", "application/json");
+			((HttpServletResponse) resp).setHeader("Content-Type", CustomHeader.JSON_CHARSET_UTF8);
 			((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
 			resp.getOutputStream().write(responseToSend);
 			return;

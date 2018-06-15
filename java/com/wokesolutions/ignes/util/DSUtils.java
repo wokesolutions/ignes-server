@@ -24,6 +24,8 @@ public class DSUtils {
 		public static final String REPORTCOMMENTS = "ReportComments";
 		public static final String SPAMMEDREPORT = "SpammedReport";
 		public static final String SKILL = "Skill";
+		public static final String TOKEN = "Token";
+		public static final String LEVELLOG = "LevelLog";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -116,6 +118,7 @@ public class DSUtils {
 		public static final String ORG_SERVICES = "org_services";
 		public static final String ORG_ISFIRESTATION = "org_isfirestation";
 		public static final String ORG_CREATIONTIME = "org_creationtime";
+		public static final String ORG_CONFIRMED = "org_confirmed";
 
 	// UserStats
 		public static final String ORGSTATS_LOGINS = "orgstats_logins";
@@ -200,4 +203,14 @@ public class DSUtils {
 		
 	// Skill
 		public static final String SKILL_NUMBEROFPEOPLE = "skill_numberofpeople";
+		
+	// Token
+		public static final String TOKEN_STRING = "token_string";
+		public static final String TOKEN_DATE = "token_date";
+		public static final String TOKEN_IP = "token_ip";
+		
+	// LevelLog
+		public static final String LEVELLOG_OLDLEVEL = "levellog_oldlevel";
+		public static final String LEVELLOG_NEWLEVEL = "levellog_newlevel";
+		public static final String LEVELLOG_DATE = "levellog_date";
 }

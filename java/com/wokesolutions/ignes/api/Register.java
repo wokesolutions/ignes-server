@@ -46,6 +46,12 @@ public class Register {
 	public Response registerUser(UserRegisterData registerData) {
 		if(!registerData.isValid())
 			return Response.status(Status.BAD_REQUEST).entity(Message.REGISTER_DATA_INVALID).build();
+		
+		if(!registerData.user_email.contains("@"))
+			return Response.status(Status.BAD_REQUEST).entity(Message.INVALID_EMAIL).build();
+		
+		if(!UserRegisterData.isUsernameValid(registerData.user_username))
+			return Response.status(Status.BAD_REQUEST).entity(Message.INVALID_USERNAME).build();
 
 		int retries = 5;
 		while(true) {
@@ -182,6 +188,7 @@ public class Register {
 			org.setProperty(DSUtils.ORG_SERVICES, registerData.org_services);
 			org.setProperty(DSUtils.ORG_ISFIRESTATION, registerData.org_isfirestation);
 			org.setUnindexedProperty(DSUtils.ORG_CREATIONTIME, new Date());
+			org.setProperty(DSUtils.ORG_CONFIRMED, false);
 
 			Entity orgCode = new Entity(DSUtils.ORGCODE , org.getKey());
 			orgCode.setProperty(DSUtils.ORGCODE_ACTIVE, false);

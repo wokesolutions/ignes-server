@@ -15,7 +15,12 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.EntityNotFoundException;
+import com.google.appengine.api.datastore.KeyFactory;
 import com.wokesolutions.ignes.util.CustomHeader;
+import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.JWTUtils;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.Secrets;
@@ -23,11 +28,12 @@ import com.wokesolutions.ignes.util.UserLevel;
 
 @Path("/verifytoken")
 public class VerifyToken {
-	
+
 	public static final Logger LOG = Logger.getLogger(VerifyToken.class.getName());
-	
+	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
 	public VerifyToken() {}
-	
+
 	@GET
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response verifyToken(@Context HttpHeaders headers) {
@@ -39,6 +45,16 @@ public class VerifyToken {
 
 			String token = headers.getHeaderString(JWTUtils.AUTHORIZATION);
 			verifier.verify(token);
+
+			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
+
+			try {
+				datastore.get(KeyFactory.createKey(DSUtils.USER, username));
+			} catch (EntityNotFoundException e) {
+				LOG.info(Message.INVALID_TOKEN);
+				return Response.status(Status.FORBIDDEN).build();
+			}
+
 			return Response.ok().entity(Message.OK).build();
 		} catch (UnsupportedEncodingException e){
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
@@ -46,7 +62,7 @@ public class VerifyToken {
 			return Response.status(Status.FORBIDDEN).entity(Message.INVALID_TOKEN).build();
 		}
 	}
-	
+
 	@GET
 	@Path("/user")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
@@ -60,6 +76,16 @@ public class VerifyToken {
 
 			String token = headers.getHeaderString(JWTUtils.AUTHORIZATION);
 			verifier.verify(token);
+
+			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
+
+			try {
+				datastore.get(KeyFactory.createKey(DSUtils.USER, username));
+			} catch (EntityNotFoundException e) {
+				LOG.info(Message.INVALID_TOKEN);
+				return Response.status(Status.FORBIDDEN).build();
+			}
+
 			return Response.ok().entity(Message.OK).build();
 		} catch (UnsupportedEncodingException e){
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
@@ -67,7 +93,7 @@ public class VerifyToken {
 			return Response.status(Status.FORBIDDEN).entity(Message.INVALID_TOKEN).build();
 		}
 	}
-	
+
 	@GET
 	@Path("/user2")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
@@ -81,6 +107,16 @@ public class VerifyToken {
 
 			String token = headers.getHeaderString(JWTUtils.AUTHORIZATION);
 			verifier.verify(token);
+
+			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
+
+			try {
+				datastore.get(KeyFactory.createKey(DSUtils.USER, username));
+			} catch (EntityNotFoundException e) {
+				LOG.info(Message.INVALID_TOKEN);
+				return Response.status(Status.FORBIDDEN).build();
+			}
+
 			return Response.ok().entity(Message.OK).build();
 		} catch (UnsupportedEncodingException e){
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
@@ -88,7 +124,7 @@ public class VerifyToken {
 			return Response.status(Status.FORBIDDEN).entity(Message.INVALID_TOKEN).build();
 		}
 	}
-	
+
 	@GET
 	@Path("/user3")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
@@ -102,6 +138,16 @@ public class VerifyToken {
 
 			String token = headers.getHeaderString(JWTUtils.AUTHORIZATION);
 			verifier.verify(token);
+
+			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
+
+			try {
+				datastore.get(KeyFactory.createKey(DSUtils.USER, username));
+			} catch (EntityNotFoundException e) {
+				LOG.info(Message.INVALID_TOKEN);
+				return Response.status(Status.FORBIDDEN).build();
+			}
+
 			return Response.ok().entity(Message.OK).build();
 		} catch (UnsupportedEncodingException e){
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
@@ -109,7 +155,7 @@ public class VerifyToken {
 			return Response.status(Status.FORBIDDEN).entity(Message.INVALID_TOKEN).build();
 		}
 	}
-	
+
 	@GET
 	@Path("/admin")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
@@ -123,6 +169,16 @@ public class VerifyToken {
 
 			String token = headers.getHeaderString(JWTUtils.AUTHORIZATION);
 			verifier.verify(token);
+
+			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
+
+			try {
+				datastore.get(KeyFactory.createKey(DSUtils.USER, username));
+			} catch (EntityNotFoundException e) {
+				LOG.info(Message.INVALID_TOKEN);
+				return Response.status(Status.FORBIDDEN).build();
+			}
+
 			return Response.ok().entity(Message.OK).build();
 		} catch (UnsupportedEncodingException e){
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
@@ -130,7 +186,7 @@ public class VerifyToken {
 			return Response.status(Status.FORBIDDEN).entity(Message.INVALID_TOKEN).build();
 		}
 	}
-	
+
 	@GET
 	@Path("/worker")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
@@ -144,6 +200,16 @@ public class VerifyToken {
 
 			String token = headers.getHeaderString(JWTUtils.AUTHORIZATION);
 			verifier.verify(token);
+
+			String username = JWT.decode(token).getClaim(JWTUtils.EMAIL).asString();
+
+			try {
+				datastore.get(KeyFactory.createKey(DSUtils.WORKER, username));
+			} catch (EntityNotFoundException e) {
+				LOG.info(Message.INVALID_TOKEN);
+				return Response.status(Status.FORBIDDEN).build();
+			}
+
 			return Response.ok().entity(Message.OK).build();
 		} catch (UnsupportedEncodingException e){
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
@@ -151,7 +217,7 @@ public class VerifyToken {
 			return Response.status(Status.FORBIDDEN).entity(Message.INVALID_TOKEN).build();
 		}
 	}
-	
+
 	@GET
 	@Path("/org")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
