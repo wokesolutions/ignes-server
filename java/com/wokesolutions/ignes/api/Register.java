@@ -1,6 +1,5 @@
 package com.wokesolutions.ignes.api;
 
-import java.awt.LinearGradientPaint;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;

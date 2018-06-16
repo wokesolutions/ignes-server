@@ -308,8 +308,8 @@ function showMap(){
 }
 
 function showProfile() {
-    hideShow('profile_variable');
     getProfile();
+    hideShow('profile_variable');
 }
 
 function showFeed() {
@@ -374,12 +374,12 @@ function getProfile(){
                         document.getElementById("people_gender").innerHTML = "-";
 
                     if(data.useroptional_job !== undefined)
-                    document.getElementById("people_job").innerHTML = data.useroptional_job;
+                        document.getElementById("people_job").innerHTML = data.useroptional_job;
                     else
                         document.getElementById("people_job").innerHTML = "-";
 
                     if(useroptional_skills !== undefined)
-                    document.getElementById("people_service").innerHTML = data.useroptional_skills;
+                        document.getElementById("people_service").innerHTML = data.useroptional_skills;
                     else
                         document.getElementById("people_service").innerHTML = "-";
 
