@@ -98,7 +98,7 @@ public class DSUtils {
 		public static final String WORKER_ORG = "worker_org";
 		public static final String WORKER_JOB = "worker_job";
 		public static final String WORKER_CREATIONTIME = "worker_creationtime";
-		public static final String WORKER_PASSWORD = "worker_password";
+		public static final String WORKER_NAME = "worker_name";
 		
 	// DeletedWorker
 		public static final String DELETEDWORKER_ORG = "deletedworker_org";

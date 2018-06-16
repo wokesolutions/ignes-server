@@ -9,7 +9,8 @@ public class WorkerRegisterData {
 	public WorkerRegisterData() {}
 	
 	public boolean isValid() {
-		return worker_email != null && worker_email.contains("@") && worker_name != null && worker_job != null;
+		return worker_email != null && worker_email.contains("@")
+				&& worker_name != null && worker_job != null;
 	}
 	
 	public static String generateCode(String org, String email) {

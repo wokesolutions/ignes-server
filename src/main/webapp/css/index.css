@@ -360,7 +360,11 @@ label {
 }
 
 .profile_top{
+<<<<<<< HEAD
     margin-bottom: 50px;
+=======
+    margin-bottom: 20px;
+>>>>>>> e522e5118ec8cd436adbf66992c4ec0623411645
     margin-top: 30px;
 }
 
@@ -371,7 +375,14 @@ label {
     font-size: 20px;
 
 }
+<<<<<<< HEAD
 
+=======
+.profile_style_row{
+    font-family: "Quicksand Bold";
+    color: #AD363B;
+}
+>>>>>>> e522e5118ec8cd436adbf66992c4ec0623411645
 .people_points{
     font-family: "Quicksand Bold";
     color: #434343;

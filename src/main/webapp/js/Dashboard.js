@@ -308,8 +308,13 @@ function showMap(){
 }
 
 function showProfile() {
+<<<<<<< HEAD
     hideShow('profile_variable');
     getProfile();
+=======
+    getProfile();
+    hideShow('profile_variable');
+>>>>>>> e522e5118ec8cd436adbf66992c4ec0623411645
 }
 
 function showFeed() {
@@ -343,36 +348,61 @@ function getProfile(){
                     document.getElementById("people_name").innerHTML = data.User;
                     document.getElementById("people_email").innerHTML = data.user_email;
 
+<<<<<<< HEAD
                     if(data.useroptional_birth !== null)
+=======
+                    if(data.useroptional_birth !== undefined)
+>>>>>>> e522e5118ec8cd436adbf66992c4ec0623411645
                         document.getElementById("people_birthday").innerHTML = data.useroptional_birth;
                     else
                         document.getElementById("people_birthday").innerHTML = "-";
 
+<<<<<<< HEAD
                     if(data.useroptional_locality !== null)
+=======
+                    if(data.useroptional_locality !== undefined)
+>>>>>>> e522e5118ec8cd436adbf66992c4ec0623411645
                         document.getElementById("people_locality").innerHTML = data.useroptional_locality;
                     else
                         document.getElementById("people_locality").innerHTML = "-";
 
+<<<<<<< HEAD
                     if(data.useroptional_phone !== null)
+=======
+                    if(data.useroptional_phone !== undefined)
+>>>>>>> e522e5118ec8cd436adbf66992c4ec0623411645
                         document.getElementById("people_phone").innerHTML = data.useroptional_phone;
                     else
                         document.getElementById("people_phone").innerHTML = "-";
 
+<<<<<<< HEAD
                     if(data.useroptional_address !== null)
+=======
+                    if(data.useroptional_address !== undefined)
+>>>>>>> e522e5118ec8cd436adbf66992c4ec0623411645
                         document.getElementById("people_address").innerHTML = data.useroptional_address;
                     else
                         document.getElementById("people_address").innerHTML = "-";
 
+<<<<<<< HEAD
                     if(data.useroptional_zip !== null)
+=======
+                    if(data.useroptional_zip !== undefined)
+>>>>>>> e522e5118ec8cd436adbf66992c4ec0623411645
                        document.getElementById("people_cp").innerHTML = data.useroptional_zip;
                     else
                         document.getElementById("people_cp").innerHTML = "-";
 
+<<<<<<< HEAD
                     if(data.useroptional_gender !== null)
+=======
+                    if(data.useroptional_gender !== undefined)
+>>>>>>> e522e5118ec8cd436adbf66992c4ec0623411645
                         document.getElementById("people_gender").innerHTML = data.useroptional_gender;
                     else
                         document.getElementById("people_gender").innerHTML = "-";
 
+<<<<<<< HEAD
                     if(data.useroptional_job !== null)
                     document.getElementById("people_job").innerHTML = data.useroptional_job;
                     else
@@ -380,6 +410,15 @@ function getProfile(){
 
                     if(useroptional_skills !== null)
                     document.getElementById("people_service").innerHTML = data.useroptional_skills;
+=======
+                    if(data.useroptional_job !== undefined)
+                        document.getElementById("people_job").innerHTML = data.useroptional_job;
+                    else
+                        document.getElementById("people_job").innerHTML = "-";
+
+                    if(useroptional_skills !== undefined)
+                        document.getElementById("people_service").innerHTML = data.useroptional_skills;
+>>>>>>> e522e5118ec8cd436adbf66992c4ec0623411645
                     else
                         document.getElementById("people_service").innerHTML = "-";
 

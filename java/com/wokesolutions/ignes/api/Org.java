@@ -119,6 +119,7 @@ public class Org {
 			String pw = DigestUtils.sha512Hex(WorkerRegisterData.generateCode(org, email));
 			worker.setProperty(DSUtils.WORKER_ORG, org);
 			worker.setProperty(DSUtils.WORKER_JOB, registerData.worker_job);
+			worker.setProperty(DSUtils.WORKER_NAME, registerData.worker_name);
 			worker.setUnindexedProperty(DSUtils.WORKER_CREATIONTIME, date);
 			
 			user.setUnindexedProperty(DSUtils.USER_PASSWORD, pw);
@@ -184,6 +185,7 @@ public class Org {
 
 		try {
 			Entity worker = datastore.get(workerKey);
+			Entity user = datastore.get(worker.getParent());
 
 			if(!worker.getProperty(DSUtils.WORKER_ORG).toString().equals(org)) {
 				txn.rollback();
@@ -201,11 +203,13 @@ public class Org {
 					worker.getProperty(org));
 
 			deletedWorker.setProperty(DSUtils.DELETEDWORKER_PASSWORD,
-					worker.getProperty(DSUtils.WORKER_PASSWORD));
+					user.getProperty(DSUtils.USER_PASSWORD));
 
 			deletedWorker.setProperty(DSUtils.DELETEDWORKER_DELETIONTIME, new Date());
 
-			datastore.delete(txn, workerKey);
+			List<Key> list = Arrays.asList(workerKey, user.getKey());
+			
+			datastore.delete(txn, list);
 			datastore.put(txn, deletedWorker);
 
 			LOG.info(Message.DELETED_WORKER + email);
@@ -268,6 +272,7 @@ public class Org {
 		for(Entity worker : list) {
 			JSONObject obj = new JSONObject();
 			obj.put(DSUtils.WORKER, worker.getKey().getName());
+			obj.put(DSUtils.WORKER_NAME, worker.getProperty(DSUtils.WORKER_NAME));
 			obj.put(DSUtils.WORKER_JOB, worker.getProperty(DSUtils.WORKER_JOB));
 			array.put(obj);
 		}
