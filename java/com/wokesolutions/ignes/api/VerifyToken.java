@@ -17,6 +17,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.wokesolutions.ignes.util.CustomHeader;
@@ -43,19 +44,28 @@ public class VerifyToken {
 					.withIssuer(JWTUtils.ISSUER)
 					.build();
 
-			String token = headers.getHeaderString(JWTUtils.AUTHORIZATION);
+			String token = headers.getHeaderString(CustomHeader.AUTHORIZATION);
 			verifier.verify(token);
 
 			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
 
+			Entity user;
 			try {
-				datastore.get(KeyFactory.createKey(DSUtils.USER, username));
+				user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
 			} catch (EntityNotFoundException e) {
-				LOG.info(Message.INVALID_TOKEN);
-				return Response.status(Status.FORBIDDEN).build();
+				
+				try {
+					user = datastore.get(KeyFactory.createKey(DSUtils.ORG, username));
+				} catch (EntityNotFoundException e1) {
+					LOG.info(Message.INVALID_TOKEN);
+					return Response.status(Status.FORBIDDEN).build();
+				}
 			}
 
-			return Response.ok().entity(Message.OK).build();
+			return Response.ok()
+					.header(CustomHeader.LEVEL_ATT, user.getProperty(DSUtils.USER_LEVEL))
+					.header(CustomHeader.ACTIVATED, CustomHeader.TRUE)
+					.entity(Message.OK).build();
 		} catch (UnsupportedEncodingException e){
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
 		} catch (JWTVerificationException e){
@@ -74,7 +84,7 @@ public class VerifyToken {
 					.withClaim(JWTUtils.LEVEL1, UserLevel.LEVEL1)
 					.build();
 
-			String token = headers.getHeaderString(JWTUtils.AUTHORIZATION);
+			String token = headers.getHeaderString(CustomHeader.AUTHORIZATION);
 			verifier.verify(token);
 
 			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
@@ -86,7 +96,10 @@ public class VerifyToken {
 				return Response.status(Status.FORBIDDEN).build();
 			}
 
-			return Response.ok().entity(Message.OK).build();
+			return Response.ok()
+					//.header(CustomHeader.LEVEL_ATT, user.getProperty(DSUtils.USER_LEVEL))
+					.header(CustomHeader.ACTIVATED, CustomHeader.TRUE)
+					.entity(Message.OK).build();
 		} catch (UnsupportedEncodingException e){
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
 		} catch (JWTVerificationException e){
@@ -105,7 +118,7 @@ public class VerifyToken {
 					.withClaim(JWTUtils.LEVEL2, UserLevel.LEVEL2)
 					.build();
 
-			String token = headers.getHeaderString(JWTUtils.AUTHORIZATION);
+			String token = headers.getHeaderString(CustomHeader.AUTHORIZATION);
 			verifier.verify(token);
 
 			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
@@ -117,7 +130,10 @@ public class VerifyToken {
 				return Response.status(Status.FORBIDDEN).build();
 			}
 
-			return Response.ok().entity(Message.OK).build();
+			return Response.ok()
+					//.header(CustomHeader.LEVEL_ATT, user.getProperty(DSUtils.USER_LEVEL))
+					.header(CustomHeader.ACTIVATED, CustomHeader.TRUE)
+					.entity(Message.OK).build();
 		} catch (UnsupportedEncodingException e){
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
 		} catch (JWTVerificationException e){
@@ -136,7 +152,7 @@ public class VerifyToken {
 					.withClaim(JWTUtils.LEVEL3, UserLevel.LEVEL3)
 					.build();
 
-			String token = headers.getHeaderString(JWTUtils.AUTHORIZATION);
+			String token = headers.getHeaderString(CustomHeader.AUTHORIZATION);
 			verifier.verify(token);
 
 			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
@@ -148,8 +164,10 @@ public class VerifyToken {
 				return Response.status(Status.FORBIDDEN).build();
 			}
 
-			return Response.ok().entity(Message.OK).build();
-		} catch (UnsupportedEncodingException e){
+			return Response.ok()
+					//.header(CustomHeader.LEVEL_ATT, user.getProperty(DSUtils.USER_LEVEL))
+					.header(CustomHeader.ACTIVATED, CustomHeader.TRUE)
+					.entity(Message.OK).build();		} catch (UnsupportedEncodingException e){
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
 		} catch (JWTVerificationException e){
 			return Response.status(Status.FORBIDDEN).entity(Message.INVALID_TOKEN).build();
@@ -167,7 +185,7 @@ public class VerifyToken {
 					.withClaim(JWTUtils.ADMIN, UserLevel.ADMIN)
 					.build();
 
-			String token = headers.getHeaderString(JWTUtils.AUTHORIZATION);
+			String token = headers.getHeaderString(CustomHeader.AUTHORIZATION);
 			verifier.verify(token);
 
 			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
@@ -179,7 +197,10 @@ public class VerifyToken {
 				return Response.status(Status.FORBIDDEN).build();
 			}
 
-			return Response.ok().entity(Message.OK).build();
+			return Response.ok()
+					//.header(CustomHeader.LEVEL_ATT, user.getProperty(DSUtils.USER_LEVEL))
+					.header(CustomHeader.ACTIVATED, CustomHeader.TRUE)
+					.entity(Message.OK).build();
 		} catch (UnsupportedEncodingException e){
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
 		} catch (JWTVerificationException e){
@@ -198,7 +219,7 @@ public class VerifyToken {
 					.withClaim(JWTUtils.WORKER, UserLevel.WORKER)
 					.build();
 
-			String token = headers.getHeaderString(JWTUtils.AUTHORIZATION);
+			String token = headers.getHeaderString(CustomHeader.AUTHORIZATION);
 			verifier.verify(token);
 
 			String username = JWT.decode(token).getClaim(JWTUtils.EMAIL).asString();
@@ -210,7 +231,10 @@ public class VerifyToken {
 				return Response.status(Status.FORBIDDEN).build();
 			}
 
-			return Response.ok().entity(Message.OK).build();
+			return Response.ok()
+					//.header(CustomHeader.LEVEL_ATT, user.getProperty(DSUtils.USER_LEVEL))
+					.header(CustomHeader.ACTIVATED, CustomHeader.TRUE)
+					.entity(Message.OK).build();
 		} catch (UnsupportedEncodingException e){
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
 		} catch (JWTVerificationException e){
@@ -229,9 +253,13 @@ public class VerifyToken {
 					.withClaim(JWTUtils.ORG, true)
 					.build();
 
-			String token = headers.getHeaderString(JWTUtils.AUTHORIZATION);
+			String token = headers.getHeaderString(CustomHeader.AUTHORIZATION);
 			verifier.verify(token);
-			return Response.ok().entity(Message.OK).build();
+			
+			return Response.ok()
+					//.header(CustomHeader.LEVEL_ATT, user.getProperty(DSUtils.USER_LEVEL))
+					.header(CustomHeader.ACTIVATED, CustomHeader.TRUE)
+					.entity(Message.OK).build();
 		} catch (UnsupportedEncodingException e){
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
 		} catch (JWTVerificationException e){

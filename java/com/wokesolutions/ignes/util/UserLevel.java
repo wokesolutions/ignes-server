@@ -7,4 +7,5 @@ public class UserLevel {
 	public static final String LEVEL3 = "LEVEL3";
 	public static final String WORKER = "WORKER";
 	public static final String ADMIN = "ADMIN";
+	public static final String ORG = "ORG";
 }

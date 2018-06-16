@@ -1,18 +1,27 @@
 package com.wokesolutions.ignes.api;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
@@ -20,6 +29,8 @@ import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
+import com.google.appengine.api.datastore.PropertyProjection;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Transaction;
@@ -33,12 +44,15 @@ import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.ParamName;
+import com.wokesolutions.ignes.util.UserLevel;
 
 @Path("/org")
 public class Org {
 
 	private static final Logger LOG = Logger.getLogger(Org.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+	private static final int BATCH_SIZE = 10;
 
 	@POST
 	@Path("/registerworker")
@@ -48,7 +62,7 @@ public class Org {
 		if(!registerData.isValid())
 			return Response.status(Status.BAD_REQUEST).entity(Message.REGISTER_DATA_INVALID).build();
 
-		String org = request.getAttribute(CustomHeader.NIF).toString();
+		String org = request.getAttribute(CustomHeader.NIF_ATT).toString();
 
 		if(org == null)
 			return Response.status(Status.EXPECTATION_FAILED).build();
@@ -68,53 +82,85 @@ public class Org {
 	private Response registerWorkerRetry(WorkerRegisterData registerData, String org) {
 		LOG.info(Message.ATTEMPT_REGISTER_WORKER + registerData.worker_name);
 
-		String email = registerData.worker_email;
-
-		Filter emailFilter =
-				new Query.FilterPredicate(DSUtils.USER_EMAIL, FilterOperator.EQUAL, email);
-		FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
-
-		Query userQuery = new Query(DSUtils.USER)
-				.setFilter(emailFilter);
-
-		QueryResultList<Entity> userResult =
-				datastore.prepare(userQuery).asQueryResultList(fetchOptions);
-
-		Key orgKey = KeyFactory.createKey(DSUtils.ORG, org);
-
-		if(!userResult.isEmpty()) {
-			return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build();
-		}
-
-		String pw = WorkerRegisterData.generateCode(org, email);
-
-		Entity worker = new Entity(DSUtils.WORKER, email);
-		worker.setUnindexedProperty(DSUtils.WORKER_PASSWORD, DigestUtils.sha256Hex(pw));
-		worker.setProperty(DSUtils.WORKER_ORG, org);
-		worker.setProperty(DSUtils.WORKER_JOB, registerData.worker_job);
-		worker.setUnindexedProperty(DSUtils.WORKER_CREATIONTIME, new Date());
+		Transaction txn = datastore.beginTransaction();
 
 		try {
-			Entity orgEntity = datastore.get(orgKey);
-			Email.sendWorkerRegisterMessage(email, pw,
-					orgEntity.getProperty(DSUtils.ORG_NAME).toString());
-		} catch(EntityNotFoundException e) {
-			return Response.status(Status.EXPECTATION_FAILED).build();
+			String email = registerData.worker_email;
+
+			Filter emailFilter =
+					new Query.FilterPredicate(DSUtils.USER_EMAIL, FilterOperator.EQUAL, email);
+
+			Query userQuery = new Query(DSUtils.USER)
+					.setFilter(emailFilter);
+
+			Entity userResult;
+
+			try {
+				userResult = datastore.prepare(userQuery).asSingleEntity();
+			} catch(TooManyResultsException e) {
+				LOG.info(Message.UNEXPECTED_ERROR);
+				txn.rollback();
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
+
+			Key orgKey = KeyFactory.createKey(DSUtils.ORG, org);
+
+			if(userResult != null) {
+				txn.rollback();
+				return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build();
+			}
+
+			Date date = new Date();
+
+			Entity user = new Entity(DSUtils.USER, email);
+			Key userKey = user.getKey();
+			Entity worker = new Entity(DSUtils.WORKER, userKey);
+
+			String pw = DigestUtils.sha512Hex(WorkerRegisterData.generateCode(org, email));
+			worker.setProperty(DSUtils.WORKER_ORG, org);
+			worker.setProperty(DSUtils.WORKER_JOB, registerData.worker_job);
+			worker.setUnindexedProperty(DSUtils.WORKER_CREATIONTIME, date);
+			
+			user.setUnindexedProperty(DSUtils.USER_PASSWORD, pw);
+			user.setProperty(DSUtils.USER_EMAIL, email);
+			user.setProperty(DSUtils.USER_LEVEL, UserLevel.WORKER);
+			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
+
+			Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
+
+			List<Entity> list = Arrays.asList(user, worker, useroptional);
+
+			try {
+				Entity orgEntity = datastore.get(orgKey);
+				Email.sendWorkerRegisterMessage(email, pw,
+						orgEntity.getProperty(DSUtils.ORG_NAME).toString());
+			} catch(EntityNotFoundException e) {
+				LOG.info(Message.UNEXPECTED_ERROR);
+				txn.rollback();
+				return Response.status(Status.EXPECTATION_FAILED).build();
+			}
+			datastore.put(txn, list);
+			txn.commit();
+			LOG.info(Message.WORKER_REGISTERED + registerData.worker_email);
+			return Response.ok().build();
+		} finally {
+			if(txn.isActive()) {
+				LOG.info(Message.TXN_ACTIVE);
+				txn.rollback();
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
 		}
-		datastore.put(worker);
-		LOG.info(Message.WORKER_REGISTERED + registerData.worker_email);
-		return Response.ok().build();
 	}
-	
+
 	@DELETE
-	@Path("/deleteworker")
+	@Path("/deleteworker/{email}")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
-	public Response deleteWorker(@QueryParam("workeremail") String workeremail,
+	public Response deleteWorker(@PathParam(ParamName.EMAIL) String email,
 			@Context HttpServletRequest request) {
-		if(!isValid(workeremail))
+		if(!isValid(email))
 			return Response.status(Status.BAD_REQUEST).build();
 
-		String org = request.getAttribute(CustomHeader.NIF).toString();
+		String org = request.getAttribute(CustomHeader.NIF_ATT).toString();
 
 		if(org == null)
 			return Response.status(Status.EXPECTATION_FAILED).build();
@@ -122,7 +168,7 @@ public class Org {
 		int retries = 5;
 		while(true) {
 			try {
-				return deleteWorkerRetry(workeremail, org);
+				return deleteWorkerRetry(email, org);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -130,42 +176,42 @@ public class Org {
 			}
 		}
 	}
-	
-	public Response deleteWorkerRetry(String workeremail, String org) {
-		Key workerKey = KeyFactory.createKey(DSUtils.WORKER, workeremail);
+
+	public Response deleteWorkerRetry(String email, String org) {
+		Key workerKey = KeyFactory.createKey(DSUtils.WORKER, email);
 		TransactionOptions options = TransactionOptions.Builder.withXG(true);
 		Transaction txn = datastore.beginTransaction(options);
-		
+
 		try {
 			Entity worker = datastore.get(workerKey);
-			
+
 			if(!worker.getProperty(DSUtils.WORKER_ORG).toString().equals(org)) {
 				txn.rollback();
 				return Response.status(Status.FORBIDDEN).build();
 			}
-			
-			Entity deletedWorker = new Entity(DSUtils.DELETEDWORKER, workeremail);
+
+			Entity deletedWorker = new Entity(DSUtils.DELETEDWORKER, email);
 			deletedWorker.setProperty(DSUtils.DELETEDWORKER_CREATIONTIME,
 					worker.getProperty(DSUtils.WORKER_CREATIONTIME));
-			
+
 			deletedWorker.setProperty(DSUtils.DELETEDWORKER_JOB,
 					worker.getProperty(DSUtils.WORKER_JOB));
-			
+
 			deletedWorker.setProperty(DSUtils.DELETEDWORKER_ORG,
 					worker.getProperty(org));
-			
+
 			deletedWorker.setProperty(DSUtils.DELETEDWORKER_PASSWORD,
 					worker.getProperty(DSUtils.WORKER_PASSWORD));
-			
+
 			deletedWorker.setProperty(DSUtils.DELETEDWORKER_DELETIONTIME, new Date());
-			
+
 			datastore.delete(txn, workerKey);
 			datastore.put(txn, deletedWorker);
-			
-			LOG.info(Message.DELETED_WORKER + workeremail);
+
+			LOG.info(Message.DELETED_WORKER + email);
 			txn.commit();
 			return Response.ok().build();
-			
+
 		} catch (EntityNotFoundException e) {
 			txn.rollback();
 			return Response.status(Status.EXPECTATION_FAILED).build();
@@ -177,7 +223,58 @@ public class Org {
 			}
 		}
 	}
-	
+
+	@GET
+	@Path("/listworkers")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response getWorkers(@Context HttpServletRequest request,
+			@QueryParam(ParamName.CURSOR) String cursor) {
+		String org = request.getAttribute(CustomHeader.NIF_ATT).toString();
+
+		if(org == null)
+			return Response.status(Status.EXPECTATION_FAILED).build();
+
+		int retries = 5;
+		while(true) {
+			try {
+				return getWorkersRetry(org, cursor);
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+
+	private Response getWorkersRetry(String org, String cursor) {
+		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
+
+		Query query = new Query(DSUtils.WORKER);
+
+		if(cursor != null && !cursor.equals(""))
+			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
+
+		Filter filter = new Query.FilterPredicate(DSUtils.WORKER_ORG,
+				FilterOperator.EQUAL, org);
+
+		query.setFilter(filter);
+
+		query.addProjection(new PropertyProjection(DSUtils.WORKER_JOB, String.class));
+
+		QueryResultList<Entity> list = datastore.prepare(query).asQueryResultList(fetchOptions);
+
+		JSONArray array = new JSONArray();
+
+		for(Entity worker : list) {
+			JSONObject obj = new JSONObject();
+			obj.put(DSUtils.WORKER, worker.getKey().getName());
+			obj.put(DSUtils.WORKER_JOB, worker.getProperty(DSUtils.WORKER_JOB));
+			array.put(obj);
+		}
+
+		return Response.ok(array.toString()).build();
+	}
+
 	private boolean isValid(String email) {
 		if(email == null)
 			return false;

@@ -29,7 +29,6 @@ import com.google.appengine.api.datastore.Transaction;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
-import com.wokesolutions.ignes.util.JWTUtils;
 import com.wokesolutions.ignes.util.Message;
 
 @Path("/logout")
@@ -44,7 +43,7 @@ public class Logout {
 	@Path("/everywhere")
 	public Response logoutUserEverywhere(@Context HttpHeaders headers,
 			@Context HttpServletRequest request) {
-		String username = request.getAttribute(CustomHeader.USERNAME).toString();
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		int retries = 5;
 		while(true) {
@@ -85,7 +84,7 @@ public class Logout {
 	public Response logoutUser(@Context HttpHeaders headers,
 			@Context HttpServletRequest request) {
 
-		String username = request.getAttribute(CustomHeader.USERNAME).toString();
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		int retries = 5;
 		while(true) {
@@ -139,7 +138,7 @@ public class Logout {
 
 				Filter filter = new Query
 						.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL,
-								request.getHeader(JWTUtils.AUTHORIZATION));
+								request.getHeader(CustomHeader.AUTHORIZATION));
 
 				query.setFilter(filter);
 
@@ -173,7 +172,7 @@ public class Logout {
 	public Response logoutOrg(@Context HttpHeaders headers,
 			@Context HttpServletRequest request) {
 
-		String nif = request.getAttribute(CustomHeader.NIF).toString();
+		String nif = request.getAttribute(CustomHeader.NIF_ATT).toString();
 
 		int retries = 5;
 		while(true) {
@@ -227,7 +226,7 @@ public class Logout {
 
 				Filter filter = new Query
 						.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL,
-								request.getHeader(JWTUtils.AUTHORIZATION));
+								request.getHeader(CustomHeader.AUTHORIZATION));
 
 				query.setFilter(filter);
 

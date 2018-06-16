@@ -9,8 +9,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 public class JWTUtils {
 
 	public final static String ISSUER = "Ignes";
-	
-	public final static String AUTHORIZATION = "Authorization";
 
 	// Sent in the token
 	public static final String USERNAME = "usr";

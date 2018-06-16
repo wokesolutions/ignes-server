@@ -46,11 +46,11 @@ public class Register {
 	public Response registerUser(UserRegisterData registerData) {
 		if(!registerData.isValid())
 			return Response.status(Status.BAD_REQUEST).entity(Message.REGISTER_DATA_INVALID).build();
-		
-		if(!registerData.user_email.contains("@"))
+
+		if(!registerData.email.contains("@"))
 			return Response.status(Status.BAD_REQUEST).entity(Message.INVALID_EMAIL).build();
-		
-		if(!UserRegisterData.isUsernameValid(registerData.user_username))
+
+		if(!UserRegisterData.isUsernameValid(registerData.username))
 			return Response.status(Status.BAD_REQUEST).entity(Message.INVALID_USERNAME).build();
 
 		int retries = 5;
@@ -66,20 +66,26 @@ public class Register {
 	}
 
 	private Response registerUserRetry(UserRegisterData registerData) {
-		LOG.info(Message.ATTEMPT_REGISTER_USER + registerData.user_username);
+		LOG.info(Message.ATTEMPT_REGISTER_USER + registerData.username);
 
 		Transaction txn = datastore.beginTransaction();
 		try {
 			// If the entity does not exist an Exception is thrown. Otherwise,
-			Key userKey = KeyFactory.createKey(DSUtils.USER, registerData.user_username);
-			datastore.get(userKey);
+			Key userKey = KeyFactory.createKey(DSUtils.USER, registerData.username);
+
+			try {
+				datastore.get(userKey);
+			} catch(EntityNotFoundException e2) {
+				datastore.get(KeyFactory.createKey(DSUtils.ORG, registerData.username));
+			}
+
 			txn.rollback();
 			return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build(); 
 		} catch (EntityNotFoundException e) {
 
 			Filter filter =
 					new Query.FilterPredicate(DSUtils.USER_EMAIL,
-							FilterOperator.EQUAL, registerData.user_email);
+							FilterOperator.EQUAL, registerData.email);
 
 			Query emailQuery = new Query(DSUtils.USER).setFilter(filter);
 
@@ -94,10 +100,10 @@ public class Register {
 			if(existingUser != null)
 				return Response.status(Status.CONFLICT).entity(Message.EMAIL_ALREADY_IN_USE).build();
 
-			Entity user = new Entity(DSUtils.USER, registerData.user_username);
+			Entity user = new Entity(DSUtils.USER, registerData.username);
 			Key userKey = user.getKey();
-			user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(registerData.user_password));
-			user.setProperty(DSUtils.USER_EMAIL, registerData.user_email);
+			user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(registerData.password));
+			user.setProperty(DSUtils.USER_EMAIL, registerData.email);
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1.toString());
 			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, new Date());
 
@@ -114,10 +120,10 @@ public class Register {
 
 			datastore.put(txn, list);
 
-			LOG.info(Message.USER_REGISTERED + registerData.user_username);
+			LOG.info(Message.USER_REGISTERED + registerData.username);
 			txn.commit();
 
-			Email.sendConfirmMessage(registerData.user_email, code);
+			Email.sendConfirmMessage(registerData.email, code);
 
 			return Response.ok().build();
 		} finally {
@@ -188,14 +194,9 @@ public class Register {
 			org.setProperty(DSUtils.ORG_SERVICES, registerData.org_services);
 			org.setProperty(DSUtils.ORG_ISFIRESTATION, registerData.org_isfirestation);
 			org.setUnindexedProperty(DSUtils.ORG_CREATIONTIME, new Date());
-			org.setProperty(DSUtils.ORG_CONFIRMED, false);
+			org.setProperty(DSUtils.ORG_CONFIRMED, CustomHeader.FALSE);
 
-			Entity orgCode = new Entity(DSUtils.ORGCODE , org.getKey());
-			orgCode.setProperty(DSUtils.ORGCODE_ACTIVE, false);
-
-			List<Entity> org_and_code = Arrays.asList(org, orgCode);
-
-			datastore.put(txn, org_and_code);
+			datastore.put(txn, org);
 			LOG.info(Message.ORG_REGISTERED + registerData.org_nif);
 			txn.commit();
 			return Response.ok().build();

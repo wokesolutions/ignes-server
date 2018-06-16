@@ -428,8 +428,8 @@ public class Profile {
 	public static String sameUserOrAdmin(HttpServletRequest request, String username)
 			throws NotSameNorAdminException {
 
-		String requester = request.getAttribute(CustomHeader.USERNAME).toString();
-		String level = request.getAttribute(CustomHeader.LEVEL).toString();
+		String requester = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		String level = request.getAttribute(CustomHeader.LEVEL_ATT).toString();
 
 		if(!level.equals(UserLevel.ADMIN) && !requester.equals(username))
 			throw new NotSameNorAdminException();

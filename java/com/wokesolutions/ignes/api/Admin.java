@@ -83,7 +83,7 @@ public class Admin {
 		Transaction txn = datastore.beginTransaction();
 		try {
 			// If the entity does not exist an Exception is thrown. Otherwise,
-			Key userKey = KeyFactory.createKey(DSUtils.USER, registerData.user_username);
+			Key userKey = KeyFactory.createKey(DSUtils.USER, registerData.username);
 			datastore.get(userKey);
 			txn.rollback();
 			return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build(); 
@@ -91,7 +91,7 @@ public class Admin {
 
 			Filter filter =
 					new Query.FilterPredicate(DSUtils.USER_EMAIL,
-							FilterOperator.EQUAL, registerData.user_email);
+							FilterOperator.EQUAL, registerData.email);
 
 			Query emailQuery = new Query(DSUtils.USER).setFilter(filter);
 
@@ -107,14 +107,13 @@ public class Admin {
 				return Response.status(Status.CONFLICT).entity(Message.EMAIL_ALREADY_IN_USE).build();
 
 			Date date = new Date();
-			Entity user = new Entity(DSUtils.USER, registerData.user_username);
+			Entity user = new Entity(DSUtils.USER, registerData.username);
 			Key userKey = user.getKey();
 			Entity admin = new Entity(DSUtils.ADMIN, userKey);
 
 			admin.setUnindexedProperty(DSUtils.ADMIN_CREATIONTIME, date);
-
-			user.setProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(registerData.user_password));
-			user.setProperty(DSUtils.USER_EMAIL, registerData.user_email);
+			user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(registerData.password));
+			user.setProperty(DSUtils.USER_EMAIL, registerData.email);
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.ADMIN);
 			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
 
@@ -135,9 +134,9 @@ public class Admin {
 	}
 
 	@POST
-	@Path("/promote")
+	@Path("/promote/{username}")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
-	public Response promoteToAdmin(@QueryParam ("username") String username,
+	public Response promoteToAdmin(@PathParam(ParamName.USERNAME) String username,
 			@Context HttpServletRequest request) {
 		if(username == null)
 			return Response.status(Status.EXPECTATION_FAILED).build();
@@ -206,9 +205,9 @@ public class Admin {
 	}
 
 	@POST
-	@Path("/demote")
+	@Path("/demote/{username}")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
-	public Response demoteFromAdmin(@QueryParam ("username") String username,
+	public Response demoteFromAdmin(@PathParam(ParamName.USERNAME) String username,
 			@Context HttpServletRequest request) {
 		int retries = 5;
 
@@ -278,7 +277,7 @@ public class Admin {
 	}
 
 	private Key getMoterKey(HttpServletRequest request) {
-		String username = request.getAttribute(CustomHeader.USERNAME).toString();
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 		Key promoterKey = KeyFactory.createKey(DSUtils.USER, username);
 
 		Query promoterQuery = new Query(DSUtils.ADMIN).setAncestor(promoterKey);
@@ -494,7 +493,7 @@ public class Admin {
 				try {
 					Entity orgE = datastore.get(orgkey);
 					
-					orgE.setProperty(DSUtils.ORG_CONFIRMED, true);
+					orgE.setProperty(DSUtils.ORG_CONFIRMED, CustomHeader.TRUE);
 					
 					return Response.ok().build();
 				} catch (EntityNotFoundException e) {

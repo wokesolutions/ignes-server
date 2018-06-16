@@ -215,7 +215,7 @@ footer a{
     color:#AD363B;
     margin-top: 2rem;
     margin-bottom: 1rem;
-    margin-bottom: 2rem;
+
 }
 #thisform{
     margin-top: 2rem;
@@ -337,4 +337,8 @@ label {
     font-family: "Quicksand Bold";
     color:#AD363B;
 
+}
+
+#contactosMarg{
+    margin-top: 40px;
 }

@@ -37,15 +37,15 @@
         <property name="report_status" direction="desc"/>
     </datastore-index>
     
-    <datastore-index kind="Report" ancestor="false" source="manual">
+    <!--<datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p1lng" direction="asc"/>
         <property name="report_address" direction="asc"/>
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
         <property name="report_lng" direction="asc"/>
         <property name="report_username" direction="asc"/>
-    </datastore-index>
-    
+    </datastore-index>-->
+     
     <datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p2lng" direction="asc"/>
         <property name="report_address" direction="asc"/>

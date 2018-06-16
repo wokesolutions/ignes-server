@@ -36,12 +36,12 @@ public class AdminFilter implements Filter {
 					.withClaim(JWTUtils.ADMIN, UserLevel.ADMIN)
 					.build();
 
-			String token = ((HttpServletRequest) req).getHeader(JWTUtils.AUTHORIZATION);
+			String token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
 			verifier.verify(token);
 			
 			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
-			req.setAttribute(CustomHeader.USERNAME, username);
-			req.setAttribute(CustomHeader.LEVEL, JWTUtils.ADMIN);
+			req.setAttribute(CustomHeader.USERNAME_ATT, username);
+			req.setAttribute(CustomHeader.LEVEL_ATT, JWTUtils.ADMIN);
 
 			chain.doFilter(req, resp);
 		} catch (JWTVerificationException e){

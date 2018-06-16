@@ -49,7 +49,7 @@ public class User2Filter implements Filter {
 					.withClaim(JWTUtils.LEVEL2, UserLevel.LEVEL2)
 					.build();
 
-			String token = ((HttpServletRequest) req).getHeader(JWTUtils.AUTHORIZATION);
+			String token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
 			
 			if(token == null)
 				throw new Exception();
@@ -74,8 +74,8 @@ public class User2Filter implements Filter {
 				throw new Exception();
 			}
 			
-			req.setAttribute(CustomHeader.USERNAME, username);
-			req.setAttribute(CustomHeader.LEVEL, JWTUtils.LEVEL3);
+			req.setAttribute(CustomHeader.USERNAME_ATT, username);
+			req.setAttribute(CustomHeader.LEVEL_ATT, JWTUtils.LEVEL3);
 
 			chain.doFilter(req, resp);
 		} catch (Exception e){

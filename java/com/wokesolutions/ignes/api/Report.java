@@ -102,10 +102,10 @@ public class Report {
 		String reportid = null;
 		Transaction txn = datastore.beginTransaction();
 
-		String level = request.getAttribute(CustomHeader.LEVEL).toString();
+		String level = request.getAttribute(CustomHeader.LEVEL_ATT).toString();
 
 		try {
-			username = request.getAttribute(CustomHeader.USERNAME).toString();
+			username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 			reportid = ReportData.generateId(username, creationtime);
 			LOG.info(Message.ATTEMPT_CREATE_REPORT + reportid);
