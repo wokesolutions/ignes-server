@@ -42,22 +42,7 @@
 
 	<filter-mapping>
 		<filter-name>UserFilter</filter-name>
-		<url-pattern>/api/logout</url-pattern>
 		<url-pattern>/api/report/create</url-pattern>
-		<url-pattern>/api/report/vote/up</url-pattern>
-		<url-pattern>/api/report/vote/down</url-pattern>
-		<url-pattern>/api/report/vote/spam</url-pattern>
-		<url-pattern>/api/profile/*</url-pattern>
-	</filter-mapping>
-
-	<filter>
-		<filter-name>User2Filter</filter-name>
-		<filter-class>com.wokesolutions.ignes.filters.User2Filter</filter-class>
-	</filter>
-
-	<filter-mapping>
-		<filter-name>User2Filter</filter-name>
-		<url-pattern>/api/report/close/*</url-pattern>
 	</filter-mapping>
 
 	<filter>
@@ -67,16 +52,16 @@
 
 	<filter-mapping>
 		<filter-name>AdminFilter</filter-name>
-		<url-pattern>/api/admin/*</url-pattern>
+		<url-pattern>/api/adminmanager/*</url-pattern>
 	</filter-mapping>
 
 	<filter>
 		<filter-name>OrgFilter</filter-name>
 		<filter-class>com.wokesolutions.ignes.filters.OrgFilter</filter-class>
 	</filter>
-
+	
 	<filter-mapping>
 		<filter-name>OrgFilter</filter-name>
-		<url-pattern>/api/org/*</url-pattern>
+		<url-pattern>/api/orgcode/*</url-pattern>
 	</filter-mapping>
 </web-app>

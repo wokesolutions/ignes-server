@@ -21,7 +21,7 @@ function init() {
     document.getElementById('map_button').onclick = showMap;
     document.getElementById("profile_button").onclick = showProfile;
     document.getElementById("feed_button").onclick = showFeed;
-    document.getElementById("user_table_button").onclick = showUsers;
+    document.getElementById("user_table_button").onclick = showWorkers;
     document.getElementById("logout_button").onclick = logOut;
 
     getMarkers("Caparica");
@@ -224,8 +224,48 @@ function showFeed() {
 
 }
 
-function showUsers(){
+function showWorkers(){
+    getWorkers();
     hideShow('users_variable');
 }
 
+function getWorkers(){
+    var info;
+    fetch('https://hardy-scarab-200218.appspot.com/api/org/listworkers', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
 
+            if (response.status === 200) {
+                response.json().then(function(data) {
+                    if(data != null){
+                        var worker_data = '';
+                        $.each(data,function(key,value){
+                            worker_data += '<tr>';
+                            worker_data += '<td>' + value.user_name + '</td>';
+                            worker_data += '<td>' + value.Worker + '</td>';
+                            worker_data += '</tr>';
+                        });
+                        $('#user_table').append(worker_data);
+                    }else{
+                        alert("Esta empresa ainda não tem trabalhadores associados.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden")
+                return info;
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+            return info;
+        });
+
+}
