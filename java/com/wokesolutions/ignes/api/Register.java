@@ -1,5 +1,6 @@
 package com.wokesolutions.ignes.api;
 
+import java.awt.LinearGradientPaint;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -20,6 +21,7 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Transaction;
+import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
@@ -68,64 +70,68 @@ public class Register {
 	private Response registerUserRetry(UserRegisterData registerData) {
 		LOG.info(Message.ATTEMPT_REGISTER_USER + registerData.username);
 
-		Transaction txn = datastore.beginTransaction();
+		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 		try {
 			// If the entity does not exist an Exception is thrown. Otherwise,
 			Key userKey = KeyFactory.createKey(DSUtils.USER, registerData.username);
 
+			LOG.info("uioghuipghi");
 			try {
 				datastore.get(userKey);
 			} catch(EntityNotFoundException e2) {
-				datastore.get(KeyFactory.createKey(DSUtils.ORG, registerData.username));
+				try {
+					Key orgKey = KeyFactory.createKey(DSUtils.ORG, registerData.username);
+					datastore.get(orgKey);
+				} catch(EntityNotFoundException e3) {
+					Filter filter =
+							new Query.FilterPredicate(DSUtils.USER_EMAIL,
+									FilterOperator.EQUAL, registerData.email);
+
+					Query emailQuery = new Query(DSUtils.USER).setFilter(filter);
+
+					Entity existingUser;
+
+					try {
+						existingUser = datastore.prepare(emailQuery).asSingleEntity();
+					} catch(TooManyResultsException e1) {
+						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+					}
+
+					if(existingUser != null)
+						return Response.status(Status.CONFLICT).entity(Message.EMAIL_ALREADY_IN_USE).build();
+
+					Entity user = new Entity(DSUtils.USER, registerData.username);
+					userKey = user.getKey();
+					user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(registerData.password));
+					user.setProperty(DSUtils.USER_EMAIL, registerData.email);
+					user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1.toString());
+					user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, new Date());
+
+					String code = Long.toString(System.currentTimeMillis()).substring(6, 13);
+
+					user.setUnindexedProperty(DSUtils.USER_CODE, code);
+
+					Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
+					userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
+
+					Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
+
+					List<Entity> list = Arrays.asList(user, useroptional, userPoints);
+
+					datastore.put(txn, list);
+
+					LOG.info(Message.USER_REGISTERED + registerData.username);
+					txn.commit();
+
+					Email.sendConfirmMessage(registerData.email, code);
+
+					return Response.ok().build();
+				}
 			}
+			LOG.info("uioghuipghi");
 
 			txn.rollback();
 			return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build(); 
-		} catch (EntityNotFoundException e) {
-
-			Filter filter =
-					new Query.FilterPredicate(DSUtils.USER_EMAIL,
-							FilterOperator.EQUAL, registerData.email);
-
-			Query emailQuery = new Query(DSUtils.USER).setFilter(filter);
-
-			Entity existingUser;
-
-			try {
-				existingUser = datastore.prepare(emailQuery).asSingleEntity();
-			} catch(TooManyResultsException e1) {
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			if(existingUser != null)
-				return Response.status(Status.CONFLICT).entity(Message.EMAIL_ALREADY_IN_USE).build();
-
-			Entity user = new Entity(DSUtils.USER, registerData.username);
-			Key userKey = user.getKey();
-			user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(registerData.password));
-			user.setProperty(DSUtils.USER_EMAIL, registerData.email);
-			user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1.toString());
-			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, new Date());
-
-			String code = Long.toString(System.currentTimeMillis()).substring(6, 13);
-
-			user.setUnindexedProperty(DSUtils.USER_CODE, code);
-
-			Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
-			userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
-
-			Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
-
-			List<Entity> list = Arrays.asList(user, useroptional, userPoints);
-
-			datastore.put(txn, list);
-
-			LOG.info(Message.USER_REGISTERED + registerData.username);
-			txn.commit();
-
-			Email.sendConfirmMessage(registerData.email, code);
-
-			return Response.ok().build();
 		} finally {
 			if (txn.isActive() ) {
 				txn.rollback();

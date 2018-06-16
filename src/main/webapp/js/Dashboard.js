@@ -8,7 +8,7 @@ var currentLoc = {
 };
 var locations = [];
 var reports;
-var currentposition = "map";
+var current_position = "map_variable";
 
 var infowindow = new google.maps.InfoWindow();
 
@@ -22,152 +22,20 @@ function init() {
 
     verifyIsLoggedIn();
 
-    document.getElementById("searchLocation").onclick = searchLocation;
-    document.getElementById("reportDashboard").onclick = fillReport;
-    document.getElementById("logoutBut").onclick = logOut;
-    document.getElementById('addReport').onclick = addReport;
-    document.getElementById('mapButton').onclick = showMap;
-    document.getElementById("perfilBut").onclick = showPerfil;
-    document.getElementById("feedBut").onclick = showFeed;
-    document.getElementById("espacinhoBut").onclick = showCantinho;
-    document.getElementById("contactoBut").onclick = showContacto;
-    document.getElementById("defBut").onclick = showDef;
+    document.getElementById("search_location").onclick = searchLocation;
+    document.getElementById("report_button").onclick = showReport;
+    document.getElementById("logout_button").onclick = logOut;
+    document.getElementById("report_occurrence").onclick = addReport;
+    document.getElementById("map_button").onclick = showMap;
+    document.getElementById("profile_button").onclick = showProfile;
+    document.getElementById("feed_button").onclick = showFeed;
+    document.getElementById("space_button").onclick = showNeighborsSpace;
+    document.getElementById("contact_button").onclick = showContacts;
+
 
     getMarkers("Caparica");
 
-
-
-    // Basic options for a simple Google Map
-    // For more options see: https://developers.google.com/maps/documentation/javascript/reference#MapOptions
-    var mapOptions = {
-        // How zoomed in you want the map to start at (always required)
-        zoom: 15,
-
-        // The latitude and longitude to center the map (always required)
-        center: new google.maps.LatLng(38.6615119,-8.224454), // FCT
-
-        // Disables the default Google Maps UI components
-        disableDefaultUI: true,
-
-
-        // How you would like to style the map.
-        // This is where you would paste any style found on Snazzy Maps.
-        styles: [{
-            "featureType": "water",
-            "elementType": "geometry",
-            "stylers": [{
-                "color": "#000000"
-            }, {
-                "lightness": 17
-            }]
-        }, {
-            "featureType": "landscape",
-            "elementType": "geometry",
-            "stylers": [{
-                "color": "#000000"
-            }, {
-                "lightness": 20
-            }]
-        }, {
-            "featureType": "road.highway",
-            "elementType": "geometry.fill",
-            "stylers": [{
-                "color": "#000000"
-            }, {
-                "lightness": 17
-            }]
-        }, {
-            "featureType": "road.highway",
-            "elementType": "geometry.stroke",
-            "stylers": [{
-                "color": "#000000"
-            }, {
-                "lightness": 29
-            }, {
-                "weight": 0.2
-            }]
-        }, {
-            "featureType": "road.arterial",
-            "elementType": "geometry",
-            "stylers": [{
-                "color": "#000000"
-            }, {
-                "lightness": 18
-            }]
-        }, {
-            "featureType": "road.local",
-            "elementType": "geometry",
-            "stylers": [{
-                "color": "#000000"
-            }, {
-                "lightness": 16
-            }]
-        }, {
-            "featureType": "poi",
-            "elementType": "geometry",
-            "stylers": [{
-                "color": "#000000"
-            }, {
-                "lightness": 21
-            }]
-        }, {
-            "elementType": "labels.text.stroke",
-            "stylers": [{
-                "visibility": "on"
-            }, {
-                "color": "#000000"
-            }, {
-                "lightness": 16
-            }]
-        }, {
-            "elementType": "labels.text.fill",
-            "stylers": [{
-                "saturation": 36
-            }, {
-                "color": "#000000"
-            }, {
-                "lightness": 40
-            }]
-        }, {
-            "elementType": "labels.icon",
-            "stylers": [{
-                "visibility": "off"
-            }]
-        }, {
-            "featureType": "transit",
-            "elementType": "geometry",
-            "stylers": [{
-                "color": "#000000"
-            }, {
-                "lightness": 19
-            }]
-        }, {
-            "featureType": "administrative",
-            "elementType": "geometry.fill",
-            "stylers": [{
-                "color": "#000000"
-            }, {
-                "lightness": 20
-            }]
-        }, {
-            "featureType": "administrative",
-            "elementType": "geometry.stroke",
-            "stylers": [{
-                "color": "#000000"
-            }, {
-                "lightness": 17
-            }, {
-                "weight": 1.2
-            }]
-        }]
-    };
-
-    // Get the HTML DOM element that will contain your map
-// We are using a div with id="map" seen below in the <body>
     var mapElement = document.getElementById('map');
-
-
-// Create the Google Map using out element and options defined above
     map = new google.maps.Map(mapElement, currentLoc);
 
 }
@@ -195,7 +63,7 @@ function searchLocation(){
             map.setCenter(results[0].geometry.location);
             map.setZoom(15);
         } else {
-            alert('A morada inserida não existe.');
+            alert('A morada inserida não existe');
         }
     });
 
@@ -204,52 +72,71 @@ function searchLocation(){
 
 function hideShow(element){
 
-    console.log("Ola");
-    if(currentposition === "map"){
+
+    if(current_position === "map_variable"){
+
         document.getElementById("map").style.display = "none";
-        document.getElementById("searchBar").style.display = "none";
-    }else if(currentposition === "report"){
-        document.getElementById("reportForm").style.display = "none";
-    }else if(currentposition === "cantinho"){
-        document.getElementById("cantinhoId").style.display = "none";
-    }else if(currentposition === "perfil"){
-        document.getElementById("perfilId").style.display = "none";
-    }else if(currentposition === "feed"){
-        document.getElementById("feedId").style.display = "none";
-    }else if(currentposition === "contactos"){
-        document.getElementById("contactosId").style.display = "none";
-    }else if(currentposition === "definicoes"){
-        document.getElementById("definicoesId").style.display = "none";
+        document.getElementById("search_location_style").style.display = "none";
+
+    }else if(current_position === "report_variable"){
+
+        document.getElementById("report_form").style.display = "none";
+
+    }else if(current_position === "space_variable"){
+
+        document.getElementById("space_neighbor").style.display = "none";
+
+    }else if(current_position === "profile_variable"){
+
+        document.getElementById("profile").style.display = "none";
+
+    }else if(current_position === "feed_variable"){
+
+        document.getElementById("feed").style.display = "none";
+
+    }else if(current_position === "contacts_variable"){
+
+        document.getElementById("contacts").style.display = "none";
+
     }
 
-    if(element === "map"){
+    if(element === "map_variable"){
+
         document.getElementById("map").style.display = "block";
-        document.getElementById("searchBar").style.display = "block";
-        currentposition = "map";
-    }else if(element === "report"){
-        document.getElementById("reportForm").style.display = "block";
-        currentposition = "report";
-    }else if(element === "cantinho"){
-        document.getElementById("cantinhoId").style.display = "block";
-        currentposition = "cantinho";
-    }else if(element === "perfil"){
-        document.getElementById("perfilId").style.display = "block";
-        currentposition = "perfil";
-    }else if(element === "feed"){
-        document.getElementById("feedId").style.display = "block";
-        currentposition = "feed";
-    }else if(element === "contactos"){
-        document.getElementById("contactosId").style.display = "block";
-        currentposition = "contactos";
-    }else if(element === "definicoes"){
-        document.getElementById("definicoesId").style.display = "block";
-        currentposition = "definicoes";
+        document.getElementById("search_location_style").style.display = "block";
+        current_position = "map_variable";
+
+    }else if(element === "report_variable"){
+
+        document.getElementById("report_form").style.display = "block";
+        current_position = "report_variable";
+
+    }else if(element === "space_variable"){
+
+        document.getElementById("space_neighbor").style.display = "block";
+        current_position = "space_variable";
+
+    }else if(element === "profile_variable"){
+
+        document.getElementById("profile").style.display = "block";
+        current_position = "profile_variable";
+
+    }else if(element === "feed_variable"){
+
+        document.getElementById("feed").style.display = "block";
+        current_position = "feed_variable";
+
+    }else if(element === "contacts_variable"){
+
+        document.getElementById("contacts").style.display = "block";
+        current_position = "contacts_variable";
+
     }
 
 }
 
-function fillReport(){
-    hideShow('report');
+function showReport(){
+    hideShow('report_variable');
 }
 
 function verifyIsLoggedIn(){
@@ -291,7 +178,8 @@ function logOut(){
 
             if (response.status === 200) {
                 localStorage.removeItem('token');
-                window.location.href = "index.html";
+                localStorage.removeItem('ignes_username');
+                window.location.href = "../index.html";
 
             }else{
                 console.log("Tratar do Forbidden")
@@ -416,33 +304,100 @@ function fillMap(reports){
 }
 
 function showMap(){
-    hideShow('map');
+    hideShow('map_variable');
 }
 
-function showPerfil() {
-    hideShow('perfil');
-
+function showProfile() {
+    hideShow('profile_variable');
+    getProfile();
 }
 
 function showFeed() {
-    hideShow('feed');
+    hideShow('feed_variable');
+}
+
+function showNeighborsSpace() {
+    hideShow('space_variable');
 
 }
 
-function showCantinho() {
-    hideShow('cantinho');
+function showContacts() {
+    hideShow('contacts_variable');
 
 }
 
-function showContacto() {
-    hideShow('contactos');
+function getProfile(){
+    fetch('https://hardy-scarab-200218.appspot.com/api/profile/view/' + localStorage.getItem('ignes_username'), {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
+
+            if (response.status === 200) {
+                response.json().then(function(data) {
+
+                    document.getElementById("num_level").innerHTML = data.user_level;
+                    document.getElementById("people_name").innerHTML = data.User;
+                    document.getElementById("people_email").innerHTML = data.user_email;
+
+                    if(data.useroptional_birth !== undefined)
+                        document.getElementById("people_birthday").innerHTML = data.useroptional_birth;
+                    else
+                        document.getElementById("people_birthday").innerHTML = "-";
+
+                    if(data.useroptional_locality !== undefined)
+                        document.getElementById("people_locality").innerHTML = data.useroptional_locality;
+                    else
+                        document.getElementById("people_locality").innerHTML = "-";
+
+                    if(data.useroptional_phone !== undefined)
+                        document.getElementById("people_phone").innerHTML = data.useroptional_phone;
+                    else
+                        document.getElementById("people_phone").innerHTML = "-";
+
+                    if(data.useroptional_address !== undefined)
+                        document.getElementById("people_address").innerHTML = data.useroptional_address;
+                    else
+                        document.getElementById("people_address").innerHTML = "-";
+
+                    if(data.useroptional_zip !== undefined)
+                       document.getElementById("people_cp").innerHTML = data.useroptional_zip;
+                    else
+                        document.getElementById("people_cp").innerHTML = "-";
+
+                    if(data.useroptional_gender !== undefined)
+                        document.getElementById("people_gender").innerHTML = data.useroptional_gender;
+                    else
+                        document.getElementById("people_gender").innerHTML = "-";
+
+                    if(data.useroptional_job !== undefined)
+                    document.getElementById("people_job").innerHTML = data.useroptional_job;
+                    else
+                        document.getElementById("people_job").innerHTML = "-";
+
+                    if(useroptional_skills !== undefined)
+                    document.getElementById("people_service").innerHTML = data.useroptional_skills;
+                    else
+                        document.getElementById("people_service").innerHTML = "-";
+
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 
 }
 
-function showDef() {
-    hideShow('definicoes');
-
-}
 
 
 

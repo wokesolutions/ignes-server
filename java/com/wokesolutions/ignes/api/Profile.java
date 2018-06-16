@@ -418,9 +418,22 @@ public class Profile {
 
 		object.put(DSUtils.USER, username);
 
-		for(Entry<String, Object> prop : user.getProperties().entrySet()) {
-			object.put(prop.getKey(), prop.getValue().toString());
+		for(Entry<String, Object> prop : user.getProperties().entrySet())
+			if(!prop.getKey().equals(DSUtils.USER_PASSWORD))
+				object.put(prop.getKey(), prop.getValue().toString());
+
+		Query query = new Query(DSUtils.USEROPTIONAL).setAncestor(user.getKey());
+
+		Entity optionals;
+		try {
+			optionals = datastore.prepare(query).asSingleEntity();
+		} catch(TooManyResultsException e) {
+			LOG.info(Message.UNEXPECTED_ERROR);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
+
+		for(Entry<String, Object> prop : optionals.getProperties().entrySet())
+			object.put(prop.getKey(), prop.getValue().toString());
 
 		return Response.ok(object.toString()).build();
 	}
@@ -460,17 +473,17 @@ public class Profile {
 
 	private Response getAllReportsRetry(String username, String cursor) {
 		Query reportQuery = new Query(DSUtils.REPORT);
-		
+
 		Filter userFilter = new Query.FilterPredicate(DSUtils.REPORT_USERNAME,
 				FilterOperator.EQUAL, username);
-		
+
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 
 		if(cursor != null && !cursor.equals(""))
 			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
-		
+
 		reportQuery.setFilter(userFilter);
-		
+
 		reportQuery
 		.addProjection(new PropertyProjection(DSUtils.REPORT_TITLE, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_ADDRESS, String.class))
@@ -480,16 +493,16 @@ public class Profile {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class));
-		
+
 		QueryResultList<Entity> reports = datastore.prepare(reportQuery).asQueryResultList(fetchOptions);
-		
+
 		if(reports.isEmpty()) {
 			LOG.info(Message.NO_REPORTS_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
-		
+
 		JSONArray array = new JSONArray();
-		
+
 		try {
 			array = Report.buildJsonReports(reports, true);
 		} catch(InternalServerErrorException e) {
@@ -498,7 +511,7 @@ public class Profile {
 		}
 
 		cursor = reports.getCursor().toWebSafeString();
-		
+
 		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 	}
 }
