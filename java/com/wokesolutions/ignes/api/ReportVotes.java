@@ -47,7 +47,7 @@ public class ReportVotes extends Report {
 		if(report == null || report == "")
 			return Response.status(Status.BAD_REQUEST).build();
 
-		String username = request.getAttribute(CustomHeader.USERNAME).toString();
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		int retries = 5;
 		while(true) {
@@ -129,7 +129,7 @@ public class ReportVotes extends Report {
 		if(report == null || report == "")
 			return Response.status(Status.BAD_REQUEST).build();
 
-		String username = request.getAttribute(CustomHeader.USERNAME).toString();
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		int retries = 5;
 		while(true) {
@@ -243,7 +243,7 @@ public class ReportVotes extends Report {
 		if(report == null || report == "")
 			return Response.status(Status.BAD_REQUEST).build();
 
-		String username = request.getAttribute(CustomHeader.USERNAME).toString();
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		int retries = 5;
 		while(true) {

@@ -17,6 +17,7 @@ public class ParamName {
 	// Path
 		public static final String REPORT = "report";
 		public static final String NIF = "nif";
+		public static final String EMAIL = "email";
 		
 	// Both
 		public static final String USERNAME = "username";

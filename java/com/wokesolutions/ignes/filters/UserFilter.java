@@ -44,7 +44,7 @@ public class UserFilter implements Filter {
 					.withClaim(JWTUtils.LEVEL1, UserLevel.LEVEL1)
 					.build();
 
-			String token = ((HttpServletRequest) req).getHeader(JWTUtils.AUTHORIZATION);
+			String token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
 			
 			if(token == null)
 				throw new Exception();
@@ -69,8 +69,8 @@ public class UserFilter implements Filter {
 				throw new Exception();
 			}
 			
-			req.setAttribute(CustomHeader.USERNAME, username);
-			req.setAttribute(CustomHeader.LEVEL, JWTUtils.LEVEL1);
+			req.setAttribute(CustomHeader.USERNAME_ATT, username);
+			req.setAttribute(CustomHeader.LEVEL_ATT, JWTUtils.LEVEL1);
 
 			chain.doFilter(req, resp);
 		} catch (Exception e){

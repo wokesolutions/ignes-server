@@ -6,9 +6,9 @@ var currentLoc = {
     center: {lat: 38.661148, lng: -9.203075},
     zoom: 18
 };
-var locations = [];
+
 var reports;
-var currentposition = "map";
+var currentposition = "map_variable";
 
 var infowindow = new google.maps.InfoWindow();
 
@@ -22,16 +22,12 @@ function init() {
 
     verifyIsLoggedIn();
 
-    document.getElementById("searchLocation").onclick = searchLocation;
-    document.getElementById("reportDashboard").onclick = fillReport;
-    document.getElementById("logoutBut").onclick = logOut;
-    document.getElementById('addReport').onclick = addReport;
-    document.getElementById('mapButton').onclick = showMap;
-    document.getElementById("perfilBut").onclick = showPerfil;
-    document.getElementById("feedBut").onclick = showFeed;
-    document.getElementById("espacinhoBut").onclick = showCantinho;
-    document.getElementById("contactoBut").onclick = showContacto;
-    document.getElementById("defBut").onclick = showDef;
+    document.getElementById("search_location").onclick = searchLocation;
+    document.getElementById('map_button').onclick = showMap;
+    document.getElementById("profile_button").onclick = showProfile;
+    document.getElementById("feed_button").onclick = showFeed;
+    document.getElementById("user_table_button").onclick = showUsers;
+    document.getElementById("logout_button").onclick = logOut;
 
     getMarkers("Caparica");
 
@@ -172,22 +168,6 @@ function init() {
 
 }
 
-function getLocation() {
-
-    if(navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-
-            currentLoc = {
-                center: {lat: position.coords.latitude, lng: position.coords.longitude},
-                zoom: 15
-            };
-
-        })
-    }
-    console.log(currentLoc);
-    return currentLoc;
-}
-
 function searchLocation(){
     var address = document.getElementById('location').value;
     geocoder.geocode( { 'address': address}, function(results, status) {
@@ -204,52 +184,49 @@ function searchLocation(){
 
 function hideShow(element){
 
-    console.log("Ola");
-    if(currentposition === "map"){
+    if(currentposition === "map_variable"){
+
         document.getElementById("map").style.display = "none";
-        document.getElementById("searchBar").style.display = "none";
-    }else if(currentposition === "report"){
-        document.getElementById("reportForm").style.display = "none";
-    }else if(currentposition === "cantinho"){
-        document.getElementById("cantinhoId").style.display = "none";
-    }else if(currentposition === "perfil"){
+        document.getElementById("search_location_style").style.display = "none";
+
+    }else if(currentposition === "profile_variable"){
+
         document.getElementById("perfilId").style.display = "none";
-    }else if(currentposition === "feed"){
+
+    }else if(currentposition === "feed_variable"){
+
         document.getElementById("feedId").style.display = "none";
-    }else if(currentposition === "contactos"){
-        document.getElementById("contactosId").style.display = "none";
-    }else if(currentposition === "definicoes"){
-        document.getElementById("definicoesId").style.display = "none";
+
+    }else if(currentposition === "users_variable"){
+
+        document.getElementById("list_users").style.display = "none";
+
     }
 
-    if(element === "map"){
+
+    if(element === "map_variable"){
+
         document.getElementById("map").style.display = "block";
-        document.getElementById("searchBar").style.display = "block";
-        currentposition = "map";
-    }else if(element === "report"){
-        document.getElementById("reportForm").style.display = "block";
-        currentposition = "report";
-    }else if(element === "cantinho"){
-        document.getElementById("cantinhoId").style.display = "block";
-        currentposition = "cantinho";
-    }else if(element === "perfil"){
+        document.getElementById("search_location_style").style.display = "block";
+        currentposition = "map_variable";
+
+    }else if(element === "profile_variable"){
+
         document.getElementById("perfilId").style.display = "block";
-        currentposition = "perfil";
-    }else if(element === "feed"){
+        currentposition = "profile_variable";
+
+    }else if(element === "feed_variable"){
+
         document.getElementById("feedId").style.display = "block";
-        currentposition = "feed";
-    }else if(element === "contactos"){
-        document.getElementById("contactosId").style.display = "block";
-        currentposition = "contactos";
-    }else if(element === "definicoes"){
-        document.getElementById("definicoesId").style.display = "block";
-        currentposition = "definicoes";
+        currentposition = "feed_variable";
+
+    }else if(element === "users_variable"){
+
+        document.getElementById("list_users").style.display = "block";
+        currentposition = "users_variable";
+
     }
 
-}
-
-function fillReport(){
-    hideShow('report');
 }
 
 function verifyIsLoggedIn(){
@@ -280,7 +257,7 @@ function verifyIsLoggedIn(){
 
 function logOut(){
     console.log(localStorage.getItem('token'));
-    fetch('https://hardy-scarab-200218.appspot.com/api/logout', {
+    fetch('https://hardy-scarab-200218.appspot.com/api/logout/org', {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
@@ -303,52 +280,6 @@ function logOut(){
         .catch(function(err) {
             console.log('Fetch Error', err);
         });
-
-
-
-}
-
-function addReport(){
-    var title = document.getElementById('titulo').value;
-    var descricao = document.getElementById('descricao').value;
-    var address = document.getElementById('address').value;
-
-    var marker, i;
-
-   geocoder.geocode( { 'address': address}, function(results, status) {
-
-        if (status == 'OK') {
-            locations.push([title, results[0].geometry.location.lat(), results[0].geometry.location.lng(), address, descricao]);
-            for (i = 0; i < locations.length; i++) {
-                marker = new google.maps.Marker({
-                    position: new google.maps.LatLng(locations[i][1], locations[i][2]),
-                    map: map
-                });
-
-
-                google.maps.event.addListener(marker, 'click', (function(marker, i) {
-                    return function() {
-                        var contentString = '<div id="content">'+
-                            '<h1 style="font-family: Quicksand Bold; color:#AD363B; font-size:30px">'+ locations[i][0] +'</h1>'+ '<div>' +
-                            '<p style="font-family: Quicksand Bold">'+'Localização' +'</p>'+ '<p>' + locations[i][3] + '</div>'+
-                            '<div>' +
-                            '<p style="font-family: Quicksand Bold">'+'Descrição' + '<p>' + locations[i][4] +'</p>'+ '</p>' +'</div>'+
-                            '<div>'+
-                            '<p style="font-family: Quicksand Bold">'+'Estado' +'</p>'+ '<p style="color:forestgreen">' + "OPEN" +
-                            '</div>'+
-                            '</div>';
-                        infowindow.setContent(contentString);
-                        infowindow.open(map, marker);
-                    }
-                })(marker, i));
-            }
-            showMap();
-
-        } else {
-            alert('A morada inserida não existe.');
-        }
-    });
-
 
 
 
@@ -416,33 +347,21 @@ function fillMap(reports){
 }
 
 function showMap(){
-    hideShow('map');
+    hideShow('map_variable');
 }
 
-function showPerfil() {
-    hideShow('perfil');
+function showProfile() {
+    hideShow('profile_variable');
 
 }
 
 function showFeed() {
-    hideShow('feed');
+    hideShow('feed_variable');
 
 }
 
-function showCantinho() {
-    hideShow('cantinho');
-
+function showUsers(){
+    hideShow('users_variable');
 }
-
-function showContacto() {
-    hideShow('contactos');
-
-}
-
-function showDef() {
-    hideShow('definicoes');
-
-}
-
 
 
