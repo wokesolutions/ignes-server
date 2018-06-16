@@ -105,7 +105,8 @@ header.masthead .site-heading {
 .text{
 
     font-family: "Quicksand";
-    font-size:1rem
+    font-size:1rem;
+    color: #AD363B !important;
 }
 
 .esquema{
@@ -174,6 +175,7 @@ footer a{
     text-align: center;
     size:20rem;
     font-size: 60px;
+    color: black;
 }
 
 #expBrand{
@@ -342,3 +344,44 @@ label {
 #contactosMarg{
     margin-top: 40px;
 }
+
+.contacts-style{
+    margin-bottom: 70px;
+    margin-top: 100px;
+}
+
+.profile_style{
+    font-family: "Quicksand Bold";
+    color: black;
+}
+
+.profile_style_response{
+    font-family: Quicksand;
+}
+
+.profile_top{
+    margin-bottom: 50px;
+    margin-top: 30px;
+}
+
+.people_level{
+    font-family: "Quicksand Bold";
+    color: #AD363B;
+    margin-top: 20px;
+    font-size: 20px;
+
+}
+
+.people_points{
+    font-family: "Quicksand Bold";
+    color: #434343;
+    margin-top: 70px;
+    font-size: 20px;
+}
+
+.people_numbers{
+    font-family: "Quicksand";
+    color: #434343;
+    font-size: 20px;
+}
+
