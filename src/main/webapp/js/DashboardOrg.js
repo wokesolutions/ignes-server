@@ -233,11 +233,7 @@ function showWorkers(){
 
 function getWorkers(){
     var info;
-<<<<<<< HEAD
     fetch(URL_BASE + '/api/org/listworkers', {
-=======
-    fetch('https://hardy-scarab-200218.appspot.com/api/org/listworkers', {
->>>>>>> 0d6dca03195c37da8dd57b3055daf19dae849ef1
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -248,7 +244,6 @@ function getWorkers(){
             if (response.status === 200) {
                 response.json().then(function(data) {
                     if(data != null){
-<<<<<<< HEAD
                         var i;
                         var worker_data = '';
                         for(i = 0; i < data.length; i++){
@@ -259,16 +254,6 @@ function getWorkers(){
                         }
                        document.getElementById("user_table").append(worker_data);
                        document.getElementById("user_table").append(worker_data);
-=======
-                        var worker_data = '';
-                        $.each(data,function(key,value){
-                            worker_data += '<tr>';
-                            worker_data += '<td>' + value.user_name + '</td>';
-                            worker_data += '<td>' + value.Worker + '</td>';
-                            worker_data += '</tr>';
-                        });
-                        $('#user_table').append(worker_data);
->>>>>>> 0d6dca03195c37da8dd57b3055daf19dae849ef1
                     }else{
                         alert("Esta empresa ainda não tem trabalhadores associados.")
                     }
