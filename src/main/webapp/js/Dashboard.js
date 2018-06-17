@@ -1,5 +1,7 @@
 var map = null;
 
+var URL_BASE = 'https://maria-dot-hardy-scarab-200218.appspot.com';
+
 var geocoder = new google.maps.Geocoder();
 
 var currentLoc = {
@@ -31,6 +33,7 @@ function init() {
     document.getElementById("feed_button").onclick = showFeed;
     document.getElementById("space_button").onclick = showNeighborsSpace;
     document.getElementById("contact_button").onclick = showContacts;
+    document.getElementById("button_edit").onclick = setProfile;
 
 
     getMarkers("Caparica");
@@ -141,7 +144,7 @@ function showReport(){
 
 function verifyIsLoggedIn(){
     console.log(localStorage.getItem('token'));
-    fetch('https://hardy-scarab-200218.appspot.com/api/verifytoken', {
+    fetch(URL_BASE + '/api/verifytoken', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -167,7 +170,7 @@ function verifyIsLoggedIn(){
 
 function logOut(){
     console.log(localStorage.getItem('token'));
-    fetch('https://hardy-scarab-200218.appspot.com/api/logout', {
+    fetch(URL_BASE + '/api/logout', {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
@@ -243,7 +246,7 @@ function addReport(){
 }
 
 function getMarkers(address){
-    fetch('https://hardy-scarab-200218.appspot.com/api/report/getinlocation?location=' + address + '&offset=0&', {
+    fetch(URL_BASE + '/api/report/getinlocation?location=' + address + '&offset=0&', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -323,11 +326,10 @@ function showNeighborsSpace() {
 
 function showContacts() {
     hideShow('contacts_variable');
-
 }
 
 function getProfile(){
-    fetch('https://hardy-scarab-200218.appspot.com/api/profile/view/' + localStorage.getItem('ignes_username'), {
+    fetch(URL_BASE + '/api/profile/view/' + localStorage.getItem('ignes_username'), {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
@@ -339,49 +341,55 @@ function getProfile(){
             if (response.status === 200) {
                 response.json().then(function(data) {
 
+                    document.getElementById("people_username").innerHTML = data.User;
                     document.getElementById("num_level").innerHTML = data.user_level;
-                    document.getElementById("people_name").innerHTML = data.User;
                     document.getElementById("people_email").innerHTML = data.user_email;
 
-                    if(data.useroptional_birth !== undefined)
+                    if(data.useroptional_name!== undefined || data.useroptional_name!== "")
+                        document.getElementById("people_name").innerHTML = data.useroptional_name;
+                    else
+                        document.getElementById("people_name").innerHTML = "-";
+
+
+                    if(data.useroptional_birth !== undefined || data.useroptional_birth !== "" )
                         document.getElementById("people_birthday").innerHTML = data.useroptional_birth;
                     else
                         document.getElementById("people_birthday").innerHTML = "-";
 
-                    if(data.useroptional_locality !== undefined)
+                  /*  if(data.useroptional_locality !== undefined)
                         document.getElementById("people_locality").innerHTML = data.useroptional_locality;
                     else
                         document.getElementById("people_locality").innerHTML = "-";
-
-                    if(data.useroptional_phone !== undefined)
+                  */
+                    if(data.useroptional_phone !== undefined || data.useroptional_phone !== "" )
                         document.getElementById("people_phone").innerHTML = data.useroptional_phone;
                     else
                         document.getElementById("people_phone").innerHTML = "-";
 
-                    if(data.useroptional_address !== undefined)
+                    if(data.useroptional_address !== undefined || data.useroptional_address !== "")
                         document.getElementById("people_address").innerHTML = data.useroptional_address;
                     else
                         document.getElementById("people_address").innerHTML = "-";
 
-                    if(data.useroptional_zip !== undefined)
+                    /*  if(data.useroptional_zip !== undefined)
                        document.getElementById("people_cp").innerHTML = data.useroptional_zip;
                     else
                         document.getElementById("people_cp").innerHTML = "-";
-
-                    if(data.useroptional_gender !== undefined)
+                    */
+                    if(data.useroptional_gender !== undefined || data.useroptional_gender !== "")
                         document.getElementById("people_gender").innerHTML = data.useroptional_gender;
                     else
                         document.getElementById("people_gender").innerHTML = "-";
 
-                    if(data.useroptional_job !== undefined)
+                    if(data.useroptional_job !== undefined || data.useroptional_job !== "")
                         document.getElementById("people_job").innerHTML = data.useroptional_job;
                     else
                         document.getElementById("people_job").innerHTML = "-";
 
-                    if(useroptional_skills !== undefined)
-                        document.getElementById("people_service").innerHTML = data.useroptional_skills;
+                    if(data.useroptional_skills !== undefined || data.useroptional_skills !== "")
+                        document.getElementById("people_skills").innerHTML = data.useroptional_skills;
                     else
-                        document.getElementById("people_service").innerHTML = "-";
+                        document.getElementById("people_skills").innerHTML = "-";
 
                 });
 
@@ -398,6 +406,58 @@ function getProfile(){
 
 }
 
+function setProfile(){
 
+    var user_name = document.getElementById('input_name').value;
+    var user_gender= document.getElementById('input_gender').value;
+    var user_birth = document.getElementById('input_birth').value;
+    var user_address = document.getElementById('input_address').value;
+    var user_phone = document.getElementById('input_phone').value;
+    var user_job = document.getElementById('input_job').value;
+    var user_skills = document.getElementById('input_skills').value;
+
+
+    var propsThatExist = {};
+
+    if(user_name != null || user_name != "")
+        propsThatExist.useroptional_name = user_name;
+    if(user_gender != null || user_gender != "")
+        propsThatExist.useroptional_gender = user_gender;
+    if(user_birth != null || user_birth != "")
+        propsThatExist.useroptional_birth = user_birth;
+    if(user_address != null || user_address != "")
+        propsThatExist.useroptional_address = user_address;
+    if(user_phone != null || user_phone != "")
+        propsThatExist.useroptional_phone = user_phone;
+    if(user_job != null || user_job != "")
+        propsThatExist.useroptional_job = user_job;
+    if(user_skills != null || user_skills != "")
+        propsThatExist.useroptional_skills = user_skills;
+
+    fetch(URL_BASE + '/api/profile/update/' + localStorage.getItem('ignes_username'), {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        },
+        body:JSON.stringify(propsThatExist)
+    }).then(function(response) {
+        console.log("Fiz");
+            if (response.status === 200) {
+
+                console.log("ola");
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+
+}
 
 
