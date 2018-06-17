@@ -471,6 +471,28 @@ public class Profile {
 
 		return requester;
 	}
+	
+	@POST
+	@Path("/changepassword")
+	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
+	public Response changePassword(String password, @Context HttpServletRequest request) {
+		int retries = 5;
+		
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+
+		while(true) {
+			try {
+				
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
 
 	@GET
 	@Path("/reports/{username}")

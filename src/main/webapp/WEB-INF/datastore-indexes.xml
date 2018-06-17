@@ -4,7 +4,6 @@
 		<property name="user_login_time" direction="desc" />
 		<property name="user_login_ip" direction="asc" />
 	</datastore-index>
-<<<<<<< HEAD
 	
 	<datastore-index kind="ReportComments" ancestor="true" source="manual">
         <property name="reportcomments_num" direction="asc"/>
@@ -158,6 +157,4 @@
     	<property name="worker_name" direction="asc"/>
         <property name="worker_job" direction="desc"/>
     </datastore-index>
-=======
->>>>>>> 0d6dca03195c37da8dd57b3055daf19dae849ef1
 </datastore-indexes>
