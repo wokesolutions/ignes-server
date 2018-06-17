@@ -78,5 +78,6 @@
 	<filter-mapping>
 		<filter-name>OrgFilter</filter-name>
 		<url-pattern>/api/org/*</url-pattern>
+		<url-pattern>/api/logout/org</url-pattern>
 	</filter-mapping>
 </web-app>

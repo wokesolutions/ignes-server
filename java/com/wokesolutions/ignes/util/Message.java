@@ -52,6 +52,7 @@ public class Message {
 	// Info User
 		public static final String ATTEMPT_REGISTER_USER = "Tentando registar o utilizador: ";
 		public static final String USER_REGISTERED = "Utilizador registado: ";
+		public static final String PASSWORD_CHANGED = "Palavra-passe alterada para o utilizador: ";
 	
 	// Info Admin
 		public static final String ADMIN_PROMOTED = "Administrador promovido";

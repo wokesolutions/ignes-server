@@ -21,6 +21,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -482,6 +483,37 @@ public class Profile {
 
 		while(true) {
 			try {
+				Entity user;
+				try {
+					user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
+				} catch(EntityNotFoundException e) {
+					LOG.info(Message.UNEXPECTED_ERROR);
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+				}
+				
+				Transaction txn = datastore.beginTransaction();
+				
+				String oldPw = user.getProperty(DSUtils.USER_PASSWORD).toString();
+				
+				try {
+					user.setProperty(DSUtils.USER_PASSWORD, DigestUtils.sha256Hex(password));
+					
+					Entity pwLog = new Entity(DSUtils.PASSWORDCHANGELOG, user.getKey());
+					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_NEW, password);
+					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_OLD, oldPw);
+					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_TIME, new Date());
+					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_IP, request.getRemoteAddr());
+					
+					txn.commit();
+					LOG.info(Message.PASSWORD_CHANGED + username);
+					return Response.ok().build();
+				} finally {
+					if(txn.isActive()) {
+						LOG.info(Message.TXN_ACTIVE);
+						txn.rollback();
+						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+					}
+				}
 				
 			} catch(DatastoreException e) {
 				if(retries == 0) {
