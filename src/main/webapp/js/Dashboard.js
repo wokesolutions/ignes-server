@@ -417,7 +417,7 @@ function setProfile(){
     var user_skills = document.getElementById('input_skills').value;
 
 
-    var propsThatExist = {};;
+    var propsThatExist = {};
 
     if(user_name != null || user_name != "")
         propsThatExist.useroptional_name = user_name;
