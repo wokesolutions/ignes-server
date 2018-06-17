@@ -26,6 +26,7 @@ public class DSUtils {
 		public static final String SKILL = "Skill";
 		public static final String TOKEN = "Token";
 		public static final String LEVELLOG = "LevelLog";
+		public static final String TASK = "Task";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -162,6 +163,7 @@ public class DSUtils {
 		public static final String REPORT_THUMBNAIL = "report_thumbnail";
 		public static final String REPORT_COMMENTSNUM = "report_commentsnum";
 		public static final String REPORT_STATUS = "report_status";
+		public static final String REPORT_PRIVATE = "report_private";
 		
 		public static final String REPORT_P0LAT = "report_p0lat";
 		public static final String REPORT_P1LAT = "report_p1lat";
@@ -213,4 +215,10 @@ public class DSUtils {
 		public static final String LEVELLOG_OLDLEVEL = "levellog_oldlevel";
 		public static final String LEVELLOG_NEWLEVEL = "levellog_newlevel";
 		public static final String LEVELLOG_DATE = "levellog_date";
+		
+	// Task
+		public static final String TASK_WORKER = "task_worker";
+		public static final String TASK_TIME = "task_time";
+		public static final String TASK_INDICATIONS = "task_indications";
+		
 }

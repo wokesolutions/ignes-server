@@ -63,7 +63,7 @@ public class VerifyToken {
 			}
 
 			return Response.ok()
-					.header(CustomHeader.LEVEL_ATT, user.getProperty(DSUtils.USER_LEVEL))
+					.header(CustomHeader.LEVEL, user.getProperty(DSUtils.USER_LEVEL))
 					.header(CustomHeader.ACTIVATED, CustomHeader.TRUE)
 					.entity(Message.OK).build();
 		} catch (UnsupportedEncodingException e){

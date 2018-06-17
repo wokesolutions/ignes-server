@@ -1,0 +1,4 @@
+cron:
+- description: "Close reports"
+  url: https://hardy-scarab-200218.appspot.com/api/report/closedef
+  schedule: every 24 hours

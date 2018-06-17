@@ -14,6 +14,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 import com.auth0.jwt.JWT;
@@ -28,6 +29,7 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Transaction;
+import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.LoginData;
@@ -92,7 +94,7 @@ public class Login {
 			Entity userE, boolean isOrg) { //TODO organize code
 		LOG.info(Message.ATTEMPT_LOGIN + data.username);
 
-		Transaction txn = datastore.beginTransaction();
+		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
 		if(!isOrg) {
 			Key userKey = KeyFactory.createKey(DSUtils.USER, data.username);
@@ -157,19 +159,25 @@ public class Login {
 						datastore.put(txn, logs);
 						txn.commit();
 
-						String activated;
-						boolean act = user.getProperty(DSUtils.USER_CODE).equals(Profile.ACTIVATED);
+						String activated = null;
+						if(!user.getProperty(DSUtils.USER_LEVEL).toString().equals(UserLevel.WORKER) &&
+								!user.getProperty(DSUtils.USER_LEVEL).toString().equals(UserLevel.ADMIN)) {
+							boolean act = user.getProperty(DSUtils.USER_CODE).equals(Profile.ACTIVATED);
 
-						if(act)
-							activated = CustomHeader.TRUE;
-						else
-							activated = CustomHeader.FALSE;
+							if(act)
+								activated = CustomHeader.TRUE;
+							else
+								activated = CustomHeader.FALSE;
+						}
 
-						return Response.ok()
+						ResponseBuilder r = Response.ok()
 								.header(CustomHeader.AUTHORIZATION, token)
-								.header(CustomHeader.LEVEL, user.getProperty(DSUtils.USER_LEVEL))
-								.header(CustomHeader.ACTIVATED, activated)
-								.build();
+								.header(CustomHeader.LEVEL, user.getProperty(DSUtils.USER_LEVEL));
+						
+						if(activated != null)
+							r.header(CustomHeader.ACTIVATED, activated);
+						
+						return r.build();
 					} catch (UnsupportedEncodingException e){
 						LOG.warning(e.getMessage());
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();

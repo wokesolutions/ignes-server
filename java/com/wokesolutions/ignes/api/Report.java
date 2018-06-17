@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
@@ -68,6 +69,7 @@ public class Report {
 	public static final String OPEN = "open";
 	public static final String CLOSED = "closed";
 	public static final String STANDBY = "standby";
+	private static final String NOT_FOUND = "NOT_FOUND";
 
 	private static final int DEFAULT_GRAVITY = 2;
 	private static final int NO_TRUST_GRAVITY = 1;
@@ -128,6 +130,7 @@ public class Report {
 				report.setProperty(DSUtils.REPORT_LAT, data.report_lat);
 				report.setProperty(DSUtils.REPORT_LNG, data.report_lng);
 				report.setProperty(DSUtils.REPORT_CREATIONTIME, new Date(creationtime));
+				report.setProperty(DSUtils.REPORT_PRIVATE, data.report_private);
 				report.setProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED,
 						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(creationtime));
 				report.setProperty(DSUtils.REPORT_USERNAME, username);
@@ -378,7 +381,8 @@ public class Report {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
-		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class));
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, Boolean.class));
 
 		QueryResultList<Entity> reports =
 				datastore.prepare(reportQuery).asQueryResultList(fetchOptions);
@@ -459,7 +463,8 @@ public class Report {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, Integer.class))
-		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class));
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, Boolean.class));
 
 		QueryResultList<Entity> reports =
 				datastore.prepare(reportQuery).asQueryResultList(fetchOptions);
@@ -534,8 +539,8 @@ public class Report {
 				report = datastore.get(KeyFactory.createKey(DSUtils.REPORT, id));
 			} catch (EntityNotFoundException e) {
 				LOG.info(Message.REPORT_NOT_FOUND + " - " + id);
-
-				thumbnails.put(id, "NOT_FOUND");
+				
+				thumbnails.put(id, NOT_FOUND);
 
 				continue;
 			}
@@ -625,6 +630,7 @@ public class Report {
 			jsonReport.put(DSUtils.REPORT_STATUS, report.getProperty(DSUtils.REPORT_STATUS));
 			jsonReport.put(DSUtils.REPORT_CREATIONTIMEFORMATTED,
 					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
+			jsonReport.put(DSUtils.REPORT_PRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
 
 			if(withTn) {
 				String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
@@ -754,5 +760,25 @@ public class Report {
 		key += request + "|" + cursor;
 
 		return key;
+	}
+	
+	@DELETE
+	@Path("/closedef")
+	public Response closeDef() {
+		int retries = 5;
+
+		while(true) {
+			try {
+				return closeDefRetry();
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+	
+	private Response closeDefRetry() {
+		return null;
 	}
 }

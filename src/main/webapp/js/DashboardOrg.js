@@ -122,7 +122,11 @@ function verifyIsLoggedIn(){
 
 function logOut(){
     console.log(localStorage.getItem('token'));
+<<<<<<< HEAD
     fetch(URL_BASE + '/api/logout', {
+=======
+    fetch(URL_BASE + '/api/logout/org', {
+>>>>>>> 9c8e70d03826261a0c30d61c9a7592822c3b9388
         method: 'POST',
         headers: {
             'Accept': 'application/json',
@@ -233,7 +237,15 @@ function showWorkers(){
 
 function getWorkers(){
     var info;
+<<<<<<< HEAD
     fetch(URL_BASE + '/api/org/listworkers', {
+=======
+<<<<<<< HEAD
+    fetch(URL_BASE + '/api/org/listworkers', {
+=======
+    fetch('https://hardy-scarab-200218.appspot.com/api/org/listworkers', {
+>>>>>>> 0d6dca03195c37da8dd57b3055daf19dae849ef1
+>>>>>>> 9c8e70d03826261a0c30d61c9a7592822c3b9388
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -244,6 +256,18 @@ function getWorkers(){
             if (response.status === 200) {
                 response.json().then(function(data) {
                     if(data != null){
+<<<<<<< HEAD
+                        var i;
+                        var worker_data = '';
+                        for(i = 0; i < data.length; i++){
+                            worker_data += '<tr>';
+                            worker_data += '<td>' + data[i].user_name + '</td>';
+                            worker_data += '<td>' + data[i].Worker + '</td>';
+                            worker_data += '</tr>';
+                        }
+                       document.getElementById("user_table").append(worker_data);
+                       document.getElementById("user_table").append(worker_data);
+=======
                         var worker_data = '';
                         $.each(data,function(key,value){
                             worker_data += '<tr>';
@@ -252,6 +276,7 @@ function getWorkers(){
                             worker_data += '</tr>';
                         });
                         $('#user_table').append(worker_data);
+>>>>>>> 0d6dca03195c37da8dd57b3055daf19dae849ef1
                     }else{
                         alert("Esta empresa ainda não tem trabalhadores associados.")
                     }

@@ -26,6 +26,9 @@ public class Message {
 	
 	// Error Admin
 		public static final String MOTER_NOT_ADMIN = "Utilizador a fazer alterações não é administrador";
+		
+	// Error Worker
+		public static final String WORKER_NOT_FOUND = "Trabalhador não encontrado";
 	
 	// Error General
 		public static final String WRONG_PASSWORD = "Password errada para o utilizador: ";
@@ -69,6 +72,7 @@ public class Message {
 		public static final String WORKER_REGISTERED = "Trabalhador registado: ";
 		public static final String ATTEMPT_REGISTER_WORKER = "Tentando registar o trabalhador: ";
 		public static final String DELETED_WORKER = "Trabalhador foi apagado do sistema: ";
+		public static final String LISTING_TASKS = "Listando tarefas do trabalhador";
 	
 	// Info Report
 		public static final String REPORT_CREATED = "Ocorrência reportada: ";
