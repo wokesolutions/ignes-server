@@ -14,6 +14,7 @@ public class ReportData {
 	public String report_address;
 	public String report_img;
 	public String report_thumbnail;
+	public boolean report_private;
 	
 	public ReportData() {}
 	

@@ -45,10 +45,10 @@ public class AdminFilter implements Filter {
 
 			chain.doFilter(req, resp);
 		} catch (JWTVerificationException e){
-			byte[] responseToSend = Message.INVALID_TOKEN.getBytes();
-			((HttpServletResponse) resp).setHeader("Content-Type", "application/json");
+			String responseToSend = Message.INVALID_TOKEN;
+			((HttpServletResponse) resp).setHeader("Content-Type", CustomHeader.JSON_CHARSET_UTF8);
 			((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
-			resp.getOutputStream().write(responseToSend);
+			resp.getWriter().println(responseToSend);
 			return;
 		}
 	}

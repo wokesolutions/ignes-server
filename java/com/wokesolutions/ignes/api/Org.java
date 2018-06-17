@@ -82,7 +82,7 @@ public class Org {
 	private Response registerWorkerRetry(WorkerRegisterData registerData, String org) {
 		LOG.info(Message.ATTEMPT_REGISTER_WORKER + registerData.worker_name);
 
-		Transaction txn = datastore.beginTransaction();
+		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
 		try {
 			String email = registerData.worker_email;
@@ -116,20 +116,19 @@ public class Org {
 			Key userKey = user.getKey();
 			Entity worker = new Entity(DSUtils.WORKER, userKey);
 
-			String pw = DigestUtils.sha512Hex(WorkerRegisterData.generateCode(org, email));
+			String pw = WorkerRegisterData.generateCode(org, email);
+			String pwSha = DigestUtils.sha512Hex(pw);
 			worker.setProperty(DSUtils.WORKER_ORG, org);
 			worker.setProperty(DSUtils.WORKER_JOB, registerData.worker_job);
 			worker.setProperty(DSUtils.WORKER_NAME, registerData.worker_name);
 			worker.setUnindexedProperty(DSUtils.WORKER_CREATIONTIME, date);
-			
-			user.setUnindexedProperty(DSUtils.USER_PASSWORD, pw);
+
+			user.setUnindexedProperty(DSUtils.USER_PASSWORD, pwSha);
 			user.setProperty(DSUtils.USER_EMAIL, email);
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.WORKER);
 			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
 
-			Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
-
-			List<Entity> list = Arrays.asList(user, worker, useroptional);
+			List<Entity> list = Arrays.asList(user, worker);
 
 			try {
 				Entity orgEntity = datastore.get(orgKey);
@@ -208,7 +207,7 @@ public class Org {
 			deletedWorker.setProperty(DSUtils.DELETEDWORKER_DELETIONTIME, new Date());
 
 			List<Key> list = Arrays.asList(workerKey, user.getKey());
-			
+
 			datastore.delete(txn, list);
 			datastore.put(txn, deletedWorker);
 
@@ -263,7 +262,8 @@ public class Org {
 
 		query.setFilter(filter);
 
-		query.addProjection(new PropertyProjection(DSUtils.WORKER_JOB, String.class));
+		query.addProjection(new PropertyProjection(DSUtils.WORKER_JOB, String.class))
+		.addProjection(new PropertyProjection(DSUtils.WORKER_NAME, String.class));
 
 		QueryResultList<Entity> list = datastore.prepare(query).asQueryResultList(fetchOptions);
 
@@ -271,7 +271,7 @@ public class Org {
 
 		for(Entity worker : list) {
 			JSONObject obj = new JSONObject();
-			obj.put(DSUtils.WORKER, worker.getKey().getName());
+			obj.put(DSUtils.WORKER, worker.getParent().getName());
 			obj.put(DSUtils.WORKER_NAME, worker.getProperty(DSUtils.WORKER_NAME));
 			obj.put(DSUtils.WORKER_JOB, worker.getProperty(DSUtils.WORKER_JOB));
 			array.put(obj);
@@ -288,5 +288,53 @@ public class Org {
 		if(!email.contains("@"))
 			return false;
 		return true;
+	}
+
+	@POST
+	@Path("/givetask")
+	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
+	public Response giveTask(@QueryParam(ParamName.EMAIL) String email,
+			@QueryParam(ParamName.REPORT) String report, String indications) {
+		if(email == null || email.equals("") || report == null || report.equals(""))
+			return Response.status(Status.BAD_REQUEST).build();
+
+		int retries = 5;
+		while(true) {
+			try {
+				return giveTaskRetry(report, email, indications);
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+
+	private Response giveTaskRetry(String report, String email, String indications) {
+		Entity reportE;
+
+		try {
+			reportE = datastore.get(KeyFactory.createKey(DSUtils.REPORT, report));
+		} catch (EntityNotFoundException e) {
+			LOG.info(Message.REPORT_NOT_FOUND);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+
+		try {
+			datastore.get(KeyFactory.createKey(DSUtils.WORKER, email));
+		} catch (EntityNotFoundException e) {
+			LOG.info(Message.WORKER_NOT_FOUND);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+
+		Entity task = new Entity(DSUtils.TASK, reportE.getKey());
+
+		task.setProperty(DSUtils.WORKER, email);
+		task.setProperty(DSUtils.TASK_TIME, new Date());
+		task.setProperty(DSUtils.TASK_INDICATIONS, indications);
+
+		datastore.put(task);
+
+		return Response.ok().build();
 	}
 }

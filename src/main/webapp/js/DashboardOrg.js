@@ -8,6 +8,8 @@ var current_location = {
     zoom: 18
 };
 
+var URL_BASE = 'https://maria-dot-hardy-scarab-200218.appspot.com';
+
 google.maps.event.addDomListener(window, 'load', init());
 google.maps.event.addDomListener(window, 'resize', function() {
     map.setCenter(new google.maps.LatLng(38.6615119,-8.224454));
@@ -21,7 +23,7 @@ function init() {
     document.getElementById('map_button').onclick = showMap;
     document.getElementById("profile_button").onclick = showProfile;
     document.getElementById("feed_button").onclick = showFeed;
-    document.getElementById("user_table_button").onclick = showUsers;
+    document.getElementById("user_table_button").onclick = showWorkers;
     document.getElementById("logout_button").onclick = logOut;
 
     getMarkers("Caparica");
@@ -94,7 +96,7 @@ function hideShow(element){
 
 function verifyIsLoggedIn(){
     console.log(localStorage.getItem('token'));
-    fetch('https://hardy-scarab-200218.appspot.com/api/verifytoken', {
+    fetch(URL_BASE + '/api/verifytoken', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -120,7 +122,7 @@ function verifyIsLoggedIn(){
 
 function logOut(){
     console.log(localStorage.getItem('token'));
-    fetch('https://hardy-scarab-200218.appspot.com/api/logout', {
+    fetch(URL_BASE + '/api/logout/org', {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
@@ -150,7 +152,7 @@ function logOut(){
 }
 
 function getMarkers(address){
-    fetch('https://hardy-scarab-200218.appspot.com/api/report/getinlocation?location=' + address + '&offset=0&', {
+    fetch(URL_BASE + '/api/report/getinlocation?location=' + address + '&offset=0&', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -224,8 +226,50 @@ function showFeed() {
 
 }
 
-function showUsers(){
+function showWorkers(){
+    getWorkers();
     hideShow('users_variable');
 }
 
+function getWorkers(){
+    var info;
+    fetch(URL_BASE + '/api/org/listworkers', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
 
+            if (response.status === 200) {
+                response.json().then(function(data) {
+                    if(data != null){
+                        var i;
+                        var worker_data = '';
+                        for(i = 0; i < data.length; i++){
+                            worker_data += '<tr>';
+                            worker_data += '<td>' + data[i].user_name + '</td>';
+                            worker_data += '<td>' + data[i].Worker + '</td>';
+                            worker_data += '</tr>';
+                        }
+                       document.getElementById("user_table").append(worker_data);
+                       document.getElementById("user_table").append(worker_data);
+                    }else{
+                        alert("Esta empresa ainda não tem trabalhadores associados.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden")
+                return info;
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+            return info;
+        });
+
+}

@@ -20,6 +20,7 @@
         <property name="report_lat" direction="asc"/>
         <property name="report_lng" direction="asc"/>
         <property name="report_title" direction="asc"/>
+        <property name="report_private" direction="desc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
         <property name="report_status" direction="desc"/>
@@ -31,6 +32,7 @@
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
         <property name="report_lng" direction="asc"/>
+        <property name="report_private" direction="desc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
@@ -52,6 +54,7 @@
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
         <property name="report_lng" direction="asc"/>
+        <property name="report_private" direction="desc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
@@ -63,6 +66,7 @@
         <property name="report_address" direction="asc"/>
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
+        <property name="report_private" direction="desc"/>
         <property name="report_lng" direction="asc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
@@ -76,6 +80,7 @@
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
         <property name="report_lng" direction="asc"/>
+        <property name="report_private" direction="desc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
@@ -86,6 +91,7 @@
         <property name="report_p5lng" direction="asc"/>
         <property name="report_address" direction="asc"/>
         <property name="report_gravity" direction="asc"/>
+        <property name="report_private" direction="desc"/>
         <property name="report_lat" direction="asc"/>
         <property name="report_lng" direction="asc"/>
         <property name="report_title" direction="asc"/>
@@ -99,6 +105,7 @@
         <property name="report_address" direction="asc"/>
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
+        <property name="report_private" direction="desc"/>
         <property name="report_lng" direction="asc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
@@ -112,6 +119,7 @@
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
         <property name="report_lng" direction="asc"/>
+        <property name="report_private" direction="desc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
@@ -124,6 +132,7 @@
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
         <property name="report_lng" direction="asc"/>
+        <property name="report_private" direction="desc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
@@ -135,10 +144,17 @@
     	<property name="report_address" direction="asc"/>
     	<property name="report_gravity" direction="asc"/>
     	<property name="report_lat" direction="asc"/>
+        <property name="report_private" direction="desc"/>
     	<property name="report_lng" direction="asc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
     	<property name="report_username" direction="asc"/>
         <property name="report_status" direction="desc"/>
+    </datastore-index>
+    
+    <datastore-index kind="Worker" ancestor="false" source="manual">
+        <property name="worker_org" direction="desc"/>
+    	<property name="worker_name" direction="asc"/>
+        <property name="worker_job" direction="desc"/>
     </datastore-index>
 </datastore-indexes>

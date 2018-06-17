@@ -74,10 +74,10 @@ public class UserFilter implements Filter {
 
 			chain.doFilter(req, resp);
 		} catch (Exception e){
-			byte[] responseToSend = Message.INVALID_TOKEN.getBytes();
+			String responseToSend = Message.INVALID_TOKEN;
 			((HttpServletResponse) resp).setHeader("Content-Type", CustomHeader.JSON_CHARSET_UTF8);
 			((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
-			resp.getOutputStream().write(responseToSend);
+			resp.getWriter().println(responseToSend);
 			return;
 		}
 	}
