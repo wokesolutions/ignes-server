@@ -251,8 +251,9 @@ function getWorkers(){
                             worker_data += '<td>' + data[i].user_name + '</td>';
                             worker_data += '<td>' + data[i].Worker + '</td>';
                             worker_data += '</tr>';
+                            document.getElementById("user_table").appendChild(worker_data);
                         }
-                       document.getElementById("user_table").appendChild(worker_data);
+
                     }else{
                         alert("Esta empresa ainda não tem trabalhadores associados.")
                     }
