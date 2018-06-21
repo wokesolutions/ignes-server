@@ -219,12 +219,19 @@ function addReport(){
 
                 var lat = results[0].geometry.location.lat();
                 var lng = results[0].geometry.location.lng();
+                var morada = results[0].formatted_address;
+                var locality = results[0].address_components[2].long_name;
+                var district = results[0].address_components[3].long_name;
 
                 bodyToSend.report_lat = lat;
                 bodyToSend.report_lng = lng;
                 bodyToSend.report_img = previewImageBase;
+                bodyToSend.report_thumbnail = previewImageBase;
                 bodyToSend.report_private = true;
                 bodyToSend.report_gravity = gravity;
+                bodyToSend.report_address = morada;
+                bodyToSend.report_locality = locality;
+                bodyToSend.report_city = district;
 
                 if(title !== "" || title !== undefined){
                     bodyToSend.report_title = title;
@@ -301,7 +308,6 @@ function getMarkers(radius, cursor){
                 console.log(newCursor);
                 response.json().then(function(data) {
                     reports = data;
-                    console.log(reports);
                     fillMap(reports, newCursor);
                 });
 
@@ -325,7 +331,6 @@ function fillMap(reports, cursor){
         var lat = reports[i].report_lat;
         var lng = reports[i].report_lng;
 
-        console.log(cursor);
 
         marker = new google.maps.Marker({
             position: new google.maps.LatLng(lat, lng),
@@ -349,10 +354,11 @@ function fillMap(reports, cursor){
                 infowindow.open(map, marker);
             }
         })(marker, i));
-        if(cursor !== null || cursor !== undefined){
-            getMarkers(5, cursor);
-        }
+    }
 
+    if(cursor !== null){
+        console.log(cursor);
+        getMarkers(5, cursor);
     }
 }
 
