@@ -223,6 +223,12 @@ function addReport(){
                 var locality = results[0].address_components[2].long_name;
                 var district = results[0].address_components[3].long_name;
 
+                console.log(lat);
+                console.log(lng);
+                console.log(morada);
+                console.log(locality);
+                console.log(district);
+
                 bodyToSend.report_lat = lat;
                 bodyToSend.report_lng = lng;
                 bodyToSend.report_img = previewImageBase;

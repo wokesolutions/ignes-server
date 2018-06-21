@@ -57,11 +57,11 @@ function hideShow(element){
 
     }else if(current_position === "profile_variable"){
 
-        document.getElementById("perfilId").style.display = "none";
+        document.getElementById("profile").style.display = "none";
 
     }else if(current_position === "feed_variable"){
 
-        document.getElementById("feedId").style.display = "none";
+        document.getElementById("feed").style.display = "none";
 
     }else if(current_position === "users_variable"){
 
