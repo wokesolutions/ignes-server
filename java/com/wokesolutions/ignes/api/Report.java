@@ -194,8 +194,10 @@ public class Report {
 
 				List<String> folders = Arrays.asList(Storage.IMG_FOLDER, Storage.REPORT_FOLDER);
 				StoragePath pathImg = new StoragePath(folders, reportid);
-				if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg))
+				if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg)) {
+					LOG.info(Message.STORAGE_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
+				}
 
 				report.setUnindexedProperty(DSUtils.REPORT_IMGPATH, pathImg);
 				report.setUnindexedProperty(DSUtils.REPORT_THUMBNAILPATH, Storage.getTnFromPath(pathImg));
