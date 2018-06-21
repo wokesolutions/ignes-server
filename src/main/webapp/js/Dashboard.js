@@ -388,7 +388,7 @@ function getProfile(){
             if (response.status === 200) {
                 response.json().then(function(data) {
 
-                    document.getElementById("num_points").innerHTML = data.user_points;
+                    document.getElementById("num_points").innerHTML = data.userpoints_points;
                     document.getElementById("num_reports").innerHTML = data.user_reports;
                     document.getElementById("people_username").innerHTML = data.User;
                     document.getElementById("num_level").innerHTML = data.user_level;

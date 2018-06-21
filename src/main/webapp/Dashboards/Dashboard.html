@@ -128,11 +128,6 @@
         </div>
         <div class=" col-md-4 col-lg-4 text-center">
             <img src="../images/avatar.png" height="142" width="142"/>
-            <div class="row">
-                <div class="col-md-4 col-lg-4 text-center">
-                    <p class ="people_level" id="num_level"></p>
-                </div>
-            </div>
         </div>
         <div class=" col-md-2 col-lg-2 text-center">
             <p class ="people_points">Reportes<p class ="people_numbers" id="num_reports"></p></p>
@@ -145,12 +140,6 @@
             <table class="table table-user-information">
                 <tbody>
                 <tr>
-                    <td class="profile_style"></td>
-                    <td class="profile_style"></td>
-                    <td class="profile_style"><button type="submit" class="btn btn-link"
-                                                      id="button_edit">Editar Perfil</button></td>
-                </tr>
-                <tr>
                     <td class="profile_style">Nome</td>
                     <td class="profile_style_response" id="people_name"> </td>
                     <td class="profile_style_response"><input type="text" id="input_name"/></td>
@@ -159,18 +148,23 @@
 
                 </tr>
                 <tr>
-                    <td class="profile_style">Género</td>
-                    <td class="profile_style_response" id="people_gender"></td>
-                    <td class="profile_style_response"><input type="text" id="input_gender"/></td>
                     <td class="profile_style">Data de nascimento</td>
                     <td class="profile_style_response" id="people_birthday"></td>
                     <td class="profile_style_response"><input type="text" id="input_birth"/></td>
-
-                </tr>
-                <tr>
                     <td class="profile_style">Morada</td>
                     <td class="profile_style_response" id="people_address"></td>
                     <td class="profile_style_response"><input type="text" id="input_address"/></td>
+
+                </tr>
+                <tr>
+                    <td class="profile_style">Género</td>
+                    <td class="profile_style_response" id="people_gender"></td>
+                    <td class="profile_style_response"><input type="text" id="input_gender"/></td>
+                    <td class="profile_style">Nivel</td>
+                    <td class="profile_style_response" id="num_level"></td>
+
+                </tr>
+                <tr>
                     <td class="profile_style">Localidade</td>
                     <td class="profile_style_response" id="people_address"></td>
                     <td class="profile_style_response"><input type="text" id="input_address"/></td>
@@ -196,9 +190,11 @@
                     <td class="profile_style_response" id="people_skills"></td>
                     <td class="profile_style_response"><input type="text" id="input_skills"/></td>
                 </tr>
+
                 </tbody>
             </table>
-
+            <button type="submit" class="btn btn-link"
+                    id="button_edit">Editar Perfil</button>
         </div>
         <div class=" col-md-2 col-lg-2 "></div>
     </div>
