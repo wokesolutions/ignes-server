@@ -310,6 +310,7 @@ public class Login {
 						return Response.ok()
 								.header(CustomHeader.AUTHORIZATION, token)
 								.header(CustomHeader.LEVEL, UserLevel.ORG)
+								.header(CustomHeader.ORG, org.getProperty(DSUtils.ORG_NAME))
 								.build();
 					} catch (UnsupportedEncodingException e){
 						LOG.warning(e.getMessage());
