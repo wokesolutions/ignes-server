@@ -159,17 +159,6 @@ public class Login {
 						datastore.put(txn, logs);
 						txn.commit();
 
-						String activated = null;
-						if(!user.getProperty(DSUtils.USER_LEVEL).toString().equals(UserLevel.WORKER) &&
-								!user.getProperty(DSUtils.USER_LEVEL).toString().equals(UserLevel.ADMIN)) {
-							boolean act = user.getProperty(DSUtils.USER_CODE).equals(Profile.ACTIVATED);
-
-							if(act)
-								activated = CustomHeader.TRUE;
-							else
-								activated = CustomHeader.FALSE;
-						}
-
 						ResponseBuilder r;
 						
 						String level = user.getProperty(DSUtils.USER_LEVEL).toString();
@@ -199,6 +188,20 @@ public class Login {
 
 							r.header(CustomHeader.ORG,
 											user.getProperty(orgE.getProperty(DSUtils.ORG_NAME).toString()));
+							LOG.info(r.build().getHeaders().toString());
+						}
+						
+						LOG.info(r.build().getHeaders().toString());
+						
+						String activated = null;
+						if(!user.getProperty(DSUtils.USER_LEVEL).toString().equals(UserLevel.WORKER) &&
+								!user.getProperty(DSUtils.USER_LEVEL).toString().equals(UserLevel.ADMIN)) {
+							boolean act = user.getProperty(DSUtils.USER_CODE).equals(Profile.ACTIVATED);
+
+							if(act)
+								activated = CustomHeader.TRUE;
+							else
+								activated = CustomHeader.FALSE;
 						}
 
 						if(activated != null)

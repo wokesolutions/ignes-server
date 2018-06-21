@@ -56,6 +56,7 @@ import com.wokesolutions.ignes.util.Haversine;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Storage;
+import com.wokesolutions.ignes.util.Storage.StoragePath;
 import com.wokesolutions.ignes.util.UserLevel;
 
 @Path("/report")
@@ -187,17 +188,13 @@ public class Report {
 				if(data.report_description != null)
 					report.setUnindexedProperty(DSUtils.REPORT_DESCRIPTION, data.report_description);
 
-				String imgid = Storage.IMG_FOLDER + Storage.REPORT_FOLDER + reportid;
-				if(!Storage.saveImage(data.report_img, Storage.BUCKET, imgid))
+				List<String> folders = Arrays.asList(Storage.IMG_FOLDER, Storage.REPORT_FOLDER);
+				StoragePath pathImg = new StoragePath(folders, reportid);
+				if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg))
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
-				report.setUnindexedProperty(DSUtils.REPORT_IMGPATH, imgid);
-
-				String thumbnailid = Storage.IMG_FOLDER + Storage.REPORT_FOLDER + Storage.THUMBNAIL_FOLDER + reportid;
-				if(!Storage.saveImage(data.report_thumbnail, Storage.BUCKET, thumbnailid))
-					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
-
-				report.setUnindexedProperty(DSUtils.REPORT_THUMBNAILPATH, thumbnailid);
+				report.setUnindexedProperty(DSUtils.REPORT_IMGPATH, pathImg);
+				report.setUnindexedProperty(DSUtils.REPORT_THUMBNAILPATH, Storage.getTnFromPath(pathImg));
 
 				Entity reportVotes = new Entity(DSUtils.REPORTVOTES, reportKey);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_UP, 0L);

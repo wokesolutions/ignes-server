@@ -50,6 +50,7 @@ import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.UserLevel;
+import com.wokesolutions.ignes.util.Storage.StoragePath;
 
 @Path("/profile")
 public class Profile {
@@ -60,7 +61,7 @@ public class Profile {
 	private static final int BATCH_SIZE = 20;
 
 	public static final String ACTIVATED = "activated";
-	
+
 	private static final String USER_REPORTS = "user_reports";
 
 	@POST
@@ -236,7 +237,7 @@ public class Profile {
 
 	private Response getVotesRetry(String username,
 			HttpServletRequest request, HttpHeaders headers, String cursor) {
-		
+
 		LOG.info(Message.GIVING_VOTES + username);
 
 		try {
@@ -274,7 +275,7 @@ public class Profile {
 
 			jsonarray.put(voteJson);
 		}
-		
+
 		if(jsonarray.length() < BATCH_SIZE)
 			return Response.ok()
 					.entity(jsonarray.toString()).build();
@@ -441,7 +442,7 @@ public class Profile {
 
 		for(Entry<String, Object> prop : optionals.getProperties().entrySet())
 			object.put(prop.getKey(), prop.getValue().toString());
-		
+
 		Query query2 = new Query(DSUtils.USERPOINTS).setAncestor(user.getKey());
 		Entity points;
 		try {
@@ -450,16 +451,16 @@ public class Profile {
 			LOG.info(Message.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
-		
+
 		object.put(DSUtils.USERPOINTS_POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
-		
+
 		Query query3 = new Query(DSUtils.REPORT);
 		Filter filter = new Query.FilterPredicate(DSUtils.REPORT_USERNAME,
 				FilterOperator.EQUAL, username);
 		query3.setFilter(filter);
-		
+
 		int reports = datastore.prepare(query3).asList(FetchOptions.Builder.withDefaults()).size();
-		
+
 		object.put(USER_REPORTS, reports);
 
 		return Response.ok(object.toString()).build();
@@ -476,13 +477,13 @@ public class Profile {
 
 		return requester;
 	}
-	
+
 	@POST
 	@Path("/changepassword")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response changePassword(PasswordData data, @Context HttpServletRequest request) {
 		int retries = 5;
-		
+
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		while(true) {
@@ -494,13 +495,13 @@ public class Profile {
 					LOG.info(Message.UNEXPECTED_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
-				
+
 				Transaction txn = datastore.beginTransaction();
-				
+
 				try {
 					String newPw = DigestUtils.sha512Hex(data.newpassword);
 					String oldPw = DigestUtils.sha512Hex(data.oldpassword);
-					
+
 					if(!user.getProperty(DSUtils.USER_PASSWORD).toString().equals(oldPw)) {
 						LOG.info(Message.WRONG_PASSWORD + oldPw);
 						txn.rollback();
@@ -508,17 +509,17 @@ public class Profile {
 					}
 
 					user.setProperty(DSUtils.USER_PASSWORD, newPw);
-					
+
 					Entity pwLog = new Entity(DSUtils.PASSWORDCHANGELOG, user.getKey());
 					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_NEW, newPw);
 					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_OLD, oldPw);
 					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_TIME, new Date());
 					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_IP, request.getRemoteAddr());
-					
+
 					List<Entity> list = Arrays.asList(user, pwLog);
-					
+
 					datastore.put(txn, list);
-					
+
 					txn.commit();
 					LOG.info(Message.PASSWORD_CHANGED + username);
 					return Response.ok().build();
@@ -529,7 +530,7 @@ public class Profile {
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 					}
 				}
-				
+
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Message.TOO_MANY_RETRIES);
@@ -606,13 +607,13 @@ public class Profile {
 
 		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 	}
-	
+
 	@POST
 	@Path("/changeprofilepic")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response changeProfPic(@Context HttpServletRequest request, String pic) {
 		int retries = 5;
-		
+
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		while(true) {
@@ -628,12 +629,13 @@ public class Profile {
 			}
 		}
 	}
-	
+
 	private Response changeProfPicRetry(String pic, String username) {
-		String imgid = Storage.IMG_FOLDER + Storage.REPORT_FOLDER + username;
-		if(!Storage.saveImage(pic, Storage.BUCKET, imgid))
+		List<String> folders = Arrays.asList(Storage.IMG_FOLDER, Storage.REPORT_FOLDER);
+		StoragePath pathImg = new StoragePath(folders, username);
+		if(!Storage.saveImage(pic, Storage.BUCKET, pathImg))
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
-		
+
 		return Response.ok().build();
 	}
 }
