@@ -31,6 +31,7 @@ function init() {
     var mapElement = document.getElementById('map');
     map = new google.maps.Map(mapElement, current_location);
 
+    getWorkers();
 }
 
 function searchLocation(){
@@ -130,10 +131,9 @@ function verifyIsLoggedIn(){
 
 function logOut(){
     console.log(localStorage.getItem('token'));
-    fetch(URL_BASE + '/api/logout/org', {
+    fetch(URL_BASE + '/api/logout', {
         method: 'POST',
         headers: {
-            'Accept': 'application/json',
             'Content-Type': 'application/json',
             'Authorization': localStorage.getItem('token')
         }
@@ -235,12 +235,12 @@ function showFeed() {
 }
 
 function showWorkers(){
-    getWorkers();
     hideShow('users_variable');
 }
 
 function showCreateWorker(){
     hideShow('create_variable');
+    document.getElementById("org_name").innerHTML = localStorage.getItem('ignes_org_name');
 }
 
 function getWorkers(){
@@ -260,8 +260,7 @@ function getWorkers(){
                     if(data != null){
                         var i;
                         var table = document.getElementById("user_table");
-                        if(table.rows.length > 1)
-                            clearTable();
+
                         console.log(data.length);
                         for(i = 0; i < data.length; i++){
                             var row = table.insertRow(-1);
@@ -302,7 +301,7 @@ function clearTable(){
 }
 
 function createWorker(){
-    var username = document.getElementById("worker_username").value;
+    var name = document.getElementById("worker_username").value;
     var email = document.getElementById("worker_email").value;
     var job = document.getElementById("worker_jobs").value;
 
@@ -313,7 +312,7 @@ function createWorker(){
             'Authorization': localStorage.getItem('token')
         },
         body: JSON.stringify({
-            worker_username: username,
+            worker_name: name,
             worker_email: email,
             worker_job: job
         })
