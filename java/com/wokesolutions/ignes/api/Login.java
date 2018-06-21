@@ -171,8 +171,13 @@ public class Login {
 						}
 
 						ResponseBuilder r;
-
+						
 						String level = user.getProperty(DSUtils.USER_LEVEL).toString();
+						
+						r = Response.ok()
+								.header(CustomHeader.AUTHORIZATION, token)
+								.header(CustomHeader.LEVEL, level);
+						
 						if(level.equals(UserLevel.WORKER)) {
 
 							Query query = new Query(DSUtils.WORKER).setAncestor(userKey);
@@ -194,20 +199,12 @@ public class Login {
 							}
 
 							r = Response.ok()
-									.header(CustomHeader.AUTHORIZATION, token)
 									.header(CustomHeader.ORG,
-											user.getProperty(orgE.getProperty(DSUtils.ORG_NAME).toString()))
-									.header(CustomHeader.LEVEL, level);
+											user.getProperty(orgE.getProperty(DSUtils.ORG_NAME).toString()));
 						}
-
-						r = Response.ok()
-								.header(CustomHeader.AUTHORIZATION, token)
-								.header(CustomHeader.LEVEL, level);
 
 						if(activated != null)
 							r.header(CustomHeader.ACTIVATED, activated);
-						
-						LOG.info("-----token-----> " + token);
 
 						return r.build();
 					} catch (UnsupportedEncodingException e){
