@@ -289,7 +289,7 @@ public class Login {
 						Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 						String token = JWT.create()
 								.withIssuer(JWTUtils.ISSUER)
-								.withClaim(JWTUtils.ORG, JWTUtils.ORG)
+								.withClaim(JWTUtils.ORG, UserLevel.ORG)
 								.withClaim(JWTUtils.USERNAME, data.username)
 								.withClaim(JWTUtils.IAT, date)
 								.sign(algorithm);

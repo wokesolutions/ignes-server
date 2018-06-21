@@ -20,6 +20,7 @@ import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.JWTUtils;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.Secrets;
+import com.wokesolutions.ignes.util.UserLevel;
 
 public class OrgFilter implements Filter {
 	
@@ -36,7 +37,7 @@ public class OrgFilter implements Filter {
 			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
-					.withClaim(JWTUtils.ORG, JWTUtils.ORG)
+					.withClaim(JWTUtils.ORG, UserLevel.ORG)
 					.build();
 
 			String token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
