@@ -59,29 +59,30 @@ public class DSUtils {
 		public static final String USEROPTIONAL_ZIP = "useroptional_zip";
 		public static final String USEROPTIONAL_SKILLS = "useroptional_skills";
 		public static final String USEROPTIONAL_JOB = "useroptional_job";
-		public static final String USEROPTIONAL_JOB_STANDARD = "useroptional_job_standard";
+		public static final String USEROPTIONAL_PICPATH = "useroptional_picpath";
+		public static final String USEROPTIONAL_PICTNPATH = "useroptional_pictnpath";
 		
 	// UserOptionalLogs
-		public static final String USEROPTIONALLOGS_USERNAME = "useroptionallog_username";
-		public static final String USEROPTIONALLOGS_CHANGETIME = "useroptionallog_changetime";
-		public static final String USEROPTIONALLOGS_NEWNAME = "useroptionallog_newname";
-		public static final String USEROPTIONALLOGS_NEWBIRTH = "useroptionallog_newbirth";
-		public static final String USEROPTIONALLOGS_NEWGENDER = "useroptionallog_newgender";
-		public static final String USEROPTIONALLOGS_NEWPHONE = "useroptionallog_newphone";
-		public static final String USEROPTIONALLOGS_NEWADDRESS = "useroptionallog_newaddress";
-		public static final String USEROPTIONALLOGS_NEWLOCALITY = "useroptionallog_newlocality";
-		public static final String USEROPTIONALLOGS_NEWZIP = "useroptionallog_newzip";
-		public static final String USEROPTIONALLOGS_NEWSKILLS = "useroptionallog_newskills";
-		public static final String USEROPTIONALLOGS_NEWJOB = "useroptionallog_newjob";
-		public static final String USEROPTIONALLOGS_OLDNAME = "useroptionallog_oldname";
-		public static final String USEROPTIONALLOGS_OLDBIRTH = "useroptionallog_oldbirth";
-		public static final String USEROPTIONALLOGS_OLDGENDER = "useroptionallog_oldgender";
-		public static final String USEROPTIONALLOGS_OLDPHONE = "useroptionallog_oldphone";
-		public static final String USEROPTIONALLOGS_OLDADDRESS = "useroptionallog_oldaddress";
-		public static final String USEROPTIONALLOGS_OLDLOCALITY = "useroptionallog_oldlocality";
-		public static final String USEROPTIONALLOGS_OLDZIP = "useroptionallog_oldzip";
-		public static final String USEROPTIONALLOGS_OLDSKILLS = "useroptionallog_oldskills";
-		public static final String USEROPTIONALLOGS_OLDJOB = "useroptionallog_oldjob";
+		public static final String USEROPTIONALLOGS_USERNAME = "useroptionallogs_username";
+		public static final String USEROPTIONALLOGS_CHANGETIME = "useroptionallogs_changetime";
+		public static final String USEROPTIONALLOGS_NEWNAME = "useroptionallogs_newname";
+		public static final String USEROPTIONALLOGS_NEWBIRTH = "useroptionallogs_newbirth";
+		public static final String USEROPTIONALLOGS_NEWGENDER = "useroptionallogs_newgender";
+		public static final String USEROPTIONALLOGS_NEWPHONE = "useroptionallogs_newphone";
+		public static final String USEROPTIONALLOGS_NEWADDRESS = "useroptionallogs_newaddress";
+		public static final String USEROPTIONALLOGS_NEWLOCALITY = "useroptionallogs_newlocality";
+		public static final String USEROPTIONALLOGS_NEWZIP = "useroptionallogs_newzip";
+		public static final String USEROPTIONALLOGS_NEWSKILLS = "useroptionallogs_newskills";
+		public static final String USEROPTIONALLOGS_NEWJOB = "useroptionallogs_newjob";
+		public static final String USEROPTIONALLOGS_OLDNAME = "useroptionallogs_oldname";
+		public static final String USEROPTIONALLOGS_OLDBIRTH = "useroptionallogs_oldbirth";
+		public static final String USEROPTIONALLOGS_OLDGENDER = "useroptionallogs_oldgender";
+		public static final String USEROPTIONALLOGS_OLDPHONE = "useroptionallogs_oldphone";
+		public static final String USEROPTIONALLOGS_OLDADDRESS = "useroptionallogs_oldaddress";
+		public static final String USEROPTIONALLOGS_OLDLOCALITY = "useroptionallogs_oldlocality";
+		public static final String USEROPTIONALLOGS_OLDZIP = "useroptionallogs_oldzip";
+		public static final String USEROPTIONALLOGS_OLDSKILLS = "useroptionallogs_oldskills";
+		public static final String USEROPTIONALLOGS_OLDJOB = "useroptionallogs_oldjob";
 
 	// UserStats
 		public static final String USERSTATS_LOGINS = "userstats_logins";

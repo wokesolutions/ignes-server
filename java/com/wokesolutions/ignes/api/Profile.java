@@ -631,12 +631,26 @@ public class Profile {
 	}
 
 	private Response changeProfPicRetry(String pic, String username) {
-		List<String> folders = Arrays.asList(Storage.IMG_FOLDER, Storage.REPORT_FOLDER);
+		List<String> folders = Arrays.asList(Storage.IMG_FOLDER, Storage.PROFILE_FOLDER);
 		StoragePath pathImg = new StoragePath(folders, username);
 		if(!Storage.saveImage(pic, Storage.BUCKET, pathImg))
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
+		Query query = new Query(DSUtils.USEROPTIONAL)
+				.setAncestor(KeyFactory.createKey(DSUtils.USER, username))
+				.setKeysOnly();
+
+		try {
+			Entity optional = datastore.prepare(query).asSingleEntity();
+			optional.setProperty(DSUtils.USEROPTIONAL_PICPATH, pathImg.makePath());
+			optional.setProperty(DSUtils.USEROPTIONAL_PICTNPATH, Storage.getTnFromPath(pathImg));
+			
+			datastore.put(optional);
+		} catch(TooManyResultsException e) {
+			LOG.info(Message.UNEXPECTED_ERROR);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+
 		return Response.ok().build();
 	}
-
 }
