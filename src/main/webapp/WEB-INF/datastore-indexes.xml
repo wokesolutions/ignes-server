@@ -24,6 +24,7 @@
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
         <property name="report_status" direction="desc"/>
+        <property name="report_description" direction="desc"/>
     </datastore-index>
     
     <datastore-index kind="Report" ancestor="false" source="manual">
@@ -37,6 +38,7 @@
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
         <property name="report_status" direction="desc"/>
+        <property name="report_description" direction="desc"/>
     </datastore-index>
     
     <!--<datastore-index kind="Report" ancestor="false" source="manual">
@@ -59,6 +61,7 @@
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
         <property name="report_status" direction="desc"/>
+        <property name="report_description" direction="desc"/>
     </datastore-index>
     
     <datastore-index kind="Report" ancestor="false" source="manual">
@@ -72,6 +75,7 @@
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
         <property name="report_status" direction="desc"/>
+        <property name="report_description" direction="desc"/>
     </datastore-index>
     
     <datastore-index kind="Report" ancestor="false" source="manual">
@@ -85,6 +89,7 @@
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
         <property name="report_status" direction="desc"/>
+        <property name="report_description" direction="desc"/>
     </datastore-index>
     
     <datastore-index kind="Report" ancestor="false" source="manual">
@@ -98,6 +103,7 @@
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
         <property name="report_status" direction="desc"/>
+        <property name="report_description" direction="desc"/>
     </datastore-index>
     
     <datastore-index kind="Report" ancestor="false" source="manual">
@@ -111,6 +117,7 @@
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
         <property name="report_status" direction="desc"/>
+        <property name="report_description" direction="desc"/>
     </datastore-index>
     
     <datastore-index kind="Report" ancestor="false" source="manual">
@@ -124,6 +131,7 @@
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
         <property name="report_status" direction="desc"/>
+        <property name="report_description" direction="desc"/>
     </datastore-index>
     
     <datastore-index kind="Report" ancestor="false" source="manual">
@@ -137,6 +145,7 @@
         <property name="report_creationtimeformatted" direction="desc"/>
         <property name="report_username" direction="asc"/>
         <property name="report_status" direction="desc"/>
+        <property name="report_description" direction="desc"/>
     </datastore-index>
     
     <datastore-index kind="Report" ancestor="false" source="manual">
@@ -150,6 +159,7 @@
         <property name="report_creationtimeformatted" direction="desc"/>
     	<property name="report_username" direction="asc"/>
         <property name="report_status" direction="desc"/>
+        <property name="report_description" direction="desc"/>
     </datastore-index>
     
     <datastore-index kind="Worker" ancestor="false" source="manual">

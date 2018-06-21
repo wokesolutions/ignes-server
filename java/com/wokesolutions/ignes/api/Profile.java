@@ -657,7 +657,7 @@ public class Profile {
 	@GET
 	@Path("/getprofilepic/{username}")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
-	public Response getProfPic() {
+	public Response getProfPic() { //TODO
 		return null;
 	}
 }

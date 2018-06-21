@@ -52,6 +52,8 @@ public class UserFilter implements Filter {
 
 			if(token == null)
 				throw new Exception();
+
+			verifier.verify(token);
 		} catch(Exception e) {
 			try {
 				verifier = JWT.require(algorithm)
@@ -63,6 +65,8 @@ public class UserFilter implements Filter {
 
 				if(token == null)
 					throw new Exception();
+
+				verifier.verify(token);
 			} catch (Exception e2) {
 				String responseToSend = Message.INVALID_TOKEN;
 				((HttpServletResponse) resp).setHeader("Content-Type", CustomHeader.JSON_CHARSET_UTF8);
@@ -71,8 +75,6 @@ public class UserFilter implements Filter {
 				return;
 			}
 		}
-
-		verifier.verify(token);
 
 		String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
 
