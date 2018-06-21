@@ -10,7 +10,6 @@ var currentLoc = {
 };
 
 
-var locations = [];
 var reports;
 var current_position = "map_variable";
 var previewImageBase = "";
@@ -307,7 +306,8 @@ function getMarkers(radius, cursor){
                 });
 
             }else{
-                console.log("Tratar do Forbidden")
+                console.log("Tratar do Forbidden");
+                return;
             }
 
 

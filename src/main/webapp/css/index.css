@@ -445,7 +445,19 @@ label {
     font-family: "Quicksand Bold";
 
 }
+
+.table-style-profile{
+    margin-top: 4rem;
+
+}
+
+
 .table-bordered td, .table-bordered th {
     border: 1px solid rgba(68, 68, 68, 0.49);
     background-color: white;
+}
+
+.edit_button_style{
+    font-family: "Quicksand Bold";
+    color:white;
 }
