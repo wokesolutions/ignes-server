@@ -215,79 +215,76 @@ function addReport(){
 
     if(previewImageBase !== ""){
         geocoder.geocode( { 'address': address}, function(results, status) {
-            if(status == 'OK'){
+            if(results[0].address_components[2] !== null){
+                if(status == 'OK') {
 
-                var lat = results[0].geometry.location.lat();
-                var lng = results[0].geometry.location.lng();
-                var morada = results[0].formatted_address;
-                var locality = results[0].address_components[2].long_name;
-                var district = results[0].address_components[3].long_name;
+                    var lat = results[0].geometry.location.lat();
+                    var lng = results[0].geometry.location.lng();
+                    var morada = results[0].formatted_address;
+                    var locality = results[0].address_components[2].long_name;
+                    var district = results[0].address_components[3].long_name;
 
-                console.log(lat);
-                console.log(lng);
-                console.log(morada);
-                console.log(locality);
-                console.log(district);
-
-                bodyToSend.report_lat = lat;
-                bodyToSend.report_lng = lng;
-                bodyToSend.report_img = previewImageBase;
-                bodyToSend.report_thumbnail = previewImageBase;
-                bodyToSend.report_private = true;
-                bodyToSend.report_gravity = gravity;
-                bodyToSend.report_address = morada;
-                bodyToSend.report_locality = locality;
-                bodyToSend.report_city = district;
-
-                if(title !== "" || title !== undefined){
-                    bodyToSend.report_title = title;
-                }
-                if(description !== null || description !== undefined){
-                    bodyToSend.report_description = description;
-                }
-
-                fetch('https://hardy-scarab-200218.appspot.com/api/report/create', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': localStorage.getItem('token')
-                    },
-                    body:bodyToSend
+                    bodyToSend.report_lat = lat;
+                    bodyToSend.report_lng = lng;
+                    bodyToSend.report_img = previewImageBase;
+                    bodyToSend.report_thumbnail = previewImageBase;
+                    bodyToSend.report_private = true;
+                    bodyToSend.report_gravity = gravity;
+                    bodyToSend.report_address = morada;
+                    bodyToSend.report_locality = locality;
+                    bodyToSend.report_city = district;
 
 
-                }).then(function(response) {
-
-                        if (response.status === 200) {
-
-                            marker = new google.maps.Marker({
-                                position: new google.maps.LatLng(lat, lng),
-                                map: map
-                            });
-
-                            google.maps.event.addListener(marker, 'click', (function(marker, i) {
-                                return function() {
-                                    var contentString = '<div id="content">'+
-                                        '<h1 style="font-family: Quicksand Bold; color:#AD363B; font-size:30px">'+ title +'</h1>'+ '<div>' +
-                                        '<p style="font-family: Quicksand Bold">'+'Localização' +'</p>'+ '<p>' + address + '</div>'+
-                                        '<div>' +
-                                        '<p style="font-family: Quicksand Bold">'+'Descrição' + '<p>' + description +'</p>'+ '</p>' +'</div>'+
-                                        '<div>'+
-                                        '<p style="font-family: Quicksand Bold">'+'Estado' +'</p>'+ '<p style="color:forestgreen">' + "OPEN" +
-                                        '</div>'+
-                                        '</div>';
-                                    infowindow.setContent(contentString);
-                                    infowindow.open(map, marker);
-                                }
-                            })(marker, i));
-                            bodyToSend = "";
-                            map.setCenter(new google.maps.LatLng(lat, lng));
-                            showMap();
-                        }
-
+                    if (title !== "" || title !== undefined) {
+                        bodyToSend.report_title = title;
                     }
-                ).catch(function(err) {
-                    console.log('Fetch Error', err);
-                });
+                    if (description !== null || description !== undefined) {
+                        bodyToSend.report_description = description;
+                    }
+
+                    fetch('https://hardy-scarab-200218.appspot.com/api/report/create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': localStorage.getItem('token')
+                        },
+                        body: JSON.stringify(bodyToSend)
+                    }).then(function (response) {
+
+                            if (response.status === 200) {
+
+                                marker = new google.maps.Marker({
+                                    position: new google.maps.LatLng(lat, lng),
+                                    map: map
+                                });
+
+                                google.maps.event.addListener(marker, 'click', (function (marker, i) {
+                                    return function () {
+                                        var contentString = '<div id="content">' +
+                                            '<h1 style="font-family: Quicksand Bold; color:#AD363B; font-size:30px">' + title + '</h1>' + '<div>' +
+                                            '<p style="font-family: Quicksand Bold">' + 'Localização' + '</p>' + '<p>' + address + '</div>' +
+                                            '<div>' +
+                                            '<p style="font-family: Quicksand Bold">' + 'Descrição' + '<p>' + description + '</p>' + '</p>' + '</div>' +
+                                            '<div>' +
+                                            '<p style="font-family: Quicksand Bold">' + 'Estado' + '</p>' + '<p style="color:forestgreen">' + "OPEN" +
+                                            '</div>' +
+                                            '</div>';
+                                        infowindow.setContent(contentString);
+                                        infowindow.open(map, marker);
+                                    }
+                                })(marker, i));
+                                bodyToSend = "";
+                                map.setCenter(new google.maps.LatLng(lat, lng));
+                                showMap();
+                            }
+
+                        }
+                    ).catch(function (err) {
+                        console.log('Fetch Error', err);
+                    });
+                }else{
+                    alert("Insira uma morada mais específica.")
+                }
             }else{
                 alert("A morada inserida não existe.")
             }
