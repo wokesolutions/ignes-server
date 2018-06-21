@@ -42,7 +42,7 @@ public class JWTUtils {
 					.withClaim(JWTUtils.USERNAME, username)
 					.withClaim(JWTUtils.IAT, date)
 					.sign(algorithm);
-		} else if(level.equals(UserLevel.WORKER)) {
+		} else if(level.equals(UserLevel.WORKER)) { //TODO CAREFUL WITH PERMISSION
 			token = JWT.create()
 					.withIssuer(JWTUtils.ISSUER)
 					.withClaim(JWTUtils.WORKER, UserLevel.WORKER)

@@ -25,9 +25,9 @@ import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.Secrets;
 import com.wokesolutions.ignes.util.UserLevel;
 
-public class UserFilter implements Filter {
+public class WorkerFilter implements Filter {
 
-	public static final Logger LOG = Logger.getLogger(UserFilter.class.getName());
+	public static final Logger LOG = Logger.getLogger(WorkerFilter.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
 	public void init(FilterConfig arg0) throws ServletException {}  
@@ -39,14 +39,15 @@ public class UserFilter implements Filter {
 		
 		try {
 			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
-			JWTVerifier verifier = JWT.require(algorithm)
-					.withIssuer(JWTUtils.ISSUER)
-					.withClaim(JWTUtils.LEVEL1, UserLevel.LEVEL1)
-					.build();
-
+			
 			String token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
 			
-			LOG.info("-----token-----> " + token);
+			LOG.info(token);
+			
+			JWTVerifier verifier = JWT.require(algorithm)
+					.withIssuer(JWTUtils.ISSUER)
+					.withClaim(JWTUtils.WORKER, UserLevel.WORKER)
+					.build();
 			
 			if(token == null)
 				throw new Exception();
@@ -54,6 +55,8 @@ public class UserFilter implements Filter {
 			verifier.verify(token);
 			
 			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
+			
+			LOG.info("username " + username);
 			
 			Query query = new Query(DSUtils.TOKEN)
 					.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
@@ -76,10 +79,10 @@ public class UserFilter implements Filter {
 
 			chain.doFilter(req, resp);
 		} catch (Exception e){
-			String responseToSend = Message.INVALID_TOKEN;
+			LOG.info(Message.INVALID_TOKEN);
 			((HttpServletResponse) resp).setHeader("Content-Type", CustomHeader.JSON_CHARSET_UTF8);
 			((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
-			resp.getWriter().println(responseToSend);
+			resp.getWriter().println(Message.INVALID_TOKEN);
 			return;
 		}
 	}

@@ -36,13 +36,32 @@
 	<!-- Filters -->
 
 	<filter>
+		<filter-name>RequestControlFilter</filter-name>
+		<filter-class>com.wokesolutions.ignes.filters.RequestControlFilter</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>RequestControlFilter</filter-name>
+		<url-pattern>/api/*</url-pattern>
+	</filter-mapping>
+
+	<filter>
+		<filter-name>AdditionalResponseHeadersFilter</filter-name>
+		<filter-class>com.wokesolutions.ignes.filters.AdditionalResponseHeadersFilter</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>AdditionalResponseHeadersFilter</filter-name>
+		<url-pattern>/api/*</url-pattern>
+	</filter-mapping>
+
+	<filter>
 		<filter-name>UserFilter</filter-name>
 		<filter-class>com.wokesolutions.ignes.filters.UserFilter</filter-class>
 	</filter>
 
 	<filter-mapping>
 		<filter-name>UserFilter</filter-name>
-		<url-pattern>/api/logout</url-pattern>
 		<url-pattern>/api/report/create</url-pattern>
 		<url-pattern>/api/report/vote/up</url-pattern>
 		<url-pattern>/api/report/vote/down</url-pattern>
@@ -78,5 +97,16 @@
 	<filter-mapping>
 		<filter-name>OrgFilter</filter-name>
 		<url-pattern>/api/org/*</url-pattern>
+	</filter-mapping>
+
+	<filter>
+		<filter-name>WorkerFilter</filter-name>
+		<filter-class>com.wokesolutions.ignes.filters.WorkerFilter</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>WorkerFilter</filter-name>
+		<url-pattern>/api/task/addnote/*</url-pattern>
+		<url-pattern>/api/worker/*</url-pattern>
 	</filter-mapping>
 </web-app>

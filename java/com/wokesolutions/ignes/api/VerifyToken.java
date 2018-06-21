@@ -39,6 +39,8 @@ public class VerifyToken {
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response verifyToken(@Context HttpHeaders headers) {
 		try {
+			LOG.info(Message.VERIFYING_TOKEN);
+			
 			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
@@ -49,11 +51,12 @@ public class VerifyToken {
 
 			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
 
+			LOG.info(Message.VERIFYING_TOKEN_OF_USER + username);
+
 			Entity user;
 			try {
 				user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
 			} catch (EntityNotFoundException e) {
-				
 				try {
 					user = datastore.get(KeyFactory.createKey(DSUtils.ORG, username));
 				} catch (EntityNotFoundException e1) {

@@ -10,6 +10,7 @@ public class CustomHeader {
 	
 	public static final String LEVEL = "Level";
 	public static final String ACTIVATED = "Activated";
+	public static final String ORG = "Org";
 	public static final String TRUE = "true";
 	public static final String FALSE = "false";
 	

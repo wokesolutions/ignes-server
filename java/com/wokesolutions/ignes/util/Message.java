@@ -29,6 +29,12 @@ public class Message {
 		
 	// Error Worker
 		public static final String WORKER_NOT_FOUND = "Trabalhador não encontrado";
+		
+	// Error Task
+		public static final String NOTE_TOO_LONG = "Nota é demasiado longa";
+		public static final String NOTE_EMPTY = "Nota não pode ser vazia";
+		public static final String TASK_NOT_FOUND= "Tarefa não encontrada";
+		public static final String DUPLICATED_TASK = "Trabalhador já tem essa tarefa";
 	
 	// Error General
 		public static final String WRONG_PASSWORD = "Password errada para o utilizador: ";
@@ -48,10 +54,17 @@ public class Message {
 		public static final String INVALID_EMAIL = "Email inválido";
 		public static final String INVALID_USERNAME = "Nome de utilizador inválido";
 		
+	// Error Requests
+		public static final String TOO_MANY_REQUESTS = "Demasiados pedidos do mesmo IP";
+		public static final String NOT_HTTP_REQUEST = "Pedido não é HTTP";
+		public static final String REQUEST_ID_ERROR = "Erro a obter ID do pedido";
+		
 	
 	// Info User
 		public static final String ATTEMPT_REGISTER_USER = "Tentando registar o utilizador: ";
 		public static final String USER_REGISTERED = "Utilizador registado: ";
+		public static final String PASSWORD_CHANGED = "Palavra-passe alterada para o utilizador: ";
+		public static final String GIVING_VOTES = "Tentando dar os votos do utilizador: ";
 	
 	// Info Admin
 		public static final String ADMIN_PROMOTED = "Administrador promovido";
@@ -94,6 +107,11 @@ public class Message {
 		public static final String LOGGING_OUT = "A sair da conta: ";
 		public static final String ATTEMPT_UPDATE_PROFILE = "Tentando atualizar perfil: ";
 		public static final String PROFILE_UPDATED = "Perfil do utilizador foi atualizado";
+		public static final String VERIFYING_TOKEN = "Verificando o token";
+		public static final String VERIFYING_TOKEN_OF_USER = "Verificando o token do user: ";
+		
+	// Info Requests
+		public static final String REQUEST_IS_GOOD = "Pedido foi aceite";
 	
 	// Status
 		public static final String OK = "OK";

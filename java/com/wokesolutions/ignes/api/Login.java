@@ -59,14 +59,13 @@ public class Login {
 		if(!data.isValid())
 			return Response.status(Status.FORBIDDEN).entity(Message.LOGIN_DATA_INVALID).build();
 
-		Entity user;
 		boolean isOrg = false;
 
 		try {
-			user = datastore.get(KeyFactory.createKey(DSUtils.USER, data.username));
+			datastore.get(KeyFactory.createKey(DSUtils.USER, data.username));
 		} catch (EntityNotFoundException e1) {
 			try {
-				user = datastore.get(KeyFactory.createKey(DSUtils.ORG, data.username));
+				datastore.get(KeyFactory.createKey(DSUtils.ORG, data.username));
 				isOrg = true;
 			} catch (EntityNotFoundException e) {
 				LOG.info(Message.USER_NOT_FOUND);
@@ -77,7 +76,7 @@ public class Login {
 		int retries = 5;
 		while(true) {
 			try {
-				return loginUserRetry(data, request, user, isOrg);
+				return loginUserRetry(data, request, isOrg);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Message.TOO_MANY_RETRIES);
@@ -91,7 +90,7 @@ public class Login {
 
 
 	private Response loginUserRetry(LoginData data, HttpServletRequest request,
-			Entity userE, boolean isOrg) { //TODO organize code
+			boolean isOrg) { //TODO organize code
 		LOG.info(Message.ATTEMPT_LOGIN + data.username);
 
 		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
@@ -139,7 +138,8 @@ public class Login {
 					log.setProperty(DSUtils.USERLOG_TIME, date);
 
 					// Get the user statistics and updates it
-					ustats.setProperty(DSUtils.USERSTATS_LOGINS, 1L + (long) ustats.getProperty(DSUtils.USERSTATS_LOGINS));
+					ustats.setProperty(DSUtils.USERSTATS_LOGINS,
+							1L + (long) ustats.getProperty(DSUtils.USERSTATS_LOGINS));
 					ustats.setProperty(DSUtils.USERSTATS_LASTIN, date);
 
 					// Return token		
@@ -170,13 +170,45 @@ public class Login {
 								activated = CustomHeader.FALSE;
 						}
 
-						ResponseBuilder r = Response.ok()
+						ResponseBuilder r;
+
+						String level = user.getProperty(DSUtils.USER_LEVEL).toString();
+						if(level.equals(UserLevel.WORKER)) {
+
+							Query query = new Query(DSUtils.WORKER).setAncestor(userKey);
+							Entity orgE;
+
+							try {
+								String org = datastore.prepare(query).asSingleEntity()
+										.getProperty(DSUtils.WORKER_ORG).toString();
+
+								try {
+									orgE = datastore.get(KeyFactory.createKey(DSUtils.ORG, org));
+								} catch(EntityNotFoundException e3) {
+									LOG.info(Message.UNEXPECTED_ERROR);
+									return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+								}
+							} catch(TooManyResultsException e4) {
+								LOG.info(Message.UNEXPECTED_ERROR);
+								return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+							}
+
+							r = Response.ok()
+									.header(CustomHeader.AUTHORIZATION, token)
+									.header(CustomHeader.ORG,
+											user.getProperty(orgE.getProperty(DSUtils.ORG_NAME).toString()))
+									.header(CustomHeader.LEVEL, level);
+						}
+
+						r = Response.ok()
 								.header(CustomHeader.AUTHORIZATION, token)
-								.header(CustomHeader.LEVEL, user.getProperty(DSUtils.USER_LEVEL));
-						
+								.header(CustomHeader.LEVEL, level);
+
 						if(activated != null)
 							r.header(CustomHeader.ACTIVATED, activated);
 						
+						LOG.info("-----token-----> " + token);
+
 						return r.build();
 					} catch (UnsupportedEncodingException e){
 						LOG.warning(e.getMessage());

@@ -313,8 +313,11 @@ public class Report {
 		}
 
 		JSONObject obj = new JSONObject();
-		obj.put(DSUtils.REPORT_THUMBNAIL,
-				Storage.getImage(rep.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString()));
+		String tn = Storage.getImage(rep.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
+		obj.put(DSUtils.REPORT_THUMBNAIL, tn);
+		
+		LOG.info(tn);
+		
 		return Response.ok(obj.toString()).build();
 	}
 
@@ -400,8 +403,8 @@ public class Report {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
-
-			if(jsonReports.length() < BATCH_SIZE)
+			
+			if(reports.size() < BATCH_SIZE)
 				return Response.ok()
 						.entity(jsonReports.toString()).build();
 
@@ -778,7 +781,7 @@ public class Report {
 		}
 	}
 	
-	private Response closeDefRetry() {
+	private Response closeDefRetry() { //TODO
 		return null;
 	}
 }
