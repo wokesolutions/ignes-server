@@ -70,11 +70,11 @@ public class RequestControlFilter implements Filter {
 			String ip = newreq.getRemoteAddr();
 			
 			if(cache.get(ip) == null)
-				cache.put(ip, 1L, Expiration.byDeltaSeconds(120));
+				cache.put(ip, 1L, Expiration.byDeltaSeconds(15));
 			else
 				cache.increment(ip, 1L);
 			
-			if((long) cache.get(ip) > 50L) {
+			if((long) cache.get(ip) > 35L) {
 				LOG.info(Message.TOO_MANY_REQUESTS);
 				((HttpServletResponse) resp).setHeader("Content-Type", "application/json");
 				((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());

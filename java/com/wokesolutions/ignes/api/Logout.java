@@ -85,21 +85,21 @@ public class Logout {
 	public Response logoutUser(@Context HttpHeaders headers,
 			@Context HttpServletRequest request) {
 
-		Object username = request.getAttribute(CustomHeader.USERNAME_ATT);
-		if(username == null)
-			username = request.getAttribute(CustomHeader.NIF_ATT);
-		if(username == null)
+		Object user = request.getAttribute(CustomHeader.USERNAME_ATT);
+		if(user == null)
+			user = request.getAttribute(CustomHeader.NIF_ATT).toString();
+		if(user == null)
 			return Response.status(Status.FORBIDDEN).build();
-
-		String user = username.toString();
+		
+		String username = user.toString();
 
 		boolean isOrg = false;
 
 		try {
-			datastore.get(KeyFactory.createKey(DSUtils.USER, user));
+			datastore.get(KeyFactory.createKey(DSUtils.USER, username));
 		} catch (EntityNotFoundException e1) {
 			try {
-				datastore.get(KeyFactory.createKey(DSUtils.ORG, user));
+				datastore.get(KeyFactory.createKey(DSUtils.ORG, username));
 				isOrg = true;
 			} catch (EntityNotFoundException e) {
 				LOG.info(Message.USER_NOT_FOUND);
@@ -110,7 +110,7 @@ public class Logout {
 		int retries = 5;
 		while(true) {
 			try {
-				return logoutUserRetry(user, request, isOrg);
+				return logoutUserRetry(username, request, isOrg);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
