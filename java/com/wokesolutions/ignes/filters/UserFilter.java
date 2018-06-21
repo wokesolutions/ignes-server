@@ -34,54 +34,72 @@ public class UserFilter implements Filter {
 
 	public void doFilter(ServletRequest req, ServletResponse resp,  
 			FilterChain chain) throws IOException, ServletException {
-		
+
 		LOG.info(this.getClass().getSimpleName() + Message.FILTER_VERIFYING + req.toString());
-		
+
+		Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
+
+		JWTVerifier verifier;
+		String token;
+
 		try {
-			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
-			JWTVerifier verifier = JWT.require(algorithm)
+			verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
 					.withClaim(JWTUtils.LEVEL1, UserLevel.LEVEL1)
 					.build();
 
-			String token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
-			
-			LOG.info("-----token-----> " + token);
-			
+			token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
+
 			if(token == null)
 				throw new Exception();
-			
-			verifier.verify(token);
-			
-			String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
-			
-			Query query = new Query(DSUtils.TOKEN)
-					.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
-			
-			List<Entity> allTokens = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
-			
-			boolean has = false;
-			for(Entity oneToken : allTokens)
-				if(oneToken.getProperty(DSUtils.TOKEN_STRING).equals(token)) {
-					has = true;
-					break;
-				}
-			
-			if(!has) {
-				throw new Exception();
-			}
-			
-			req.setAttribute(CustomHeader.USERNAME_ATT, username);
-			req.setAttribute(CustomHeader.LEVEL_ATT, JWTUtils.LEVEL1);
+		} catch(Exception e) {
+			try {
+				verifier = JWT.require(algorithm)
+						.withIssuer(JWTUtils.ISSUER)
+						.withClaim(JWTUtils.ORG, UserLevel.ORG)
+						.build();
 
-			chain.doFilter(req, resp);
-		} catch (Exception e){
+				token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
+
+				if(token == null)
+					throw new Exception();
+			} catch (Exception e2) {
+				String responseToSend = Message.INVALID_TOKEN;
+				((HttpServletResponse) resp).setHeader("Content-Type", CustomHeader.JSON_CHARSET_UTF8);
+				((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
+				resp.getWriter().println(responseToSend);
+				return;
+			}
+		}
+
+		verifier.verify(token);
+
+		String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
+
+		Query query = new Query(DSUtils.TOKEN)
+				.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
+
+		List<Entity> allTokens = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
+
+		boolean tokenExists = false;
+		for(Entity oneToken : allTokens)
+			if(oneToken.getProperty(DSUtils.TOKEN_STRING).equals(token)) {
+				tokenExists = true;
+				break;
+			}
+
+		if(!tokenExists) {
 			String responseToSend = Message.INVALID_TOKEN;
 			((HttpServletResponse) resp).setHeader("Content-Type", CustomHeader.JSON_CHARSET_UTF8);
 			((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
 			resp.getWriter().println(responseToSend);
 			return;
 		}
+
+		req.setAttribute(CustomHeader.USERNAME_ATT, username);
+		req.setAttribute(CustomHeader.LEVEL_ATT, JWTUtils.LEVEL1);
+
+		chain.doFilter(req, resp);
 	}
 
 	public void destroy() {}  

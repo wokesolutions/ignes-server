@@ -67,7 +67,7 @@ public class RequestControlFilter implements Filter {
 			
 			LOG.info("-------ID------> " + id);
 			
-			String ip = newreq.getRemoteAddr();
+			// String ip = newreq.getRemoteAddr();
 			
 			/*if(cache.get(ip) == null)
 				cache.put(ip, 1L, Expiration.byDeltaSeconds(15));

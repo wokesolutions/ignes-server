@@ -605,4 +605,9 @@ public class Profile {
 
 		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 	}
+	
+	@POST
+	@Path("/changeprofilepic")
+	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
+	public Response 
 }

@@ -87,7 +87,7 @@ public class Logout {
 
 		Object user = request.getAttribute(CustomHeader.USERNAME_ATT);
 		if(user == null)
-			user = request.getAttribute(CustomHeader.NIF_ATT).toString();
+			user = request.getAttribute(CustomHeader.NIF_ATT);
 		if(user == null)
 			return Response.status(Status.FORBIDDEN).build();
 		
