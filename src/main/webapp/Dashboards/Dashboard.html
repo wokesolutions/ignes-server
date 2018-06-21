@@ -95,12 +95,12 @@
                         <div class="form-group floating-label-form-group controls text-center" >
                             <label>Upload Fotografia</label>
                             <div class="row">
-                                <div class="col-lg-2 col-md-2 mx-auto"></div>
+                                <div class="col-lg-4 col-md-2 mx-auto">
+                                    <img src="" height="80" style="font-family: Quicksand"alt="Image preview..." id="img">
+                                </div>
                                 <div class="col-lg-4 col-md-4 mx-auto text-center">
                                     <input type="file" id="imagem"/>
                                 </div>
-                                <div class="col-lg-2 col-md-2 mx-auto"></div>
-
                             </div>
                         </div>
 
@@ -113,6 +113,7 @@
                 </div>
             </div>
         </div>
+    </div>
 </section>
 
 <!--Neighbor's space-->
@@ -129,13 +130,13 @@
             <img src="../images/avatar.png" height="142" width="142"/>
             <div class="row">
                 <div class="col-md-4 col-lg-4 text-center">
-                <p class ="people_level" id="num_level"></p>
-                <p class ="people_level" id="people_username"></p>
+                    <p class ="people_level" id="num_level"></p>
+                    <p class ="people_level" id="people_username"></p>
                 </div>
             </div>
         </div>
         <div class=" col-md-2 col-lg-2 text-center">
-           <p class ="people_points">Reportes<p class ="people_numbers" id="num_reports"></p></p>
+            <p class ="people_points">Reportes<p class ="people_numbers" id="num_reports"></p></p>
         </div>
         <div class=" col-md-2 col-lg-2 "></div>
     </div>
@@ -284,7 +285,10 @@
 </div>
 
 <!--Feed-->
-<div id="feed" style="display: none">feed</div>
+<div id="feed" style="display: none">feed
+    <div id="feedReports" style="height:100px;overflow: scroll;">
+    </div>
+</div>
 
 <!--Map-->
 <div id ="map"/>

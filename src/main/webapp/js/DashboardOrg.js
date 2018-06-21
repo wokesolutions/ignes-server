@@ -11,9 +11,7 @@ var current_location = {
 var URL_BASE = 'https://maria-dot-hardy-scarab-200218.appspot.com';
 
 google.maps.event.addDomListener(window, 'load', init());
-google.maps.event.addDomListener(window, 'resize', function() {
-    map.setCenter(new google.maps.LatLng(38.6615119,-8.224454));
-});
+
 
 function init() {
 
@@ -24,6 +22,8 @@ function init() {
     document.getElementById("profile_button").onclick = showProfile;
     document.getElementById("feed_button").onclick = showFeed;
     document.getElementById("user_table_button").onclick = showWorkers;
+    document.getElementById("create_button").onclick = showCreateWorker;
+    document.getElementById("worker_register").onclick = createWorker;
     document.getElementById("logout_button").onclick = logOut;
 
     getMarkers("Caparica");
@@ -66,6 +66,9 @@ function hideShow(element){
 
         document.getElementById("list_users").style.display = "none";
 
+    }else if(current_position == "create_variable"){
+
+        document.getElementById("create_worker").style.display = "none";
     }
 
 
@@ -89,6 +92,11 @@ function hideShow(element){
 
         document.getElementById("list_users").style.display = "block";
         current_position = "users_variable";
+
+    }else if(element === "create_variable"){
+
+        document.getElementById("create_worker").style.display = "block";
+        current_position = "create_variable";
 
     }
 
@@ -231,6 +239,10 @@ function showWorkers(){
     hideShow('users_variable');
 }
 
+function showCreateWorker(){
+    hideShow('create_variable');
+}
+
 function getWorkers(){
     var info;
     fetch(URL_BASE + '/api/org/listworkers', {
@@ -283,7 +295,38 @@ function getWorkers(){
 function clearTable(){
     var table = document.getElementById("user_table");
     var i;
-    for(i = table.rows.length; i > 1; i--){
-        table.deleteRow(-1);
+    for(i = 1; i < table.rows.length; i++){
+        table.deleteRow(i);
     }
+}
+
+function createWorker(){
+    var username = document.getElementById("worker_username").value;
+    var email = document.getElementById("worker_email").value;
+    var job = document.getElementById("worker_jobs").value;
+
+    fetch(URL_BASE + '/api/org/registerworker', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        },
+        body: JSON.stringify({
+            worker_username: username,
+            worker_email: email,
+            worker_job: job
+        })
+    }).then(function(response) {
+
+            if (response.status === 200) {
+                alert("Trabalhador registado com sucesso.")
+            }else{
+                alert("Utilizador já existe ou falta informação em algum campo")
+            }
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
