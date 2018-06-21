@@ -74,7 +74,7 @@ public class RequestControlFilter implements Filter {
 			else
 				cache.increment(ip, 1L);
 			
-			if((long) cache.get(ip) > 5L) {
+			if((long) cache.get(ip) > 50L) {
 				LOG.info(Message.TOO_MANY_REQUESTS);
 				((HttpServletResponse) resp).setHeader("Content-Type", "application/json");
 				((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
