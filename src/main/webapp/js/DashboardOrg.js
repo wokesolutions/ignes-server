@@ -8,7 +8,7 @@ var current_location = {
     zoom: 18
 };
 
-var URL_BASE = 'https://maria-dot-hardy-scarab-200218.appspot.com';
+var URL_BASE = 'https://hardy-scarab-200218.appspot.com';
 
 google.maps.event.addDomListener(window, 'load', init());
 

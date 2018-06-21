@@ -1,6 +1,6 @@
 var map = null;
 
-var URL_BASE = 'https://maria-dot-hardy-scarab-200218.appspot.com';
+var URL_BASE = 'https://hardy-scarab-200218.appspot.com';
 
 var geocoder = new google.maps.Geocoder();
 
