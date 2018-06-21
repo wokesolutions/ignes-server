@@ -57,6 +57,9 @@ public class Storage {
 		
 		// Make an image directly from a byte array, and transform it.
 		Image image = ImagesServiceFactory.makeImage(Base64.decode(img));
+		
+		// 256
+		
 		Transform resize = ImagesServiceFactory.makeResize(image.getWidth() / 5, image.getHeight() / 5);
 		Image resizedImage = imagesService.applyTransform(resize, image);
 		

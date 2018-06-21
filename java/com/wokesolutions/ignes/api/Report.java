@@ -176,17 +176,21 @@ public class Report {
 
 				if(data.report_address != null)
 					report.setProperty(DSUtils.REPORT_ADDRESS, data.report_address);
+				
 				if(data.report_title != null)
 					report.setProperty(DSUtils.REPORT_TITLE, data.report_title);
 				else
 					report.setProperty(DSUtils.REPORT_TITLE, "");
+
+				if(data.report_description != null)
+					report.setProperty(DSUtils.REPORT_DESCRIPTION, data.report_description);
+				else
+					report.setProperty(DSUtils.REPORT_DESCRIPTION, "");
 				
 				if(data.report_locality != null)
 					report.setProperty(DSUtils.REPORT_LOCALITY, data.report_locality);
 				if(data.report_city != null)
 					report.setProperty(DSUtils.REPORT_DISTRICT, data.report_city);
-				if(data.report_description != null)
-					report.setUnindexedProperty(DSUtils.REPORT_DESCRIPTION, data.report_description);
 
 				List<String> folders = Arrays.asList(Storage.IMG_FOLDER, Storage.REPORT_FOLDER);
 				StoragePath pathImg = new StoragePath(folders, reportid);
