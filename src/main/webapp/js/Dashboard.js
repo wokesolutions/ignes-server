@@ -56,6 +56,11 @@ function getCurrentLocation() {
 
             getMarkers(5);
         })
+    }else {
+        var mapElement = document.getElementById('map');
+        map = new google.maps.Map(mapElement, currentLoc);
+
+        getMarkers(5);
     }
 
     return currentLoc;
@@ -283,6 +288,7 @@ function addReport(){
 }
 
 function getMarkers(radius, cursor){
+    if(cursor===undefined) cursor = "";
     fetch(URL_BASE + '/api/report/getwithinradius?' + "lat=" + currentLoc.center.lat + "&lng=" + currentLoc.center.lng +
         "&radius=" + radius + "&cursor=" + cursor, {
         method: 'GET',
@@ -382,6 +388,8 @@ function getProfile(){
             if (response.status === 200) {
                 response.json().then(function(data) {
 
+                    document.getElementById("num_points").innerHTML = data.user_points;
+                    document.getElementById("num_reports").innerHTML = data.user_reports;
                     document.getElementById("people_username").innerHTML = data.User;
                     document.getElementById("num_level").innerHTML = data.user_level;
                     document.getElementById("people_email").innerHTML = data.user_email;

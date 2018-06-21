@@ -23,7 +23,7 @@ function init() {
     document.getElementById("feed_button").onclick = showFeed;
     document.getElementById("user_table_button").onclick = showWorkers;
     document.getElementById("create_button").onclick = showCreateWorker;
-    document.getElementById("worker_register").onclick = createWorker;
+    document.getElementById("report_occurrence").onclick = createWorker;
     document.getElementById("logout_button").onclick = logOut;
 
     getMarkers("Caparica");
@@ -262,6 +262,7 @@ function getWorkers(){
                         var table = document.getElementById("user_table");
                         if(table.rows.length > 1)
                             clearTable();
+                        console.log(data.length);
                         for(i = 0; i < data.length; i++){
                             var row = table.insertRow(-1);
                             var cell1 = row.insertCell(0);
@@ -269,7 +270,7 @@ function getWorkers(){
                             var cell3 = row.insertCell(2);
                             cell1.innerHTML = data[i].worker_name;
                             cell2.innerHTML = data[i].Worker;
-                            cell3.innerHTML = data[i].worker.job;
+                            cell3.innerHTML = data[i].worker_job;
                         }
 
                     }else{
