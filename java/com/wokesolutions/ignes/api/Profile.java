@@ -606,5 +606,35 @@ public class Profile {
 
 		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 	}
+
+	@POST
+	@Path("/changeprofilepic")
+	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
+	public Response changeProfPic(@Context HttpServletRequest request, String pic) {
+		int retries = 5;
+		
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+
+		while(true) {
+			try {
+				return changeProfPicRetry(pic, username);
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
 	
+	private Response changeProfPicRetry(String pic, String username) {
+		String imgid = Storage.IMG_FOLDER + Storage.REPORT_FOLDER + username;
+		if(!Storage.saveImage(pic, Storage.BUCKET, imgid))
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
+		
+		return Response.ok().build();
+	}
+
 }
