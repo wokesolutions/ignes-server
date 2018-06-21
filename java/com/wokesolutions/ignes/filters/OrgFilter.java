@@ -36,7 +36,7 @@ public class OrgFilter implements Filter {
 			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
-					.withClaim(JWTUtils.ORG, true)
+					.withClaim(JWTUtils.ORG, JWTUtils.ORG)
 					.build();
 
 			String token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
