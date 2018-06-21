@@ -41,6 +41,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.cloud.datastore.DatastoreException;
+import com.wokesolutions.ignes.data.PasswordData;
 import com.wokesolutions.ignes.data.UserOptionalData;
 import com.wokesolutions.ignes.exceptions.NotSameNorAdminException;
 import com.wokesolutions.ignes.util.CustomHeader;
@@ -478,7 +479,7 @@ public class Profile {
 	@POST
 	@Path("/changepassword")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
-	public Response changePassword(String password, @Context HttpServletRequest request) {
+	public Response changePassword(PasswordData data, @Context HttpServletRequest request) {
 		int retries = 5;
 		
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
@@ -495,13 +496,19 @@ public class Profile {
 				
 				Transaction txn = datastore.beginTransaction();
 				
-				String oldPw = user.getProperty(DSUtils.USER_PASSWORD).toString();
-				
 				try {
-					user.setProperty(DSUtils.USER_PASSWORD, DigestUtils.sha256Hex(password));
+					String newPw = DigestUtils.sha256Hex(data.newpassword);
+					String oldPw = DigestUtils.sha256Hex(data.oldpassword);
+					
+					if(!user.getProperty(DSUtils.USER_PASSWORD).toString().equals(oldPw)) {
+						LOG.info(Message.WRONG_PASSWORD);
+						return Response.status(Status.FORBIDDEN).build();
+					}
+
+					user.setProperty(DSUtils.USER_PASSWORD, newPw);
 					
 					Entity pwLog = new Entity(DSUtils.PASSWORDCHANGELOG, user.getKey());
-					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_NEW, password);
+					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_NEW, newPw);
 					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_OLD, oldPw);
 					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_TIME, new Date());
 					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_IP, request.getRemoteAddr());

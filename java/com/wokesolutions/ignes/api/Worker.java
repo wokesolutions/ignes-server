@@ -54,6 +54,23 @@ public class Worker {
 	@POST
 	@Path("/wipreport/{report}")
 	public Response wipReport(@PathParam(ParamName.REPORT) String report) { //TODO
+		int retries = 5;
+		
+		while(true) {
+			try {
+				return wipReportRetry(report);
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
+	
+	private Response wipReportRetry(String report) {
 		return null;
 	}
 

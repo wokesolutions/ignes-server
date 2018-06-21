@@ -69,7 +69,7 @@ public class RequestControlFilter implements Filter {
 			
 			String ip = newreq.getRemoteAddr();
 			
-			if(cache.get(ip) == null)
+			/*if(cache.get(ip) == null)
 				cache.put(ip, 1L, Expiration.byDeltaSeconds(15));
 			else
 				cache.increment(ip, 1L);
@@ -80,14 +80,14 @@ public class RequestControlFilter implements Filter {
 				((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
 				resp.getWriter().println(Message.TOO_MANY_REQUESTS);
 				return;
-			}
+			}*/
 			
 			if(cache.get(id) == null)
 				cache.put(id, 1L, Expiration.byDeltaSeconds(15));
 			else
 				cache.increment(id, 1L);
 			
-			if((long) cache.get(id) > 5L) {
+			if((long) cache.get(id) > 10L) {
 				LOG.info(Message.TOO_MANY_REQUESTS);
 				((HttpServletResponse) resp).setHeader("Content-Type", "application/json");
 				((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
