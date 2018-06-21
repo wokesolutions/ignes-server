@@ -9,6 +9,7 @@ var currentLoc = {
     zoom: 18
 };
 
+getCurrentLocation();
 
 var reports;
 var current_position = "map_variable";
@@ -21,8 +22,6 @@ google.maps.event.addDomListener(window, 'load', init());
 function init() {
 
     verifyIsLoggedIn();
-
-    getCurrentLocation();
 
     document.getElementById("search_location").onclick = searchLocation;
     document.getElementById("report_button").onclick = showReport;
@@ -298,7 +297,8 @@ function getMarkers(radius, cursor){
     }).then(function(response) {
 
             if (response.status === 200) {
-                var newCursor = response.headers.cursor;
+                var newCursor = response.headers.get("Cursor");
+                console.log(newCursor);
                 response.json().then(function(data) {
                     reports = data;
                     console.log(reports);
@@ -325,7 +325,7 @@ function fillMap(reports, cursor){
         var lat = reports[i].report_lat;
         var lng = reports[i].report_lng;
 
-        console.log(lat + " " + lng);
+        console.log(cursor);
 
         marker = new google.maps.Marker({
             position: new google.maps.LatLng(lat, lng),
@@ -349,7 +349,10 @@ function fillMap(reports, cursor){
                 infowindow.open(map, marker);
             }
         })(marker, i));
-        getMarkers(5, cursor);
+        if(cursor !== null || cursor !== undefined){
+            getMarkers(5, cursor);
+        }
+
     }
 }
 
