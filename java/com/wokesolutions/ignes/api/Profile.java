@@ -48,6 +48,7 @@ import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
+import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.UserLevel;
 
 @Path("/profile")

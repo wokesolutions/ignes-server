@@ -97,12 +97,14 @@ public class Report {
 		}
 	}
 
-	private Response createReportRetry(ReportData data, HttpServletRequest request) { //TODO grav constants
+	private Response createReportRetry(ReportData data, HttpServletRequest request) {
 		String username = null;
 		Key reportKey = null;
 		long creationtime = System.currentTimeMillis();
 		String reportid = null;
 		Transaction txn = datastore.beginTransaction();
+		
+		LOG.info(Message.ATTEMPT_CREATE_REPORT);
 
 		String level = request.getAttribute(CustomHeader.LEVEL_ATT).toString();
 

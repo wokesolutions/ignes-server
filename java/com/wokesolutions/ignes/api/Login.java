@@ -179,7 +179,6 @@ public class Login {
 								.header(CustomHeader.LEVEL, level);
 						
 						if(level.equals(UserLevel.WORKER)) {
-
 							Query query = new Query(DSUtils.WORKER).setAncestor(userKey);
 							Entity orgE;
 
@@ -198,8 +197,7 @@ public class Login {
 								return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 							}
 
-							r = Response.ok()
-									.header(CustomHeader.ORG,
+							r.header(CustomHeader.ORG,
 											user.getProperty(orgE.getProperty(DSUtils.ORG_NAME).toString()));
 						}
 
