@@ -197,7 +197,7 @@ footer a{
 }
 
 #navbarOrg{
-    background-color: #fbc700;
+    background-color: #3b4956;
 }
 
 #cont{
@@ -224,7 +224,7 @@ footer a{
 
 .btn-colorYellow{
     color:white !important;
-    background-color: #fbc700 !important;
+    background-color: #3b4956 !important;
     font-family: "Quicksand Bold" !important;
     margin-top: 1rem;
     margin-bottom: 1rem;
@@ -277,8 +277,8 @@ footer a{
     font-size: 24px;
     line-height: 1.33;
     border-radius: 35px;
-    background-color: #fbc700;
-    border-color: #fbc700;
+    background-color: #3b4956;
+    border-color: #3b4956;
     margin-top: 1rem;
 }
 
