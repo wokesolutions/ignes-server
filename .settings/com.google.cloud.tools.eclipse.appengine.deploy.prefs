@@ -4,5 +4,5 @@ include.optional.configuration.files=true
 project.bucket=
 project.id=hardy-scarab-200218
 project.previousVersion.stop=true
-project.promote=false
-project.version=maria
+project.promote=true
+project.version=
