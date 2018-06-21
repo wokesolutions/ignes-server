@@ -65,10 +65,25 @@ public class RequestControlFilter implements Filter {
 				return;
 			}
 			
-			LOG.info("-------ID------" + id);
+			LOG.info("-------ID------> " + id);
+			
+			String ip = newreq.getRemoteAddr();
+			
+			if(cache.get(ip) == null)
+				cache.put(ip, 1L, Expiration.byDeltaSeconds(120));
+			else
+				cache.increment(ip, 1L);
+			
+			if((long) cache.get(ip) > 5L) {
+				LOG.info(Message.TOO_MANY_REQUESTS);
+				((HttpServletResponse) resp).setHeader("Content-Type", "application/json");
+				((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
+				resp.getWriter().println(Message.TOO_MANY_REQUESTS);
+				return;
+			}
 			
 			if(cache.get(id) == null)
-				cache.put(id, 0L, Expiration.byDeltaSeconds(15));
+				cache.put(id, 1L, Expiration.byDeltaSeconds(15));
 			else
 				cache.increment(id, 1L);
 			
