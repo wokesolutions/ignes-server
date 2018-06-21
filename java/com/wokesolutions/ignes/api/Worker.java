@@ -1,6 +1,8 @@
 package com.wokesolutions.ignes.api;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,8 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.QueryResultList;
+import com.google.appengine.api.datastore.Transaction;
+import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.exceptions.NotSameNorAdminException;
 import com.wokesolutions.ignes.util.CustomHeader;
@@ -49,13 +53,15 @@ public class Worker {
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	private static final int BATCH_SIZE = 10;
 
+	private static final String WIP = "WIP";
+
 	public Worker() {}
 
 	@POST
 	@Path("/wipreport/{report}")
-	public Response wipReport(@PathParam(ParamName.REPORT) String report) { //TODO
+	public Response wipReport(@PathParam(ParamName.REPORT) String report) {
 		int retries = 5;
-		
+
 		while(true) {
 			try {
 				return wipReportRetry(report);
@@ -64,14 +70,45 @@ public class Worker {
 					LOG.warning(Message.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
-
 				retries--;
 			}
 		}
 	}
-	
+
 	private Response wipReportRetry(String report) {
-		return null;
+		Entity reportE ;
+
+		try {
+			reportE = datastore.get(KeyFactory.createKey(DSUtils.REPORT, report));
+		} catch(EntityNotFoundException e) {
+			LOG.info(Message.REPORT_NOT_FOUND);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+
+		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
+
+		try {
+			reportE.setProperty(DSUtils.REPORT_STATUS, WIP);
+
+			Entity reportStatusLog = new Entity(DSUtils.REPORTSTATUSLOG);
+			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_NEWSTATUS, null);
+			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_OLDSTATUS, null);
+			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_TIME, new Date());
+			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_REPORT, null);
+			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_USER, null);
+
+			List<Entity> list = Arrays.asList(reportE, reportStatusLog);
+
+			datastore.put(txn, list);
+			txn.commit();
+			return Response.ok().build();
+		} finally {
+			if(txn.isActive()) {
+				LOG.info(Message.TXN_ACTIVE);
+				txn.rollback();
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
+		}
 	}
 
 	@GET
@@ -155,7 +192,7 @@ public class Worker {
 
 			Query queryoptional = new Query(DSUtils.USEROPTIONAL).setAncestor(userKey.getKey());
 			Entity optional;
-			
+
 			try {
 				optional = datastore.prepare(queryoptional).asSingleEntity();
 			} catch(TooManyResultsException e) {

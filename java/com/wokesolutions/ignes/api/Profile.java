@@ -497,11 +497,12 @@ public class Profile {
 				Transaction txn = datastore.beginTransaction();
 				
 				try {
-					String newPw = DigestUtils.sha256Hex(data.newpassword);
-					String oldPw = DigestUtils.sha256Hex(data.oldpassword);
+					String newPw = DigestUtils.sha512Hex(data.newpassword);
+					String oldPw = DigestUtils.sha512Hex(data.oldpassword);
 					
 					if(!user.getProperty(DSUtils.USER_PASSWORD).toString().equals(oldPw)) {
-						LOG.info(Message.WRONG_PASSWORD);
+						LOG.info(Message.WRONG_PASSWORD + oldPw);
+						txn.rollback();
 						return Response.status(Status.FORBIDDEN).build();
 					}
 
@@ -512,6 +513,10 @@ public class Profile {
 					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_OLD, oldPw);
 					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_TIME, new Date());
 					pwLog.setProperty(DSUtils.PASSWORDCHANGELOG_IP, request.getRemoteAddr());
+					
+					List<Entity> list = Arrays.asList(user, pwLog);
+					
+					datastore.put(txn, list);
 					
 					txn.commit();
 					LOG.info(Message.PASSWORD_CHANGED + username);

@@ -29,6 +29,7 @@ public class DSUtils {
 		public static final String TASK = "Task";
 		public static final String PASSWORDCHANGELOG = "PasswordChangeLog";
 		public static final String NOTE = "Note";
+		public static final String REPORTSTATUSLOG = "ReportStatusLog";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -234,4 +235,11 @@ public class DSUtils {
 		public static final String NOTE_TIME = "note_time";
 		public static final String NOTE_TASK = "note_task";
 		public static final String NOTE_TEXT = "note_text";
+		
+	// ReportStatusLog
+		public static final String REPORTSTATUSLOG_TIME = "reportstatuslog_time";
+		public static final String REPORTSTATUSLOG_USER = "reportstatuslog_user";
+		public static final String REPORTSTATUSLOG_OLDSTATUS = "reportstatuslog_oldstatus";
+		public static final String REPORTSTATUSLOG_NEWSTATUS = "reportstatuslog_newstatus";
+		public static final String REPORTSTATUSLOG_REPORT = "reportstatuslog_report";
 }
