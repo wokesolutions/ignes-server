@@ -26,6 +26,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Transaction;
+import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
@@ -64,19 +65,19 @@ public class Logout {
 				.setKeysOnly();
 
 		List<Entity> tokens = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
-		
+
 		if(tokens.isEmpty()) {
 			LOG.info(Message.NO_TOKENS_FOUND);
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		}
-		
+
 		List<Key> keys = new ArrayList<Key>(tokens.size());
-		
+
 		for(Entity token : tokens)
 			keys.add(token.getKey());
-		
+
 		datastore.delete(keys);
-		
+
 		return Response.ok().build();
 	}
 
@@ -84,12 +85,32 @@ public class Logout {
 	public Response logoutUser(@Context HttpHeaders headers,
 			@Context HttpServletRequest request) {
 
-		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		Object username = request.getAttribute(CustomHeader.USERNAME_ATT);
+		if(username == null)
+			username = request.getAttribute(CustomHeader.NIF_ATT);
+		if(username == null)
+			return Response.status(Status.FORBIDDEN).build();
+
+		String user = username.toString();
+
+		boolean isOrg = false;
+
+		try {
+			datastore.get(KeyFactory.createKey(DSUtils.USER, user));
+		} catch (EntityNotFoundException e1) {
+			try {
+				datastore.get(KeyFactory.createKey(DSUtils.ORG, user));
+				isOrg = true;
+			} catch (EntityNotFoundException e) {
+				LOG.info(Message.USER_NOT_FOUND);
+				return Response.status(Status.FORBIDDEN).build();
+			}
+		}
 
 		int retries = 5;
 		while(true) {
 			try {
-				return logoutUserRetry(username, request, headers);
+				return logoutUserRetry(user, request, isOrg);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -98,158 +119,137 @@ public class Logout {
 		}
 	}
 
-	public Response logoutUserRetry(String username, HttpServletRequest request, HttpHeaders headers) {
+	public Response logoutUserRetry(String username, HttpServletRequest request, boolean isOrg) { //TODO organize code
+		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
-		Transaction txn = datastore.beginTransaction();
-		try {
-			LOG.info(Message.LOGGING_OUT + username);
-
-			Key userKey = KeyFactory.createKey(DSUtils.USER, username);
-
-			// Obtain the user login statistics
-			Query statsQuery = new Query(DSUtils.USERSTATS).setAncestor(userKey);
-			Entity stats;
+		if(!isOrg) {
 			try {
-				stats = datastore.prepare(statsQuery).asSingleEntity();
-			} catch(TooManyResultsException e2) {
-				txn.rollback();
-				return Response.status(Status.EXPECTATION_FAILED).build();
-			}
+				LOG.info(Message.LOGGING_OUT + username);
 
-			try {
-				datastore.get(userKey);
-				Entity log = new Entity(DSUtils.USERLOG, userKey);
+				Key userKey = KeyFactory.createKey(DSUtils.USER, username);
 
-				log.setProperty(DSUtils.USERLOG_TYPE, OUT);
-				log.setProperty(DSUtils.USERLOG_IP, request.getRemoteAddr());
-				log.setProperty(DSUtils.USERLOG_HOST, request.getRemoteHost());
-				log.setProperty(DSUtils.USERLOG_LATLON, headers.getHeaderString("X-AppEngine-CityLatLong"));
-				log.setProperty(DSUtils.USERLOG_CITY, headers.getHeaderString("X-AppEngine-City"));
-				log.setProperty(DSUtils.USERLOG_COUNTRY, headers.getHeaderString("X-AppEngine-Country"));
-				log.setProperty(DSUtils.USERLOG_TIME, new Date());
-
-				stats.setProperty(DSUtils.USERSTATS_LOGOUTS,
-						1 + (long) stats.getProperty(DSUtils.USERSTATS_LOGOUTS));
-
-				List<Entity> list = Arrays.asList(stats, log);
-				datastore.put(txn, list);
-
-				Query query = new Query(DSUtils.TOKEN).setAncestor(userKey).setKeysOnly();
-
-				Filter filter = new Query
-						.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL,
-								request.getHeader(CustomHeader.AUTHORIZATION));
-
-				query.setFilter(filter);
-
-				Entity token;
+				// Obtain the user login statistics
+				Query statsQuery = new Query(DSUtils.USERSTATS).setAncestor(userKey);
+				Entity stats;
 				try {
-					token = datastore.prepare(txn, query).asSingleEntity();
+					stats = datastore.prepare(statsQuery).asSingleEntity();
 				} catch(TooManyResultsException e2) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					txn.rollback();
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+
+				try {
+					datastore.get(userKey);
+					Entity log = new Entity(DSUtils.USERLOG, userKey);
+
+					log.setProperty(DSUtils.USERLOG_TYPE, OUT);
+					log.setProperty(DSUtils.USERLOG_IP, request.getRemoteAddr());
+					log.setProperty(DSUtils.USERLOG_HOST, request.getRemoteHost());
+					log.setProperty(DSUtils.USERLOG_LATLON, request.getHeader("X-AppEngine-CityLatLong"));
+					log.setProperty(DSUtils.USERLOG_CITY, request.getHeader("X-AppEngine-City"));
+					log.setProperty(DSUtils.USERLOG_COUNTRY, request.getHeader("X-AppEngine-Country"));
+					log.setProperty(DSUtils.USERLOG_TIME, new Date());
+
+					stats.setProperty(DSUtils.USERSTATS_LOGOUTS,
+							1 + (long) stats.getProperty(DSUtils.USERSTATS_LOGOUTS));
+
+					List<Entity> list = Arrays.asList(stats, log);
+					datastore.put(txn, list);
+
+					Query query = new Query(DSUtils.TOKEN).setAncestor(userKey).setKeysOnly();
+
+					Filter filter = new Query
+							.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL,
+									request.getHeader(CustomHeader.AUTHORIZATION));
+
+					query.setFilter(filter);
+
+					Entity token;
+					try {
+						token = datastore.prepare(txn, query).asSingleEntity();
+					} catch(TooManyResultsException e2) {
+						LOG.info(Message.UNEXPECTED_ERROR);
+						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+					}
+
+					datastore.delete(txn, token.getKey());
+
+					txn.commit();
+					return Response.ok().build();
+				} catch(EntityNotFoundException e) {
+					txn.rollback();
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+			} finally {
+				if(txn.isActive()) {
+					txn.rollback();
+					LOG.info(Message.TXN_ACTIVE);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
-				
-				datastore.delete(txn, token.getKey());
-
-				txn.commit();
-				return Response.ok().build();
-			} catch(EntityNotFoundException e) {
-				txn.rollback();
-				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
-		} finally {
-			if(txn.isActive()) {
-				txn.rollback();
-				LOG.info(Message.TXN_ACTIVE);
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-		}
-	}
-
-	@Path("/org")
-	@POST
-	public Response logoutOrg(@Context HttpHeaders headers,
-			@Context HttpServletRequest request) {
-
-		String nif = request.getAttribute(CustomHeader.NIF_ATT).toString();
-
-		int retries = 5;
-		while(true) {
+		} else {
 			try {
-				return logoutOrgRetry(nif, request, headers);
-			} catch(DatastoreException e) {
-				if(retries == 0)
-					return Response.status(Status.REQUEST_TIMEOUT).build();
-				retries--;
-			}
-		}
-	}
+				LOG.info(Message.LOGGING_OUT);
 
-	public Response logoutOrgRetry(String nif, HttpServletRequest request, HttpHeaders headers) {
-		Transaction txn = datastore.beginTransaction();
+				Key orgKey = KeyFactory.createKey(DSUtils.ORG, username);
 
-		try {
-			LOG.info(Message.LOGGING_OUT);
-
-			Key orgKey = KeyFactory.createKey(DSUtils.ORG, nif);
-
-			// Obtain the org login statistics
-			Query statsQuery = new Query(DSUtils.ORGSTATS).setAncestor(orgKey);
-			Entity stats;
-			try {
-				stats = datastore.prepare(statsQuery).asSingleEntity();
-			} catch(TooManyResultsException e2) {
-				txn.rollback();
-				return Response.status(Status.EXPECTATION_FAILED).build();
-			}
-
-			try {
-				datastore.get(orgKey);
-				Entity log = new Entity(DSUtils.ORGLOG, orgKey);
-
-				log.setProperty(DSUtils.ORGLOG_TYPE, OUT);
-				log.setProperty(DSUtils.ORGLOG_IP, request.getRemoteAddr());
-				log.setProperty(DSUtils.ORGLOG_HOST, request.getRemoteHost());
-				log.setProperty(DSUtils.ORGLOG_LATLON, headers.getHeaderString("X-AppEngine-CityLatLong"));
-				log.setProperty(DSUtils.ORGLOG_CITY, headers.getHeaderString("X-AppEngine-City"));
-				log.setProperty(DSUtils.ORGLOG_COUNTRY, headers.getHeaderString("X-AppEngine-Country"));
-				log.setProperty(DSUtils.ORGLOG_TIME, new Date());
-
-				stats.setProperty(DSUtils.ORGSTATS_LOGOUTS,
-						1 + (long) stats.getProperty(DSUtils.ORGSTATS_LOGOUTS));
-
-				List<Entity> list = Arrays.asList(stats, log);
-				datastore.put(txn, list);
-
-				Query query = new Query(DSUtils.TOKEN).setAncestor(orgKey).setKeysOnly();
-
-				Filter filter = new Query
-						.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL,
-								request.getHeader(CustomHeader.AUTHORIZATION));
-
-				query.setFilter(filter);
-
-				Entity token;
+				// Obtain the org login statistics
+				Query statsQuery = new Query(DSUtils.ORGSTATS).setAncestor(orgKey);
+				Entity stats;
 				try {
-					token = datastore.prepare(txn, query).asSingleEntity();
+					stats = datastore.prepare(statsQuery).asSingleEntity();
 				} catch(TooManyResultsException e2) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					txn.rollback();
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+
+				try {
+					datastore.get(orgKey);
+					Entity log = new Entity(DSUtils.ORGLOG, orgKey);
+
+					log.setProperty(DSUtils.ORGLOG_TYPE, OUT);
+					log.setProperty(DSUtils.ORGLOG_IP, request.getRemoteAddr());
+					log.setProperty(DSUtils.ORGLOG_HOST, request.getRemoteHost());
+					log.setProperty(DSUtils.ORGLOG_LATLON, request.getHeader("X-AppEngine-CityLatLong"));
+					log.setProperty(DSUtils.ORGLOG_CITY, request.getHeader("X-AppEngine-City"));
+					log.setProperty(DSUtils.ORGLOG_COUNTRY, request.getHeader("X-AppEngine-Country"));
+					log.setProperty(DSUtils.ORGLOG_TIME, new Date());
+
+					stats.setProperty(DSUtils.ORGSTATS_LOGOUTS,
+							1 + (long) stats.getProperty(DSUtils.ORGSTATS_LOGOUTS));
+
+					List<Entity> list = Arrays.asList(stats, log);
+					datastore.put(txn, list);
+
+					Query query = new Query(DSUtils.TOKEN).setAncestor(orgKey).setKeysOnly();
+
+					Filter filter = new Query
+							.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL,
+									request.getHeader(CustomHeader.AUTHORIZATION));
+
+					query.setFilter(filter);
+
+					Entity token;
+					try {
+						token = datastore.prepare(txn, query).asSingleEntity();
+					} catch(TooManyResultsException e2) {
+						LOG.info(Message.UNEXPECTED_ERROR);
+						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+					}
+
+					datastore.delete(txn, token.getKey());
+					txn.commit();
+					return Response.ok().build();
+				} catch(EntityNotFoundException e) {
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+
+			} finally {
+				if(txn.isActive()) {
+					txn.rollback();
+					LOG.info(Message.TXN_ACTIVE);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
-				
-				datastore.delete(txn, token.getKey());
-				txn.commit();
-				return Response.ok().build();
-			} catch(EntityNotFoundException e) {
-				return Response.status(Status.EXPECTATION_FAILED).build();
-			}
-
-		} finally {
-			if(txn.isActive()) {
-				txn.rollback();
-				LOG.info(Message.TXN_ACTIVE);
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 		}
 	}

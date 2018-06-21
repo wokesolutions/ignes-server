@@ -212,7 +212,7 @@ public class Profile {
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response getVotes(@PathParam (ParamName.USERNAME) String username,
 			@Context HttpServletRequest request,
-			@Context HttpHeaders headers) {
+			@Context HttpHeaders headers, @QueryParam(ParamName.CURSOR) String cursor) {
 		if(username == null || username.equals(""))
 			return Response.status(Status.BAD_REQUEST).entity(Message.PROFILE_UPDATE_DATA_INVALID).build();
 
@@ -220,7 +220,7 @@ public class Profile {
 
 		while(true) {
 			try {
-				return getVotesRetry(username, request, headers);
+				return getVotesRetry(username, request, headers, cursor);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Message.TOO_MANY_RETRIES);
@@ -233,7 +233,9 @@ public class Profile {
 	}
 
 	private Response getVotesRetry(String username,
-			HttpServletRequest request, HttpHeaders headers) {
+			HttpServletRequest request, HttpHeaders headers, String cursor) {
+		
+		LOG.info(Message.GIVING_VOTES + username);
 
 		try {
 			sameUserOrAdmin(request, username);
@@ -247,7 +249,6 @@ public class Profile {
 
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(20);
 
-		String cursor = headers.getHeaderString(CustomHeader.CURSOR);
 		if(cursor != null && !cursor.equals(""))
 			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
 
@@ -260,7 +261,7 @@ public class Profile {
 			Map<String, Object> props = vote.getProperties();
 
 			voteJson.put(DSUtils.USERVOTE_TYPE, props.get(DSUtils.USERVOTE_TYPE));
-			voteJson.put(DSUtils.USERVOTE_USER, props.get(DSUtils.USERVOTE_USER));
+			//voteJson.put(DSUtils.USERVOTE_USER, props.get(DSUtils.USERVOTE_USER));
 
 			if(props.containsKey(DSUtils.USERVOTE_COMMENT))
 				voteJson.put(DSUtils.USERVOTE_COMMENT, props.get(DSUtils.USERVOTE_COMMENT));
@@ -271,9 +272,10 @@ public class Profile {
 
 			jsonarray.put(voteJson);
 		}
-
+		
 		if(jsonarray.length() < BATCH_SIZE)
-			return Response.ok(jsonarray.toString()).build();
+			return Response.ok()
+					.entity(jsonarray.toString()).build();
 
 		return Response.ok()
 				.header(CustomHeader.CURSOR, allVotes.getCursor().toWebSafeString())
@@ -568,7 +570,8 @@ public class Profile {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
-		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class));
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, String.class));
 
 		QueryResultList<Entity> reports = datastore.prepare(reportQuery).asQueryResultList(fetchOptions);
 
@@ -580,7 +583,7 @@ public class Profile {
 		JSONArray array = new JSONArray();
 
 		try {
-			array = Report.buildJsonReports(reports, true);
+			array = Report.buildJsonReports(reports, false);
 		} catch(InternalServerErrorException e) {
 			LOG.info(Message.REPORT_NOT_FOUND);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();

@@ -28,6 +28,7 @@ public class DSUtils {
 		public static final String LEVELLOG = "LevelLog";
 		public static final String TASK = "Task";
 		public static final String PASSWORDCHANGELOG = "PasswordChangeLog";
+		public static final String NOTE = "Note";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -227,4 +228,10 @@ public class DSUtils {
 		public static final String PASSWORDCHANGELOG_NEW = "passwordchangelog_new";
 		public static final String PASSWORDCHANGELOG_TIME = "passwordchangelog_time";
 		public static final String PASSWORDCHANGELOG_IP = "passwordchangelog_ip";
+		
+	// Note
+		public static final String NOTE_WORKER = "note_worker";
+		public static final String NOTE_TIME = "note_time";
+		public static final String NOTE_TASK = "note_task";
+		public static final String NOTE_TEXT = "note_text";
 }

@@ -39,7 +39,9 @@ import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.DatastoreException;
+import com.wokesolutions.ignes.data.TaskData;
 import com.wokesolutions.ignes.data.WorkerRegisterData;
+import com.wokesolutions.ignes.exceptions.UserNotWorkerException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
@@ -293,15 +295,14 @@ public class Org {
 	@POST
 	@Path("/givetask")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
-	public Response giveTask(@QueryParam(ParamName.EMAIL) String email,
-			@QueryParam(ParamName.REPORT) String report, String indications) {
-		if(email == null || email.equals("") || report == null || report.equals(""))
+	public Response giveTask(TaskData data) {
+		if(!data.isValid())
 			return Response.status(Status.BAD_REQUEST).build();
 
 		int retries = 5;
 		while(true) {
 			try {
-				return giveTaskRetry(report, email, indications);
+				return giveTaskRetry(data);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -310,7 +311,11 @@ public class Org {
 		}
 	}
 
-	private Response giveTaskRetry(String report, String email, String indications) {
+	private Response giveTaskRetry(TaskData data) {
+		String report = data.report;
+		String email = data.email;
+		String indications = data.indications;
+
 		Entity reportE;
 
 		try {
@@ -321,17 +326,39 @@ public class Org {
 		}
 
 		try {
-			datastore.get(KeyFactory.createKey(DSUtils.WORKER, email));
+			Entity user = datastore.get(KeyFactory.createKey(DSUtils.USER, email));
+			if(!user.getProperty(DSUtils.USER_LEVEL).equals(UserLevel.WORKER))
+				throw new UserNotWorkerException();
 		} catch (EntityNotFoundException e) {
 			LOG.info(Message.WORKER_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
+		} catch(UserNotWorkerException e2) {
+			LOG.info(e2.getMessage());
+			return Response.status(Status.NOT_FOUND).build();
+		}
+
+		Query query = new Query(DSUtils.TASK).setAncestor(KeyFactory.createKey(DSUtils.REPORT, report));
+		Filter filter = new Query.FilterPredicate(DSUtils.TASK_WORKER, FilterOperator.EQUAL, email);
+		query.setFilter(filter);
+
+		try {
+			Entity existingTask = datastore.prepare(query).asSingleEntity();
+			if(existingTask != null) {
+				LOG.info(Message.DUPLICATED_TASK);
+				return Response.status(Status.EXPECTATION_FAILED).build();
+			}
+		} catch(TooManyResultsException e) {
+			LOG.info(Message.UNEXPECTED_ERROR);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
 		Entity task = new Entity(DSUtils.TASK, reportE.getKey());
 
-		task.setProperty(DSUtils.WORKER, email);
+		task.setProperty(DSUtils.TASK_WORKER, email);
 		task.setProperty(DSUtils.TASK_TIME, new Date());
-		task.setProperty(DSUtils.TASK_INDICATIONS, indications);
+
+		if(indications != null && !indications.equals(""))
+			task.setProperty(DSUtils.TASK_INDICATIONS, indications);
 
 		datastore.put(task);
 

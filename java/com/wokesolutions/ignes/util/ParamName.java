@@ -21,4 +21,5 @@ public class ParamName {
 		
 	// Both
 		public static final String USERNAME = "username";
+		public static final String TASK = "task";
 }
