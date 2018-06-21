@@ -242,16 +242,22 @@ function getWorkers(){
     }).then(function(response) {
 
             if (response.status === 200) {
+
                 response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
                     if(data != null){
                         var i;
-                        var worker_data = '';
+                        var table = document.getElementById("user_table");
+                        if(table.rows.length > 1)
+                            clearTable();
                         for(i = 0; i < data.length; i++){
-                            worker_data += '<tr>';
-                            worker_data += '<td>' + data[i].user_name + '</td>';
-                            worker_data += '<td>' + data[i].Worker + '</td>';
-                            worker_data += '</tr>';
-                            document.getElementById("user_table").appendChild(worker_data);
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            cell1.innerHTML = data[i].worker_name;
+                            cell2.innerHTML = data[i].Worker;
+                            cell3.innerHTML = data[i].worker.job;
                         }
 
                     }else{
@@ -272,4 +278,12 @@ function getWorkers(){
             return info;
         });
 
+}
+
+function clearTable(){
+    var table = document.getElementById("user_table");
+    var i;
+    for(i = table.rows.length; i > 1; i--){
+        table.deleteRow(-1);
+    }
 }
