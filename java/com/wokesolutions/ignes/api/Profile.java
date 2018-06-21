@@ -653,4 +653,11 @@ public class Profile {
 
 		return Response.ok().build();
 	}
+	
+	@GET
+	@Path("/getprofilepic/{username}")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response getProfPic() {
+		return null;
+	}
 }
