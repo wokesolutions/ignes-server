@@ -104,7 +104,7 @@ public class Report {
 		Date creationtime = new Date();
 		String reportid = null;
 		Transaction txn = datastore.beginTransaction();
-		
+
 		LOG.info(Message.ATTEMPT_CREATE_REPORT);
 
 		String level = request.getAttribute(CustomHeader.LEVEL_ATT).toString();
@@ -131,7 +131,7 @@ public class Report {
 				}
 
 				Entity report = new Entity(DSUtils.REPORT, reportid);
-				
+
 				LOG.info("1");
 
 				report.setProperty(DSUtils.REPORT_LAT, data.report_lat);
@@ -141,7 +141,7 @@ public class Report {
 				report.setProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED,
 						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(creationtime));
 				report.setProperty(DSUtils.REPORT_USERNAME, username);
-				
+
 				LOG.info("2");
 
 				if(level.equals(UserLevel.LEVEL1))
@@ -154,7 +154,7 @@ public class Report {
 
 				Query userpointsQ = new Query(DSUtils.USERPOINTS)
 						.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
-				
+
 				LOG.info("3");
 
 				int points;
@@ -167,7 +167,7 @@ public class Report {
 					txn.rollback();
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
-				
+
 				LOG.info("4");
 
 				if(data.report_gravity >= 1 && data.report_gravity <= 5) {
@@ -183,12 +183,12 @@ public class Report {
 
 					report.setProperty(DSUtils.REPORT_GRAVITY, gravity);
 				}
-				
+
 				LOG.info("5");
 
 				if(data.report_address != null)
 					report.setProperty(DSUtils.REPORT_ADDRESS, data.report_address);
-				
+
 				if(data.report_title != null)
 					report.setProperty(DSUtils.REPORT_TITLE, data.report_title);
 				else
@@ -198,32 +198,34 @@ public class Report {
 					report.setProperty(DSUtils.REPORT_DESCRIPTION, data.report_description);
 				else
 					report.setProperty(DSUtils.REPORT_DESCRIPTION, "");
-				
+
 				if(data.report_locality != null)
 					report.setProperty(DSUtils.REPORT_LOCALITY, data.report_locality);
 				if(data.report_city != null)
 					report.setProperty(DSUtils.REPORT_DISTRICT, data.report_city);
-				
-				LOG.info("6");
 
-				List<String> folders = Arrays.asList(Storage.IMG_FOLDER, Storage.REPORT_FOLDER);
-				StoragePath pathImg = new StoragePath(folders, reportid);
-				if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg)) {
-					LOG.info(Message.STORAGE_ERROR);
-					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
+				try {
+					List<String> folders = Arrays.asList(Storage.IMG_FOLDER, Storage.REPORT_FOLDER);
+					StoragePath pathImg = new StoragePath(folders, reportid);
+					if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg)) {
+						LOG.info(Message.STORAGE_ERROR);
+						return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
+					}
+
+					report.setUnindexedProperty(DSUtils.REPORT_IMGPATH, pathImg);
+					report.setUnindexedProperty(DSUtils.REPORT_THUMBNAILPATH, Storage.getTnFromPath(pathImg));
+				} catch(Exception e) {
+					LOG.info(e.getMessage());
+					LOG.info(e.toString());
 				}
-				
-				LOG.info("7");
 
-				report.setUnindexedProperty(DSUtils.REPORT_IMGPATH, pathImg);
-				report.setUnindexedProperty(DSUtils.REPORT_THUMBNAILPATH, Storage.getTnFromPath(pathImg));
 
 				Entity reportVotes = new Entity(DSUtils.REPORTVOTES, reportKey);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_UP, 0L);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_DOWN, 0L);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_DOWN, 0L);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_RELEVANCE, 0);
-				
+
 				LOG.info("8");
 
 				Entity reportComments = new Entity(DSUtils.REPORTCOMMENTS, reportKey);
@@ -232,7 +234,7 @@ public class Report {
 				report.setPropertiesFrom(makeCoordProps(data.report_lat, data.report_lng));
 
 				List<Entity> entities = Arrays.asList(report, reportVotes, reportComments);
-				
+
 				LOG.info("9");
 
 				LOG.info(Message.REPORT_CREATED + reportid);
@@ -340,9 +342,9 @@ public class Report {
 		JSONObject obj = new JSONObject();
 		String tn = Storage.getImage(rep.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
 		obj.put(DSUtils.REPORT_THUMBNAIL, tn);
-		
+
 		LOG.info(tn);
-		
+
 		return Response.ok(obj.toString()).build();
 	}
 
@@ -429,7 +431,7 @@ public class Report {
 				LOG.info(Message.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
-			
+
 			if(reports.size() < BATCH_SIZE)
 				return Response.ok()
 						.entity(jsonReports.toString()).build();
@@ -569,7 +571,7 @@ public class Report {
 				report = datastore.get(KeyFactory.createKey(DSUtils.REPORT, id));
 			} catch (EntityNotFoundException e) {
 				LOG.info(Message.REPORT_NOT_FOUND + " - " + id);
-				
+
 				thumbnails.put(id, NOT_FOUND);
 
 				continue;
@@ -792,7 +794,7 @@ public class Report {
 
 		return key;
 	}
-	
+
 	@DELETE
 	@Path("/closedef")
 	public Response closeDef() {
@@ -808,7 +810,7 @@ public class Report {
 			}
 		}
 	}
-	
+
 	private Response closeDefRetry() { //TODO
 		return null;
 	}
