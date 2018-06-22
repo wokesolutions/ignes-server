@@ -118,7 +118,7 @@ public class Report {
 			datastore.get(reportKey);
 			txn.rollback();
 			return Response.status(Status.CONFLICT).entity(Message.DUPLICATE_REPORT).build();
-		} catch (EntityNotFoundException e1) {
+		} catch(EntityNotFoundException e1) {
 			try {
 				reportKey = KeyFactory.createKey(DSUtils.REPORT, reportid);
 				datastore.get(reportKey);
@@ -197,7 +197,8 @@ public class Report {
 				try {
 					List<String> folders = Arrays.asList(Storage.IMG_FOLDER, Storage.REPORT_FOLDER);
 					StoragePath pathImg = new StoragePath(folders, reportid);
-					if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg)) {
+					if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg,
+							data.report_imgwidth, data.report_imgheight)) {
 						LOG.info(Message.STORAGE_ERROR);
 						return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 					}
@@ -205,10 +206,7 @@ public class Report {
 					report.setUnindexedProperty(DSUtils.REPORT_IMGPATH, pathImg);
 					report.setUnindexedProperty(DSUtils.REPORT_THUMBNAILPATH, Storage.getTnFromPath(pathImg));
 				} catch(Exception e) {
-					LOG.info(e.getMessage());
-					LOG.info(e.toString());
 				}
-
 
 				Entity reportVotes = new Entity(DSUtils.REPORTVOTES, reportKey);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_UP, 0L);
@@ -326,10 +324,15 @@ public class Report {
 		}
 
 		JSONObject obj = new JSONObject();
-		String tn = Storage.getImage(rep.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
-		obj.put(DSUtils.REPORT_THUMBNAIL, tn);
+		try {
+			String tn = Storage.getImage(rep.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
+			obj.put(DSUtils.REPORT_THUMBNAIL, tn);
 
-		LOG.info(tn);
+			LOG.info(tn);
+		} catch(Exception e) {
+			LOG.info(Message.REPORT_NOT_FOUND);
+			return Response.status(Status.NOT_FOUND).build();
+		}
 
 		return Response.ok(obj.toString()).build();
 	}

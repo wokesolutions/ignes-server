@@ -364,4 +364,38 @@ public class Org {
 
 		return Response.ok().build();
 	}
+	
+	@GET
+	@Path("/info/{nif}")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response getInfo(@PathParam(ParamName.NIF) String nif) {
+		int retries = 5;
+		
+		while(true) {
+			try {
+				Entity org;
+				
+				try {
+					org = datastore.get(KeyFactory.createKey(DSUtils.ORG, nif));
+				} catch(EntityNotFoundException e) {
+					LOG.info(Message.ORG_NOT_FOUND);
+					return Response.status(Status.NOT_FOUND).build();
+				}
+				
+				JSONObject obj = new JSONObject();
+				obj.put(DSUtils.ORG, org.getKey().getName());
+				obj.put(DSUtils.ORG_ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
+				obj.put(DSUtils.ORG_EMAIL, org.getProperty(DSUtils.ORG_EMAIL));
+				obj.put(DSUtils.ORG_NAME, org.getProperty(DSUtils.ORG_NAME));
+				obj.put(DSUtils.ORG_PHONE, org.getProperty(DSUtils.ORG_PHONE));
+				obj.put(DSUtils.ORG_SERVICES, org.getProperty(DSUtils.ORG_SERVICES));
+				
+				return Response.ok(obj.toString()).build();
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
 }

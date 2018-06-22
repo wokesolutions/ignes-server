@@ -42,6 +42,7 @@ import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.PasswordData;
+import com.wokesolutions.ignes.data.ProfPicData;
 import com.wokesolutions.ignes.data.UserOptionalData;
 import com.wokesolutions.ignes.exceptions.NotSameNorAdminException;
 import com.wokesolutions.ignes.util.CustomHeader;
@@ -612,14 +613,14 @@ public class Profile {
 	@POST
 	@Path("/changeprofilepic")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
-	public Response changeProfPic(@Context HttpServletRequest request, String pic) {
+	public Response changeProfPic(@Context HttpServletRequest request, ProfPicData data) {
 		int retries = 5;
 
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		while(true) {
 			try {
-				return changeProfPicRetry(pic, username);
+				return changeProfPicRetry(data, username);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Message.TOO_MANY_RETRIES);
@@ -631,10 +632,10 @@ public class Profile {
 		}
 	}
 
-	private Response changeProfPicRetry(String pic, String username) {
+	private Response changeProfPicRetry(ProfPicData data, String username) {
 		List<String> folders = Arrays.asList(Storage.IMG_FOLDER, Storage.PROFILE_FOLDER);
 		StoragePath pathImg = new StoragePath(folders, username);
-		if(!Storage.saveImage(pic, Storage.BUCKET, pathImg))
+		if(!Storage.saveImage(data.pic, Storage.BUCKET, pathImg, data.width, data.height))
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
 		Query query = new Query(DSUtils.USEROPTIONAL)

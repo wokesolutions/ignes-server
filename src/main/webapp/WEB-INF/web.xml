@@ -98,7 +98,10 @@
 
 	<filter-mapping>
 		<filter-name>OrgFilter</filter-name>
-		<url-pattern>/api/org/*</url-pattern>
+		<url-pattern>/api/org/givetask</url-pattern>
+		<url-pattern>/api/org/listworkers</url-pattern>
+		<url-pattern>/api/org/deleteworker/*</url-pattern>
+		<url-pattern>/api/org/registerworker</url-pattern>
 	</filter-mapping>
 
 	<filter>

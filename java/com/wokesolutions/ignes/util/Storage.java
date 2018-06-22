@@ -1,6 +1,5 @@
 package com.wokesolutions.ignes.util;
 
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -9,8 +8,6 @@ import java.io.OutputStream;
 import java.nio.channels.Channels;
 import java.util.List;
 import java.util.logging.Logger;
-
-import javax.imageio.ImageIO;
 
 import org.apache.geronimo.mail.util.Base64;
 
@@ -49,7 +46,7 @@ public class Storage {
 	
 	private static ImagesService imagesService = ImagesServiceFactory.getImagesService();
 
-	public static boolean saveImage(String img, String bucket, StoragePath path) {
+	public static boolean saveImage(String img, String bucket, StoragePath path, int width, int height) {
 		GcsFilename fileName = new GcsFilename(bucket, path.makePath());
 		GcsFileOptions options = new GcsFileOptions.Builder()
                 .mimeType("image/jpg")
@@ -59,29 +56,31 @@ public class Storage {
 		try {
 			outputChannel = gcsService.createOrReplace(fileName, options);
 			copy(new ByteArrayInputStream(img.getBytes()), Channels.newOutputStream(outputChannel));
-		} catch (IOException e) {
+		} catch(IOException e) {
 			return false;
 		}
 		
 		byte[] bytes = Base64.decode(img);
-		BufferedImage sizeable;
+		Image image;
 		try {
-			sizeable = ImageIO.read(new ByteArrayInputStream(bytes));
-		} catch (IOException e1) {
+			LOG.info("iupbubi");
+	        image = ImagesServiceFactory.makeImage(bytes);
+			LOG.info("iupbubi");
+		} catch(Exception e1) {
 			LOG.info(Message.STORAGE_ERROR);
 			return false;
 		}
 		
-		// Make an image directly from a byte array, and transform it.
-		Image image = ImagesServiceFactory.makeImage(bytes);
-		
-		int height = sizeable.getHeight() * IMAGE_WIDTH / sizeable.getWidth();
-		
-		Transform resize = ImagesServiceFactory.makeResize(IMAGE_WIDTH, height);
-		Image resizedImage = imagesService.applyTransform(resize, image);
+		int newHeight = height * IMAGE_WIDTH / width;
 		
 		StoragePath tnPath = path.clone();
 		tnPath.addTn();
+		
+		LOG.info(tnPath.makePath());
+		
+		Transform resize = ImagesServiceFactory.makeResize(IMAGE_WIDTH, newHeight);
+		LOG.info(tnPath.makePath());
+		Image resizedImage = imagesService.applyTransform(resize, image);
 		
 		GcsFilename fileNameTn = new GcsFilename(bucket, tnPath.makePath());
 		GcsFileOptions optionsTn = new GcsFileOptions.Builder()
