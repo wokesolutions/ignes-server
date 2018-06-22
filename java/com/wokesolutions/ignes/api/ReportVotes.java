@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
@@ -14,6 +15,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.google.appengine.api.datastore.DatastoreService;
@@ -37,6 +39,11 @@ public class ReportVotes extends Report {
 
 	private static final Logger LOG = Logger.getLogger(ReportVotes.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+	private static final String VOTE = "vote";
+	private static final String UP = "up";
+	private static final String DOWN = "down";
+	private static final String SPAM = "spam";
 
 	public ReportVotes() {}
 
@@ -319,5 +326,44 @@ public class ReportVotes extends Report {
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 		}
+	}
+
+	@POST
+	@Path("/multiple")
+	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
+	public Response voteAll(JSONArray votes, @Context HttpServletRequest request) {
+		int retries = 5;
+
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+
+		while(true) {
+			try {
+				return voteAllRetry(votes, username);
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+
+	private Response voteAllRetry(JSONArray votes, String username) {
+		for(int i = 0; i < votes.length(); i++) {
+			JSONObject obj = votes.getJSONObject(i);
+
+			String reportid = obj.getString(DSUtils.REPORT);
+			String vote = obj.getString(VOTE);
+
+			if(vote.equals(UP))
+				upvoteReportRetry(reportid, username);
+			else if(vote.equals(DOWN))
+				downvoteReportRetry(reportid, username);
+			else if(vote.equals(SPAM))
+				spamvoteReportRetry(reportid, username);
+			else
+				return Response.status(Status.BAD_REQUEST).build();
+		}
+		
+		return Response.ok().build();
 	}
 }
