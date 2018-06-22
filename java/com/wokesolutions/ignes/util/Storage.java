@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.Channels;
-import java.util.List;
+import java.util.LinkedList;
 import java.util.logging.Logger;
 
 import org.apache.geronimo.mail.util.Base64;
@@ -29,7 +29,6 @@ public class Storage {
 
 	public static final String BUCKET = "wokesolutions_ignes";
 	public static final String IMG_FOLDER = "img";
-	public static final String THUMBNAIL_FOLDER = "thumbnail";
 	public static final String PROFILE_FOLDER = "profile";
 	public static final String REPORT_FOLDER = "report";
 	public static final String EVENT_FOLDER = "event";
@@ -61,15 +60,7 @@ public class Storage {
 		}
 		
 		byte[] bytes = Base64.decode(img);
-		Image image;
-		try {
-			LOG.info("iupbubi");
-	        image = ImagesServiceFactory.makeImage(bytes);
-			LOG.info("iupbubi");
-		} catch(Exception e1) {
-			LOG.info(Message.STORAGE_ERROR);
-			return false;
-		}
+		Image image = ImagesServiceFactory.makeImage(bytes);
 		
 		int newHeight = height * IMAGE_WIDTH / width;
 		
@@ -132,10 +123,12 @@ public class Storage {
 	}
 	
 	public static class StoragePath {
-		public List<String> folders;
+		private static final String THUMBNAIL_FOLDER = "thumbnail";
+		
+		public LinkedList<String> folders;
 		public String name;
 		
-		public StoragePath(List<String> folders, String name) {
+		public StoragePath(LinkedList<String> folders, String name) {
 			this.name = name;
 			this.folders = folders;
 		}

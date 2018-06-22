@@ -2,6 +2,7 @@ package com.wokesolutions.ignes.api;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -633,7 +634,9 @@ public class Profile {
 	}
 
 	private Response changeProfPicRetry(ProfPicData data, String username) {
-		List<String> folders = Arrays.asList(Storage.IMG_FOLDER, Storage.PROFILE_FOLDER);
+		LinkedList<String> folders = new LinkedList<String>();
+		folders.add(Storage.IMG_FOLDER);
+		folders.add(Storage.PROFILE_FOLDER);
 		StoragePath pathImg = new StoragePath(folders, username);
 		if(!Storage.saveImage(data.pic, Storage.BUCKET, pathImg, data.width, data.height))
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();

@@ -5,6 +5,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -195,7 +196,9 @@ public class Report {
 					report.setProperty(DSUtils.REPORT_DISTRICT, data.report_city);
 
 				try {
-					List<String> folders = Arrays.asList(Storage.IMG_FOLDER, Storage.REPORT_FOLDER);
+					LinkedList<String> folders = new LinkedList<String>();
+					folders.add(Storage.IMG_FOLDER);
+					folders.add(Storage.REPORT_FOLDER);
 					StoragePath pathImg = new StoragePath(folders, reportid);
 					if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg,
 							data.report_imgwidth, data.report_imgheight)) {
