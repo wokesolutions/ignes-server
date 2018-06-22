@@ -306,7 +306,7 @@ function getFirstWorkers(){
                             cell1.innerHTML = data[i].worker_name;
                             cell2.innerHTML = data[i].Worker;
                             cell3.innerHTML = data[i].worker_job;
-                            cell4.outerHTML= "<button type='submit' class='btn' onclick='getRow()'></button>";
+                            cell4.outerHTML= "<button type='submit' class='btn' onclick='deleteWorker(this.parentNode.rowIndex)'></button>";
 
                         }
 
@@ -370,7 +370,7 @@ function getNextWorkers(){
                             cell1.innerHTML = data[i].worker_name;
                             cell2.innerHTML = data[i].Worker;
                             cell3.innerHTML = data[i].worker_job;
-                            cell4.outerHTML= "<button type='submit' class='btn' onclick='getRow()'></button>";
+                            cell4.outerHTML= "<button type='submit' class='btn' onclick='deleteWorker(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -435,7 +435,8 @@ function getPreWorkers(){
                                 cell1.innerHTML = data[i].worker_name;
                                 cell2.innerHTML = data[i].Worker;
                                 cell3.innerHTML = data[i].worker_job;
-                                cell4.outerHTML= "<button type='submit' class='btn' onclick='getRow()'></button>";
+                                cell4.outerHTML= "<button type='submit' class='btn' onclick='deleteWorker(this.parentNode.rowIndex)'></button>";
+
                             }
 
                         }else{
@@ -492,17 +493,8 @@ function getProfile(){
 
 }
 
-function getRow(){
-
-    alert(this.parentNode.rowIndex);
-    var row = this.parentNode.rowIndex;
+function deleteWorker (row){
     var email = document.getElementById("user_table").rows[row].cells[1].innerHTML;
-    deleteWorker(email);
-
-}
-
-
-function deleteWorker (email){
     fetch(URL_BASE + '/api/org/deleteworker/' + email, {
         method: 'POST',
         headers: {
