@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.Channels;
 import java.util.LinkedList;
-import java.util.logging.Logger;
 
 import org.apache.geronimo.mail.util.Base64;
 
@@ -24,8 +23,6 @@ import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
 import com.google.appengine.tools.cloudstorage.RetryParams;
 
 public class Storage {
-	
-	private static final Logger LOG = Logger.getLogger(Storage.class.getName());
 
 	public static final String BUCKET = "wokesolutions_ignes";
 	public static final String IMG_FOLDER = "img";
@@ -65,7 +62,6 @@ public class Storage {
 		int newHeight = height * IMAGE_WIDTH / width;
 		
 		Transform resize = ImagesServiceFactory.makeResize(IMAGE_WIDTH, newHeight);
-		LOG.info(path.makeTnPath());
 		Image resizedImage = imagesService.applyTransform(resize, image);
 		
 		GcsFilename fileNameTn = new GcsFilename(bucket, path.makeTnPath());
@@ -76,7 +72,7 @@ public class Storage {
 		GcsOutputChannel outputChannelTn;
 		try {
 			outputChannelTn = gcsService.createOrReplace(fileNameTn, optionsTn);
-			copy(new ByteArrayInputStream(resizedImage.getImageData()),
+			copy(new ByteArrayInputStream(Base64.encode(resizedImage.getImageData())),
 					Channels.newOutputStream(outputChannelTn));
 		} catch (IOException e) {
 			return false;

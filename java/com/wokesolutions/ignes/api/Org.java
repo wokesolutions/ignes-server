@@ -278,8 +278,12 @@ public class Org {
 			obj.put(DSUtils.WORKER_JOB, worker.getProperty(DSUtils.WORKER_JOB));
 			array.put(obj);
 		}
+		
+		if(array.length() < BATCH_SIZE)
+			return Response.ok(array.toString()).build();
 
-		return Response.ok(array.toString()).build();
+		return Response.ok(array.toString()).header(CustomHeader.CURSOR,
+				list.getCursor().toWebSafeString()).build();
 	}
 
 	private boolean isValid(String email) {
