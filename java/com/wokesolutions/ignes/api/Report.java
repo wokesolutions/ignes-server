@@ -195,21 +195,19 @@ public class Report {
 				if(data.report_city != null)
 					report.setProperty(DSUtils.REPORT_DISTRICT, data.report_city);
 
-				try {
-					LinkedList<String> folders = new LinkedList<String>();
-					folders.add(Storage.IMG_FOLDER);
-					folders.add(Storage.REPORT_FOLDER);
-					StoragePath pathImg = new StoragePath(folders, reportid);
-					if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg,
-							data.report_imgwidth, data.report_imgheight)) {
-						LOG.info(Message.STORAGE_ERROR);
-						return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
-					}
-
-					report.setUnindexedProperty(DSUtils.REPORT_IMGPATH, pathImg);
-					report.setUnindexedProperty(DSUtils.REPORT_THUMBNAILPATH, Storage.getTnFromPath(pathImg));
-				} catch(Exception e) {
+				LinkedList<String> folders = new LinkedList<String>();
+				folders.add(Storage.IMG_FOLDER);
+				folders.add(Storage.REPORT_FOLDER);
+				StoragePath pathImg = new StoragePath(folders, reportid);
+				if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg,
+						data.report_imgwidth, data.report_imgheight)) {
+					LOG.info(Message.STORAGE_ERROR);
+					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 				}
+
+				report.setUnindexedProperty(DSUtils.REPORT_IMGPATH, pathImg.makePath());
+				report.setUnindexedProperty(DSUtils.REPORT_THUMBNAILPATH,
+						Storage.getTnFromPath(pathImg).makePath());
 
 				Entity reportVotes = new Entity(DSUtils.REPORTVOTES, reportKey);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_UP, 0L);
