@@ -219,12 +219,8 @@ function showMap(){
 }
 
 function showProfile() {
+    getProfile();
     hideShow('profile_variable');
-
-}
-
-function showFeed() {
-    hideShow('feed_variable');
 
 }
 
@@ -235,14 +231,6 @@ function showWorkers(){
 function showCreateWorker(){
     hideShow('create_variable');
     document.getElementById("org_name").innerHTML = localStorage.getItem('ignes_org_name');
-}
-
-function clearTable(){
-    var table = document.getElementById("user_table");
-    var i;
-    for(i = 1; i < table.rows.length; i++){
-        table.deleteRow(i);
-    }
 }
 
 function createWorker(){
@@ -256,7 +244,7 @@ function createWorker(){
             'Content-Type': 'application/json',
             'Authorization': localStorage.getItem('token')
         },
-        body: JSON.stringify({msg
+        body: JSON.stringify({
             worker_name: name,
             worker_email: email,
             worker_job: job
@@ -314,9 +302,12 @@ function getFirstWorkers(){
                             var cell1 = row.insertCell(0);
                             var cell2 = row.insertCell(1);
                             var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
                             cell1.innerHTML = data[i].worker_name;
                             cell2.innerHTML = data[i].Worker;
                             cell3.innerHTML = data[i].worker_job;
+                            cell4.outerHTML= "<button type='submit' class='btn' onclick='getRow()'></button>";
+
                         }
 
                     }else{
@@ -375,9 +366,11 @@ function getNextWorkers(){
                             var cell1 = row.insertCell(0);
                             var cell2 = row.insertCell(1);
                             var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
                             cell1.innerHTML = data[i].worker_name;
                             cell2.innerHTML = data[i].Worker;
                             cell3.innerHTML = data[i].worker_job;
+                            cell4.outerHTML= "<button type='submit' class='btn' onclick='getRow()'></button>";
                         }
 
                     }else{
@@ -438,9 +431,11 @@ function getPreWorkers(){
                                 var cell1 = row.insertCell(0);
                                 var cell2 = row.insertCell(1);
                                 var cell3 = row.insertCell(2);
+                                var cell4 = row.insertCell(3);
                                 cell1.innerHTML = data[i].worker_name;
                                 cell2.innerHTML = data[i].Worker;
                                 cell3.innerHTML = data[i].worker_job;
+                                cell4.outerHTML= "<button type='submit' class='btn' onclick='getRow()'></button>";
                             }
 
                         }else{
@@ -461,3 +456,72 @@ function getPreWorkers(){
 
     }
 }
+
+function getProfile(){
+    fetch(URL_BASE + '/api/org/info/' + localStorage.getItem('ignes_org_nif'), {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
+
+            if (response.status === 200) {
+                response.json().then(function(data) {
+
+                    document.getElementById("organization_name").innerHTML = localStorage.getItem('ignes_org_name');
+                    document.getElementById("organization_nif").innerHTML = data.Org;
+                    document.getElementById("organization_email").innerHTML = data.org_email;
+                    document.getElementById("organization_addresses").innerHTML = data.org_address;
+                    document.getElementById("organization_locality").innerHTML = data.org_locality;
+                    document.getElementById("organization_zip").innerHTML = data.org_zip;
+                    document.getElementById("organization_service").innerHTML = data.org_services;
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+
+}
+
+function getRow(){
+
+    alert(this.parentNode.rowIndex);
+    var row = this.parentNode.rowIndex;
+    var email = document.getElementById("user_table").rows[row].cells[1].innerHTML;
+    deleteWorker(email);
+
+}
+
+
+function deleteWorker (email){
+    fetch(URL_BASE + '/api/org/deleteworker/' + email, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
+
+            if (response.status === 200 || response.status === 204) {
+                alert("Trabalhador apagado com sucesso.")
+            }else{
+                alert("Falha ao apagar o utilizador.")
+            }
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+

@@ -510,7 +510,7 @@ function setProfile(){
     }).then(function(response) {
 
             if (response.status === 200) {
-               hideShow(profile_variable);
+               hideShow("profile_variable");
             }else{
                 console.log("Tratar do Forbidden");
             }
