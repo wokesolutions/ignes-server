@@ -64,10 +64,7 @@ public class Storage {
 		
 		int newHeight = height * IMAGE_WIDTH / width;
 		
-		StoragePath tnPath = path.clone();
-		tnPath.addTn();
-		
-		LOG.info(tnPath.makePath());
+		StoragePath tnPath = path.addTn();
 		
 		Transform resize = ImagesServiceFactory.makeResize(IMAGE_WIDTH, newHeight);
 		LOG.info(tnPath.makePath());
@@ -147,8 +144,11 @@ public class Storage {
 			return new StoragePath(folders, name);
 		}
 		
-		public void addTn() {
-			folders.add(THUMBNAIL_FOLDER);
+		public StoragePath addTn() {
+			StoragePath newPath = this.clone();
+			newPath.folders.add(THUMBNAIL_FOLDER);
+			LOG.info(newPath.makePath());
+			return newPath;
 		}
 	}
 }

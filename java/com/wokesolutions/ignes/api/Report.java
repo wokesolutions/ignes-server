@@ -199,6 +199,7 @@ public class Report {
 				folders.add(Storage.IMG_FOLDER);
 				folders.add(Storage.REPORT_FOLDER);
 				StoragePath pathImg = new StoragePath(folders, reportid);
+				LOG.info(pathImg.makePath());
 				if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg,
 						data.report_imgwidth, data.report_imgheight)) {
 					LOG.info(Message.STORAGE_ERROR);
