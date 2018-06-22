@@ -205,6 +205,8 @@ public class Report {
 					LOG.info(Message.STORAGE_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 				}
+				
+				LOG.info(pathImg.makePath());
 
 				report.setUnindexedProperty(DSUtils.REPORT_IMGPATH, pathImg.makePath());
 				report.setUnindexedProperty(DSUtils.REPORT_THUMBNAILPATH,
