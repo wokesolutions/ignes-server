@@ -65,6 +65,7 @@ public class Message {
 		public static final String USER_REGISTERED = "Utilizador registado: ";
 		public static final String PASSWORD_CHANGED = "Palavra-passe alterada para o utilizador: ";
 		public static final String GIVING_VOTES = "Tentando dar os votos do utilizador: ";
+		public static final String USER_HAS_NO_IMAGE = "Utilizador não tem imagem de perfil";
 	
 	// Info Admin
 		public static final String ADMIN_PROMOTED = "Administrador promovido";

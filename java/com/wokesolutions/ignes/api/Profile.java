@@ -63,6 +63,7 @@ public class Profile {
 	public static final String ACTIVATED = "activated";
 
 	private static final String USER_REPORTS = "user_reports";
+	private static final String PROFILEPIC = "profilepic";
 
 	@POST
 	@Path("/update/{username}")
@@ -657,7 +658,46 @@ public class Profile {
 	@GET
 	@Path("/getprofilepic/{username}")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
-	public Response getProfPic() { //TODO
-		return null;
+	public Response getProfPic(@PathParam(ParamName.USERNAME) String username) {
+		int retries = 5;
+		while(true) {
+			try {
+				return getProfPicRetry(username);
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
+	
+	public Response getProfPicRetry(String username) {
+		String img;
+		String path;
+		Entity optional;
+		
+		try {
+			optional = datastore.get(KeyFactory.createKey(DSUtils.USEROPTIONAL_PICPATH, username));
+		} catch(EntityNotFoundException e) {
+			LOG.info(Message.USER_NOT_FOUND);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+		
+		path = optional.getProperty(DSUtils.USEROPTIONAL_PICPATH).toString();
+		
+		if(path == null) {
+			LOG.info(Message.USER_HAS_NO_IMAGE);
+			return Response.status(Status.NO_CONTENT).build();
+		}
+		
+		img = Storage.getImage(path);
+		
+		JSONObject obj = new JSONObject();
+		obj.put(PROFILEPIC, img);
+		
+		return Response.ok(obj.toString()).build();
 	}
 }
