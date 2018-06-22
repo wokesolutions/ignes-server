@@ -136,27 +136,31 @@ public class Worker {
 		}
 	}
 
-	private Response taskListRetry(String email, String cursor) { // TODO
+	private Response taskListRetry(String email, String cursor) {
 		LOG.info(Message.LISTING_TASKS);
 
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 		Query query = new Query(DSUtils.TASK).setKeysOnly();
 		Filter filter = new Query.FilterPredicate(DSUtils.TASK_WORKER, FilterOperator.EQUAL, email);
 		query.setFilter(filter);
+		LOG.info(Message.LISTING_TASKS);
 
 		if(cursor != null && !cursor.equals(""))
 			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
 
 		JSONArray array = new JSONArray();
+		LOG.info(Message.LISTING_TASKS);
 
 		QueryResultList<Entity> tasks = datastore.prepare(query).asQueryResultList(fetchOptions);
 		List<Key> keys = new ArrayList<Key>(tasks.size());
 		Map<Key, Entity> taskMap = new HashMap<Key, Entity>(tasks.size());
+		LOG.info(Message.LISTING_TASKS);
 
 		for(Entity task : tasks) {
 			taskMap.put(task.getKey(), task);
 			keys.add(task.getParent());
 		}
+		LOG.info(Message.LISTING_TASKS);
 
 		Map<Key, Entity> reports = datastore.get(keys);
 
@@ -209,6 +213,7 @@ public class Worker {
 
 			array.put(jsonReport);
 		}
+		LOG.info(Message.LISTING_TASKS);
 
 		cursor = tasks.getCursor().toWebSafeString();
 

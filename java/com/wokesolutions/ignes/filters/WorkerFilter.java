@@ -61,7 +61,11 @@ public class WorkerFilter implements Filter {
 			Query query = new Query(DSUtils.TOKEN)
 					.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
 			
+			LOG.info("username " + username);
+			
 			List<Entity> allTokens = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
+			
+			LOG.info("username " + username);
 			
 			boolean has = false;
 			for(Entity oneToken : allTokens)
@@ -70,12 +74,18 @@ public class WorkerFilter implements Filter {
 					break;
 				}
 			
+			LOG.info("username " + username);
+			
 			if(!has) {
 				throw new Exception();
 			}
 			
+			LOG.info("username " + username);
+			
 			req.setAttribute(CustomHeader.USERNAME_ATT, username);
 			req.setAttribute(CustomHeader.LEVEL_ATT, JWTUtils.LEVEL1);
+			
+			LOG.info("username " + username);
 
 			chain.doFilter(req, resp);
 		} catch (Exception e){
