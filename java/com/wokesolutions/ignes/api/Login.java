@@ -159,11 +159,11 @@ public class Login {
 						datastore.put(txn, logs);
 						txn.commit();
 
-						ResponseBuilder r;
+						ResponseBuilder response;
 						
 						String level = user.getProperty(DSUtils.USER_LEVEL).toString();
 						
-						r = Response.ok()
+						response = Response.ok()
 								.header(CustomHeader.AUTHORIZATION, token)
 								.header(CustomHeader.LEVEL, level);
 						
@@ -186,12 +186,11 @@ public class Login {
 								return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 							}
 
-							r.header(CustomHeader.ORG,
-											user.getProperty(orgE.getProperty(DSUtils.ORG_NAME).toString()));
-							LOG.info(r.build().getHeaders().toString());
+							response.header(CustomHeader.ORG, orgE.getProperty(DSUtils.ORG_NAME));
+							LOG.info(response.build().getHeaders().toString());
 						}
 						
-						LOG.info(r.build().getHeaders().toString());
+						LOG.info(response.build().getHeaders().toString());
 						
 						String activated = null;
 						if(!user.getProperty(DSUtils.USER_LEVEL).toString().equals(UserLevel.WORKER) &&
@@ -205,9 +204,9 @@ public class Login {
 						}
 
 						if(activated != null)
-							r.header(CustomHeader.ACTIVATED, activated);
+							response.header(CustomHeader.ACTIVATED, activated);
 
-						return r.build();
+						return response.build();
 					} catch (UnsupportedEncodingException e){
 						LOG.warning(e.getMessage());
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
