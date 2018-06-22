@@ -64,7 +64,7 @@ public class Org {
 		if(!registerData.isValid())
 			return Response.status(Status.BAD_REQUEST).entity(Message.REGISTER_DATA_INVALID).build();
 
-		String org = request.getAttribute(CustomHeader.NIF_ATT).toString();
+		String org = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		if(org == null)
 			return Response.status(Status.EXPECTATION_FAILED).build();
@@ -162,10 +162,12 @@ public class Org {
 		if(!isValid(email))
 			return Response.status(Status.BAD_REQUEST).build();
 
-		String org = request.getAttribute(CustomHeader.NIF_ATT).toString();
+		String org = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
-		if(org == null)
+		if(org == null) {
+			LOG.info("no orrrrgggg");
 			return Response.status(Status.EXPECTATION_FAILED).build();
+		}
 
 		int retries = 5;
 		while(true) {
@@ -234,7 +236,7 @@ public class Org {
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response getWorkers(@Context HttpServletRequest request,
 			@QueryParam(ParamName.CURSOR) String cursor) {
-		String org = request.getAttribute(CustomHeader.NIF_ATT).toString();
+		String org = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		if(org == null)
 			return Response.status(Status.EXPECTATION_FAILED).build();

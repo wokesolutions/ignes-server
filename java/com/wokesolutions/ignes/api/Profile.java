@@ -589,7 +589,7 @@ public class Profile {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LOCALITY, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
-		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, String.class));
+		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, Boolean.class));
 
 		QueryResultList<Entity> reports = datastore.prepare(reportQuery).asQueryResultList(fetchOptions);
 

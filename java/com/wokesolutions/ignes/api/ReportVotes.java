@@ -333,6 +333,8 @@ public class ReportVotes extends Report {
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response voteAll(JSONArray votes, @Context HttpServletRequest request) {
 		int retries = 5;
+		
+		LOG.info(votes.toString());
 
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
