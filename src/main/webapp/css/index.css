@@ -519,3 +519,9 @@ label {
 #navbarAdmin{
     background-color: rgb(241, 145, 44);
 }
+
+.report_private{
+    font-family: "Quicksand Bold";
+    font-size: 1rem;
+    color:#AD363B;
+}

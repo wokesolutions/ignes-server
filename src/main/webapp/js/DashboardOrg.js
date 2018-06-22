@@ -2,8 +2,8 @@ var map = null;
 var geocoder = new google.maps.Geocoder();
 var reports;
 var current_position = "map_variable";
-var infowindow = new google.maps.InfoWindow();
-var currentLoc = {
+var info_window = new google.maps.InfoWindow();
+var current_location = {
     center: {lat: 38.661148, lng: -9.203075},
     zoom: 18
 };
@@ -29,6 +29,10 @@ function init() {
     document.getElementById("next_list").onclick = getNextWorkers;
     document.getElementById("previous_list").onclick = getPreWorkers;
     document.getElementById("refresh_workers").onclick = getFirstWorkers;
+
+
+
+
 
     getFirstWorkers();
 
@@ -178,7 +182,7 @@ function logOut(){
 
 function getMarkers(radius, cursor){
     if(cursor===undefined) cursor = "";
-    fetch(URL_BASE + '/api/report/getwithinradius?' + "lat=" + currentLoc.center.lat + "&lng=" + currentLoc.center.lng +
+    fetch(URL_BASE + '/api/report/getprivatewithinradius?' + "lat=" + currentLoc.center.lat + "&lng=" + currentLoc.center.lng +
         "&radius=" + radius + "&cursor=" + cursor, {
         method: 'GET',
         headers: {

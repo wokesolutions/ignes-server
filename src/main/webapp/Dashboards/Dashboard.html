@@ -31,9 +31,9 @@
             <ul class="navbar-nav ml-auto">
                 <li id ="profile_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  ><a class="fa fa-user"> </a>Perfil</a></li>
                 <!-- <li id ="feed_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  /><a class="fa fa-newspaper-o"> </a>Feed</a></li>-->
-                 <li id = "map_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  /><a class="fa fa-map-o"> </a>Mapa</a></li>
-                 <li id = "report_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-map-marker"> </a>Reportar</a></li>
-               <!--  <li id ="space_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  ><a class="fa fa-comments-o"> </a>Espaçinho das Dicas do Vizinho</a></li>-->
+                <li id = "map_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  /><a class="fa fa-map-o"> </a>Mapa</a></li>
+                <li id = "report_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-map-marker"> </a>Reportar</a></li>
+                <!--  <li id ="space_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  ><a class="fa fa-comments-o"> </a>Espaçinho das Dicas do Vizinho</a></li>-->
                 <li id ="contact_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-phone"> </a>Contactos</a></li>
                 <li id = "logout_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"><a class="fa fa-power-off"> </a>Terminar Sessão</a></li>
             </ul>
@@ -104,6 +104,16 @@
                             </div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-lg-5 mx-lg-auto text-center"></div>
+                            <div class="col-lg-1 mx-lg-auto text-center">
+                                <input type = "checkbox" id = "fireStation" className="checkboxtitle" defaultChecked={false}  />
+                            </div>
+                            <div class="col-lg-1 mx-lg-auto text-center">
+                                <p class="report_private">Reporte Privado</p>
+                            </div>
+                            <div class="col-lg-5 mx-lg-auto text-center"></div>
+                        </div>
                         <div class="row">
                             <div class="col-lg-12 mx-lg-auto text-center">
                                 <button id="report_occurrence" type="button" class="btn btn-circle btn-xl"><i class="fa fa-check" id="iconcheck"> </i> </button>
