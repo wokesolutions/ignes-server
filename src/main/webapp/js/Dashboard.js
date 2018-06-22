@@ -31,8 +31,7 @@ function init() {
     document.getElementById("report_occurrence").onclick = addReport;
     document.getElementById("map_button").onclick = showMap;
     document.getElementById("profile_button").onclick = showProfile;
-   // document.getElementById("feed_button").onclick = showFeed;
-   // document.getElementById("space_button").onclick = showNeighborsSpace;
+    document.getElementById("button_showedit").onclick = showEdit;
     document.getElementById("contact_button").onclick = showContacts;
     document.getElementById("button_edit").onclick = setProfile;
     document.getElementById('imagem').onchange = encodeImageFileAsURL;
@@ -108,6 +107,8 @@ function hideShow(element){
 
         document.getElementById("contacts").style.display = "none";
 
+    }else if(current_position == "edit_variable"){
+        document.getElementById("edit_profile").style.display = "none";
     }
 
     if(element === "map_variable"){
@@ -141,6 +142,9 @@ function hideShow(element){
         document.getElementById("contacts").style.display = "block";
         current_position = "contacts_variable";
 
+    }else if(element === "edit_variable"){
+        document.getElementById("edit_profile").style.display = "block";
+        current_position = "edit_variable";
     }
 
 }
@@ -379,13 +383,8 @@ function showProfile() {
     hideShow('profile_variable');
 }
 
-function showFeed() {
-    hideShow('feed_variable');
-}
-
-function showNeighborsSpace() {
-    hideShow('space_variable');
-
+function showEdit(){
+    hideShow("edit_variable");
 }
 
 function showContacts() {
@@ -509,10 +508,9 @@ function setProfile(){
         },
         body:JSON.stringify(propsThatExist)
     }).then(function(response) {
-            console.log("Fiz");
-            if (response.status === 200) {
 
-                console.log("ola");
+            if (response.status === 200) {
+               hideShow(profile_variable);
             }else{
                 console.log("Tratar do Forbidden");
             }
