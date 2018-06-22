@@ -66,6 +66,8 @@ public class UserFilter implements Filter {
 				if(token == null)
 					throw new Exception();
 
+				LOG.info(token);
+				
 				verifier.verify(token);
 			} catch (Exception e2) {
 				String responseToSend = Message.INVALID_TOKEN;

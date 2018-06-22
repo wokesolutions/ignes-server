@@ -26,7 +26,7 @@ public class AdditionalResponseHeadersFilter implements Filter {
 
 		LOG.info(this.getClass().getSimpleName() + Message.FILTER_VERIFYING);
 		((HttpServletResponse) resp).setHeader("Access-Control-Expose-Headers", "*");
-		((HttpServletResponse) resp).setHeader("Access-Control-Allow-Origin", "*, http://localhost:3000");
+		((HttpServletResponse) resp).setHeader("Access-Control-Allow-Origin", "https://wokesolutionsignes.com/");
 		((HttpServletResponse) resp).setHeader("Access-Control-Allow-Headers",
 				"Content-Type, X-Requested-With, Authorization");
 		
