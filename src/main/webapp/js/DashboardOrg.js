@@ -2,8 +2,8 @@ var map = null;
 var geocoder = new google.maps.Geocoder();
 var reports;
 var current_position = "map_variable";
-var info_window = new google.maps.InfoWindow();
-var current_location = {
+var infowindow = new google.maps.InfoWindow();
+var currentLoc ={
     center: {lat: 38.661148, lng: -9.203075},
     zoom: 18
 };
@@ -29,10 +29,6 @@ function init() {
     document.getElementById("next_list").onclick = getNextWorkers;
     document.getElementById("previous_list").onclick = getPreWorkers;
     document.getElementById("refresh_workers").onclick = getFirstWorkers;
-
-
-
-
 
     getFirstWorkers();
 
