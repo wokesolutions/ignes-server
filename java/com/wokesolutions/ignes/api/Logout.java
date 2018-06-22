@@ -44,12 +44,15 @@ public class Logout {
 	@Path("/everywhere")
 	public Response logoutUserEverywhere(@Context HttpHeaders headers,
 			@Context HttpServletRequest request) {
-		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		Object user = request.getAttribute(CustomHeader.USERNAME_ATT);
+		
+		if(user == null)
+			return Response.status(Status.FORBIDDEN).build();
 
 		int retries = 5;
 		while(true) {
 			try {
-				return logoutUserEverywhereRetry(username, request, headers);
+				return logoutUserEverywhereRetry(user.toString(), request, headers);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();

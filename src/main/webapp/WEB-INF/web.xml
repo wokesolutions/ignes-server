@@ -68,6 +68,7 @@
 		<url-pattern>/api/report/vote/spam</url-pattern>
 		<url-pattern>/api/profile/*</url-pattern>
 		<url-pattern>/api/logout</url-pattern>
+		<url-pattern>/api/logout/everywhere</url-pattern>
 	</filter-mapping>
 
 	<filter>

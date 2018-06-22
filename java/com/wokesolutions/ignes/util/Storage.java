@@ -1,5 +1,6 @@
 package com.wokesolutions.ignes.util;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -7,6 +8,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.Channels;
 import java.util.List;
+import java.util.logging.Logger;
+
+import javax.imageio.ImageIO;
 
 import org.apache.geronimo.mail.util.Base64;
 
@@ -24,12 +28,16 @@ import com.google.appengine.tools.cloudstorage.RetryParams;
 
 public class Storage {
 	
+	private static final Logger LOG = Logger.getLogger(Storage.class.getName());
+
 	public static final String BUCKET = "wokesolutions_ignes";
 	public static final String IMG_FOLDER = "img";
 	public static final String THUMBNAIL_FOLDER = "thumbnail";
 	public static final String PROFILE_FOLDER = "profile";
 	public static final String REPORT_FOLDER = "report";
 	public static final String EVENT_FOLDER = "event";
+	
+	private static final int IMAGE_WIDTH = 256;
 
 	private final static int BUFFER_SIZE = 1024 * 1024;
 
@@ -55,12 +63,21 @@ public class Storage {
 			return false;
 		}
 		
+		byte[] bytes = Base64.decode(img);
+		BufferedImage sizeable;
+		try {
+			sizeable = ImageIO.read(new ByteArrayInputStream(bytes));
+		} catch (IOException e1) {
+			LOG.info(Message.STORAGE_ERROR);
+			return false;
+		}
+		
 		// Make an image directly from a byte array, and transform it.
-		Image image = ImagesServiceFactory.makeImage(Base64.decode(img));
+		Image image = ImagesServiceFactory.makeImage(bytes);
 		
-		// 256
+		int height = sizeable.getHeight() * IMAGE_WIDTH / sizeable.getWidth();
 		
-		Transform resize = ImagesServiceFactory.makeResize(image.getWidth() / 5, image.getHeight() / 5);
+		Transform resize = ImagesServiceFactory.makeResize(IMAGE_WIDTH, height);
 		Image resizedImage = imagesService.applyTransform(resize, image);
 		
 		StoragePath tnPath = path.clone();

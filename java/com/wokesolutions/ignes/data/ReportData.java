@@ -15,13 +15,12 @@ public class ReportData {
 	public String report_locality;
 	public String report_address;
 	public String report_img;
-	public String report_thumbnail;
 	public boolean report_private;
 	
 	public ReportData() {}
 	
 	public boolean isValid() {
-		return report_lat != 0 && report_lng != 0 && report_img != null && report_thumbnail != null;
+		return report_lat != 0 && report_lng != 0 && report_img != null;
 	}
 	
 	public static String generateId(String username, Date creationtime) {

@@ -132,8 +132,6 @@ public class Report {
 
 				Entity report = new Entity(DSUtils.REPORT, reportid);
 
-				LOG.info("1");
-
 				report.setProperty(DSUtils.REPORT_LAT, data.report_lat);
 				report.setProperty(DSUtils.REPORT_LNG, data.report_lng);
 				report.setProperty(DSUtils.REPORT_CREATIONTIME, creationtime);
@@ -141,8 +139,6 @@ public class Report {
 				report.setProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED,
 						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(creationtime));
 				report.setProperty(DSUtils.REPORT_USERNAME, username);
-
-				LOG.info("2");
 
 				if(level.equals(UserLevel.LEVEL1))
 					report.setProperty(DSUtils.REPORT_STATUS, STANDBY);
@@ -155,8 +151,6 @@ public class Report {
 				Query userpointsQ = new Query(DSUtils.USERPOINTS)
 						.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
 
-				LOG.info("3");
-
 				int points;
 				try {
 					Entity pointsE = datastore.prepare(userpointsQ).asSingleEntity();
@@ -167,8 +161,6 @@ public class Report {
 					txn.rollback();
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
-
-				LOG.info("4");
 
 				if(data.report_gravity >= 1 && data.report_gravity <= 5) {
 					report.setProperty(DSUtils.REPORT_GRAVITY, data.report_gravity);
@@ -183,8 +175,6 @@ public class Report {
 
 					report.setProperty(DSUtils.REPORT_GRAVITY, gravity);
 				}
-
-				LOG.info("5");
 
 				if(data.report_address != null)
 					report.setProperty(DSUtils.REPORT_ADDRESS, data.report_address);
@@ -226,16 +216,12 @@ public class Report {
 				reportVotes.setProperty(DSUtils.REPORTVOTES_DOWN, 0L);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_RELEVANCE, 0);
 
-				LOG.info("8");
-
 				Entity reportComments = new Entity(DSUtils.REPORTCOMMENTS, reportKey);
 				reportComments.setProperty(DSUtils.REPORTCOMMENTS_NUM, 0L);
 
 				report.setPropertiesFrom(makeCoordProps(data.report_lat, data.report_lng));
 
 				List<Entity> entities = Arrays.asList(report, reportVotes, reportComments);
-
-				LOG.info("9");
 
 				LOG.info(Message.REPORT_CREATED + reportid);
 				datastore.put(txn, entities);
