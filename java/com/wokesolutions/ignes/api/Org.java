@@ -182,13 +182,28 @@ public class Org {
 	}
 
 	public Response deleteWorkerRetry(String email, String org) {
-		Key workerKey = KeyFactory.createKey(DSUtils.WORKER, email);
+		Key userKey = KeyFactory.createKey(DSUtils.USER, email);
 		TransactionOptions options = TransactionOptions.Builder.withXG(true);
 		Transaction txn = datastore.beginTransaction(options);
 
 		try {
-			Entity worker = datastore.get(workerKey);
-			Entity user = datastore.get(worker.getParent());
+			Entity user = datastore.get(userKey);
+			Entity worker;
+			
+			try {
+				Query query = new Query(DSUtils.WORKER).setAncestor(userKey);
+				worker = datastore.prepare(query).asSingleEntity();
+			} catch(TooManyResultsException e) {
+				txn.rollback();
+				LOG.info(Message.WORKER_NOT_FOUND);
+				return Response.status(Status.EXPECTATION_FAILED).build();
+			}
+			
+			if(worker == null) {
+				txn.rollback();
+				LOG.info(Message.WORKER_NOT_FOUND);
+				return Response.status(Status.EXPECTATION_FAILED).build();
+			}
 
 			if(!worker.getProperty(DSUtils.WORKER_ORG).toString().equals(org)) {
 				txn.rollback();
@@ -210,7 +225,7 @@ public class Org {
 
 			deletedWorker.setProperty(DSUtils.DELETEDWORKER_DELETIONTIME, new Date());
 
-			List<Key> list = Arrays.asList(workerKey, user.getKey());
+			List<Key> list = Arrays.asList(userKey, worker.getKey());
 
 			datastore.delete(txn, list);
 			datastore.put(txn, deletedWorker);

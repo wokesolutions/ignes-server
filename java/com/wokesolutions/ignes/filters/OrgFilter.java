@@ -48,7 +48,7 @@ public class OrgFilter implements Filter {
 			verifier.verify(token);
 			
 			String nif = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
-			req.setAttribute(CustomHeader.NIF_ATT, nif);
+			req.setAttribute(CustomHeader.USERNAME_ATT, nif);
 			req.setAttribute(CustomHeader.LEVEL_ATT, JWTUtils.ORG);
 
 			chain.doFilter(req, resp);

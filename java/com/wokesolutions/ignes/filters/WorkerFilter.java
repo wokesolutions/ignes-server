@@ -83,7 +83,7 @@ public class WorkerFilter implements Filter {
 			LOG.info("username " + username);
 			
 			req.setAttribute(CustomHeader.USERNAME_ATT, username);
-			req.setAttribute(CustomHeader.LEVEL_ATT, JWTUtils.LEVEL1);
+			req.setAttribute(CustomHeader.LEVEL_ATT, UserLevel.WORKER);
 			
 			LOG.info("username " + username);
 

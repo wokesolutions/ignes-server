@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.Channels;
 import java.util.LinkedList;
+import java.util.logging.Logger;
 
 import org.apache.geronimo.mail.util.Base64;
 
@@ -23,6 +24,8 @@ import com.google.appengine.tools.cloudstorage.GcsServiceFactory;
 import com.google.appengine.tools.cloudstorage.RetryParams;
 
 public class Storage {
+	
+	private static final Logger LOG = Logger.getLogger(Storage.class.getName());
 
 	public static final String BUCKET = "wokesolutions_ignes";
 	public static final String IMG_FOLDER = "img";
@@ -44,9 +47,9 @@ public class Storage {
 
 	public static boolean saveImage(String img, String bucket, StoragePath path,
 			int width, int height, int orientation) {
-		
 		byte[] bytes = Base64.decode(img);
 		Image image = ImagesServiceFactory.makeImage(bytes);
+		LOG.info(Integer.toString(orientation));
 		Transform rotate = ImagesServiceFactory.makeRotate(orientation);
 		Image rotatedImage = imagesService.applyTransform(rotate, image);
 		

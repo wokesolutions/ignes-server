@@ -498,8 +498,7 @@ public class Report {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
-		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
-		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, Boolean.class));
+		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class));
 
 		QueryResultList<Entity> reports =
 				datastore.prepare(reportQuery).asQueryResultList(fetchOptions);
@@ -579,6 +578,7 @@ public class Report {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_GRAVITY, Integer.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_LOCALITY, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, Integer.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
