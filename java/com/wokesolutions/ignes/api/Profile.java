@@ -648,7 +648,7 @@ public class Profile {
 		try {
 			Entity optional = datastore.prepare(query).asSingleEntity();
 			optional.setProperty(DSUtils.USEROPTIONAL_PICPATH, pathImg.makePath());
-			optional.setProperty(DSUtils.USEROPTIONAL_PICTNPATH, Storage.getTnFromPath(pathImg));
+			optional.setProperty(DSUtils.USEROPTIONAL_PICTNPATH, pathImg.makeTnPath());
 			
 			datastore.put(optional);
 		} catch(TooManyResultsException e) {

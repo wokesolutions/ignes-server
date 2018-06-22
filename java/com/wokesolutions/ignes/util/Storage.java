@@ -64,13 +64,11 @@ public class Storage {
 		
 		int newHeight = height * IMAGE_WIDTH / width;
 		
-		StoragePath tnPath = path.addTn();
-		
 		Transform resize = ImagesServiceFactory.makeResize(IMAGE_WIDTH, newHeight);
-		LOG.info(tnPath.makePath());
+		LOG.info(path.makeTnPath());
 		Image resizedImage = imagesService.applyTransform(resize, image);
 		
-		GcsFilename fileNameTn = new GcsFilename(bucket, tnPath.makePath());
+		GcsFilename fileNameTn = new GcsFilename(bucket, path.makeTnPath());
 		GcsFileOptions optionsTn = new GcsFileOptions.Builder()
                 .mimeType("image/jpg")
                 .acl("public-read")
@@ -113,14 +111,8 @@ public class Storage {
 		}
 	}
 	
-	public static StoragePath getTnFromPath(StoragePath path) {
-		StoragePath pathTn = path.clone();
-		pathTn.addTn();
-		return pathTn;
-	}
-	
 	public static class StoragePath {
-		private static final String THUMBNAIL_FOLDER = "thumbnail";
+		private static final String THUMBNAIL_FOLDER = "thumbnail/";
 		
 		public LinkedList<String> folders;
 		public String name;
@@ -140,15 +132,20 @@ public class Storage {
 			return path;
 		}
 		
-		public StoragePath clone() {
-			return new StoragePath(folders, name);
+		public String makeTnPath() {
+			String path = "";
+			for(String folder : folders)
+				path += folder + "/";
+			
+			path += THUMBNAIL_FOLDER;
+			
+			path += name;
+			
+			return path;
 		}
 		
-		public StoragePath addTn() {
-			StoragePath newPath = this.clone();
-			newPath.folders.add(THUMBNAIL_FOLDER);
-			LOG.info(newPath.makePath());
-			return newPath;
+		public StoragePath clone() {
+			return new StoragePath(folders, name);
 		}
 	}
 }
