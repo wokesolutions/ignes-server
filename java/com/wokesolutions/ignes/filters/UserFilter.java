@@ -63,7 +63,7 @@ public class UserFilter implements Filter {
 					throw new Exception();
 
 				LOG.info(token);
-				
+
 				verifier.verify(token);
 			} catch (Exception e2) {
 				LOG.info(Message.INVALID_TOKEN);
@@ -100,16 +100,23 @@ public class UserFilter implements Filter {
 					tokenExists = true;
 					break;
 				}
+
+			if(!tokenExists) {
+				LOG.info(Message.INVALID_TOKEN);
+				((HttpServletResponse) resp).setHeader("Content-Type", CustomHeader.JSON_CHARSET_UTF8);
+				((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
+				resp.getWriter().println(Message.INVALID_TOKEN);
+				return;
+			}
+
+			req.setAttribute(CustomHeader.LEVEL_ATT, UserLevel.ORG);
+			req.setAttribute(CustomHeader.USERNAME_ATT, username);
 			
-			LOG.info(Message.INVALID_TOKEN);
-			((HttpServletResponse) resp).setHeader("Content-Type", CustomHeader.JSON_CHARSET_UTF8);
-			((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
-			resp.getWriter().println(Message.INVALID_TOKEN);
-			return;
+			chain.doFilter(req, resp);
 		}
 
+		req.setAttribute(CustomHeader.LEVEL_ATT, UserLevel.LEVEL1);
 		req.setAttribute(CustomHeader.USERNAME_ATT, username);
-		req.setAttribute(CustomHeader.LEVEL_ATT, JWTUtils.LEVEL1);
 
 		chain.doFilter(req, resp);
 	}

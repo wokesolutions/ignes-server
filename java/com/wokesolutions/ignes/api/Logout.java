@@ -115,6 +115,7 @@ public class Logout {
 			try {
 				return logoutUserRetry(username, request, isOrg);
 			} catch(DatastoreException e) {
+				LOG.info("Trying again");
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				retries--;
@@ -195,9 +196,11 @@ public class Logout {
 				LOG.info(Message.LOGGING_OUT);
 
 				Key orgKey = KeyFactory.createKey(DSUtils.ORG, username);
+				LOG.info(Message.LOGGING_OUT);
 
 				// Obtain the org login statistics
 				Query statsQuery = new Query(DSUtils.ORGSTATS).setAncestor(orgKey);
+				LOG.info(Message.LOGGING_OUT);
 				Entity stats;
 				try {
 					stats = datastore.prepare(statsQuery).asSingleEntity();
@@ -205,10 +208,12 @@ public class Logout {
 					txn.rollback();
 					return Response.status(Status.EXPECTATION_FAILED).build();
 				}
+				LOG.info(Message.LOGGING_OUT);
 
 				try {
 					datastore.get(orgKey);
 					Entity log = new Entity(DSUtils.ORGLOG, orgKey);
+					LOG.info(Message.LOGGING_OUT);
 
 					log.setProperty(DSUtils.ORGLOG_TYPE, OUT);
 					log.setProperty(DSUtils.ORGLOG_IP, request.getRemoteAddr());
@@ -217,24 +222,31 @@ public class Logout {
 					log.setProperty(DSUtils.ORGLOG_CITY, request.getHeader("X-AppEngine-City"));
 					log.setProperty(DSUtils.ORGLOG_COUNTRY, request.getHeader("X-AppEngine-Country"));
 					log.setProperty(DSUtils.ORGLOG_TIME, new Date());
+					LOG.info(Message.LOGGING_OUT);
 
 					stats.setProperty(DSUtils.ORGSTATS_LOGOUTS,
 							1 + (long) stats.getProperty(DSUtils.ORGSTATS_LOGOUTS));
+					LOG.info(Message.LOGGING_OUT);
 
 					List<Entity> list = Arrays.asList(stats, log);
 					datastore.put(txn, list);
+					LOG.info(Message.LOGGING_OUT);
 
 					Query query = new Query(DSUtils.TOKEN).setAncestor(orgKey).setKeysOnly();
+					LOG.info(Message.LOGGING_OUT);
 
 					Filter filter = new Query
 							.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL,
 									request.getHeader(CustomHeader.AUTHORIZATION));
 
 					query.setFilter(filter);
+					LOG.info(Message.LOGGING_OUT);
 
 					Entity token;
 					try {
 						token = datastore.prepare(txn, query).asSingleEntity();
+						
+						LOG.info(Boolean.toString(token == null));
 					} catch(TooManyResultsException e2) {
 						LOG.info(Message.UNEXPECTED_ERROR);
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
