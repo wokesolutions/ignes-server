@@ -40,15 +40,13 @@ public class UserFilter implements Filter {
 		Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 
 		JWTVerifier verifier;
-		String token;
+		String token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
 
 		try {
 			verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
 					.withClaim(JWTUtils.LEVEL1, UserLevel.LEVEL1)
 					.build();
-
-			token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
 
 			if(token == null)
 				throw new Exception();
@@ -61,8 +59,6 @@ public class UserFilter implements Filter {
 						.withClaim(JWTUtils.ORG, UserLevel.ORG)
 						.build();
 
-				token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
-
 				if(token == null)
 					throw new Exception();
 
@@ -70,10 +66,10 @@ public class UserFilter implements Filter {
 				
 				verifier.verify(token);
 			} catch (Exception e2) {
-				String responseToSend = Message.INVALID_TOKEN;
+				LOG.info(Message.INVALID_TOKEN);
 				((HttpServletResponse) resp).setHeader("Content-Type", CustomHeader.JSON_CHARSET_UTF8);
 				((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
-				resp.getWriter().println(responseToSend);
+				resp.getWriter().println(Message.INVALID_TOKEN);
 				return;
 			}
 		}
@@ -93,10 +89,22 @@ public class UserFilter implements Filter {
 			}
 
 		if(!tokenExists) {
-			String responseToSend = Message.INVALID_TOKEN;
+			query = new Query(DSUtils.TOKEN)
+					.setAncestor(KeyFactory.createKey(DSUtils.ORG, username));
+
+			allTokens = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
+
+			tokenExists = false;
+			for(Entity oneToken : allTokens)
+				if(oneToken.getProperty(DSUtils.TOKEN_STRING).equals(token)) {
+					tokenExists = true;
+					break;
+				}
+			
+			LOG.info(Message.INVALID_TOKEN);
 			((HttpServletResponse) resp).setHeader("Content-Type", CustomHeader.JSON_CHARSET_UTF8);
 			((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
-			resp.getWriter().println(responseToSend);
+			resp.getWriter().println(Message.INVALID_TOKEN);
 			return;
 		}
 

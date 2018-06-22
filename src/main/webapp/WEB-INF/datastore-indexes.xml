@@ -149,17 +149,17 @@
     </datastore-index>
     
     <datastore-index kind="Report" ancestor="false" source="manual">
+        <property name="report_username" direction="asc"/>
+        <property name="report_address" direction="asc"/>
     	<property name="report_locality" direction="asc"/>
-    	<property name="report_address" direction="asc"/>
-    	<property name="report_gravity" direction="asc"/>
-    	<property name="report_lat" direction="asc"/>
-        <property name="report_private" direction="desc"/>
-    	<property name="report_lng" direction="asc"/>
-        <property name="report_title" direction="asc"/>
-        <property name="report_creationtimeformatted" direction="desc"/>
-    	<property name="report_username" direction="asc"/>
-        <property name="report_status" direction="desc"/>
+        <property name="report_creationtimeformatted" direction="asc"/>
+        <property name="report_gravity" direction="asc"/>
+        <property name="report_lat" direction="asc"/>
+        <property name="report_lng" direction="asc"/>
+        <property name="report_private" direction="asc"/>
         <property name="report_description" direction="desc"/>
+        <property name="report_status" direction="asc"/>
+        <property name="report_title" direction="asc"/>
     </datastore-index>
     
     <datastore-index kind="Worker" ancestor="false" source="manual">
