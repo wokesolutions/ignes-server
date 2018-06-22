@@ -306,7 +306,7 @@ function getFirstWorkers(){
                             cell1.innerHTML = data[i].worker_name;
                             cell2.innerHTML = data[i].Worker;
                             cell3.innerHTML = data[i].worker_job;
-                            cell4.outerHTML= "<button type='submit' class='btn' onclick='deleteWorker(this.parentNode.rowIndex)'></button>";
+                            cell4.outerHTML= "<button type='submit' class='btn btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'></button>";
 
                         }
 
