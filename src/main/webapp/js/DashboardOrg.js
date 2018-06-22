@@ -2,11 +2,13 @@ var map = null;
 var geocoder = new google.maps.Geocoder();
 var reports;
 var current_position = "map_variable";
-var info_window = new google.maps.InfoWindow();
-var current_location = {
+var infowindow = new google.maps.InfoWindow();
+var currentLoc = {
     center: {lat: 38.661148, lng: -9.203075},
     zoom: 18
 };
+
+getCurrentLocation();
 
 var URL_BASE = 'https://hardy-scarab-200218.appspot.com';
 
@@ -28,12 +30,7 @@ function init() {
     document.getElementById("previous_list").onclick = getPreWorkers;
     document.getElementById("refresh_workers").onclick = getFirstWorkers;
 
-    getMarkers("Caparica");
-
     getFirstWorkers();
-
-    var mapElement = document.getElementById('map');
-    map = new google.maps.Map(mapElement, current_location);
 
 }
 
@@ -49,6 +46,32 @@ function searchLocation(){
     });
 
     getMarkers(address);
+}
+
+function getCurrentLocation() {
+
+    if(navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+            console.log(currentLoc);
+            currentLoc = {
+                center: {lat: position.coords.latitude, lng: position.coords.longitude},
+                zoom: 15
+            };
+            console.log(currentLoc);
+
+            var mapElement = document.getElementById('map');
+            map = new google.maps.Map(mapElement, currentLoc);
+
+            getMarkers(5);
+        })
+    }else {
+        var mapElement = document.getElementById('map');
+        map = new google.maps.Map(mapElement, currentLoc);
+
+        getMarkers(5);
+    }
+
+    return currentLoc;
 }
 
 function hideShow(element){
@@ -153,23 +176,27 @@ function logOut(){
 
 }
 
-function getMarkers(address){
-    fetch(URL_BASE + '/api/report/getinlocation?location=' + address + '&offset=0&', {
+function getMarkers(radius, cursor){
+    if(cursor===undefined) cursor = "";
+    fetch(URL_BASE + '/api/report/getwithinradius?' + "lat=" + currentLoc.center.lat + "&lng=" + currentLoc.center.lng +
+        "&radius=" + radius + "&cursor=" + cursor, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
         }
     }).then(function(response) {
 
             if (response.status === 200) {
+                var newCursor = response.headers.get("Cursor");
                 response.json().then(function(data) {
                     reports = data;
-                    console.log(reports);
-                    fillMap(reports);
+                    fillMap(reports, newCursor);
                 });
 
             }else{
-                console.log("Tratar do Forbidden")
+                console.log("Tratar do Forbidden");
+                return;
             }
 
 
@@ -181,13 +208,12 @@ function getMarkers(address){
 
 }
 
-function fillMap(reports){
+function fillMap(reports, cursor){
     var i, marker ;
     for(i = 0; i<reports.length; i++){
         var lat = reports[i].report_lat;
         var lng = reports[i].report_lng;
 
-        console.log(lat + " " + lng);
 
         marker = new google.maps.Marker({
             position: new google.maps.LatLng(lat, lng),
@@ -198,19 +224,25 @@ function fillMap(reports){
         google.maps.event.addListener(marker, 'click', (function(marker, i) {
 
             return function() {
-                var contentString = '<div id="content">'+
-                    '<h1 style="font-family: Quicksand Bold; color:#AD363B; font-size:30px">'+ reports[i].report_title +'</h1>'+ '<div>' +
-                    '<p style="font-family: Quicksand Bold">'+'Localização' +'</p>'+ '<p>' + reports[i].report_address + '</div>'+
-                    '<div>' +
-                    '<p style="font-family: Quicksand Bold">'+'Descrição' + '<p>' + reports[i].report_description +'</p>'+ '</p>' +'</div>'+
-                    '<div>'+
-                    '<p style="font-family: Quicksand Bold">'+'Estado' +'</p>'+ '<p style="color:forestgreen">' + reports[i].report_status +
+                var contentString = '<div id="content">';
+                if(reports[i].report_title !== null)
+                    contentString +='<h1 style="font-family: Quicksand Bold; color:#AD363B; font-size:30px">'+ reports[i].report_title +'</h1>';
+                contentString += '<div>' + '<p style="font-family: Quicksand Bold">'+'Localização' +'</p>'+ '<p>' + reports[i].report_address + '</div>';
+                if(reports[i].report_description !== null)
+                    contentString +='<div>' + '<p style="font-family: Quicksand Bold">'+'Descrição' + '<p>' + reports[i].report_description +'</p>'+ '</p>' +'</div>';
+
+                contentString +='<div>'+ '<p style="font-family: Quicksand Bold">'+'Estado' +'</p>'+ '<p style="color:forestgreen">' + reports[i].report_status +
                     '</div>'+
                     '</div>';
-                info_window.setContent(contentString);
-                info_window.open(map, marker);
+                infowindow.setContent(contentString);
+                infowindow.open(map, marker);
             }
         })(marker, i));
+    }
+
+    if(cursor !== null){
+        console.log(cursor);
+        getMarkers(5, cursor);
     }
 }
 
@@ -370,7 +402,7 @@ function getNextWorkers(){
                             cell1.innerHTML = data[i].worker_name;
                             cell2.innerHTML = data[i].Worker;
                             cell3.innerHTML = data[i].worker_job;
-                            cell4.outerHTML= "<button type='submit' class='btn' onclick='deleteWorker(this.parentNode.rowIndex)'></button>";
+                            cell4.outerHTML= "<button type='submit' class='btn btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -435,8 +467,7 @@ function getPreWorkers(){
                                 cell1.innerHTML = data[i].worker_name;
                                 cell2.innerHTML = data[i].Worker;
                                 cell3.innerHTML = data[i].worker_job;
-                                cell4.outerHTML= "<button type='submit' class='btn' onclick='deleteWorker(this.parentNode.rowIndex)'></button>";
-
+                                cell4.outerHTML= "<button type='submit' class='btn btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'></button>";
                             }
 
                         }else{

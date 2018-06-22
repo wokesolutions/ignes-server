@@ -38,7 +38,7 @@ function init() {
 
 
 }
-//Tambem inicializa o mapa
+
 function getCurrentLocation() {
 
     if(navigator.geolocation) {
