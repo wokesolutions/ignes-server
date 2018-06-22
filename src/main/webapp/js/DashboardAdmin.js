@@ -17,7 +17,6 @@ function init() {
     document.getElementById("refresh_users").onclick = getFirstUsers;
 
 }
-
 function verifyIsLoggedIn(){
     console.log(localStorage.getItem('token'));
     fetch(URL_BASE + '/api/verifytoken', {
