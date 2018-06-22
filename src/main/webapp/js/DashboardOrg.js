@@ -17,12 +17,9 @@ function init() {
 
     verifyIsLoggedIn();
 
-    getFirstWorkers();
-
     document.getElementById("search_location").onclick = searchLocation;
     document.getElementById('map_button').onclick = showMap;
     document.getElementById("profile_button").onclick = showProfile;
-    document.getElementById("feed_button").onclick = showFeed;
     document.getElementById("user_table_button").onclick = showWorkers;
     document.getElementById("create_button").onclick = showCreateWorker;
     document.getElementById("report_occurrence").onclick = createWorker;
@@ -33,10 +30,11 @@ function init() {
 
     getMarkers("Caparica");
 
+    getFirstWorkers();
+
     var mapElement = document.getElementById('map');
     map = new google.maps.Map(mapElement, current_location);
 
-    getWorkers();
 }
 
 function searchLocation(){
@@ -64,10 +62,6 @@ function hideShow(element){
 
         document.getElementById("profile").style.display = "none";
 
-    }else if(current_position === "feed_variable"){
-
-        document.getElementById("feed").style.display = "none";
-
     }else if(current_position === "users_variable"){
 
         document.getElementById("list_users").style.display = "none";
@@ -88,11 +82,6 @@ function hideShow(element){
 
         document.getElementById("profile").style.display = "block";
         current_position = "profile_variable";
-
-    }else if(element === "feed_variable"){
-
-        document.getElementById("feed").style.display = "block";
-        current_position = "feed_variable";
 
     }else if(element === "users_variable"){
 
@@ -248,55 +237,6 @@ function showCreateWorker(){
     document.getElementById("org_name").innerHTML = localStorage.getItem('ignes_org_name');
 }
 
-function getWorkers(){
-    var info;
-    fetch(URL_BASE + '/api/org/listworkers', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
-
-            if (response.status === 200) {
-
-                response.json().then(function(data) {
-                    console.log(JSON.stringify(data));
-                    if(data != null){
-                        var i;
-                        var table = document.getElementById("user_table");
-
-                        console.log(data.length);
-                        for(i = 0; i < data.length; i++){
-                            var row = table.insertRow(-1);
-                            var cell1 = row.insertCell(0);
-                            var cell2 = row.insertCell(1);
-                            var cell3 = row.insertCell(2);
-                            cell1.innerHTML = data[i].worker_name;
-                            cell2.innerHTML = data[i].Worker;
-                            cell3.innerHTML = data[i].worker_job;
-                        }
-
-                    }else{
-                        alert("Esta empresa ainda não tem trabalhadores associados.")
-                    }
-                });
-
-            }else{
-                console.log("Tratar do Forbidden")
-                return info;
-            }
-
-
-        }
-    )
-        .catch(function(err) {
-            console.log('Fetch Error', err);
-            return info;
-        });
-
-}
-
 function clearTable(){
     var table = document.getElementById("user_table");
     var i;
@@ -347,8 +287,11 @@ function getFirstWorkers(){
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
-                if(table.rows.length > 1) $("#user_table:not(:first)").remove();
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
                 if(response.headers.get("Cursor") !== null) {
+                    console.log("Existe cursor");
                     cursor_pre_workers = "";
                     cursor_current_workers = "";
                     cursor_next_workers = response.headers.get("Cursor");
@@ -405,7 +348,9 @@ function getNextWorkers(){
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
-                if(table.rows.length > 1) $("#user_table:not(:first)").remove();
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
                 if(document.getElementById("previous_list").style.display === "none")
                     document.getElementById("previous_list").style.display = "block";
                 if(response.headers.get("Cursor") !== null) {
@@ -413,9 +358,6 @@ function getNextWorkers(){
                     cursor_pre_workers = cursor_current_workers;
                     cursor_current_workers = cursor_next_workers;
                     cursor_next_workers = response.headers.get("Cursor");
-                    cursor_next_workers = cursor_current_workers;
-                    cursor_current_workers = cursor_pre_workers;
-                    cursor_pre_workers = response.headers.get("Cursor");
 
                     if(document.getElementById("next_list").style.display === "none")
                         document.getElementById("next_list").style.display = "block";
@@ -468,7 +410,9 @@ function getPreWorkers(){
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
-                if(table.rows.length > 1) $("#user_table:not(:first)").remove();
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
                 if(document.getElementById("previous_list").style.display === "none")
                     document.getElementById("previous_list").style.display = "block";
                 if(response.headers.get("Cursor") !== null) {

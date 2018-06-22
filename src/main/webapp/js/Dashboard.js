@@ -9,6 +9,8 @@ var currentLoc = {
     zoom: 18
 };
 
+var preview;
+
 getCurrentLocation();
 
 var reports;
@@ -29,8 +31,8 @@ function init() {
     document.getElementById("report_occurrence").onclick = addReport;
     document.getElementById("map_button").onclick = showMap;
     document.getElementById("profile_button").onclick = showProfile;
-    document.getElementById("feed_button").onclick = showFeed;
-    document.getElementById("space_button").onclick = showNeighborsSpace;
+   // document.getElementById("feed_button").onclick = showFeed;
+   // document.getElementById("space_button").onclick = showNeighborsSpace;
     document.getElementById("contact_button").onclick = showContacts;
     document.getElementById("button_edit").onclick = setProfile;
     document.getElementById('imagem').onchange = encodeImageFileAsURL;
@@ -224,8 +226,11 @@ function addReport(){
                     var locality = results[0].address_components[2].long_name;
                     var district = results[0].address_components[3].long_name;
 
+
                     bodyToSend.report_lat = lat;
                     bodyToSend.report_lng = lng;
+                    bodyToSend.report_imgwidth= preview.naturalWidth;
+                    bodyToSend.report_imgheight= preview.naturalHeight;
                     bodyToSend.report_img = previewImageBase;
                     bodyToSend.report_private = true;
                     bodyToSend.report_gravity = gravity;
@@ -524,7 +529,7 @@ function setProfile(){
 function encodeImageFileAsURL() {
 
     var filesSelected = document.getElementById("imagem").files;
-    var preview = document.getElementById('img');
+    preview = document.getElementById('img');
     if (filesSelected.length > 0) {
         var file = filesSelected[0];
 

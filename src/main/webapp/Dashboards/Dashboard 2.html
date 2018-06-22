@@ -95,12 +95,12 @@
                         <div class="form-group floating-label-form-group controls text-center" >
                             <label>Upload Fotografia</label>
                             <div class="row">
-                                <div class="col-lg-2 col-md-2 mx-auto"></div>
+                                <div class="col-lg-4 col-md-2 mx-auto">
+                                    <img src="" height="80" style="font-family: Quicksand"alt="Image preview..." id="img">
+                                </div>
                                 <div class="col-lg-4 col-md-4 mx-auto text-center">
                                     <input type="file" id="imagem"/>
                                 </div>
-                                <div class="col-lg-2 col-md-2 mx-auto"></div>
-
                             </div>
                         </div>
 
@@ -113,6 +113,7 @@
                 </div>
             </div>
         </div>
+    </div>
 </section>
 
 <!--Neighbor's space-->
@@ -127,44 +128,49 @@
         </div>
         <div class=" col-md-4 col-lg-4 text-center">
             <img src="../images/avatar.png" height="142" width="142"/>
-            <p class ="people_level" id="num_level"></p>
-            <p class ="people_level" id="people_username"></p>
         </div>
         <div class=" col-md-2 col-lg-2 text-center">
-           <p class ="people_points">Reportes<p class ="people_numbers" id="num_reports"></p></p>
+            <p class ="people_points">Reportes<p class ="people_numbers" id="num_reports"></p></p>
         </div>
         <div class=" col-md-2 col-lg-2 "></div>
     </div>
     <div class="row">
         <div class=" col-md-2 col-lg-2 "></div>
         <div class=" col-md-8 col-lg-8 text-center">
-            <table class="table table-user-information">
+            <table class="table table-user-information table-style-profile">
                 <tbody>
-                <tr>
-                    <td class="profile_style_row"></td>
-                    <td class="profile_style_row" ></td>
-                    <td class="profile_style_row" > <button type="submit" class="btn btn-link"
-                                                            onClick={setProfile} >Editar Perfil</button></td>
-                </tr>
                 <tr>
                     <td class="profile_style">Nome</td>
                     <td class="profile_style_response" id="people_name"> </td>
                     <td class="profile_style_response"><input type="text" id="input_name"/></td>
-                </tr>
-                <tr>
-                    <td class="profile_style">Género</td>
-                    <td class="profile_style_response" id="people_gender"></td>
-                    <td class="profile_style_response"><input type="text" id="input_gender"/></td>
+                    <td class="profile_style">Username</td>
+                    <td class="profile_style_response" id="people_username"></td>
+                    <td class="profile_style"></td>
 
                 </tr>
                 <tr>
                     <td class="profile_style">Data de nascimento</td>
                     <td class="profile_style_response" id="people_birthday"></td>
                     <td class="profile_style_response"><input type="text" id="input_birth"/></td>
+                    <td class="profile_style">Morada</td>
+                    <td class="profile_style_response" id="people_address"></td>
+                    <td class="profile_style_response"><input type="text" id="input_address"/></td>
 
                 </tr>
                 <tr>
-                    <td class="profile_style">Morada</td>
+                    <td class="profile_style">Género</td>
+                    <td class="profile_style_response" id="people_gender"></td>
+                    <td class="profile_style_response"><input type="text" id="input_gender"/></td>
+                    <td class="profile_style">Nivel</td>
+                    <td class="profile_style_response" id="num_level"></td>
+                    <td class="profile_style"></td>
+
+                </tr>
+                <tr>
+                    <td class="profile_style">Localidade</td>
+                    <td class="profile_style_response" id="people_address"></td>
+                    <td class="profile_style_response"><input type="text" id="input_address"/></td>
+                    <td class="profile_style">Código Postal</td>
                     <td class="profile_style_response" id="people_address"></td>
                     <td class="profile_style_response"><input type="text" id="input_address"/></td>
 
@@ -173,9 +179,6 @@
                     <td class="profile_style">Email</td>
                     <td class="profile_style_response" id="people_email"></td>
                     <td class="profile_style_response"></td>
-
-                </tr>
-                <tr>
                     <td class="profile_style">Telemóvel</td>
                     <td class="profile_style_response" id="people_phone"></td>
                     <td class="profile_style_response"><input type="text" id="input_phone"/></td>
@@ -185,15 +188,14 @@
                     <td class="profile_style">Trabalho</td>
                     <td class="profile_style_response" id="people_job"></td>
                     <td class="profile_style_response"><input type="text" id="input_job"/></td>
-                </tr>
-                <tr>
                     <td class="profile_style">Serviços</td>
                     <td class="profile_style_response" id="people_skills"></td>
                     <td class="profile_style_response"><input type="text" id="input_skills"/></td>
                 </tr>
+
                 </tbody>
             </table>
-
+            <button type="submit" class="btn btn-primary-check btn-xl" id="button_edit"><p class="edit_button_style">Editar Perfil</p></button>
         </div>
         <div class=" col-md-2 col-lg-2 "></div>
     </div>
@@ -280,7 +282,10 @@
 </div>
 
 <!--Feed-->
-<div id="feed" style="display: none">feed</div>
+<div id="feed" style="display: none">feed
+    <div id="feedReports" style="height:100px;overflow: scroll;">
+    </div>
+</div>
 
 <!--Map-->
 <div id ="map"/>
