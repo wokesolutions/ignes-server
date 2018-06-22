@@ -463,6 +463,13 @@ label {
     margin-top: 4rem;
 }
 
+.btn-primary-style{
+    color: #fff;
+    margin-top: 20px;
+    background-color: #3e4e5a;
+    border-color: #3e4e5a
+}
+
 .floating-label-form-group-x input, .floating-label-form-group-x textarea {
     font-size: 1rem;
     position: relative;
