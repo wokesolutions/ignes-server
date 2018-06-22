@@ -1,5 +1,7 @@
 package com.wokesolutions.ignes.data;
 
+import java.util.Date;
+
 import com.google.api.client.util.Base64;
 
 public class ReportData {
@@ -22,7 +24,7 @@ public class ReportData {
 		return report_lat != 0 && report_lng != 0 && report_img != null && report_thumbnail != null;
 	}
 	
-	public static String generateId(String username, long creationtime) {
-		return Base64.encodeBase64String((username + creationtime).getBytes());
+	public static String generateId(String username, Date creationtime) {
+		return Base64.encodeBase64String((username + creationtime.getTime()).getBytes());
 	}
 }

@@ -101,7 +101,7 @@ public class Report {
 	private Response createReportRetry(ReportData data, HttpServletRequest request) {
 		String username = null;
 		Key reportKey = null;
-		long creationtime = System.currentTimeMillis();
+		Date creationtime = new Date();
 		String reportid = null;
 		Transaction txn = datastore.beginTransaction();
 		
@@ -125,8 +125,10 @@ public class Report {
 				txn.rollback();
 				return Response.status(Status.CONFLICT).entity(Message.DUPLICATE_REPORT).build();
 			} catch(EntityNotFoundException e2) {
-				if(username == null || reportKey == null)
+				if(username == null || reportKey == null) {
+					LOG.info(Message.UNEXPECTED_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+				}
 
 				Entity report = new Entity(DSUtils.REPORT, reportid);
 				
@@ -134,7 +136,7 @@ public class Report {
 
 				report.setProperty(DSUtils.REPORT_LAT, data.report_lat);
 				report.setProperty(DSUtils.REPORT_LNG, data.report_lng);
-				report.setProperty(DSUtils.REPORT_CREATIONTIME, new Date(creationtime));
+				report.setProperty(DSUtils.REPORT_CREATIONTIME, creationtime);
 				report.setProperty(DSUtils.REPORT_PRIVATE, data.report_private);
 				report.setProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED,
 						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(creationtime));
