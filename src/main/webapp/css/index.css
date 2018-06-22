@@ -283,7 +283,7 @@ footer a{
 }
 
 .type_letter{
-font-family: "Quicksand Bold";
+    font-family: "Quicksand Bold";
 }
 #worker_register{
     color: white;
@@ -514,4 +514,8 @@ label {
 
 .btn-style{
     margin-top: 1rem;
+}
+
+#navbarAdmin{
+    background-color: rgb(241, 145, 44);
 }
