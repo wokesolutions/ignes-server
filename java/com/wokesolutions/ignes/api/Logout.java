@@ -175,6 +175,11 @@ public class Logout {
 						LOG.info(Message.UNEXPECTED_ERROR);
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 					}
+					
+					if(token == null) {
+						LOG.info(Message.UNEXPECTED_ERROR);
+						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+					}
 
 					datastore.delete(txn, token.getKey());
 
@@ -246,6 +251,7 @@ public class Logout {
 					}
 					
 					datastore.delete(txn, token.getKey());
+					LOG.info("deleted");
 					txn.commit();
 					return Response.ok().build();
 				} catch(Exception e) {

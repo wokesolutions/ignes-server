@@ -429,6 +429,103 @@ public class Report {
 					.entity(jsonReports.toString()).header(CustomHeader.CURSOR, cursor).build();
 		}
 	}
+	
+	@GET
+	@Path("/getprivatewithinradius")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response getPrivReportsWithinRadius(
+			@QueryParam(ParamName.LAT) double lat,
+			@QueryParam(ParamName.LNG) double lng,
+			@QueryParam(ParamName.RADIUS) double radius,
+			@QueryParam(ParamName.CURSOR) String cursor) {
+		if(lat == 0 || lng == 0 || radius == 0)
+			return Response.status(Status.EXPECTATION_FAILED).build();
+		int retries = 5;
+		while(true) {
+			try {
+				return getPrivateReportsWithinRadiusRetry(lat, lng, radius, cursor);
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+
+	private Response getPrivateReportsWithinRadiusRetry(double lat, double lng,
+			double radius, String cursor) {
+		LOG.info(Message.ATTEMPT_GIVE_ALL_REPORTS);
+
+		int precision = Haversine.getPrecision(lat, lng, radius);
+
+		LOG.info("precision " + Integer.toString(precision));
+
+		String latValue = doubleToProp(lat, precision);
+		String lngValue = doubleToProp(lng, precision);
+
+		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
+
+		if(cursor != null && !cursor.equals(""))
+			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
+
+		String pPropLat = "report_p" + precision + "lat";
+		String pPropLng = "report_p" + precision + "lng";
+
+		Filter latFilter =
+				new Query.FilterPredicate(pPropLat,
+						FilterOperator.EQUAL, latValue);
+
+		Filter lngFilter =
+				new Query.FilterPredicate(pPropLng,
+						FilterOperator.EQUAL, lngValue);
+		
+		Filter privFilter = new Query
+				.FilterPredicate(DSUtils.REPORT_PRIVATE,
+						FilterOperator.EQUAL, true);
+
+		Query reportQuery = new Query(DSUtils.REPORT)
+				.setFilter(latFilter).setFilter(lngFilter).setFilter(privFilter);
+		
+		LOG.info(Message.SEARCHING_IN_COORDS + pPropLat + " - " + latValue +
+				" | " + pPropLng + " - " + lngValue);
+
+		reportQuery
+		.addProjection(new PropertyProjection(DSUtils.REPORT_TITLE, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_ADDRESS, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_USERNAME, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_GRAVITY, Integer.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, Boolean.class));
+
+		QueryResultList<Entity> reports =
+				datastore.prepare(reportQuery).asQueryResultList(fetchOptions);
+
+		cursor = reports.getCursor().toWebSafeString();
+
+		JSONArray jsonReports;
+
+		if(reports.isEmpty())
+			return Response.status(Status.NO_CONTENT).build();
+		else {
+			try {
+				jsonReports = buildJsonReports(reports, false);
+			} catch(DatastoreException e) {
+				LOG.info(Message.REPORT_NOT_FOUND);
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
+
+			if(reports.size() < BATCH_SIZE)
+				return Response.ok()
+						.entity(jsonReports.toString()).build();
+
+			return Response.ok()
+					.entity(jsonReports.toString()).header(CustomHeader.CURSOR, cursor).build();
+		}
+	}
 
 	@GET
 	@Path("/getinlocation")

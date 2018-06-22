@@ -254,6 +254,8 @@ public class Org {
 	}
 
 	private Response getWorkersRetry(String org, String cursor) {
+		LOG.info("listing workers");
+		
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 
 		Query query = new Query(DSUtils.WORKER);
