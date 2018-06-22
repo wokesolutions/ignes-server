@@ -452,9 +452,34 @@ label {
 
 }
 
+.organization_name_style{
+    font-size: 2rem;
+    font-family: "Quicksand Bold";
+    color:#3b4956;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
 .table-style-profile{
     margin-top: 4rem;
+}
 
+.floating-label-form-group-x input, .floating-label-form-group-x textarea {
+    font-size: 1rem;
+    position: relative;
+    z-index: 1;
+    padding: 0;
+    resize: none;
+    border: none;
+    border-radius: 0;
+    background: none;
+    box-shadow: none !important;
+    font-family: "Quicksand";
+}
+
+
+.info_text{
+    font-family: Quicksand;
+    color: #AD363B;
 }
 
 .btn-primary-check {
@@ -474,4 +499,12 @@ label {
     color:white;
     margin-top: 0;
     margin-bottom: 0;
+}
+
+.organization_style{
+    margin-top: 3rem;
+}
+
+.btn-style{
+    margin-top: 1rem;
 }

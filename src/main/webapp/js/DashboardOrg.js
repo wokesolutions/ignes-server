@@ -17,6 +17,8 @@ function init() {
 
     verifyIsLoggedIn();
 
+    getFirstWorkers();
+
     document.getElementById("search_location").onclick = searchLocation;
     document.getElementById('map_button').onclick = showMap;
     document.getElementById("profile_button").onclick = showProfile;
@@ -25,6 +27,9 @@ function init() {
     document.getElementById("create_button").onclick = showCreateWorker;
     document.getElementById("report_occurrence").onclick = createWorker;
     document.getElementById("logout_button").onclick = logOut;
+    document.getElementById("next_list").onclick = getNextWorkers;
+    document.getElementById("previous_list").onclick = getPreWorkers;
+    document.getElementById("refresh_workers").onclick = getFirstWorkers;
 
     getMarkers("Caparica");
 
@@ -81,12 +86,12 @@ function hideShow(element){
 
     }else if(element === "profile_variable"){
 
-        document.getElementById("perfilId").style.display = "block";
+        document.getElementById("profile").style.display = "block";
         current_position = "profile_variable";
 
     }else if(element === "feed_variable"){
 
-        document.getElementById("feedId").style.display = "block";
+        document.getElementById("feed").style.display = "block";
         current_position = "feed_variable";
 
     }else if(element === "users_variable"){
@@ -329,4 +334,184 @@ function createWorker(){
         .catch(function(err) {
             console.log('Fetch Error', err);
         });
+}
+
+function getFirstWorkers(){
+    fetch(URL_BASE + '/api/org/listworkers?cursor=', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
+            var table = document.getElementById("user_table");
+
+            if (response.status === 200) {
+                if(table.rows.length > 1) $("#user_table:not(:first)").remove();
+                if(response.headers.get("Cursor") !== null) {
+                    cursor_pre_workers = "";
+                    cursor_current_workers = "";
+                    cursor_next_workers = response.headers.get("Cursor");
+                    if(document.getElementById("next_list").style.display === "none")
+                        document.getElementById("next_list").style.display = "block";
+                    if(document.getElementById("previous_list").style.display === "block")
+                        document.getElementById("previous_list").style.display = "none";
+                } else{
+                    if(document.getElementById("next_list").style.display === "block")
+                        document.getElementById("next_list").style.display = "none";
+                    if(document.getElementById("previous_list").style.display === "block")
+                        document.getElementById("previous_list").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            cell1.innerHTML = data[i].worker_name;
+                            cell2.innerHTML = data[i].Worker;
+                            cell3.innerHTML = data[i].worker_job;
+                        }
+
+                    }else{
+                        alert("Esta empresa ainda não tem trabalhadores associados.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+
+}
+
+function getNextWorkers(){
+    fetch(URL_BASE + '/api/org/listworkers?cursor=' + cursor_next_workers, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
+            var table = document.getElementById("user_table");
+
+            if (response.status === 200) {
+                if(table.rows.length > 1) $("#user_table:not(:first)").remove();
+                if(document.getElementById("previous_list").style.display === "none")
+                    document.getElementById("previous_list").style.display = "block";
+                if(response.headers.get("Cursor") !== null) {
+
+                    cursor_pre_workers = cursor_current_workers;
+                    cursor_current_workers = cursor_next_workers;
+                    cursor_next_workers = response.headers.get("Cursor");
+                    cursor_next_workers = cursor_current_workers;
+                    cursor_current_workers = cursor_pre_workers;
+                    cursor_pre_workers = response.headers.get("Cursor");
+
+                    if(document.getElementById("next_list").style.display === "none")
+                        document.getElementById("next_list").style.display = "block";
+
+                } else{
+                    if(document.getElementById("next_list").style.display === "block")
+                        document.getElementById("next_list").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            cell1.innerHTML = data[i].worker_name;
+                            cell2.innerHTML = data[i].Worker;
+                            cell3.innerHTML = data[i].worker_job;
+                        }
+
+                    }else{
+                        alert("Esta empresa ainda não tem trabalhadores associados.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+
+}
+
+function getPreWorkers(){
+    if(cursor_pre_workers === "") getFirstWorkers();
+    fetch(URL_BASE + '/api/org/listworkers?cursor=' + cursor_pre_workers, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
+            var table = document.getElementById("user_table");
+
+            if (response.status === 200) {
+                if(table.rows.length > 1) $("#user_table:not(:first)").remove();
+                if(document.getElementById("previous_list").style.display === "none")
+                    document.getElementById("previous_list").style.display = "block";
+                if(response.headers.get("Cursor") !== null) {
+
+                    cursor_next_workers = cursor_current_workers;
+                    cursor_current_workers = cursor_pre_workers;
+                    cursor_pre_workers = response.headers.get("Cursor");
+
+                    if(document.getElementById("next_list").style.display === "none")
+                        document.getElementById("next_list").style.display = "block";
+
+                } else{
+                    if(document.getElementById("next_list").style.display === "block")
+                        document.getElementById("next_list").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            cell1.innerHTML = data[i].worker_name;
+                            cell2.innerHTML = data[i].Worker;
+                            cell3.innerHTML = data[i].worker_job;
+                        }
+
+                    }else{
+                        alert("Esta empresa ainda não tem trabalhadores associados.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+
 }

@@ -227,7 +227,6 @@ function addReport(){
                     bodyToSend.report_lat = lat;
                     bodyToSend.report_lng = lng;
                     bodyToSend.report_img = previewImageBase;
-                    bodyToSend.report_thumbnail = previewImageBase;
                     bodyToSend.report_private = true;
                     bodyToSend.report_gravity = gravity;
                     bodyToSend.report_address = morada;
@@ -258,7 +257,7 @@ function addReport(){
                                     map: map
                                 });
 
-                                google.maps.event.addListener(marker, 'click', (function (marker, i) {
+                                google.maps.event.addListener(marker, 'click', (function (marker) {
                                     return function () {
                                         var contentString = '<div id="content">' +
                                             '<h1 style="font-family: Quicksand Bold; color:#AD363B; font-size:30px">' + title + '</h1>' + '<div>' +
@@ -272,7 +271,7 @@ function addReport(){
                                         infowindow.setContent(contentString);
                                         infowindow.open(map, marker);
                                     }
-                                })(marker, i));
+                                })(marker));
                                 bodyToSend = "";
                                 map.setCenter(new google.maps.LatLng(lat, lng));
                                 showMap();
@@ -344,13 +343,14 @@ function fillMap(reports, cursor){
         google.maps.event.addListener(marker, 'click', (function(marker, i) {
 
             return function() {
-                var contentString = '<div id="content">'+
-                    '<h1 style="font-family: Quicksand Bold; color:#AD363B; font-size:30px">'+ reports[i].report_title +'</h1>'+ '<div>' +
-                    '<p style="font-family: Quicksand Bold">'+'Localização' +'</p>'+ '<p>' + reports[i].report_address + '</div>'+
-                    '<div>' +
-                    '<p style="font-family: Quicksand Bold">'+'Descrição' + '<p>' + reports[i].report_description +'</p>'+ '</p>' +'</div>'+
-                    '<div>'+
-                    '<p style="font-family: Quicksand Bold">'+'Estado' +'</p>'+ '<p style="color:forestgreen">' + reports[i].report_status +
+                var contentString = '<div id="content">';
+                if(reports[i].report_title !== null)
+                    contentString +='<h1 style="font-family: Quicksand Bold; color:#AD363B; font-size:30px">'+ reports[i].report_title +'</h1>';
+                contentString += '<div>' + '<p style="font-family: Quicksand Bold">'+'Localização' +'</p>'+ '<p>' + reports[i].report_address + '</div>';
+                if(reports[i].report_description !== null)
+                    contentString +='<div>' + '<p style="font-family: Quicksand Bold">'+'Descrição' + '<p>' + reports[i].report_description +'</p>'+ '</p>' +'</div>';
+
+                contentString +='<div>'+ '<p style="font-family: Quicksand Bold">'+'Estado' +'</p>'+ '<p style="color:forestgreen">' + reports[i].report_status +
                     '</div>'+
                     '</div>';
                 infowindow.setContent(contentString);
