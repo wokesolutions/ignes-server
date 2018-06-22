@@ -42,7 +42,14 @@ public class Storage {
 	
 	private static ImagesService imagesService = ImagesServiceFactory.getImagesService();
 
-	public static boolean saveImage(String img, String bucket, StoragePath path, int width, int height) {
+	public static boolean saveImage(String img, String bucket, StoragePath path,
+			int width, int height, int orientation) {
+		
+		byte[] bytes = Base64.decode(img);
+		Image image = ImagesServiceFactory.makeImage(bytes);
+		Transform rotate = ImagesServiceFactory.makeRotate(orientation);
+		Image rotatedImage = imagesService.applyTransform(rotate, image);
+		
 		GcsFilename fileName = new GcsFilename(bucket, path.makePath());
 		GcsFileOptions options = new GcsFileOptions.Builder()
                 .mimeType("image/jpg")
@@ -51,18 +58,16 @@ public class Storage {
 		GcsOutputChannel outputChannel;
 		try {
 			outputChannel = gcsService.createOrReplace(fileName, options);
-			copy(new ByteArrayInputStream(img.getBytes()), Channels.newOutputStream(outputChannel));
+			copy(new ByteArrayInputStream(Base64.encode(rotatedImage.getImageData())),
+					Channels.newOutputStream(outputChannel));
 		} catch(IOException e) {
 			return false;
 		}
 		
-		byte[] bytes = Base64.decode(img);
-		Image image = ImagesServiceFactory.makeImage(bytes);
-		
 		int newHeight = height * IMAGE_WIDTH / width;
 		
 		Transform resize = ImagesServiceFactory.makeResize(IMAGE_WIDTH, newHeight);
-		Image resizedImage = imagesService.applyTransform(resize, image);
+		Image resizedImage = imagesService.applyTransform(resize, rotatedImage);
 		
 		GcsFilename fileNameTn = new GcsFilename(bucket, path.makeTnPath());
 		GcsFileOptions optionsTn = new GcsFileOptions.Builder()

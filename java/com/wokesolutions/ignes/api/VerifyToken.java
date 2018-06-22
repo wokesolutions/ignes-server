@@ -20,6 +20,10 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
+import com.google.appengine.api.datastore.Query.Filter;
+import com.google.appengine.api.datastore.Query.FilterOperator;
+import com.google.appengine.api.datastore.Query;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.JWTUtils;
@@ -40,7 +44,7 @@ public class VerifyToken {
 	public Response verifyToken(@Context HttpHeaders headers) {
 		try {
 			LOG.info(Message.VERIFYING_TOKEN);
-			
+
 			Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 			JWTVerifier verifier = JWT.require(algorithm)
 					.withIssuer(JWTUtils.ISSUER)
@@ -63,6 +67,29 @@ public class VerifyToken {
 					LOG.info(Message.INVALID_TOKEN);
 					return Response.status(Status.FORBIDDEN).build();
 				}
+			}
+
+			Entity tokenE;
+			try {
+				Query query = new Query(DSUtils.TOKEN).setAncestor(KeyFactory.createKey(DSUtils.USER, username));
+				Filter filter = new Query.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL, token);
+				query.setFilter(filter);
+
+				tokenE = datastore.prepare(query).asSingleEntity();
+				if(tokenE == null) {
+					Query query2 = new Query(DSUtils.TOKEN).setAncestor(KeyFactory.createKey(DSUtils.ORG, username));
+					query2.setFilter(filter);
+
+					tokenE = datastore.prepare(query2).asSingleEntity();
+
+					if(tokenE == null) {
+						LOG.info(Message.INVALID_TOKEN);
+						return Response.status(Status.FORBIDDEN).build();
+					}
+				}
+			} catch(TooManyResultsException e) {
+				LOG.info(Message.UNEXPECTED_ERROR);
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
 			return Response.ok()
@@ -171,10 +198,10 @@ public class VerifyToken {
 					//.header(CustomHeader.LEVEL_ATT, user.getProperty(DSUtils.USER_LEVEL))
 					.header(CustomHeader.ACTIVATED, CustomHeader.TRUE)
 					.entity(Message.OK).build();		} catch (UnsupportedEncodingException e){
-			return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
-		} catch (JWTVerificationException e){
-			return Response.status(Status.FORBIDDEN).entity(Message.INVALID_TOKEN).build();
-		}
+						return Response.status(Status.EXPECTATION_FAILED).entity(Message.BAD_FORMAT).build();
+					} catch (JWTVerificationException e){
+						return Response.status(Status.FORBIDDEN).entity(Message.INVALID_TOKEN).build();
+					}
 	}
 
 	@GET
@@ -258,7 +285,7 @@ public class VerifyToken {
 
 			String token = headers.getHeaderString(CustomHeader.AUTHORIZATION);
 			verifier.verify(token);
-			
+
 			return Response.ok()
 					//.header(CustomHeader.LEVEL_ATT, user.getProperty(DSUtils.USER_LEVEL))
 					.header(CustomHeader.ACTIVATED, CustomHeader.TRUE)

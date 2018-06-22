@@ -186,7 +186,8 @@ public class Login {
 								return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 							}
 
-							response.header(CustomHeader.ORG, orgE.getProperty(DSUtils.ORG_NAME));
+							LOG.info(orgE.getProperty(DSUtils.ORG_NAME).toString());
+							response.header(CustomHeader.ORG, orgE.getProperty(DSUtils.ORG_NAME).toString());
 							LOG.info(response.build().getHeaders().toString());
 							return response.build();
 						}
@@ -311,6 +312,7 @@ public class Login {
 								.header(CustomHeader.AUTHORIZATION, token)
 								.header(CustomHeader.LEVEL, UserLevel.ORG)
 								.header(CustomHeader.ORG, org.getProperty(DSUtils.ORG_NAME))
+								.header(CustomHeader.NIF, org.getKey().getName())
 								.build();
 					} catch (UnsupportedEncodingException e){
 						LOG.warning(e.getMessage());

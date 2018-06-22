@@ -200,7 +200,7 @@ public class Report {
 				folders.add(Storage.REPORT_FOLDER);
 				StoragePath pathImg = new StoragePath(folders, reportid);
 				if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg,
-						data.report_imgwidth, data.report_imgheight)) {
+						data.report_imgwidth, data.report_imgheight, data.report_imgorientation)) {
 					LOG.info(Message.STORAGE_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 				}

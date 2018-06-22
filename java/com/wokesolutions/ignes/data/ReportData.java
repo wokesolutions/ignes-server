@@ -18,6 +18,7 @@ public class ReportData {
 	public boolean report_private;
 	public int report_imgheight;
 	public int report_imgwidth;
+	public int report_imgorientation;
 	
 	public ReportData() {}
 	

@@ -256,7 +256,7 @@ function createWorker(){
             'Content-Type': 'application/json',
             'Authorization': localStorage.getItem('token')
         },
-        body: JSON.stringify({
+        body: JSON.stringify({msg
             worker_name: name,
             worker_email: email,
             worker_job: job

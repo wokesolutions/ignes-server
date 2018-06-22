@@ -393,6 +393,8 @@ public class Org {
 				obj.put(DSUtils.ORG_NAME, org.getProperty(DSUtils.ORG_NAME));
 				obj.put(DSUtils.ORG_PHONE, org.getProperty(DSUtils.ORG_PHONE));
 				obj.put(DSUtils.ORG_SERVICES, org.getProperty(DSUtils.ORG_SERVICES));
+				obj.put(DSUtils.ORG_ZIP, org.getProperty(DSUtils.ORG_ZIP));
+				obj.put(DSUtils.ORG_LOCALITY, org.getProperty(DSUtils.ORG_LOCALITY));
 				
 				return Response.ok(obj.toString()).build();
 			} catch(DatastoreException e) {

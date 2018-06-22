@@ -638,7 +638,7 @@ public class Profile {
 		folders.add(Storage.IMG_FOLDER);
 		folders.add(Storage.PROFILE_FOLDER);
 		StoragePath pathImg = new StoragePath(folders, username);
-		if(!Storage.saveImage(data.pic, Storage.BUCKET, pathImg, data.width, data.height))
+		if(!Storage.saveImage(data.pic, Storage.BUCKET, pathImg, data.width, data.height, data.orientation))
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
 		Query query = new Query(DSUtils.USEROPTIONAL)
