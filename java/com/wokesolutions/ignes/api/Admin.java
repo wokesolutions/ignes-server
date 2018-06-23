@@ -118,8 +118,11 @@ public class Admin {
 			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
 
 			Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
+			
+			Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
+			userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
 
-			List<Entity> list = Arrays.asList(user, admin, useroptional);
+			List<Entity> list = Arrays.asList(user, admin, useroptional, userPoints);
 
 			datastore.put(txn, list);
 			LOG.info(Message.ADMIN_REGISTERED + registerData);
