@@ -527,7 +527,7 @@ function getProfile(){
 function deleteWorker (row){
     var email = document.getElementById("user_table").rows[row].cells[1].innerHTML;
     fetch(URL_BASE + '/api/org/deleteworker/' + email, {
-        method: 'POST',
+        method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': localStorage.getItem('token')

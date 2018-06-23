@@ -446,8 +446,12 @@ label {
 
 .table-style{
     margin-top: 2rem;
-    font-family: "Quicksand Bold";
+    font-family: "Quicksand";
+}
 
+.th-style{
+    font-family: "Quicksand Bold";
+    color: #AD363B;
 }
 
 .organization_name_style{
