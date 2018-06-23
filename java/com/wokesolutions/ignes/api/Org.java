@@ -1,5 +1,6 @@
 package com.wokesolutions.ignes.api;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -226,6 +227,16 @@ public class Org {
 			List<Key> list = Arrays.asList(userKey, worker.getKey());
 
 			datastore.delete(txn, list);
+			
+			Query query = new Query(DSUtils.TOKEN).setAncestor(userKey).setKeysOnly();
+			List<Entity> listToken = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
+			List<Key> tokens = new ArrayList<Key>(listToken.size());
+			
+			for(Entity e : listToken)
+				tokens.add(e.getKey());
+			
+			datastore.delete(txn, tokens);
+			
 			datastore.put(txn, deletedWorker);
 
 			LOG.info(Message.DELETED_WORKER + email);

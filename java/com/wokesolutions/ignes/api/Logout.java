@@ -247,11 +247,15 @@ public class Logout {
 						return Response.status(Status.EXPECTATION_FAILED).build();
 					}
 					
+					LOG.info(Boolean.toString(token == null));
+					
 					if(token == null) {
 						txn.rollback();
 						LOG.info(Message.UNEXPECTED_ERROR);
 						return Response.status(Status.EXPECTATION_FAILED).build();
 					}
+					
+					LOG.info(Boolean.toString(token == null));
 
 					datastore.delete(txn, token.getKey());
 					txn.commit();
