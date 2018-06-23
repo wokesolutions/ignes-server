@@ -74,7 +74,6 @@ public class Register {
 			// If the entity does not exist an Exception is thrown. Otherwise,
 			Key userKey = KeyFactory.createKey(DSUtils.USER, registerData.username);
 
-			LOG.info("uioghuipghi");
 			try {
 				datastore.get(userKey);
 			} catch(EntityNotFoundException e2) {
@@ -127,7 +126,6 @@ public class Register {
 					return Response.ok().build();
 				}
 			}
-			LOG.info("uioghuipghi");
 
 			txn.rollback();
 			return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build(); 

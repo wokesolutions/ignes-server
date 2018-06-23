@@ -13,6 +13,11 @@
         <property name="reportvotes_relevance" direction="desc"/>
     </datastore-index>
     
+    <datastore-index kind="User" ancestor="false" source="manual">
+        <property name="user_email" direction="asc"/>
+        <property name="user_level" direction="asc"/>
+    </datastore-index>
+    
     <datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p0lng" direction="asc"/>
         <property name="report_address" direction="asc"/>

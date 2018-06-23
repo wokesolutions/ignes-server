@@ -165,7 +165,6 @@ public class Org {
 		String org = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		if(org == null) {
-			LOG.info("no orrrrgggg");
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		}
 
@@ -217,8 +216,7 @@ public class Org {
 			deletedWorker.setProperty(DSUtils.DELETEDWORKER_JOB,
 					worker.getProperty(DSUtils.WORKER_JOB));
 
-			deletedWorker.setProperty(DSUtils.DELETEDWORKER_ORG,
-					worker.getProperty(org));
+			deletedWorker.setProperty(DSUtils.DELETEDWORKER_ORG, org);
 
 			deletedWorker.setProperty(DSUtils.DELETEDWORKER_PASSWORD,
 					user.getProperty(DSUtils.USER_PASSWORD));

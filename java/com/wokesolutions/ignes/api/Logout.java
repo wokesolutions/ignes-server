@@ -240,11 +240,9 @@ public class Logout {
 					List<Entity> token;
 					
 					token = datastore.prepare(txn, query).asList(FetchOptions.Builder.withDefaults());
-
-					if(token.size() != 0) {
-						LOG.info(Message.UNEXPECTED_ERROR);
-						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-					}
+					
+					LOG.info(Integer.toString(token.size()));
+					LOG.info(token.get(0).toString());
 
 					datastore.delete(txn, token.get(0).getKey());
 					txn.commit();
