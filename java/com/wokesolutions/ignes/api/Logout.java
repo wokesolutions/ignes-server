@@ -237,14 +237,23 @@ public class Logout {
 
 					query.setFilter(filter);
 
-					List<Entity> token;
+					Entity token;
 					
-					token = datastore.prepare(txn, query).asList(FetchOptions.Builder.withDefaults());
+					try {
+						token = datastore.prepare(txn, query).asSingleEntity();
+					} catch(TooManyResultsException e) {
+						txn.rollback();
+						LOG.info(Message.UNEXPECTED_ERROR);
+						return Response.status(Status.EXPECTATION_FAILED).build();
+					}
 					
-					LOG.info(Integer.toString(token.size()));
-					LOG.info(token.get(0).toString());
+					if(token == null) {
+						txn.rollback();
+						LOG.info(Message.UNEXPECTED_ERROR);
+						return Response.status(Status.EXPECTATION_FAILED).build();
+					}
 
-					datastore.delete(txn, token.get(0).getKey());
+					datastore.delete(txn, token.getKey());
 					txn.commit();
 					return Response.ok().build();
 				} catch(Exception e) {

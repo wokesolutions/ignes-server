@@ -187,7 +187,6 @@ public class Login {
 							}
 
 							response.header(CustomHeader.ORG, orgE.getProperty(DSUtils.ORG_NAME).toString());
-							LOG.info(response.build().getHeaders().toString());
 							return response.build();
 						}
 						
