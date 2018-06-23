@@ -186,7 +186,6 @@ public class Login {
 								return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 							}
 
-							LOG.info(orgE.getProperty(DSUtils.ORG_NAME).toString());
 							response.header(CustomHeader.ORG, orgE.getProperty(DSUtils.ORG_NAME).toString());
 							LOG.info(response.build().getHeaders().toString());
 							return response.build();
