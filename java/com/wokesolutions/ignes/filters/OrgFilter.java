@@ -42,13 +42,23 @@ public class OrgFilter implements Filter {
 
 			String token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
 			
+			LOG.info("hlvflyvl");
+			
 			if(token == null)
 				throw new Exception();
 			
+			LOG.info("hlvflyvl");
+			
 			verifier.verify(token);
 			
+			LOG.info("hlvflyvl");
+			
 			String nif = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
+			
+			LOG.info("hlvflyvl");
 			req.setAttribute(CustomHeader.USERNAME_ATT, nif);
+			
+			LOG.info("hlvflyvl");
 			req.setAttribute(CustomHeader.LEVEL_ATT, JWTUtils.ORG);
 
 			chain.doFilter(req, resp);

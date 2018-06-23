@@ -45,7 +45,7 @@ public class Logout {
 	public Response logoutUserEverywhere(@Context HttpHeaders headers,
 			@Context HttpServletRequest request) {
 		Object user = request.getAttribute(CustomHeader.USERNAME_ATT);
-		
+
 		if(user == null)
 			return Response.status(Status.FORBIDDEN).build();
 
@@ -93,7 +93,7 @@ public class Logout {
 			user = request.getAttribute(CustomHeader.NIF_ATT);
 		if(user == null)
 			return Response.status(Status.FORBIDDEN).build();
-		
+
 		String username = user.toString();
 
 		boolean isOrg = false;
@@ -175,7 +175,7 @@ public class Logout {
 						LOG.info(Message.UNEXPECTED_ERROR);
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 					}
-					
+
 					if(token == null) {
 						LOG.info(Message.UNEXPECTED_ERROR);
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -237,21 +237,16 @@ public class Logout {
 
 					query.setFilter(filter);
 
-					Entity token;
-					try {
-						token = datastore.prepare(txn, query).asSingleEntity();
-					} catch(TooManyResultsException e2) {
+					List<Entity> token;
+					
+					token = datastore.prepare(txn, query).asList(FetchOptions.Builder.withDefaults());
+
+					if(token.size() != 0) {
 						LOG.info(Message.UNEXPECTED_ERROR);
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 					}
 
-					if(token == null) {
-						LOG.info(Message.UNEXPECTED_ERROR);
-						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-					}
-					
-					datastore.delete(txn, token.getKey());
-					LOG.info("deleted");
+					datastore.delete(txn, token.get(0).getKey());
 					txn.commit();
 					return Response.ok().build();
 				} catch(Exception e) {
