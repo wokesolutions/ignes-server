@@ -467,11 +467,14 @@ label {
 
 .btn-primary-style{
     color: #fff;
-    margin-top: 20px;
+    margin-top: 10px;
     background-color: #3e4e5a;
     border-color: #3e4e5a
 }
 
+.delete_style{
+    font-family: "Quicksand Bold";
+}
 .floating-label-form-group-x input, .floating-label-form-group-x textarea {
     font-size: 1rem;
     position: relative;
@@ -526,4 +529,26 @@ label {
     font-family: "Quicksand Bold";
     font-size: 10px;
     color:#AD363B;
+}
+
+.search-style{
+    margin-top:1rem !important;
+}
+
+.info_text_bold{
+    font-family: "Quicksand Bold";
+    color: #AD363B;
+    font-size: 20px;
+}
+
+.info_text_response{
+    font-family: "Quicksand";
+    color: #3b4956;
+    font-size: 15px;
+}
+
+.on {
+    width: 700px;
+    height: 620px;
+    overflow: auto;
 }

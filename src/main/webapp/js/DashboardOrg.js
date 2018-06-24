@@ -45,7 +45,7 @@ function searchLocation(){
         }
     });
 
-    getMarkers(address);
+    getMarkersByLocation(address);
 }
 
 function getCurrentLocation() {
@@ -78,8 +78,8 @@ function hideShow(element){
 
     if(current_position === "map_variable"){
 
-        document.getElementById("map").style.display = "none";
-        document.getElementById("search_location_style").style.display = "none";
+        document.getElementById("map_search").style.display = "none";
+
 
     }else if(current_position === "profile_variable"){
 
@@ -97,8 +97,7 @@ function hideShow(element){
 
     if(element === "map_variable"){
 
-        document.getElementById("map").style.display = "block";
-        document.getElementById("search_location_style").style.display = "block";
+        document.getElementById("map_search").style.display = "block";
         current_position = "map_variable";
 
     }else if(element === "profile_variable"){
@@ -176,9 +175,39 @@ function logOut(){
 
 }
 
+function getMarkersByLocation(zone, cursor){
+    if(cursor===undefined) cursor = "";
+    fetch(URL_BASE + '/api/report/getinlocation?' + "location=" + zone + "&cursor=" + cursor, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
+
+            if (response.status === 200) {
+                var newCursor = response.headers.get("Cursor");
+                response.json().then(function(data) {
+                    reports = data;
+                    fillMap(reports, newCursor, zone);
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+                return;
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
 function getMarkers(radius, cursor){
     if(cursor===undefined) cursor = "";
-    fetch(URL_BASE + '/api/report/getprivatewithinradius?' + "lat=" + currentLoc.center.lat + "&lng=" + currentLoc.center.lng +
+    fetch(URL_BASE + '/api/report/getwithinradius?' + "lat=" + currentLoc.center.lat + "&lng=" + currentLoc.center.lng +
         "&radius=" + radius + "&cursor=" + cursor, {
         method: 'GET',
         headers: {
@@ -191,6 +220,7 @@ function getMarkers(radius, cursor){
                 var newCursor = response.headers.get("Cursor");
                 response.json().then(function(data) {
                     reports = data;
+                    console.log(data);
                     fillMap(reports, newCursor);
                 });
 
@@ -208,7 +238,7 @@ function getMarkers(radius, cursor){
 
 }
 
-function fillMap(reports, cursor){
+function fillMap(reports, cursor, zone){
     var i, marker ;
     for(i = 0; i<reports.length; i++){
         var lat = reports[i].report_lat;
@@ -224,26 +254,55 @@ function fillMap(reports, cursor){
         google.maps.event.addListener(marker, 'click', (function(marker, i) {
 
             return function() {
-                var contentString = '<div id="content">';
-                if(reports[i].report_title !== null)
-                    contentString +='<h1 style="font-family: Quicksand Bold; color:#AD363B; font-size:30px">'+ reports[i].report_title +'</h1>';
-                contentString += '<div>' + '<p style="font-family: Quicksand Bold">'+'Localização' +'</p>'+ '<p>' + reports[i].report_address + '</div>';
-                if(reports[i].report_description !== null)
-                    contentString +='<div>' + '<p style="font-family: Quicksand Bold">'+'Descrição' + '<p>' + reports[i].report_description +'</p>'+ '</p>' +'</div>';
+                getInfo(reports[i].Report, i);
 
-                contentString +='<div>'+ '<p style="font-family: Quicksand Bold">'+'Estado' +'</p>'+ '<p style="color:forestgreen">' + reports[i].report_status +
-                    '</div>'+
-                    '</div>';
-                infowindow.setContent(contentString);
-                infowindow.open(map, marker);
             }
         })(marker, i));
     }
 
     if(cursor !== null){
-        console.log(cursor);
-        getMarkers(5, cursor);
+        if(zone === null) {
+            console.log(cursor);
+            getMarkers(5, cursor);
+        } else{
+            getMarkersByLocation(zone, cursor);
+        }
     }
+}
+
+function getInfo(idReport, i){
+    fetch(URL_BASE + '/api/report/thumbnail/' + idReport, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
+
+            if (response.status === 200) {
+                var image = new Image();
+                image.src = 'data:image/png;base64,iVBORw0K...';
+                document.body.appendChild(image);
+
+                if(reports[i].report_title !== null)
+                    document.getElementById('report_title_id').innerHTML= reports[i].report_title;
+
+                document.getElementById('report_address_id').innerHTML= reports[i].report_address;
+                document.getElementById('report_description_id').innerHTML= reports[i].report_description;
+                document.getElementById('report_state_id').innerHTML= reports[i].report_status;
+
+            }else{
+                console.log("Tratar do Forbidden");
+                return;
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+
 }
 
 function showMap(){
@@ -338,7 +397,7 @@ function getFirstWorkers(){
                             cell1.innerHTML = data[i].worker_name;
                             cell2.innerHTML = data[i].Worker;
                             cell3.innerHTML = data[i].worker_job;
-                            cell4.outerHTML= "<button type='submit' class='btn btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'></button>";
+                            cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
 
                         }
 
@@ -402,7 +461,7 @@ function getNextWorkers(){
                             cell1.innerHTML = data[i].worker_name;
                             cell2.innerHTML = data[i].Worker;
                             cell3.innerHTML = data[i].worker_job;
-                            cell4.outerHTML= "<button type='submit' class='btn btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'></button>";
+                            cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
                         }
 
                     }else{
@@ -467,7 +526,7 @@ function getPreWorkers(){
                                 cell1.innerHTML = data[i].worker_name;
                                 cell2.innerHTML = data[i].Worker;
                                 cell3.innerHTML = data[i].worker_job;
-                                cell4.outerHTML= "<button type='submit' class='btn btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'></button>";
+                                cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
                             }
 
                         }else{
@@ -547,4 +606,22 @@ function deleteWorker (row){
         });
 }
 
+var max = 20;
 
+var loadMore = function () {
+    for (var i = max-20; i < max; i++) {
+        $(".inner").append("<p>test "+i+"</p>");
+    }
+    max += 20;
+}
+
+$('.on').scroll(function () {
+    var top = $('.on').scrollTop();
+    $('.two').html("top: "+top+" diff: "+($(".inner").height() - $(".on").height()));
+    if (top >= $(".inner").height() - $(".on").height()) {
+        $('.two').append(" bottom");
+        loadMore();
+    }
+});
+
+loadMore();
