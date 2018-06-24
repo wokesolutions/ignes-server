@@ -302,6 +302,8 @@ function getInfo(idReport, i){
                     document.getElementById('report_description_id').innerHTML= "-";
 
                 document.getElementById('report_state_id').innerHTML= reports[i].report_status;
+                document.getElementById('report_gravity_id').innerHTML= reports[i].report_gravity;
+                document.getElementById('report_private_id').innerHTML= reports[i].report_private;
 
             }else{
                 console.log("Tratar do Forbidden");
