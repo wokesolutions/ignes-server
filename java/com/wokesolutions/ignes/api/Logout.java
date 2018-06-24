@@ -26,7 +26,6 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Transaction;
-import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
