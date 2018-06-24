@@ -79,6 +79,16 @@
 
 	<filter-mapping>
 		<filter-name>User2Filter</filter-name>
+		<url-pattern>/api/report/comment/*</url-pattern>
+	</filter-mapping>
+	
+	<filter>
+		<filter-name>User3Filter</filter-name>
+		<filter-class>com.wokesolutions.ignes.filters.User3Filter</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>User3Filter</filter-name>
 		<url-pattern>/api/report/close/*</url-pattern>
 	</filter-mapping>
 
