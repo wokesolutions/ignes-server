@@ -57,8 +57,10 @@ public class OrgFilter implements Filter {
 			
 			Entity org = datastore.get(KeyFactory.createKey(DSUtils.ORG, nif));
 			
-			if(!((boolean) org.getProperty(DSUtils.ORG_CONFIRMED)))
+			if(!((boolean) org.getProperty(DSUtils.ORG_CONFIRMED))) {
+				LOG.info(Message.ORG_NOT_CONFIRMED);
 				throw new Exception();
+			}
 			
 			req.setAttribute(CustomHeader.USERNAME_ATT, nif);
 			
@@ -66,10 +68,10 @@ public class OrgFilter implements Filter {
 
 			chain.doFilter(req, resp);
 		} catch (Exception e){
-			String responseToSend = Message.INVALID_TOKEN;
+			LOG.info(Message.INVALID_TOKEN);
 			((HttpServletResponse) resp).setHeader("Content-Type", "application/json");
 			((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
-			resp.getWriter().println(responseToSend);
+			resp.getWriter().println(Message.INVALID_TOKEN);
 			return;
 		}
 	}
