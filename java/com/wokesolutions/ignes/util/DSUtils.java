@@ -22,7 +22,6 @@ public class DSUtils {
 		public static final String CLOSEDREPORT = "ClosedReport";
 		public static final String REPORTVOTES = "ReportVotes";
 		public static final String USERVOTE = "UserVotes";
-		public static final String REPORTCOMMENTS = "ReportComments";
 		public static final String SPAMMEDREPORT = "SpammedReport";
 		public static final String SKILL = "Skill";
 		public static final String TOKEN = "Token";
@@ -31,6 +30,7 @@ public class DSUtils {
 		public static final String PASSWORDCHANGELOG = "PasswordChangeLog";
 		public static final String NOTE = "Note";
 		public static final String REPORTSTATUSLOG = "ReportStatusLog";
+		public static final String REPORTCOMMENT = "ReportComment";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -216,10 +216,10 @@ public class DSUtils {
 		public static final String USERVOTE_COMMENT = "uservote_comment";
 		public static final String USERVOTE_TYPE = "uservote_type";
 		
-	// ReportComments
-		public static final String REPORTCOMMENTS_NUM = "reportcomments_num";
-		public static final String REPORTCOMMENTS_TEXT = "reportcomments_text";
-		public static final String REPORTCOMMENTS_TIME = "reportcomments_time";
+	// ReportComment
+		public static final String REPORTCOMMENT_TEXT = "reportcomment_text";
+		public static final String REPORTCOMMENT_TIME = "reportcomment_time";
+		public static final String REPORTCOMMENT_USER = "reportcomment_user";
 		
 	// Skill
 		public static final String SKILL_NUMBEROFPEOPLE = "skill_numberofpeople";

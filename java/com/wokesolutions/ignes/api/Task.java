@@ -94,7 +94,7 @@ public class Task {
 		note = obj.getString(NOTE);
 		
 		noteE.setProperty(DSUtils.NOTE_TASK, task);
-		noteE.setProperty(DSUtils.NOTE_TEXT, note);
+		noteE.setUnindexedProperty(DSUtils.NOTE_TEXT, note);
 		noteE.setProperty(DSUtils.NOTE_WORKER, worker);
 		noteE.setProperty(DSUtils.NOTE_TIME, time);
 		
