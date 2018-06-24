@@ -15,7 +15,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.google.appengine.api.datastore.DatastoreService;
@@ -29,6 +28,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.cloud.datastore.DatastoreException;
+import com.wokesolutions.ignes.data.VotesData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Message;
@@ -331,7 +331,7 @@ public class ReportVotes extends Report {
 	@POST
 	@Path("/multiple")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
-	public Response voteAll(JSONArray votes, @Context HttpServletRequest request) {
+	public Response voteAll(VotesData votes, @Context HttpServletRequest request) {
 		int retries = 5;
 		
 		LOG.info(votes.toString());
@@ -340,32 +340,32 @@ public class ReportVotes extends Report {
 
 		while(true) {
 			try {
-				return voteAllRetry(votes, username);
+				for(int i = 1; i <= 10; i++) {
+					String repVote = votes.getReport(i);
+					
+					if(repVote == null || repVote.equals(""))
+						break;
+
+					String[] split = repVote.split(" ");
+					String reportid = split[0];
+					String vote = split[1];
+
+					if(vote.equals(UP))
+						upvoteReportRetry(reportid, username);
+					else if(vote.equals(DOWN))
+						downvoteReportRetry(reportid, username);
+					else if(vote.equals(SPAM))
+						spamvoteReportRetry(reportid, username);
+					else
+						return Response.status(Status.BAD_REQUEST).build();
+				}
+				
+				return Response.ok().build();
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				retries--;
 			}
 		}
-	}
-
-	private Response voteAllRetry(JSONArray votes, String username) {
-		for(int i = 0; i < votes.length(); i++) {
-			JSONObject obj = votes.getJSONObject(i);
-
-			String reportid = obj.getString(DSUtils.REPORT);
-			String vote = obj.getString(VOTE);
-
-			if(vote.equals(UP))
-				upvoteReportRetry(reportid, username);
-			else if(vote.equals(DOWN))
-				downvoteReportRetry(reportid, username);
-			else if(vote.equals(SPAM))
-				spamvoteReportRetry(reportid, username);
-			else
-				return Response.status(Status.BAD_REQUEST).build();
-		}
-		
-		return Response.ok().build();
 	}
 }
