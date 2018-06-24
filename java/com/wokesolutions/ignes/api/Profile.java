@@ -608,6 +608,9 @@ public class Profile {
 		}
 
 		cursor = reports.getCursor().toWebSafeString();
+		
+		if(array.length() < BATCH_SIZE)
+			return Response.ok(array.toString()).build();
 
 		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 	}
