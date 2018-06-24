@@ -16,7 +16,12 @@ import javax.ws.rs.core.Response.Status;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.KeyFactory;
 import com.wokesolutions.ignes.util.CustomHeader;
+import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.JWTUtils;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.Secrets;
@@ -25,6 +30,7 @@ import com.wokesolutions.ignes.util.UserLevel;
 public class OrgFilter implements Filter {
 	
 	public static final Logger LOG = Logger.getLogger(OrgFilter.class.getName());
+	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
 	public void init(FilterConfig arg0) throws ServletException {}  
 
@@ -42,23 +48,20 @@ public class OrgFilter implements Filter {
 
 			String token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
 			
-			LOG.info("hlvflyvl");
-			
 			if(token == null)
 				throw new Exception();
 			
-			LOG.info("hlvflyvl");
-			
 			verifier.verify(token);
-			
-			LOG.info("hlvflyvl");
 			
 			String nif = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
 			
-			LOG.info("hlvflyvl");
+			Entity org = datastore.get(KeyFactory.createKey(DSUtils.ORG, nif));
+			
+			if(!((boolean) org.getProperty(DSUtils.ORG_CONFIRMED)))
+				throw new Exception();
+			
 			req.setAttribute(CustomHeader.USERNAME_ATT, nif);
 			
-			LOG.info("hlvflyvl");
 			req.setAttribute(CustomHeader.LEVEL_ATT, JWTUtils.ORG);
 
 			chain.doFilter(req, resp);

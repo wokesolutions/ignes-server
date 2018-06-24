@@ -197,7 +197,7 @@ public class Register {
 			org.setProperty(DSUtils.ORG_SERVICES, registerData.org_services);
 			org.setProperty(DSUtils.ORG_ISFIRESTATION, registerData.org_isfirestation);
 			org.setUnindexedProperty(DSUtils.ORG_CREATIONTIME, new Date());
-			org.setProperty(DSUtils.ORG_CONFIRMED, CustomHeader.FALSE);
+			org.setProperty(DSUtils.ORG_CONFIRMED, false);
 
 			datastore.put(txn, org);
 			LOG.info(Message.ORG_REGISTERED + registerData.org_nif);

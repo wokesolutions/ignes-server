@@ -516,22 +516,46 @@ public class Admin {
 	@GET
 	@Path("/orgstoconfirm")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
-	public Response orgsToConfirm() {
+	public Response orgsToConfirm(@QueryParam(CustomHeader.CURSOR) String cursor) {
 		int retries = 5;
 
 		while(true) {
 			try {
-				Query query = new Query(DSUtils.UNCONFORG);
+				Filter filter = new Query.FilterPredicate(DSUtils.ORG_CONFIRMED, FilterOperator.EQUAL, false);
 				
-				QueryResultList<Entity> list = datastore.prepare(query).asQueryResultList(
-						FetchOptions.Builder.withLimit(BATCH_SIZE));
+				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
+				
+				Query query = new Query(DSUtils.ORG).setFilter(filter);
+				
+				if(cursor != null && !cursor.equals(""))
+					fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
+				
+				QueryResultList<Entity> list = datastore.prepare(query)
+						.asQueryResultList(fetchOptions);
 				
 				JSONArray array = new JSONArray();
 				
 				for(Entity e : list) {
 					JSONObject obj = new JSONObject();
-					obj.put(DSUtils.UNCONFORG, e.getKey().getName());
+					obj.put(DSUtils.ORG, e.getKey().getName());
+					obj.put(DSUtils.ORG_NAME, e.getProperty(DSUtils.ORG_NAME));
+					obj.put(DSUtils.ORG_ADDRESS, e.getProperty(DSUtils.ORG_ADDRESS));
+					obj.put(DSUtils.ORG_CREATIONTIME, e.getProperty(DSUtils.ORG_CREATIONTIME));
+					obj.put(DSUtils.ORG_EMAIL, e.getProperty(DSUtils.ORG_EMAIL));
+					obj.put(DSUtils.ORG_ISFIRESTATION, e.getProperty(DSUtils.ORG_ISFIRESTATION));
+					obj.put(DSUtils.ORG_LOCALITY, e.getProperty(DSUtils.ORG_LOCALITY));
+					obj.put(DSUtils.ORG_PHONE, e.getProperty(DSUtils.ORG_PHONE));
+					obj.put(DSUtils.ORG_SERVICES, e.getProperty(DSUtils.ORG_SERVICES));
+					obj.put(DSUtils.ORG_ZIP, e.getProperty(DSUtils.ORG_ZIP));
+					array.put(obj);
 				}
+				
+				if(array.length() < BATCH_SIZE)
+					return Response.ok(array.toString()).build();
+				
+				cursor = list.getCursor().toWebSafeString();
+				
+				return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Message.TOO_MANY_RETRIES);
