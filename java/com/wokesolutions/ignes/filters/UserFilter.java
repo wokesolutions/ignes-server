@@ -3,8 +3,6 @@ package com.wokesolutions.ignes.filters;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -37,8 +35,6 @@ public class UserFilter implements Filter {
 			FilterChain chain) throws IOException, ServletException {
 
 		LOG.info(this.getClass().getSimpleName() + Message.FILTER_VERIFYING + req.toString());
-		
-		LOG.info(req.getReader().lines().collect(Collectors.joining(System.lineSeparator())));
 
 		Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 
