@@ -37,8 +37,6 @@ public class UserFilter implements Filter {
 			FilterChain chain) throws IOException, ServletException {
 
 		LOG.info(this.getClass().getSimpleName() + Message.FILTER_VERIFYING + req.toString());
-		
-		LOG.info(req.getReader().lines().collect(Collectors.joining(System.lineSeparator())));
 
 		Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 

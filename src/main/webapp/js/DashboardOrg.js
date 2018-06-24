@@ -280,20 +280,31 @@ function getInfo(idReport, i){
     }).then(function(response) {
 
             if (response.status === 200) {
-                var image = new Image();
-                image.src = 'data:image/png;base64,' + getThumbnailById(idReport);
-                document.body.appendChild(image);
 
-                if(reports[i].report_title !== null)
+                    response.json().then(function(data) {
+                        var image = document.getElementById("thumb_report");
+                        console.log();
+                        image.src = "data:image/jpg;base64," + data.report_thumbnail;
+                        console.log(image.src);
+                    });
+
+
+                if(reports[i].report_title !== null || reports[i].report_title !== undefined)
                     document.getElementById('report_title_id').innerHTML= reports[i].report_title;
+                else
+                    document.getElementById('report_title_id').innerHTML= "-";
 
                 document.getElementById('report_address_id').innerHTML= reports[i].report_address;
-                document.getElementById('report_description_id').innerHTML= reports[i].report_description;
+
+                if(reports[i].report_title !== null || reports[i].report_title !== undefined)
+                    document.getElementById('report_description_id').innerHTML= reports[i].report_description;
+                else
+                    document.getElementById('report_description_id').innerHTML= "-";
+
                 document.getElementById('report_state_id').innerHTML= reports[i].report_status;
 
             }else{
                 console.log("Tratar do Forbidden");
-                return;
             }
 
 
@@ -599,26 +610,6 @@ function deleteWorker (row){
                 alert("Falha ao apagar o utilizador.")
             }
 
-        }
-    )
-        .catch(function(err) {
-            console.log('Fetch Error', err);
-        });
-}
-
-function getThumbnailById(idReport){
-    fetch(URL_BASE + '/api/report/thumbnail/' + idReport, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    }).then(function(response) {
-
-            if (response.status === 200) {
-                response.json().then(function(data) {
-                    return data.report_thumbnail;
-                });
-            }
         }
     )
         .catch(function(err) {
