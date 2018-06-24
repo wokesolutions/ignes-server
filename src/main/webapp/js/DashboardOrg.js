@@ -281,7 +281,7 @@ function getInfo(idReport, i){
 
             if (response.status === 200) {
                 var image = new Image();
-                image.src = 'data:image/png;base64,iVBORw0K...';
+                image.src = 'data:image/png;base64,' + getThumbnailById(idReport);
                 document.body.appendChild(image);
 
                 if(reports[i].report_title !== null)
@@ -599,6 +599,26 @@ function deleteWorker (row){
                 alert("Falha ao apagar o utilizador.")
             }
 
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+function getThumbnailById(idReport){
+    fetch(URL_BASE + '/api/report/thumbnail/' + idReport, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(function(response) {
+
+            if (response.status === 200) {
+                response.json().then(function(data) {
+                    return data.report_thumbnail;
+                });
+            }
         }
     )
         .catch(function(err) {
