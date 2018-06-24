@@ -512,4 +512,33 @@ public class Admin {
 			}
 		}
 	}
+	
+	@GET
+	@Path("/orgstoconfirm")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response orgsToConfirm() {
+		int retries = 5;
+
+		while(true) {
+			try {
+				Query query = new Query(DSUtils.UNCONFORG);
+				
+				QueryResultList<Entity> list = datastore.prepare(query).asQueryResultList(
+						FetchOptions.Builder.withLimit(BATCH_SIZE));
+				
+				JSONArray array = new JSONArray();
+				
+				for(Entity e : list) {
+					JSONObject obj = new JSONObject();
+					obj.put(DSUtils.UNCONFORG, e.getKey().getName());
+				}
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+				retries--;
+			}
+		}
+	}
 }

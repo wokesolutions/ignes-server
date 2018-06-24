@@ -14,6 +14,7 @@ public class DSUtils {
 		public static final String WORKER = "Worker";
 		public static final String DELETEDWORKER = "DeletedWorker";
 		public static final String ORG = "Org";
+		public static final String UNCONFORG = "UnconfOrg";
 		public static final String ORGSTATS = "OrgStats";
 		public static final String ORGLOG = "OrgLog";
 		public static final String ORGCODE = "OrgCode";
@@ -124,6 +125,19 @@ public class DSUtils {
 		public static final String ORG_ISFIRESTATION = "org_isfirestation";
 		public static final String ORG_CREATIONTIME = "org_creationtime";
 		public static final String ORG_CONFIRMED = "org_confirmed";
+		
+	// UnconfOrg
+		public static final String UNCONFORG_NAME = "unconforg_name";
+		public static final String UNCONORG_ADDRESS = "unconforg_address";
+		public static final String UNCONORG_PASSWORD = "unconforg_password";
+		public static final String UNCONORG_PHONE = "unconforg_phone";
+		public static final String UNCONORG_EMAIL = "unconforg_email";
+		public static final String UNCONORG_ZIP = "unconforg_zip";
+		public static final String UNCONORG_LOCALITY = "unconforg_locality";
+		public static final String UNCONORG_SERVICES = "unconforg_services";
+		public static final String UNCONORG_ISFIRESTATION = "unconforg_isfirestation";
+		public static final String UNCONORG_CREATIONTIME = "unconforg_creationtime";
+		public static final String UNCONORG_CONFIRMED = "unconforg_confirmed";
 
 	// UserStats
 		public static final String ORGSTATS_LOGINS = "orgstats_logins";

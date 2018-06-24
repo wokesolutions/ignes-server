@@ -239,7 +239,7 @@ public class Logout {
 					query.setFilter(filter);
 
 					Entity token;
-					
+
 					try {
 						token = datastore.prepare(txn, query).asSingleEntity();
 					} catch(TooManyResultsException e) {
@@ -247,14 +247,17 @@ public class Logout {
 						LOG.info(Message.UNEXPECTED_ERROR);
 						return Response.status(Status.EXPECTATION_FAILED).build();
 					}
-					
-					LOG.info(Boolean.toString(token == null));
 
-					datastore.delete(txn, token.getKey());
-					txn.commit();
-					return Response.ok().build();
+					if(token != null) {
+						datastore.delete(txn, token.getKey());
+						txn.commit();
+						return Response.ok().build();
+					} else {
+						txn.rollback();
+						return Response.ok().build();
+					}
 				} catch(Exception e) {
-					LOG.info(e.toString());
+					txn.rollback();
 					return Response.status(Status.EXPECTATION_FAILED).build();
 				}
 
