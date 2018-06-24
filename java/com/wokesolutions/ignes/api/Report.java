@@ -40,6 +40,7 @@ import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
 import com.google.appengine.api.datastore.PropertyContainer;
 import com.google.appengine.api.datastore.PropertyProjection;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.QueryResultList;
@@ -482,9 +483,12 @@ public class Report {
 		Filter privFilter = new Query
 				.FilterPredicate(DSUtils.REPORT_PRIVATE,
 						FilterOperator.EQUAL, true);
+		
+		List<Filter> filters = Arrays.asList(latFilter, lngFilter, privFilter);
+		
+		Filter filter = new Query.CompositeFilter(CompositeFilterOperator.AND, filters);
 
-		Query reportQuery = new Query(DSUtils.REPORT)
-				.setFilter(latFilter).setFilter(lngFilter).setFilter(privFilter);
+		Query reportQuery = new Query(DSUtils.REPORT).setFilter(filter);
 		
 		LOG.info(Message.SEARCHING_IN_COORDS + pPropLat + " - " + latValue +
 				" | " + pPropLng + " - " + lngValue);
