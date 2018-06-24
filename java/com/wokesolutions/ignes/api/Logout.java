@@ -124,9 +124,10 @@ public class Logout {
 	}
 
 	public Response logoutUserRetry(String username, HttpServletRequest request, boolean isOrg) { //TODO organize code
-		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
+		Transaction txn;
 
 		if(!isOrg) {
+			txn = datastore.beginTransaction();
 			try {
 				LOG.info(Message.LOGGING_OUT + username);
 
@@ -197,6 +198,7 @@ public class Logout {
 				}
 			}
 		} else {
+			txn = datastore.beginTransaction();
 			try {
 
 				Key orgKey = KeyFactory.createKey(DSUtils.ORG, username);
