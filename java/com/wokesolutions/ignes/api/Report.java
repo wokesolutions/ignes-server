@@ -51,6 +51,7 @@ import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.callbacks.LevelManager;
+import com.wokesolutions.ignes.data.Data;
 import com.wokesolutions.ignes.data.ReportData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
@@ -1090,10 +1091,12 @@ public class Report {
 	@POST
 	@Path("/vote/multiple")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
-	public Response voteAll(JSONArray votes, @Context HttpServletRequest request) {
+	public Response voteAll(Data votesO, @Context HttpServletRequest request) {
 		int retries = 5;
 
-		LOG.info(votes.toString());
+		LOG.info(votesO.array.toString());
+		
+		JSONArray votes = votesO.array;
 
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
@@ -1126,7 +1129,7 @@ public class Report {
 			}
 		}
 	}
-
+	
 	// -----------x----------- SUBCLASS
 
 	@POST
