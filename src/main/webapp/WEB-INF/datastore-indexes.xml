@@ -20,6 +20,7 @@
     
     <datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p0lng" direction="asc"/>
+        <property name="report_p0lat" direction="asc"/>
         <property name="report_address" direction="asc"/>
         <property name="report_gravity" direction="desc"/>
         <property name="report_lat" direction="asc"/>
@@ -34,6 +35,7 @@
     
     <datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p1lng" direction="asc"/>
+        <property name="report_p1lat" direction="asc"/>
         <property name="report_address" direction="asc"/>
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
@@ -57,6 +59,7 @@
      
     <datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p2lng" direction="asc"/>
+        <property name="report_p2lat" direction="asc"/>
         <property name="report_address" direction="asc"/>
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
@@ -71,6 +74,7 @@
     
     <datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p3lng" direction="asc"/>
+        <property name="report_p3lat" direction="asc"/>
         <property name="report_address" direction="asc"/>
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
@@ -85,6 +89,7 @@
     
     <datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p4lng" direction="asc"/>
+        <property name="report_p4lat" direction="asc"/>
         <property name="report_address" direction="asc"/>
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
@@ -99,6 +104,7 @@
     
     <datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p5lng" direction="asc"/>
+        <property name="report_p5lat" direction="asc"/>
         <property name="report_address" direction="asc"/>
         <property name="report_gravity" direction="asc"/>
         <property name="report_private" direction="desc"/>
@@ -113,6 +119,7 @@
     
     <datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p6lng" direction="asc"/>
+        <property name="report_p6lat" direction="asc"/>
         <property name="report_address" direction="asc"/>
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
@@ -127,6 +134,7 @@
     
     <datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p7lng" direction="asc"/>
+        <property name="report_p7lat" direction="asc"/>
         <property name="report_address" direction="asc"/>
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
@@ -141,6 +149,7 @@
     
     <datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p8lng" direction="asc"/>
+        <property name="report_p8lat" direction="asc"/>
         <property name="report_address" direction="asc"/>
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
