@@ -552,3 +552,9 @@ label {
     height: 620px;
     overflow: auto;
 }
+
+.scrool_markers{
+    width: 320px;
+    height: 500px;
+    overflow-y:auto;
+}

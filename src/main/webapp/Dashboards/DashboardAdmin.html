@@ -16,6 +16,7 @@
         <div class="collapse navbar-collapse" id="navbarResponsive">
             <ul class="navbar-nav ml-auto">
                 <li id ="list_users_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Utilizadores</a></li>
+                <li id ="list_pending_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Organizações Pendestes</a></li>
                 <li id = "logout_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"><a class="fa fa-power-off"> </a>Terminar Sessão</a></li>
             </ul>
         </div>
@@ -51,6 +52,43 @@
         </div>
         <div class=" col-md-1 col-lg-1 text-center">
             <button style="display: none" class="btn btn-default" id="next_list"><i class="fa fa-toggle-right size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center"></div>
+    </div>
+</div>
+
+<div id="list_pending_orgs">
+    <div class="row">
+
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button class="btn btn-default btn-style" id="refresh_orgs_pending"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
+        </div>
+        <div class=" col-md-10 col-lg-10 text-center"></div>
+    </div>
+    <div class="container">
+        <div class="table-responsive">
+            <table class=" table table-bordered table-striped table-style text-center" id="orgs_pending_table">
+                <tr>
+                    <th>NIF</th>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Morada</th>
+                    <th>Localidade</th>
+                    <th>Telefone</th>
+                    <th>Serviços</th>
+                    <th>Data de criação</th>
+                    <th>Quartel de Bombeiros</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-8 col-lg-8 text-center"></div>
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button style="display: none" class="btn btn-default" id="previous_list_pending"><i class="fa fa-toggle-left size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center">
+            <button style="display: none" class="btn btn-default" id="next_list_pending"><i class="fa fa-toggle-right size"></i> </button>
         </div>
         <div class=" col-md-1 col-lg-1 text-center"></div>
     </div>

@@ -1,6 +1,10 @@
 var cursor_next;
 var cursor_pre;
 var cursor_current;
+var cursor_next_pending;
+var cursor_current_pending;
+var cursor_pre_pending;
+
 var URL_BASE = 'https://hardy-scarab-200218.appspot.com';
 
 init();
@@ -10,11 +14,15 @@ function init() {
     verifyIsLoggedIn();
 
     getFirstUsers();
+    getPendingFirst();
 
     document.getElementById("logout_button").onclick = logOut;
     document.getElementById("next_list").onclick = getNextUsers;
     document.getElementById("previous_list").onclick = getPreUsers;
     document.getElementById("refresh_users").onclick = getFirstUsers;
+    document.getElementById("next_list_pending").onclick = getPendingNext;
+    document.getElementById("previous_list_pending").onclick = getPendingPre;
+    document.getElementById("refresh_orgs_pending").onclick = getPendingFirst;
 
 }
 function verifyIsLoggedIn(){
@@ -28,7 +36,7 @@ function verifyIsLoggedIn(){
     }).then(function(response) {
 
             if (response.status !== 200) {
-                window.location.href = "index.html";
+                window.location.href = "../index.html";
             }
         }
     )
@@ -95,7 +103,9 @@ function getFirstUsers(){
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
-                if(table.rows.length > 1) ;
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
                 if(response.headers.get("Cursor") !== null) {
                     cursor_pre = "";
                     cursor_current = "";
@@ -157,7 +167,9 @@ function getNextUsers(){
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
-                if(table.rows.length > 1) ;
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
                 if(document.getElementById("previous_list").style.display === "none")
                     document.getElementById("previous_list").style.display = "block";
                 if(response.headers.get("Cursor") !== null) {
@@ -210,7 +222,7 @@ function getNextUsers(){
 }
 
 function getPreUsers(){
-    if(cursor_pre_workers === "") getFirstUsers();
+    if(cursor_pre === "") getFirstUsers();
 
     else {
         fetch(URL_BASE + '/api/org/listworkers?cursor=' + cursor_pre, {
@@ -223,7 +235,9 @@ function getPreUsers(){
                 var table = document.getElementById("user_table");
 
                 if (response.status === 200) {
-                    if (table.rows.length > 1) ;
+                    if(table.rows.length > 1) {
+                        table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                    }
                     if (document.getElementById("previous_list").style.display === "none")
                         document.getElementById("previous_list").style.display = "block";
                     if (response.headers.get("Cursor") !== null) {
@@ -304,4 +318,233 @@ function logOut(){
 
 
 
+}
+
+function getPendingNext(){
+    fetch(URL_BASE + '/api/admin/orgstoconfirm?cursor=' + cursor_next_pending, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
+            var table = document.getElementById("orgs_pending_table");
+
+            if (response.status === 200) {
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+
+                if(document.getElementById("previous_list_pending").style.display === "none")
+                    document.getElementById("previous_list_pending").style.display = "block";
+
+                if(response.headers.get("Cursor") !== null) {
+
+                    cursor_pre_pending = cursor_current;
+                    cursor_current_pending = cursor_next_pending;
+                    cursor_next_pending = response.headers.get("Cursor");
+
+                    if(document.getElementById("next_list_pending").style.display === "none")
+                        document.getElementById("next_list_pending").style.display = "block";
+
+                } else{
+                    if(document.getElementById("next_list_pending").style.display === "block")
+                        document.getElementById("next_list_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            var cell10 = row.insertCell(9);
+                            cell1.innerHTML = data[i].Org;
+                            cell2.innerHTML = data[i].org_name;
+                            cell4.innerHTML = data[i].org_email;
+                            cell3.innerHTML = data[i].org_address;
+                            cell5.innerHTML = data[i].org_locality;
+                            cell6.innerHTML = data[i].org_phone;
+                            cell7.innerHTML = data[i].org_services;
+                            cell8.innerHTML = data[i].org_creationtime;
+                            cell9.innerHTML = data[i].org_isfirestation;
+                            cell10.outerHTML = "<button type='submit' class='btn btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+function getPendingPre(){
+    if(cursor_pre_workers === "") getPendingFirst();
+
+    fetch(URL_BASE + '/api/admin/orgstoconfirm?cursor=' + cursor_pre_pending, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
+            var table = document.getElementById("orgs_pending_table");
+
+            if (response.status === 200) {
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+
+                if (document.getElementById("previous_list_pending").style.display === "none")
+                    document.getElementById("previous_list_pending").style.display = "block";
+
+                if (response.headers.get("Cursor") !== null) {
+
+                    cursor_next_pending= cursor_current_pending;
+                    cursor_current_pending = cursor_pre;
+                    cursor_pre_pending = response.headers.get("Cursor");
+
+                    if (document.getElementById("next_list_pending").style.display === "none")
+                        document.getElementById("next_list_pending").style.display = "block";
+
+                } else {
+                    if (document.getElementById("next_list_pending").style.display === "block")
+                        document.getElementById("next_list_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            var cell10 = row.insertCell(9);
+                            cell1.innerHTML = data[i].Org;
+                            cell2.innerHTML = data[i].org_name;
+                            cell4.innerHTML = data[i].org_email;
+                            cell3.innerHTML = data[i].org_address;
+                            cell5.innerHTML = data[i].org_locality;
+                            cell6.innerHTML = data[i].org_phone;
+                            cell7.innerHTML = data[i].org_services;
+                            cell8.innerHTML = data[i].org_creationtime;
+                            cell9.innerHTML = data[i].org_isfirestation;
+                            cell10.outerHTML = "<button type='submit' class='btn btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+function getPendingFirst(){
+    fetch(URL_BASE + '/api/admin/orgstoconfirm?cursor=', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
+            var table = document.getElementById("orgs_pending_table");
+
+            if (response.status === 200) {
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+                if(response.headers.get("Cursor") !== null) {
+
+                    cursor_pre_pending = "";
+                    cursor_current_pending = "";
+                    cursor_next_pending = response.headers.get("Cursor");
+
+                    if(document.getElementById("next_list_pending").style.display === "none")
+                        document.getElementById("next_list_pending").style.display = "block";
+                    if(document.getElementById("previous_list_pending").style.display === "block")
+                        document.getElementById("previous_list_pending").style.display = "none";
+                } else{
+                    if(document.getElementById("next_list_pending").style.display === "block")
+                        document.getElementById("next_list_pending").style.display = "none";
+                    if(document.getElementById("previous_list_pending").style.display === "block")
+                        document.getElementById("previous_list_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            var cell10 = row.insertCell(9);
+                            cell1.innerHTML = data[i].Org;
+                            cell2.innerHTML = data[i].org_name;
+                            cell4.innerHTML = data[i].org_email;
+                            cell3.innerHTML = data[i].org_address;
+                            cell5.innerHTML = data[i].org_locality;
+                            cell6.innerHTML = data[i].org_phone;
+                            cell7.innerHTML = data[i].org_services;
+                            cell8.innerHTML = data[i].org_creationtime;
+                            cell9.innerHTML = data[i].org_isfirestation;
+                            cell10.outerHTML = "<button type='submit' class='btn btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
