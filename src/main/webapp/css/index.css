@@ -549,6 +549,12 @@ label {
     font-size: 20px;
 }
 
+.info_text_bold_sm{
+    font-family: "Quicksand Bold";
+    color: #AD363B;
+    font-size: 15px;
+}
+
 .info_text_response{
     font-family: "Quicksand";
     color: #3b4956;
@@ -569,4 +575,20 @@ label {
 
 .thumb_report_hover:hover{
     transform:scale(4.5);
+}
+
+.report_details_style{
+    font-family: Quicksand;
+    font-size: 25px;
+}
+
+.img_user{
+    border-radius: 100%;
+}
+
+
+.comments {
+    width: 400px;
+    height: 400px;
+    overflow: auto;
 }

@@ -1,6 +1,9 @@
 var map = null;
 var geocoder = new google.maps.Geocoder();
 var reports;
+var reportId;
+var feedCursor;
+var commentsCursor;
 var current_position = "map_variable";
 var infowindow = new google.maps.InfoWindow();
 var currentLoc ={
@@ -30,6 +33,7 @@ function init() {
     document.getElementById("previous_list").onclick = getPreWorkers;
     document.getElementById("refresh_workers").onclick = getFirstWorkers;
     document.getElementById("show_more_button").onclick = getShowMore;
+    document.getElementById("close_window").onclick = closeWindow;
 
     getFirstWorkers();
 
@@ -97,9 +101,11 @@ function hideShow(element){
     }else if(current_position === "create_variable"){
 
         document.getElementById("create_worker").style.display = "none";
+
     }else if(current_position === "show_more_variable"){
 
         document.getElementById("details_report").style.display = "none";
+
     }
 
 
@@ -126,6 +132,7 @@ function hideShow(element){
     }else if(element === "show_more_variable"){
         document.getElementById("details_report").style.display = "block";
         current_position = "show_more_variable";
+
     }
 
 }
@@ -295,28 +302,45 @@ function getInfo(idReport, i){
                 response.json().then(function(data) {
                     var image = document.getElementById("thumb_report");
                     image.src = "data:image/jpg;base64," + data.report_thumbnail;
+                    var image = document.getElementById("thumb_report_2");
+                    image.src = "data:image/jpg;base64," + data.report_thumbnail;
                 });
 
 
-                if(reports[i].report_title !== null || reports[i].report_title !== undefined)
+                if(reports[i].report_title !== ""){
                     document.getElementById('report_title_id').innerHTML= reports[i].report_title;
-                else
-                    document.getElementById('report_title_id').innerHTML= "-";
+                    document.getElementById('report_title_id_2').innerHTML= reports[i].report_title;
+                }
+                else {
+                    document.getElementById('report_title_id').innerHTML = "-";
+                    document.getElementById('report_title_id_2').innerHTML = "-";
+                }
 
                 document.getElementById('report_address_id').innerHTML= reports[i].report_address;
+                document.getElementById('report_address_id_2').innerHTML= reports[i].report_address;
 
-                if(reports[i].report_title !== null || reports[i].report_title !== undefined)
+                if(reports[i].report_description !== "")
                     document.getElementById('report_description_id').innerHTML= reports[i].report_description;
                 else
                     document.getElementById('report_description_id').innerHTML= "-";
 
                 document.getElementById('report_state_id').innerHTML= reports[i].report_status;
+                document.getElementById('report_state_id_2').innerHTML= reports[i].report_status;
                 document.getElementById('report_gravity_id').innerHTML= reports[i].report_gravity;
+                document.getElementById('report_gravity_id_2').innerHTML= reports[i].report_gravity;
 
                 if(reports[i].report_private === true)
                     document.getElementById('report_private_id').innerHTML= "Privado";
                 else
                     document.getElementById('report_private_id').innerHTML= "Público";
+
+                document.getElementById('report_comments_id').innerHTML= reports[i].report_commentsnum;
+                document.getElementById('report_user_id').innerHTML= reports[i].report_username;
+                document.getElementById('report_creationtime_id').innerHTML= reports[i].report_creationtimeformatted;
+                document.getElementById('report_up_id').innerHTML= reports[i].reportvotes_up;
+                document.getElementById('report_down_id').innerHTML= reports[i].reportvotes_down;
+
+                loadMoreComments("");
 
             }else{
                 console.log("Tratar do Forbidden");
@@ -348,6 +372,10 @@ function showWorkers(){
 function showCreateWorker(){
     hideShow('create_variable');
     document.getElementById("org_name").innerHTML = localStorage.getItem('ignes_org_name');
+}
+
+function closeWindow(){
+    hideShow("map_variable");
 }
 
 function createWorker(){
@@ -642,6 +670,7 @@ var loadMore = function (cursor) {
     }).then(function(response) {
 
             if (response.status === 200 || response.status === 204) {
+                feedCursor = response.headers.get("Cursor");
                 response.json().then(function(data) {
                     console.log(data);
                     var i;
@@ -663,8 +692,45 @@ $('.on').scroll(function () {
     $('.two').html("top: "+top+" diff: "+($(".inner").height() - $(".on").height()));
     if (top >= $(".inner").height() - $(".on").height()) {
         $('.two').append(" bottom");
-        loadMore();
+        loadMore(feedCursor);
     }
 });
 
 loadMore("");
+
+var loadMoreComments = function(cursor){
+    fetch(URL_BASE + "/api/report/comment/get" + reportId + "?cursor=" + cursor, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
+
+            if (response.status === 200 || response.status === 204) {
+                commentsCursor = response.headers.get("Cursor");
+                response.json().then(function(data) {
+                    console.log(data);
+                    var i;
+                    for(i = 0; i<data.length; i++){
+                        (".inner").append("<p>" + data[i].ReportComment + "</p>");
+                    }
+
+                });
+            }
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+$('.comments').scroll(function () {
+    var top = $('.comments').scrollTop();
+    $('.two').html("top: "+top+" diff: "+($(".inner").height() - $(".comments").height()));
+    if (top >= $(".inner").height() - $(".comments").height()) {
+        $('.two').append(" bottom");
+        loadMoreComments(commentsCursor);
+    }
+});

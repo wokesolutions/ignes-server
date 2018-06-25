@@ -256,7 +256,6 @@
             <br>
 
             <p class="info_text_bold text-center">Marcador selecionado</p>
-            <p class="info_text text-center">Imagem</p>
             <div class="col-lg-12 text-center">
                 <img id="thumb_report" style="width:20%; height:20%">
             </div>
@@ -280,23 +279,113 @@
 <!--Details Report-->
 <div id="details_report" style="display: none">
 
-        <p class="info_text text-center">Imagem</p>
-        <div class="col-lg-12 text-center">
-            <img class="thumb_report_hover" id="thumb_report" style="width:20%; height:20%">
+    <div class="row">
+        <div class="col-lg-10"></div>
+        <div class="col-lg-2">
+            <button class="btn" id="close_window" ><i class="fa fa-remove" style="color:#3e4e5a"></i></button>
         </div>
-        <p class="info_text text-center">Título:</p>
-        <p class="info_text_response text-center" id="report_title_id"></p>
-        <p class="info_text text-center">Descrição:</p>
-        <p class="info_text_response text-center" id="report_description_id"></p>
-        <p class="info_text text-center">Morada:</p>
-        <p class="info_text_response text-center" id="report_address_id"></p>
-        <p class="info_text text-center">Estado:</p>
-        <p class="info_text_response text-center"id="report_state_id"></p>
-        <p class="info_text text-center">Gravidade:</p>
-        <p class="info_text_response text-center"id="report_gravity_id"></p>
-        <p class="info_text text-center"id="report_private_id"></p>
+    </div>
+    <div class="row" >
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <i class="fa fa-map-marker" style="color:#AD363B; font-size: 3rem"> </i>
+        </div>
+    </div>
+    <div class="row" >
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <p class="report_details_style text-center" id="report_address_id_2"></p>
+        </div>
+    </div>
+    <div class="row" >
+        <div class="col-lg-6 col-md-6 mx-auto text-right">
+            <p class="info_text_bold_sm ">Gravidade</p>
+        </div>
+        <div class="col-lg-6 col-md-6 mx-auto text-left">
+            <p class="info_text_bold_sm " style="color:#3b4956" id="report_gravity_id_2"></p>
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="row" >
+                <div class="col-lg-8 col-md-8 text-right ">
+                    <div class="row" >
+                        <div class="col-lg-6 col-md-6  ">
+                            <img class="img_user" src="../images/avatar.png" height="40" width="40"/>
+                        </div>
+                        <div class="col-lg-4 col-md-4 text-left ">
+                            <p class="info_text_response" id="report_user_id" style="margin-top:1rem; font-family: Quicksand Bold"></p>
+                        </div>
+                        <div class="col-lg-2 col-md-2 text-left">
+                            <p class="info_text_response text-center"id="report_state_id_2" style="margin-top:1rem;"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-4 text-left"></div>
+            </div>
+            <div class="col-lg-12 text-center">
+                <p class="info_text_bold text-center" id="report_title_id_2"></p>
+            </div>
+            <div class="col-lg-12 text-center">
+                <p class="info_text_response text-center"id="report_description_id" style="font-size:20px"></p>
+            </div>
+            <div class="col-lg-12 text-center">
+                <img id="thumb_report_2" style="height:15rem;">
+            </div>
+            <div class="row" >
+                <div class="col-lg-8 col-md-8 text-right">
+                    <p class="info_text_response"id="report_creationtime_id" style="margin-top:1rem;margin-right: 4.8rem"></p>
+                </div>
+                <div class="col-lg-4 col-md-4 text-left"></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
 
+            <div class="col-lg-6 text-center">
+                <div class="row">
+                    <div class="col-lg-6 text-right">
+                        <i class="fa fa-comment" style="color:#AD363B; font-size: 25px"></i>
+                    </div>
+                    <div class="col-lg-6 text-left">
+                        <p class="info_text_bold" id="report_comments_id" ></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class='comments'><div class='inner'></div></div>
+        </div>
+    </div>
+
+    <hr>
+    <div class="row" >
+        <div class="col-lg-4 col-md-4"></div>
+        <div class="col-lg-4 col-md-4 text-center">
+            <div class="row">
+                <div class="col-lg-6 col-md-6">
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6">
+                            <i class="fa fa-thumbs-up" style="font-size:2rem"></i>
+                        </div>
+                        <div class="col-lg-6 col-md-6 text-left">
+                            <p class="info_text_response "id="report_up_id" style="margin-top: 5px"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6">
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6">
+                            <i class="fa fa-thumbs-down" style="font-size:2rem"></i>
+                        </div>
+                        <div class="col-lg-6 col-md-6 text-left">
+                            <p class="info_text_response "id="report_down_id" style="margin-top: 5px"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-4"></div>
+    </div>
 </div>
+
 
 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAfHsLp6fKLK4YZ2WSoXO0KsM58Clspg8k"></script>
