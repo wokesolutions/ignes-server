@@ -722,25 +722,4 @@ public class Profile {
 		
 		return Response.ok(obj.toString()).build();
 	}
-	
-	@GET
-	@Path("/getprofpicthumbnails")
-	@Produces(CustomHeader.JSON_CHARSET_UTF8)
-	public Response getThumbnails(@Context HttpServletRequest request) {
-		String users = request.getHeader(CustomHeader.USERNAMES);
-		
-		int retries = 5;
-		while(true) {
-			try {
-				return null;
-			} catch(DatastoreException e) {
-				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
-					return Response.status(Status.REQUEST_TIMEOUT).build();
-				}
-
-				retries--;
-			}
-		}
-	}
 }

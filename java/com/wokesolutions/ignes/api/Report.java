@@ -1222,6 +1222,7 @@ public class Report {
 						}
 						
 						if(existingVote == null) {
+							LOG.info("çugiupgiçu");
 							response = Response.ok().build();
 							txn.rollback();
 							continue;
