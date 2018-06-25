@@ -115,6 +115,7 @@
 		<url-pattern>/api/org/listworkers</url-pattern>
 		<url-pattern>/api/org/deleteworker/*</url-pattern>
 		<url-pattern>/api/org/registerworker</url-pattern>
+		<url-pattern>/api/org/alltasks</url-pattern>
 	</filter-mapping>
 
 	<filter>

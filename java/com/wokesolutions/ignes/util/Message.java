@@ -23,6 +23,7 @@ public class Message {
 		public static final String NO_REPORTS_IN_HEADER = "Header não contem ocorrências";
 		public static final String TOO_MANY_REPORTS = "Header contém demasiados reports";
 		public static final String NO_REPORTS_FOUND = "Não foram encontradas ocorrências";
+		public static final String VOTED_REPORT_ERROR = "Ocorrência votada com erro: ";
 	
 	// Error Admin
 		public static final String MOTER_NOT_ADMIN = "Utilizador a fazer alterações não é administrador";

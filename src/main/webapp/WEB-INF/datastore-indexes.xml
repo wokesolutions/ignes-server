@@ -10,6 +10,13 @@
         <property name="user_level" direction="asc"/>
     </datastore-index>
     
+    <datastore-index kind="ReportComment" ancestor="false" source="manual">
+        <property name="reportcomment_report" direction="asc"/>
+        <property name="reportcomment_text" direction="asc"/>
+        <property name="reportcomment_time" direction="asc"/>
+        <property name="reportcomment_user" direction="asc"/>
+    </datastore-index>
+    
     <datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p0lng" direction="asc"/>
         <property name="report_p0lat" direction="asc"/>

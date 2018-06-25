@@ -357,26 +357,37 @@ public class Org {
 
 		Entity reportE;
 		
+		LOG.info("hviy");
+		
 		Query workerQuery = new Query(DSUtils.WORKER).setAncestor(KeyFactory.createKey(DSUtils.USER, email));
+		LOG.info("hviy");
 		workerQuery.addProjection(new PropertyProjection(DSUtils.WORKER_ORG, String.class));
+		LOG.info("hviy");
 		
 		Entity worker;
+		LOG.info("hviy");
 		try {
 			worker = datastore.prepare(workerQuery).asSingleEntity();
+			LOG.info("hviy");
 		} catch(TooManyResultsException e) {
 			LOG.info(Message.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
+		LOG.info("hviy");
 		
 		if(worker == null) {
+			LOG.info("hviy");
 			LOG.info(Message.WORKER_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
+		LOG.info("hviy");
 		
 		if(!worker.getProperty(DSUtils.WORKER_ORG).toString().equals(org)) {
+			LOG.info("hviy");
 			LOG.info(Message.WORKER_NOT_FOUND);
 			return Response.status(Status.FORBIDDEN).build();
 		}
+		LOG.info("hviy");
 
 		try {
 			reportE = datastore.get(KeyFactory.createKey(DSUtils.REPORT, report));

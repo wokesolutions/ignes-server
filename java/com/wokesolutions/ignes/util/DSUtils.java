@@ -21,7 +21,7 @@ public class DSUtils {
 		public static final String REPORT = "Report";
 		public static final String CLOSEDREPORT = "ClosedReport";
 		public static final String REPORTVOTES = "ReportVotes";
-		public static final String USERVOTE = "UserVotes";
+		public static final String USERVOTE = "UserVote";
 		public static final String SPAMMEDREPORT = "SpammedReport";
 		public static final String SKILL = "Skill";
 		public static final String TOKEN = "Token";
