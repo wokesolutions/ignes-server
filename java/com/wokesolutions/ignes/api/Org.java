@@ -48,6 +48,7 @@ import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
+import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.UserLevel;
 
 @Path("/org")
@@ -357,37 +358,26 @@ public class Org {
 
 		Entity reportE;
 		
-		LOG.info("hviy");
-		
 		Query workerQuery = new Query(DSUtils.WORKER).setAncestor(KeyFactory.createKey(DSUtils.USER, email));
-		LOG.info("hviy");
 		workerQuery.addProjection(new PropertyProjection(DSUtils.WORKER_ORG, String.class));
-		LOG.info("hviy");
 		
 		Entity worker;
-		LOG.info("hviy");
 		try {
 			worker = datastore.prepare(workerQuery).asSingleEntity();
-			LOG.info("hviy");
 		} catch(TooManyResultsException e) {
 			LOG.info(Message.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
-		LOG.info("hviy");
 		
 		if(worker == null) {
-			LOG.info("hviy");
 			LOG.info(Message.WORKER_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
-		LOG.info("hviy");
 		
 		if(!worker.getProperty(DSUtils.WORKER_ORG).toString().equals(org)) {
-			LOG.info("hviy");
 			LOG.info(Message.WORKER_NOT_FOUND);
 			return Response.status(Status.FORBIDDEN).build();
 		}
-		LOG.info("hviy");
 
 		try {
 			reportE = datastore.get(KeyFactory.createKey(DSUtils.REPORT, report));
@@ -519,6 +509,10 @@ public class Org {
 					jsonReport.put(DSUtils.TASK, task.getParent().getName());
 					jsonReport.put(DSUtils.TASK_WORKER, task.getProperty(DSUtils.TASK_WORKER));
 					jsonReport.put(DSUtils.TASK_INDICATIONS, task.getProperty(DSUtils.TASK_INDICATIONS));
+					
+					String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
+					jsonReport.put(DSUtils.REPORT_THUMBNAIL, tn);
+					
 					array.put(jsonReport);
 				}
 				

@@ -21,6 +21,7 @@ public class CustomHeader {
 	
 	public static final String CURSOR = "Cursor";
 	public static final String REPORTS = "Reports";
+	public static final String USERNAMES = "Usernames";
 }
 
 

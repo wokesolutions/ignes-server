@@ -656,7 +656,8 @@ public class Profile {
 		folders.add(Storage.IMG_FOLDER);
 		folders.add(Storage.PROFILE_FOLDER);
 		StoragePath pathImg = new StoragePath(folders, username);
-		if(!Storage.saveImage(data.pic, Storage.BUCKET, pathImg, data.width, data.height, data.orientation))
+		if(!Storage.saveImage(data.pic, Storage.BUCKET, pathImg,
+				data.width, data.height, data.orientation, false))
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
 		Query query = new Query(DSUtils.USEROPTIONAL)
@@ -666,7 +667,6 @@ public class Profile {
 		try {
 			Entity optional = datastore.prepare(query).asSingleEntity();
 			optional.setProperty(DSUtils.USEROPTIONAL_PICPATH, pathImg.makePath());
-			optional.setProperty(DSUtils.USEROPTIONAL_PICTNPATH, pathImg.makeTnPath());
 			
 			datastore.put(optional);
 		} catch(TooManyResultsException e) {
@@ -726,7 +726,21 @@ public class Profile {
 	@GET
 	@Path("/getprofpicthumbnails")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
-	public Response getThumbnails() {
-		return null;
+	public Response getThumbnails(@Context HttpServletRequest request) {
+		String users = request.getHeader(CustomHeader.USERNAMES);
+		
+		int retries = 5;
+		while(true) {
+			try {
+				return null;
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
 	}
 }

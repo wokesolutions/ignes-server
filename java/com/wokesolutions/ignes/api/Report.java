@@ -74,6 +74,8 @@ public class Report {
 	public static final String CLOSED = "closed";
 	public static final String STANDBY = "standby";
 	private static final String NOT_FOUND = "NOT_FOUND";
+	
+	private static final String OCORRENCIA_RAPIDA = "Ocorrência rápida - ";
 
 	private static final int DEFAULT_GRAVITY = 2;
 	private static final int NO_TRUST_GRAVITY = 1;
@@ -190,7 +192,7 @@ public class Report {
 				if(data.report_description != null)
 					report.setProperty(DSUtils.REPORT_DESCRIPTION, data.report_description);
 				else
-					report.setProperty(DSUtils.REPORT_DESCRIPTION, "");
+					report.setProperty(DSUtils.REPORT_DESCRIPTION, OCORRENCIA_RAPIDA + data.report_locality);
 
 				if(data.report_locality != null)
 					report.setProperty(DSUtils.REPORT_LOCALITY, data.report_locality);
@@ -202,7 +204,7 @@ public class Report {
 				folders.add(Storage.REPORT_FOLDER);
 				StoragePath pathImg = new StoragePath(folders, reportid);
 				if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg,
-						data.report_imgwidth, data.report_imgheight, data.report_imgorientation)) {
+						data.report_imgwidth, data.report_imgheight, data.report_imgorientation, true)) {
 					LOG.info(Message.STORAGE_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 				}
@@ -1176,8 +1178,6 @@ public class Report {
 	public Response voteAll(String votesO, @Context HttpServletRequest request) {
 		int retries = 5;
 
-		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
-
 		JSONObject votes = new JSONObject(votesO);
 
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
@@ -1187,6 +1187,8 @@ public class Report {
 		while(true) {
 			try {
 				while(keys.hasNext()) {
+					Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
+					
 					String reportid = keys.next();
 					String vote = votes.getString(reportid);
 					Response response;
@@ -1199,7 +1201,7 @@ public class Report {
 						response = spamvoteReportRetry(reportid, username);
 					else if(vote.equals(NEUTRAL)) {
 						
-						Query query = new Query(DSUtils.USERVOTE).setKeysOnly();
+						Query query = new Query(DSUtils.USERVOTE);
 						Filter filter1 = new Query.FilterPredicate(DSUtils.USERVOTE_REPORT,
 								FilterOperator.EQUAL, reportid);
 						Filter filter2 = new Query.FilterPredicate(DSUtils.USERVOTE_USER,
@@ -1214,12 +1216,18 @@ public class Report {
 							existingVote = datastore.prepare(query).asSingleEntity();
 						} catch(TooManyResultsException e) {
 							LOG.info(Message.UNEXPECTED_ERROR);
+							txn.rollback();
 							response = Response.status(Status.NOT_FOUND).build();
 							continue;
 						}
 						
-						if(existingVote == null)
-							return Response.ok().build();
+						if(existingVote == null) {
+							response = Response.ok().build();
+							txn.rollback();
+							continue;
+						}
+						
+						LOG.info(existingVote.toString());
 						
 						String oldVote = existingVote.getProperty(DSUtils.USERVOTE_TYPE).toString();
 						
@@ -1229,6 +1237,7 @@ public class Report {
 									.get(KeyFactory.createKey(DSUtils.REPORTVOTES, reportid));
 						} catch (EntityNotFoundException e) {
 							LOG.info(Message.REPORT_NOT_FOUND);
+							txn.rollback();
 							response = Response.status(Status.NOT_FOUND).build();
 							continue;
 						}
@@ -1245,21 +1254,26 @@ public class Report {
 									(long) reportvote.getProperty(DSUtils.REPORTVOTES_RELEVANCE) - 3L);
 						} else {
 							LOG.info(Message.BAD_FORMAT);
+							txn.rollback();
 							response = Response.status(Status.NOT_FOUND).build();
 							continue;
 						}
 						
-						datastore.delete(existingVote.getKey());
-						
+						datastore.delete(txn, existingVote.getKey());
+						datastore.put(txn, reportvote);
+						txn.commit();
 						response = Response.ok().build();
-					} else
+					} else {
+						txn.rollback();
 						return Response.status(Status.BAD_REQUEST).build();
+					}
 					
-					if(response.getStatus() != Status.OK.getStatusCode())
+					if(response.getStatus() != Status.OK.getStatusCode()) {
 						LOG.info(Message.VOTED_REPORT_ERROR + reportid);
+						txn.rollback();
+					}
 				}
-
-				txn.commit();
+				
 				return Response.ok().build();
 			} catch(DatastoreException e) {
 				if(retries == 0)
@@ -1272,7 +1286,7 @@ public class Report {
 	// -----------x----------- SUBCLASS
 
 	@POST
-	@Path("/comment/{report}")
+	@Path("/comment/post/{report}")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response commentOnRep(String text, @QueryParam(ParamName.CURSOR) String cursor,
 			@Context HttpServletRequest request, @PathParam(ParamName.REPORT) String report) {

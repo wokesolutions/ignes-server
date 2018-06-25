@@ -46,7 +46,7 @@ public class Storage {
 	private static ImagesService imagesService = ImagesServiceFactory.getImagesService();
 
 	public static boolean saveImage(String img, String bucket, StoragePath path,
-			int width, int height, int orientation) {
+			int width, int height, int orientation, boolean withTn) {
 		byte[] bytes = Base64.decode(img);
 		Image image = ImagesServiceFactory.makeImage(bytes);
 		LOG.info(Integer.toString(orientation));
@@ -66,6 +66,9 @@ public class Storage {
 		} catch(IOException e) {
 			return false;
 		}
+		
+		if(!withTn)
+			return true;
 		
 		int newHeight = height * IMAGE_WIDTH / width;
 		
