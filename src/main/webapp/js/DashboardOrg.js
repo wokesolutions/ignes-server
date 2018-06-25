@@ -1,7 +1,7 @@
 var map = null;
 var geocoder = new google.maps.Geocoder();
 var reports;
-var reportId;
+var reportID;
 var feedCursor;
 var commentsCursor;
 var current_position = "map_variable";
@@ -272,7 +272,8 @@ function fillMap(reports, cursor, zone){
         google.maps.event.addListener(marker, 'click', (function(marker, i) {
 
             return function() {
-                getInfo(reports[i].Report, i);
+                reportID = reports[i].Report;
+                getInfo(reportID, i);
 
             }
         })(marker, i));
@@ -340,7 +341,7 @@ function getInfo(idReport, i){
                 document.getElementById('report_up_id').innerHTML= reports[i].reportvotes_up;
                 document.getElementById('report_down_id').innerHTML= reports[i].reportvotes_down;
 
-                loadMoreComments("");
+                loadMoreComments(idReport ,"");
 
             }else{
                 console.log("Tratar do Forbidden");
@@ -698,8 +699,8 @@ $('.on').scroll(function () {
 
 loadMore("");
 
-var loadMoreComments = function(cursor){
-    fetch(URL_BASE + "/api/report/comment/get" + reportId + "?cursor=" + cursor, {
+var loadMoreComments = function(idReport,cursor){
+    fetch(URL_BASE + "/api/report/comment/get/" + idReport + "?cursor=" + cursor, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -731,6 +732,6 @@ $('.comments').scroll(function () {
     $('.two').html("top: "+top+" diff: "+($(".inner").height() - $(".comments").height()));
     if (top >= $(".inner").height() - $(".comments").height()) {
         $('.two').append(" bottom");
-        loadMoreComments(commentsCursor);
+        loadMoreComments(reportID,commentsCursor);
     }
 });
