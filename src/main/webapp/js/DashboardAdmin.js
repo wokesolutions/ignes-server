@@ -157,7 +157,7 @@ function getFirstUsers(){
 }
 
 function getNextUsers(){
-    fetch(URL_BASE + '/api/org/userlist?cursor=' + cursor_next, {
+    fetch(URL_BASE + '/api/admin/userlist?cursor=' + cursor_next, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -225,7 +225,7 @@ function getPreUsers(){
     if(cursor_pre === "") getFirstUsers();
 
     else {
-        fetch(URL_BASE + '/api/org/listworkers?cursor=' + cursor_pre, {
+        fetch(URL_BASE + '/api/admin/listworkers?cursor=' + cursor_pre, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

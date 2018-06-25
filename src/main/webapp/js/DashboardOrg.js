@@ -662,40 +662,43 @@ function deleteWorker (row){
 }
 
 var loadMore = function (cursor) {
-    fetch(URL_BASE + '/api/org/alltasks?cursor=' + cursor, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
 
-            if (response.status === 200 || response.status === 204) {
-                feedCursor = response.headers.get("Cursor");
-                response.json().then(function(data) {
-                    console.log(data);
-                    var i;
-                    for(i = 0; i<data.length; i++){
-
-                        var contentString = '<hr><div id="content">';
-                        if(data[i].report_title !== null)
-                            contentString +='<div><h1 class="text-center"style="font-family: Quicksand Bold; color:#AD363B; font-size:20px">'+ data[i].report_title +'</h1></div>';
-                            contentString += '<div class="row"><div class="col-lg-6 text-center"><img style="height:15rem;"id=' +i + '></div><div class="col-lg-6"><div class="text-center"><p style="font-family:Quicksand Bold; font-size:15px; color:#AD363B">Localização</p><p style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].report_address + '</p><p style="font-family:Quicksand Bold; font-size:15px; color:#AD363B">Data</p><p style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].report_creationtimeformatted +'</p><p style="font-family:Quicksand Bold; font-size:15px; color:#AD363B">Estado</p><p style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_status+'</p></div></div><div class="text-center"><button type="button" class="btn btn-primary-view">Ver mais</button></div></div><hr>'
-
-                        $(".inner").append(contentString);
-
-                        var image = document.getElementById(i);
-                        image.src = "data:image/jpg;base64," + data[i].report_thumbnail;
-
-                    }
-                });
+    if(cursor!==null){
+        fetch(URL_BASE + '/api/org/alltasks?cursor=' + cursor, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('token')
             }
+        }).then(function(response) {
 
-        }
-    )
-        .catch(function(err) {
-            console.log('Fetch Error', err);
-        });
+                if (response.status === 200 || response.status === 204) {
+                    feedCursor = response.headers.get("Cursor");
+                    response.json().then(function(data) {
+                        console.log(data);
+                        var i;
+                        for(i = 0; i<data.length; i++){
+
+                            var contentString = '<hr><div id="content">';
+                            if(data[i].report_title !== null)
+                                contentString +='<div><h1 class="text-center"style="font-family: Quicksand Bold; color:#AD363B; font-size:20px">'+ data[i].report_title +'</h1></div>';
+                                contentString += '<div class="row"><div class="col-lg-6 text-center"><img style="height:14rem;"id=' +i + '></div><div class="col-lg-6"><div class="text-center"><p style="font-family:Quicksand Bold; font-size:15px; color:#AD363B">Localização</p><p style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].report_address + '</p><p style="font-family:Quicksand Bold; font-size:15px; color:#AD363B">Data</p><p style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].report_creationtimeformatted +'</p><p style="font-family:Quicksand Bold; font-size:15px; color:#AD363B">Estado</p><p style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_status+'</p></div></div><div class="col-lg-12 text-center"><button type="button" class="btn btn-primary-view">Ver mais</button></div></div><hr>'
+
+                            $(".inner").append(contentString);
+
+                            var image = document.getElementById(i);
+                            image.src = "data:image/jpg;base64," + data[i].report_thumbnail;
+
+                        }
+                    });
+                }
+
+            }
+        )
+            .catch(function(err) {
+                console.log('Fetch Error', err);
+            });
+    }
 }
 
 $('.on').scroll(function () {
