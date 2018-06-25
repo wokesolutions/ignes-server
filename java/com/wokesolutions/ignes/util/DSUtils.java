@@ -49,6 +49,8 @@ public class DSUtils {
 		public static final String USER_LEVEL = "user_level";
 		public static final String USER_CREATIONTIME = "user_creationtime";
 		public static final String USER_CODE = "user_code";
+		public static final String USER_PROFPIC = "user_profpic";
+		public static final String USER_PROFPICTN = "user_profpictn";
 
 	// UserOptional
 		public static final String USEROPTIONAL_NAME = "useroptional_name";
@@ -220,6 +222,7 @@ public class DSUtils {
 		public static final String REPORTCOMMENT_TEXT = "reportcomment_text";
 		public static final String REPORTCOMMENT_TIME = "reportcomment_time";
 		public static final String REPORTCOMMENT_USER = "reportcomment_user";
+		public static final String REPORTCOMMENT_REPORT = "reportcomment_report";
 		
 	// Skill
 		public static final String SKILL_NUMBEROFPEOPLE = "skill_numberofpeople";
@@ -238,6 +241,7 @@ public class DSUtils {
 		public static final String TASK_WORKER = "task_worker";
 		public static final String TASK_TIME = "task_time";
 		public static final String TASK_INDICATIONS = "task_indications";
+		public static final String TASK_ORG = "task_org";
 		
 	// PasswordChangeLog
 		public static final String PASSWORDCHANGELOG_OLD = "passwordchangelog_old";

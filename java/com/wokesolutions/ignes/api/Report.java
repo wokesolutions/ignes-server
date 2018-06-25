@@ -5,6 +5,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -51,7 +52,6 @@ import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.callbacks.LevelManager;
-import com.wokesolutions.ignes.data.Data;
 import com.wokesolutions.ignes.data.ReportData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
@@ -802,7 +802,6 @@ public class Report {
 
 	// ---------------x--------------- SUBCLASS
 
-	private static final String VOTE = "vote";
 	private static final String UP = "up";
 	private static final String DOWN = "down";
 	private static final String SPAM = "spam";
@@ -873,9 +872,9 @@ public class Report {
 			List<Entity> entities = Arrays.asList(vote, userPoints, uservote);
 
 			datastore.put(txn, entities);
+			txn.commit();
 			LOG.info(Message.VOTED_REPORT);
 			return Response.ok().build();
-
 		} catch(EntityNotFoundException e) {
 			txn.rollback();
 			LOG.info(Message.UNEXPECTED_ERROR);
@@ -1091,25 +1090,22 @@ public class Report {
 	@POST
 	@Path("/vote/multiple")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
-	public Response voteAll(Data votesO, @Context HttpServletRequest request) {
+	public Response voteAll(String votesO, @Context HttpServletRequest request) {
 		int retries = 5;
 
-		LOG.info(votesO.array.toString());
-		
-		JSONArray votes = votesO.array;
+		LOG.info(votesO);
+
+		JSONObject votes = new JSONObject(votesO);
 
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
+		Iterator<String> keys = votes.keys();
+
 		while(true) {
 			try {
-				for(int i = 1; i <= votes.length(); i++) {
-					JSONObject repVote = votes.getJSONObject(i);
-
-					if(repVote == null)
-						break;
-
-					String reportid = repVote.getString(DSUtils.REPORT);
-					String vote = repVote.getString(VOTE);
+				while(keys.hasNext()) {
+					String reportid = keys.next();
+					String vote = votes.getString(reportid);
 
 					if(vote.equals(UP))
 						upvoteReportRetry(reportid, username);
@@ -1129,7 +1125,7 @@ public class Report {
 			}
 		}
 	}
-	
+
 	// -----------x----------- SUBCLASS
 
 	@POST
@@ -1138,6 +1134,9 @@ public class Report {
 	public Response commentOnRep(String text, @QueryParam(ParamName.CURSOR) String cursor,
 			@Context HttpServletRequest request, @PathParam(ParamName.REPORT) String report) {
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+
+		JSONObject obj = new JSONObject(text);
+		text = obj.getString(DSUtils.REPORTCOMMENT_TEXT);
 
 		int retries = 5;
 		while(true) {
@@ -1150,11 +1149,94 @@ public class Report {
 				}
 
 				Entity comment = new Entity(DSUtils.REPORTCOMMENT);
-				comment.setUnindexedProperty(DSUtils.REPORTCOMMENT_TEXT, text);
+				comment.setProperty(DSUtils.REPORTCOMMENT_TEXT, text);
 				comment.setProperty(DSUtils.REPORTCOMMENT_TIME, new Date());
 				comment.setProperty(DSUtils.REPORTCOMMENT_USER, username);
+				comment.setProperty(DSUtils.REPORTCOMMENT_REPORT, report);
 				datastore.put(comment);
 				return Response.ok().build();
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+
+	@GET
+	@Path("/comment/get/{report}")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response getComments(@Context HttpServletRequest request,
+			@PathParam(ParamName.REPORT) String report, @QueryParam(ParamName.CURSOR) String cursor) {
+		int retries = 5;
+
+		while(true) {
+			try {
+				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
+
+				if(cursor != null && !cursor.equals(""))
+					fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
+
+				Query query = new Query(DSUtils.REPORTCOMMENT);
+				Filter filter = new Query
+						.FilterPredicate(DSUtils.REPORTCOMMENT_REPORT, 
+								FilterOperator.EQUAL, report);
+				query.setFilter(filter);
+
+				query.addProjection(new PropertyProjection(DSUtils.REPORTCOMMENT_TEXT, String.class))
+				.addProjection(new PropertyProjection(DSUtils.REPORTCOMMENT_TIME, Date.class))
+				.addProjection(new PropertyProjection(DSUtils.REPORTCOMMENT_USER, String.class));
+
+				QueryResultList<Entity> list = datastore.prepare(query).asQueryResultList(fetchOptions);
+
+				JSONArray array = new JSONArray();
+
+				for(Entity comment : list) {
+					LOG.info("çugiug");
+					JSONObject obj = new JSONObject();
+					LOG.info("çugiug");
+					obj.put(DSUtils.REPORTCOMMENT_TEXT, comment.getProperty(DSUtils.REPORTCOMMENT_TEXT));
+					LOG.info("çugiug");
+					obj.put(DSUtils.REPORTCOMMENT_TIME, comment.getProperty(DSUtils.REPORTCOMMENT_TIME));
+					
+					LOG.info("çugiug");
+
+					String username = comment.getProperty(DSUtils.REPORTCOMMENT_USER).toString();
+					obj.put(DSUtils.REPORTCOMMENT_USER, username);
+					
+					LOG.info("çugiug");
+
+					Key user = KeyFactory.createKey(DSUtils.USER, username);
+					Entity userOE;
+					
+					LOG.info("çugiug");
+					try {
+						Query query2 = new Query(DSUtils.USEROPTIONAL).setAncestor(user);
+
+						userOE = datastore.prepare(query2).asSingleEntity();
+
+						if(userOE == null)
+							throw new TooManyResultsException();
+					} catch (TooManyResultsException e) {
+						LOG.info(Message.UNEXPECTED_ERROR + " " + comment.toString() + " " + username);
+						continue;
+					}
+					
+					LOG.info("çugiug");
+
+					Object profpicpath = userOE.getProperty
+							(DSUtils.USEROPTIONAL_PICTNPATH);
+
+					if(profpicpath != null) {
+						String profpic = Storage.getImage(profpicpath.toString());
+						obj.put(DSUtils.USER_PROFPICTN, profpic);
+					}
+
+					array.put(obj);
+				}
+				
+				LOG.info("çugiug");
+
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();

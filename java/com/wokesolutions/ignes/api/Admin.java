@@ -496,7 +496,9 @@ public class Admin {
 				try {
 					Entity orgE = datastore.get(orgkey);
 					
-					orgE.setProperty(DSUtils.ORG_CONFIRMED, CustomHeader.TRUE);
+					orgE.setProperty(DSUtils.ORG_CONFIRMED, true);
+					
+					datastore.put(orgE);
 					
 					return Response.ok().build();
 				} catch (EntityNotFoundException e) {

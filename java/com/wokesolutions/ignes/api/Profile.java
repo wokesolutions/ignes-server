@@ -465,6 +465,14 @@ public class Profile {
 		int reports = datastore.prepare(query3).asList(FetchOptions.Builder.withDefaults()).size();
 
 		object.put(USER_REPORTS, reports);
+		
+		Object pic = optionals.getProperty(DSUtils.USEROPTIONAL_PICTNPATH);
+		
+		if(pic != null) {
+			String picpath = pic.toString();
+			String picb64 = Storage.getImage(picpath);
+			object.put(DSUtils.USER_PROFPICTN, picb64);
+		}
 
 		return Response.ok(object.toString()).build();
 	}
@@ -707,5 +715,12 @@ public class Profile {
 		obj.put(PROFILEPIC, img);
 		
 		return Response.ok(obj.toString()).build();
+	}
+	
+	@GET
+	@Path("/getprofpicthumbnails")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response getThumbnails() {
+		return null;
 	}
 }
