@@ -1222,7 +1222,6 @@ public class Report {
 						}
 						
 						if(existingVote == null) {
-							LOG.info("çugiupgiçu");
 							response = Response.ok().build();
 							txn.rollback();
 							continue;
@@ -1232,14 +1231,33 @@ public class Report {
 						
 						String oldVote = existingVote.getProperty(DSUtils.USERVOTE_TYPE).toString();
 						
-						Entity reportvote;
+						Entity report;
 						try {
-							reportvote = datastore
-									.get(KeyFactory.createKey(DSUtils.REPORTVOTES, reportid));
+							report = datastore
+									.get(KeyFactory.createKey(DSUtils.REPORT, reportid));
 						} catch (EntityNotFoundException e) {
 							LOG.info(Message.REPORT_NOT_FOUND);
 							txn.rollback();
 							response = Response.status(Status.NOT_FOUND).build();
+							continue;
+						}
+						
+						Query query2 = new Query(DSUtils.REPORTVOTES).setAncestor(report.getKey());
+						Entity reportvote;
+						
+						try {
+							reportvote = datastore.prepare(query2).asSingleEntity();
+						} catch(TooManyResultsException e) {
+							txn.rollback();
+							LOG.info(Message.UNEXPECTED_ERROR);
+							response = Response.status(Status.INTERNAL_SERVER_ERROR).build();
+							continue;
+						}
+						
+						if(reportvote == null) {
+							txn.rollback();
+							LOG.info(Message.UNEXPECTED_ERROR);
+							response = Response.status(Status.INTERNAL_SERVER_ERROR).build();
 							continue;
 						}
 						
