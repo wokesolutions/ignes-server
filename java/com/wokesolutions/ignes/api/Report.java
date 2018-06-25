@@ -1189,27 +1189,29 @@ public class Report {
 
 				QueryResultList<Entity> list = datastore.prepare(query).asQueryResultList(fetchOptions);
 
+				LOG.info(Boolean.toString(list == null));
+				try {
+				LOG.info(Integer.toString(list.size()));
+				} catch(Exception e) {
+					LOG.info(e.toString());
+					LOG.info(e.getMessage());
+				}
+				
 				JSONArray array = new JSONArray();
 
 				for(Entity comment : list) {
-					LOG.info("çugiug");
 					JSONObject obj = new JSONObject();
-					LOG.info("çugiug");
 					obj.put(DSUtils.REPORTCOMMENT_TEXT, comment.getProperty(DSUtils.REPORTCOMMENT_TEXT));
-					LOG.info("çugiug");
 					obj.put(DSUtils.REPORTCOMMENT_TIME, comment.getProperty(DSUtils.REPORTCOMMENT_TIME));
 					
-					LOG.info("çugiug");
 
 					String username = comment.getProperty(DSUtils.REPORTCOMMENT_USER).toString();
 					obj.put(DSUtils.REPORTCOMMENT_USER, username);
 					
-					LOG.info("çugiug");
 
 					Key user = KeyFactory.createKey(DSUtils.USER, username);
 					Entity userOE;
 					
-					LOG.info("çugiug");
 					try {
 						Query query2 = new Query(DSUtils.USEROPTIONAL).setAncestor(user);
 
@@ -1221,8 +1223,6 @@ public class Report {
 						LOG.info(Message.UNEXPECTED_ERROR + " " + comment.toString() + " " + username);
 						continue;
 					}
-					
-					LOG.info("çugiug");
 
 					Object profpicpath = userOE.getProperty
 							(DSUtils.USEROPTIONAL_PICTNPATH);
