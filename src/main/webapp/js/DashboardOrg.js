@@ -29,9 +29,14 @@ function init() {
     document.getElementById("next_list").onclick = getNextWorkers;
     document.getElementById("previous_list").onclick = getPreWorkers;
     document.getElementById("refresh_workers").onclick = getFirstWorkers;
+    document.getElementById("show_more_button").onclick = getShowMore;
 
     getFirstWorkers();
 
+}
+
+function getShowMore(){
+    hideShow("show_more_variable");
 }
 
 function searchLocation(){
@@ -89,9 +94,12 @@ function hideShow(element){
 
         document.getElementById("list_users").style.display = "none";
 
-    }else if(current_position == "create_variable"){
+    }else if(current_position === "create_variable"){
 
         document.getElementById("create_worker").style.display = "none";
+    }else if(current_position === "show_more_variable"){
+
+        document.getElementById("details_report").style.display = "none";
     }
 
 
@@ -115,6 +123,9 @@ function hideShow(element){
         document.getElementById("create_worker").style.display = "block";
         current_position = "create_variable";
 
+    }else if(element === "show_more_variable"){
+        document.getElementById("details_report").style.display = "block";
+        current_position = "show_more_variable";
     }
 
 }
@@ -621,13 +632,30 @@ function deleteWorker (row){
         });
 }
 
-var max = 20;
+var loadMore = function (cursor) {
+    fetch(URL_BASE + '/api/org/alltasks?cursor=' + cursor, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
 
-var loadMore = function () {
-    for (var i = max-20; i < max; i++) {
-        $(".inner").append("<p>test "+i+"</p>");
-    }
-    max += 20;
+            if (response.status === 200 || response.status === 204) {
+                response.json().then(function(data) {
+                    console.log(data);
+                    var i;
+                    for(i = 0; i<data.length; i++){
+                        (".inner").append("<p>"+data[i].Task+"</p>");
+                    }
+                });
+            }
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 $('.on').scroll(function () {
@@ -639,10 +667,4 @@ $('.on').scroll(function () {
     }
 });
 
-loadMore();
-
-$("#test").on('click', function() {
-
-    $.fancybox.open('<div class="message"><h2>Hello!</h2><p>You are awesome!</p></div>');
-
-});
+loadMore("");

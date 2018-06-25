@@ -501,6 +501,14 @@ label {
     margin-top: 1rem;
 }
 
+.btn-primary-view {
+    color: #fff;
+    background-color: #AD363B;
+    border-color: #AD363B;
+    margin-top: 1rem;
+    font-family: "Quicksand Bold";
+}
+
 .table-bordered td, .table-bordered th {
     border: 1px solid rgba(68, 68, 68, 0.49);
     background-color: white;
