@@ -676,7 +676,7 @@ var loadMore = function (cursor) {
                     console.log(data);
                     var i;
                     for(i = 0; i<data.length; i++){
-                        (".inner").append("<p>"+data[i].Task+"</p>");
+                        $(".inner").append("<p>"+data[i].Task+"</p>");
                     }
                 });
             }
@@ -714,7 +714,7 @@ var loadMoreComments = function(idReport,cursor){
                     console.log(data);
                     var i;
                     for(i = 0; i<data.length; i++){
-                        (".inner").append("<p>" + data[i].ReportComment + "</p>");
+                        $(".inner").append("<p>" + data[i].ReportComment + "</p>");
                     }
 
                 });
@@ -731,7 +731,7 @@ $('.comments').scroll(function () {
     var top = $('.comments').scrollTop();
     $('.two').html("top: "+top+" diff: "+($(".inner").height() - $(".comments").height()));
     if (top >= $(".inner").height() - $(".comments").height()) {
-        $('.two').append(" bottom");
+        $('.two').append("bottom");
         loadMoreComments(reportID,commentsCursor);
     }
 });
