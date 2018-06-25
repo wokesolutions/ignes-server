@@ -168,24 +168,40 @@ public class Admin {
 			// If the entity does not exist an Exception is thrown. Otherwise,
 			Key userKey = KeyFactory.createKey(DSUtils.USER, username);
 			Entity user = datastore.get(userKey);
+			
+			LOG.info("kgiçgi");
 
 			Entity admin = new Entity(userKey);
 			admin.setUnindexedProperty(DSUtils.ADMIN_CREATIONTIME, new Date());
+			
+			LOG.info("kgiçgi");
 			admin.setUnindexedProperty(DSUtils.ADMIN_WASPROMOTED, true);
+			
+			LOG.info("kgiçgi");
 			admin.setUnindexedProperty(DSUtils.ADMIN_OLDLEVEL, user.getProperty(DSUtils.USER_LEVEL));
+			
+			LOG.info("kgiçgi");
 
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.ADMIN);
+			
+			LOG.info("kgiçgi");
 
 			Key promoterKey = null;
 			try {
 				promoterKey = getMoterKey(request);
+				
+				LOG.info("kgiçgi");
 			} catch(InternalServerErrorException e) {
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
+			
+			LOG.info("kgiçgi");
 
 			if(promoterKey == null)
 				return Response.status(Status.EXPECTATION_FAILED).entity(Message.MOTER_NOT_ADMIN).build();
 
+			
+			LOG.info("kgiçgi");
 			Entity adminLog = new Entity(DSUtils.ADMINLOG, promoterKey);
 			adminLog.setProperty(DSUtils.ADMINLOG_PROMOTED, username);
 			adminLog.setUnindexedProperty(DSUtils.ADMINLOG_TIME, new Date());
@@ -333,6 +349,8 @@ public class Admin {
 
 		for(Entity user : list) {
 
+			LOG.info(user.getKey().getName());
+			
 			Query queryPoints = new Query(DSUtils.USERPOINTS).setAncestor(user.getKey());
 
 			Entity points;
@@ -341,6 +359,11 @@ public class Admin {
 				points = datastore.prepare(queryPoints).asSingleEntity();
 			} catch(TooManyResultsException e) {
 				continue;
+			}
+			
+			if(points == null) {
+				LOG.info(Message.UNEXPECTED_ERROR);
+				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
 			JSONObject us = new JSONObject();
