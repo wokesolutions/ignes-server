@@ -259,13 +259,10 @@
             <div class="scrool_markers">
                 <p class="info_text text-center">Imagem</p>
                 <div class="col-lg-12 text-center">
-                    <img  id="thumb_report" style="width:20%; height:20%">
+                    <img class="thumb_report_hover" id="thumb_report" style="width:20%; height:20%">
                 </div>
-
                 <p class="info_text text-center">Título:</p>
-                <p class="info_text_response " id="report_title_id"></p>
-                <p class="info_text text-center">Descrição:</p>
-                <p class="info_text_response text-center" id="report_description_id"></p>
+                <p class="info_text_response text-center" id="report_title_id"></p>
                 <p class="info_text text-center">Morada:</p>
                 <p class="info_text_response text-center" id="report_address_id"></p>
                 <p class="info_text text-center">Estado:</p>
@@ -274,12 +271,41 @@
                 <p class="info_text_response text-center"id="report_gravity_id"></p>
                 <p class="info_text text-center"id="report_private_id"></p>
 
+
+                <div class="col-lg-12 mx-lg-auto text-center">
+                    <button id="" type="button" class="btn btn-primary-check btn-xl-yellow">Ver Mais </button>
+                </div>
+
             </div>
         </div>
     </div>
 </div>
 
+<!--Details Report-->
+<div id="details_report">
+    <div class="scrool_markers">
+        <p class="info_text text-center">Imagem</p>
+        <div class="col-lg-12 text-center">
+            <img class="thumb_report_hover" id="thumb_report" style="width:20%; height:20%">
+        </div>
+        <p class="info_text text-center">Título:</p>
+        <p class="info_text_response text-center" id="report_title_id"></p>
+        <p class="info_text text-center">Descrição:</p>
+        <p class="info_text_response text-center" id="report_description_id"></p>
+        <p class="info_text text-center">Morada:</p>
+        <p class="info_text_response text-center" id="report_address_id"></p>
+        <p class="info_text text-center">Estado:</p>
+        <p class="info_text_response text-center"id="report_state_id"></p>
+        <p class="info_text text-center">Gravidade:</p>
+        <p class="info_text_response text-center"id="report_gravity_id"></p>
+        <p class="info_text text-center"id="report_private_id"></p>
+
+    </div>
+</div>
+
+
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAfHsLp6fKLK4YZ2WSoXO0KsM58Clspg8k"></script>
+<script src="../js/bootbox.min.js"></script>
 <script src="../js/jquery-3.3.1.min.js"></script>
 <script src="../js/DashboardOrg.js"></script>
 </body>

@@ -558,3 +558,7 @@ label {
     height: 500px;
     overflow-y:auto;
 }
+
+.thumb_report_hover:hover{
+    transform:scale(4.5);
+}

@@ -548,3 +548,28 @@ function getPendingFirst(){
             console.log('Fetch Error', err);
         });
 }
+
+function activateOrg(row){
+    var table = document.getElementById("orgs_pending_table");
+    var nif = table.rows[row].cells[0].innerHTML;
+    fetch(URL_BASE + '/api/admin/confirmorg/' + nif, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        }
+    }).then(function(response) {
+
+            if (response.status === 200 || response.status === 204) {
+                alert("Organização ativa com sucesso.")
+            }else{
+                alert("Falha ao ativar a organização.")
+            }
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+

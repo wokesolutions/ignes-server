@@ -158,7 +158,7 @@ function logOut(){
             if (response.status === 200) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('ignes_username');
-                window.location.href = "index.html";
+                window.location.href = "../index.html";
 
             }else{
                 console.log("Tratar do Forbidden")
@@ -640,3 +640,9 @@ $('.on').scroll(function () {
 });
 
 loadMore();
+
+$("#test").on('click', function() {
+
+    $.fancybox.open('<div class="message"><h2>Hello!</h2><p>You are awesome!</p></div>');
+
+});
