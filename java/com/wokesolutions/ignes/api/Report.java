@@ -1172,6 +1172,13 @@ public class Report {
 
 		while(true) {
 			try {
+				try {
+					datastore.get(KeyFactory.createKey(DSUtils.REPORT, report));
+				} catch (EntityNotFoundException e1) {
+					LOG.info(Message.REPORT_NOT_FOUND);
+					return Response.status(Status.NOT_FOUND).build();
+				}
+				
 				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 
 				if(cursor != null && !cursor.equals(""))
