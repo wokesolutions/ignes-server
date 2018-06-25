@@ -676,7 +676,17 @@ var loadMore = function (cursor) {
                     console.log(data);
                     var i;
                     for(i = 0; i<data.length; i++){
-                        $(".inner").append("<p>"+data[i].Task+"</p>");
+                        var contentString = '<div id="content">';
+                        if(data[i].report_title !== null)
+                            contentString +='<h1 style="font-family: Quicksand Bold; color:#AD363B; font-size:30px">'+ data[i].report_title +'</h1>';
+                        contentString += '<div>' + '<p style="font-family: Quicksand Bold">'+'Localização' +'</p>'+ '<p>' + data[i].report_address + '</div>';
+                        if(data[i].report_description !== null)
+                            contentString +='<div>' + '<p style="font-family: Quicksand Bold">'+'Descrição' + '<p>' + data[i].report_description +'</p>'+ '</p>' +'</div>';
+
+                        contentString +='<div>'+ '<p style="font-family: Quicksand Bold">'+'Estado' +'</p>'+ '<p style="color:forestgreen">' + data[i].report_status +
+                            '</div>'+
+                            '</div>';
+                        $(".inner").append(contentString);
                     }
                 });
             }
