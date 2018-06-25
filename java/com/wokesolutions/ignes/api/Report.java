@@ -672,7 +672,10 @@ public class Report {
 	}
 
 	public static void appendVotesAndComments(JSONObject jsonReport, Entity report) {
-		Query commentQuery = new Query(DSUtils.REPORTCOMMENT).setAncestor(report.getKey());
+		Query commentQuery = new Query(DSUtils.REPORTCOMMENT);
+		Filter filter = new Query.FilterPredicate(DSUtils.REPORTCOMMENT_REPORT,
+				FilterOperator.EQUAL, report.getKey().getName());
+		commentQuery.setFilter(filter);
 
 		List<Entity> comments = datastore.prepare(commentQuery).asList(FetchOptions.Builder.withDefaults());
 
@@ -1173,7 +1176,7 @@ public class Report {
 	public Response voteAll(String votesO, @Context HttpServletRequest request) {
 		int retries = 5;
 
-		LOG.info(votesO);
+		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
 		JSONObject votes = new JSONObject(votesO);
 
@@ -1195,11 +1198,13 @@ public class Report {
 					else if(vote.equals(SPAM))
 						response = spamvoteReportRetry(reportid, username);
 					else if(vote.equals(NEUTRAL)) {
+						
 						Query query = new Query(DSUtils.USERVOTE).setKeysOnly();
 						Filter filter1 = new Query.FilterPredicate(DSUtils.USERVOTE_REPORT,
 								FilterOperator.EQUAL, reportid);
 						Filter filter2 = new Query.FilterPredicate(DSUtils.USERVOTE_USER,
 								FilterOperator.EQUAL, username);
+						
 						List<Filter> filters = Arrays.asList(filter1, filter2);
 						Filter filter = new Query.CompositeFilter(CompositeFilterOperator.AND, filters);
 						query.setFilter(filter);
@@ -1209,11 +1214,40 @@ public class Report {
 							existingVote = datastore.prepare(query).asSingleEntity();
 						} catch(TooManyResultsException e) {
 							LOG.info(Message.UNEXPECTED_ERROR);
-							return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+							response = Response.status(Status.NOT_FOUND).build();
+							continue;
 						}
 						
 						if(existingVote == null)
 							return Response.ok().build();
+						
+						String oldVote = existingVote.getProperty(DSUtils.USERVOTE_TYPE).toString();
+						
+						Entity reportvote;
+						try {
+							reportvote = datastore
+									.get(KeyFactory.createKey(DSUtils.REPORTVOTES, reportid));
+						} catch (EntityNotFoundException e) {
+							LOG.info(Message.REPORT_NOT_FOUND);
+							response = Response.status(Status.NOT_FOUND).build();
+							continue;
+						}
+						
+						if(oldVote.equals(DOWN)) {
+							reportvote.setProperty(DSUtils.REPORTVOTES_DOWN,
+									(long) reportvote.getProperty(DSUtils.REPORTVOTES_DOWN) - 1L);
+							reportvote.setProperty(DSUtils.REPORTVOTES_RELEVANCE,
+									(long) reportvote.getProperty(DSUtils.REPORTVOTES_RELEVANCE) + 1L);
+						} else if(oldVote.equals(UP)) {
+							reportvote.setProperty(DSUtils.REPORTVOTES_UP,
+									(long) reportvote.getProperty(DSUtils.REPORTVOTES_UP) - 1L);
+							reportvote.setProperty(DSUtils.REPORTVOTES_RELEVANCE,
+									(long) reportvote.getProperty(DSUtils.REPORTVOTES_RELEVANCE) - 3L);
+						} else {
+							LOG.info(Message.BAD_FORMAT);
+							response = Response.status(Status.NOT_FOUND).build();
+							continue;
+						}
 						
 						datastore.delete(existingVote.getKey());
 						
@@ -1225,6 +1259,7 @@ public class Report {
 						LOG.info(Message.VOTED_REPORT_ERROR + reportid);
 				}
 
+				txn.commit();
 				return Response.ok().build();
 			} catch(DatastoreException e) {
 				if(retries == 0)

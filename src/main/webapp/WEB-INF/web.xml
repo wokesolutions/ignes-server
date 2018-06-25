@@ -70,6 +70,7 @@
 		<url-pattern>/api/profile/*</url-pattern>
 		<url-pattern>/api/logout</url-pattern>
 		<url-pattern>/api/logout/everywhere</url-pattern>
+		<url-pattern>/api/report/comment/get/*</url-pattern>
 	</filter-mapping>
 
 	<filter>
@@ -79,7 +80,7 @@
 
 	<filter-mapping>
 		<filter-name>User2Filter</filter-name>
-		<url-pattern>/api/report/comment/*</url-pattern>
+		<url-pattern>/api/report/comment/post/*</url-pattern>
 	</filter-mapping>
 	
 	<filter>

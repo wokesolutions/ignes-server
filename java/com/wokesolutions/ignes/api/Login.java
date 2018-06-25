@@ -300,9 +300,6 @@ public class Login {
 						newToken.setProperty(DSUtils.TOKEN_STRING, token);
 						newToken.setProperty(DSUtils.TOKEN_DATE, date);
 						newToken.setProperty(DSUtils.TOKEN_IP, request.getRemoteAddr());
-						
-						LOG.info(newToken.toString());
-						LOG.info(token);
 
 						// Batch operation
 						List<Entity> stuff = Arrays.asList(log, stat, newToken);

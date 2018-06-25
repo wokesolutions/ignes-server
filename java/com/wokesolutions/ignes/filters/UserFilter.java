@@ -14,6 +14,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
@@ -26,10 +27,12 @@ import com.wokesolutions.ignes.util.UserLevel;
 
 public class UserFilter implements Filter {
 
-	public static final Logger LOG = Logger.getLogger(UserFilter.class.getName());
+	private static final Logger LOG = Logger.getLogger(UserFilter.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+	
+	private static final String GET_COMMENTS = "/api/report/comment/get/";
 
-	public void init(FilterConfig arg0) throws ServletException {}  
+	public void init(FilterConfig arg0) throws ServletException {}
 
 	public void doFilter(ServletRequest req, ServletResponse resp,  
 			FilterChain chain) throws IOException, ServletException {
@@ -40,6 +43,16 @@ public class UserFilter implements Filter {
 
 		JWTVerifier verifier;
 		String token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
+		
+		String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
+		
+		try {
+			datastore.get(KeyFactory.createKey(DSUtils.ORG, username));
+			
+			String url = ((HttpServletRequest) req).getRequestURL().toString();
+			if(url.contains(GET_COMMENTS))
+				chain.doFilter(req, resp);
+		} catch (EntityNotFoundException e1) {}
 
 		try {
 			verifier = JWT.require(algorithm)
@@ -72,8 +85,6 @@ public class UserFilter implements Filter {
 				return;
 			}
 		}
-
-		String username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
 
 		Query query = new Query(DSUtils.TOKEN)
 				.setAncestor(KeyFactory.createKey(DSUtils.USER, username));

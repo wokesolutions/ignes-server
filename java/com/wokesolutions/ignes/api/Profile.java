@@ -250,8 +250,10 @@ public class Profile {
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
-		Key userKey = KeyFactory.createKey(DSUtils.USER, username);
-		Query query = new Query(DSUtils.USERVOTE).setAncestor(userKey);
+		Query query = new Query(DSUtils.USERVOTE);
+		Filter filter = new Query.FilterPredicate(DSUtils.USERVOTE_USER,
+				FilterOperator.EQUAL, username);
+		query.setFilter(filter);
 
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(20);
 
@@ -269,12 +271,16 @@ public class Profile {
 			voteJson.put(DSUtils.USERVOTE_TYPE, props.get(DSUtils.USERVOTE_TYPE));
 			//voteJson.put(DSUtils.USERVOTE_USER, props.get(DSUtils.USERVOTE_USER));
 
-			if(props.containsKey(DSUtils.USERVOTE_COMMENT))
-				voteJson.put(DSUtils.USERVOTE_COMMENT, props.get(DSUtils.USERVOTE_COMMENT));
-			if(props.containsKey(DSUtils.USERVOTE_EVENT))
-				voteJson.put(DSUtils.USERVOTE_EVENT, props.get(DSUtils.USERVOTE_EVENT));
 			if(props.containsKey(DSUtils.USERVOTE_REPORT))
 				voteJson.put(DSUtils.USERVOTE_REPORT, props.get(DSUtils.USERVOTE_REPORT));
+			else if(props.containsKey(DSUtils.USERVOTE_EVENT))
+				voteJson.put(DSUtils.USERVOTE_EVENT, props.get(DSUtils.USERVOTE_EVENT));
+			else if(props.containsKey(DSUtils.USERVOTE_COMMENT))
+				voteJson.put(DSUtils.USERVOTE_COMMENT, props.get(DSUtils.USERVOTE_COMMENT));
+			else {
+				LOG.info(Message.UNEXPECTED_ERROR + " " + vote.getKey().getId());
+				continue;
+			}
 
 			jsonarray.put(voteJson);
 		}
