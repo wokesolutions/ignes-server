@@ -676,17 +676,17 @@ var loadMore = function (cursor) {
                     console.log(data);
                     var i;
                     for(i = 0; i<data.length; i++){
-                        var contentString = '<div id="content">';
-                        if(data[i].report_title !== null)
-                            contentString +='<h1 style="font-family: Quicksand Bold; color:#AD363B; font-size:30px">'+ data[i].report_title +'</h1>';
-                        contentString += '<div>' + '<p style="font-family: Quicksand Bold">'+'Localização' +'</p>'+ '<p>' + data[i].report_address + '</div>';
-                        if(data[i].report_description !== null)
-                            contentString +='<div>' + '<p style="font-family: Quicksand Bold">'+'Descrição' + '<p>' + data[i].report_description +'</p>'+ '</p>' +'</div>';
 
-                        contentString +='<div>'+ '<p style="font-family: Quicksand Bold">'+'Estado' +'</p>'+ '<p style="color:forestgreen">' + data[i].report_status +
-                            '</div>'+
-                            '</div>';
+                        var contentString = '<hr><div id="content">';
+                        if(data[i].report_title !== null)
+                            contentString +='<div><h1 class="text-center"style="font-family: Quicksand Bold; color:#AD363B; font-size:20px">'+ data[i].report_title +'</h1></div>';
+                            contentString += '<div class="row"><div class="col-lg-6 text-center"><img style="height:15rem;"id=' +i + '></div><div class="col-lg-6"><div class="text-center"><p style="font-family:Quicksand Bold; font-size:15px; color:#AD363B">Localização</p><p style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].report_address + '</p><p style="font-family:Quicksand Bold; font-size:15px; color:#AD363B">Data</p><p style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].report_creationtimeformatted +'</p><p style="font-family:Quicksand Bold; font-size:15px; color:#AD363B">Estado</p><p style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_status+'</p></div></div><div class="text-center"><button type="button" class="btn btn-primary-view">Ver mais</button></div></div><hr>'
+
                         $(".inner").append(contentString);
+
+                        var image = document.getElementById(i);
+                        image.src = "data:image/jpg;base64," + data[i].report_thumbnail;
+
                     }
                 });
             }
