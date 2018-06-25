@@ -714,7 +714,7 @@ var loadMoreComments = function(idReport,cursor){
                     console.log(data);
                     var i;
                     for(i = 0; i<data.length; i++){
-                        $(".inner").append("<p>" + data[i].ReportComment + "</p>");
+                        $(".inner_comment").append("<p>" + data[i].ReportComment + "</p>");
                     }
 
                 });
@@ -729,8 +729,8 @@ var loadMoreComments = function(idReport,cursor){
 
 $('.comments').scroll(function () {
     var top = $('.comments').scrollTop();
-    $('.two').html("top: "+top+" diff: "+($(".inner").height() - $(".comments").height()));
-    if (top >= $(".inner").height() - $(".comments").height()) {
+    $('.two').html("top: "+top+" diff: "+($(".inner_comment").height() - $(".comments").height()));
+    if (top >= $(".inner_comment").height() - $(".comments").height()) {
         $('.two').append("bottom");
         loadMoreComments(reportID,commentsCursor);
     }
