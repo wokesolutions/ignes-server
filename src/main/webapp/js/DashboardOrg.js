@@ -791,7 +791,7 @@ function getAvailableWorker(cursor){
                                 console.log(data.length);
                                 for(i = 0; i < data.length; i++){
                                     var email = data[i].Worker;
-                                    $(".dropdown-menu").append("<a href='#' value=" + email + ">" + email + "</a>");
+                                    $(".dropdown-menu").append("<option style='border: 3px #3b4956 solid' value=" + email + "><a href='#'>" + email + "</a></option>");
                                     $(".dropdown-menu").children().last().click(function() {
                                         fetch(URL_BASE + "/api/org/givetask", {
                                             method: 'POST',
