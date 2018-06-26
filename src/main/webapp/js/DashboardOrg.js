@@ -74,13 +74,13 @@ function getCurrentLocation() {
             var mapElement = document.getElementById('map');
             map = new google.maps.Map(mapElement, currentLoc);
 
-            getMarkers(5);
+            getMarkers(15);
         })
     }else {
         var mapElement = document.getElementById('map');
         map = new google.maps.Map(mapElement, currentLoc);
 
-        getMarkers(5);
+        getMarkers(15);
     }
 
     return currentLoc;
