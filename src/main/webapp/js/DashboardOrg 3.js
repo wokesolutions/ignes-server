@@ -679,24 +679,17 @@ var loadMore = function (cursor) {
                         var i;
                         for(i = 0; i<data.length; i++){
 
-                            var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
-                                '<div class="row" >' +
-                                '<div class="col-lg-3 col-md-3 mx-auto">' +
-                                '<div clss="col-lg-6 text-left"><p class="info_text_bold_sm text-left">Gravidade</p></div>'+
-                                '<div clss="col-lg-6 text-left"><p class="text-left"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_gravity+'</p></div>'+
-                                '</div>'+
-                                '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
+                            var contentString = '<hr><div id="content"> <div class="row" >' +
+                                '<div class="col-lg-12 col-md-12 mx-auto text-center">' +
                                 '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
-                                '</div>' +
-                                '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_status+'</p></div>'+
-                                '</div>' +
-                                ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">'+
-                                '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].report_address + '</p>' +'</div>' +'</div><hr>'+
+                                '</div>' + '</div>' + ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">'+
+                                '<p style="margin-bottom: 0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].report_address + '</p>' +'</div>' +'</div>'+
                                 '<div class="row"><div class="col-lg-6 text-center">' +'<img style="height:10rem;"id=' +i + '>' +
-                                '</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p class="text-center" style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_description+' </p>'+
-                                '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].task_indications+' </p></div></div><hr style="margin-bottom: 0; margin-top:0">'+
-                                '<div class="row"><div class="col-lg-6 text-left">'+'<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' +data[i].task_worker + '</p></div>'+
-                                '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">'+ data[i].report_creationtimeformatted+' </p></div></div>';
+                                '</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_description+' </p>'+
+                                '<p class="info_text_bold_sm text-center">Gravidade</p><p style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_gravity+' </p>'+
+                                '<p class="info_text_bold_sm text-center">Estado</p><p style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_status+' </p></div></div>'+
+                                '<div class="row"><div class="col-lg-6 text-left">'+'<p style="font-family:Quicksand bold; font-size:15px; color:#3b4956">' +data[i].task_worker + '</p></div>'+
+                                '<div class="col-lg-6 text-left"><p style="font-family:Quicksand Bold; font-size:15px; color:#3b4956">'+ data[i].report_creationtimeformatted+' </p></div></div>';
 
                             $(".inner").append(contentString);
 
@@ -762,4 +755,3 @@ $('.comments').scroll(function () {
         loadMoreComments(reportID,commentsCursor);
     }
 });
-

@@ -6,6 +6,9 @@
     <link href="../css/bootstrap.min.css" rel="stylesheet">
     <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     <link href="../css/index.css" rel="stylesheet">
+
+
+
     <style>
         #map {
             height: 100%;
@@ -43,31 +46,38 @@
 <!--List Users-->
 <div id="list_users" style="display: none">
     <div class="row">
-        <div class=" col-md-2 col-lg-2 text-center">
-            <button class="btn btn-default btn-style" id="refresh_workers"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
+        <div class="col-md-4 col-lg-4 text-center">
         </div>
-        <div class=" col-md-10 col-lg-10 text-center"></div>
-    </div>
-    <div class="container">
-        <div class="table-responsive">
-            <table class=" table table-bordered table-style text-center" id="user_table">
-                <tr>
-                    <th class="th-style">Name</th>
-                    <th class="th-style">Email</th>
-                    <th class="th-style"> Serviços</th>
-                </tr>
-            </table>
+
+        <div class="col-md-8 col-lg-8 text-center" >
+            <div class="row">
+                <div class=" col-md-2 col-lg-2 text-center">
+                    <button class="btn btn-default btn-style" id="refresh_workers"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
+                </div>
+                <div class=" col-md-10 col-lg-10 text-center"></div>
+            </div>
+            <div class="container">
+                <div class="table-responsive">
+                    <table class=" table table-hover table-style text-center" id="user_table">
+                        <tr>
+                            <th class="th-style">Name</th>
+                            <th class="th-style">Email</th>
+                            <th class="th-style"> Serviços</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="row">
+                <div class=" col-md-8 col-lg-8 text-center"></div>
+                <div class=" col-md-2 col-lg-2 text-center">
+                    <button style="display: none" class="btn btn-default" id="previous_list"><i class="fa fa-toggle-left size"></i> </button>
+                </div>
+                <div class=" col-md-1 col-lg-1 text-center">
+                    <button style="display: none" class="btn btn-default" id="next_list"><i class="fa fa-toggle-right size"></i> </button>
+                </div>
+                <div class=" col-md-1 col-lg-1 text-center"></div>
+            </div>
         </div>
-    </div>
-    <div class="row">
-        <div class=" col-md-8 col-lg-8 text-center"></div>
-        <div class=" col-md-2 col-lg-2 text-center">
-            <button style="display: none" class="btn btn-default" id="previous_list"><i class="fa fa-toggle-left size"></i> </button>
-        </div>
-        <div class=" col-md-1 col-lg-1 text-center">
-            <button style="display: none" class="btn btn-default" id="next_list"><i class="fa fa-toggle-right size"></i> </button>
-        </div>
-        <div class=" col-md-1 col-lg-1 text-center"></div>
     </div>
 </div>
 
@@ -121,11 +131,6 @@
             </div>
         </div>
         <div class="col-lg-8">
-            <div class="row">
-                <div class="col-lg-12 text-center" style="margin-top:2rem">
-                    <p class="info_text_bold">Feed</p>
-                </div>
-            </div>
             <div class='on' style="margin-top:2rem; margin-left:5rem"><div class='inner'></div></div>
         </div>
     </div>
@@ -263,14 +268,14 @@
             <p class="info_text_response text-center" id="report_title_id"></p>
             <p class="info_text_bold_sm text-center">Morada</p>
             <p class="info_text_response text-center" id="report_address_id"></p>
-            <p class="info_text_bold_sm text-center">Estado:</p>
+            <p class="info_text_bold_sm text-center">Estado</p>
             <p class="info_text_response text-center"id="report_state_id"></p>
-            <p class="info_text_bold_sm text-center">Gravidade:</p>
+            <p class="info_text_bold_sm text-center">Gravidade</p>
             <p class="info_text_response text-center"id="report_gravity_id"></p>
             <p class="info_text text-center"id="report_private_id"></p>
 
             <div class="col-lg-12 mx-lg-auto text-center">
-                <button id="show_more_button" type="button" class="btn btn-primary-view">Ver Mais</button>
+                <button id="show_more_button" style="margin-top:0" type="button" class="btn btn-primary-view">Ver Mais</button>
             </div>
         </div>
     </div>
@@ -305,7 +310,59 @@
     </div>
     <hr>
     <div class="row">
-        <div class="col-lg-8">
+        <div class="col-lg-3">
+            <div class="row">
+                <div class="col-lg-12 col-md-12 mx-auto text-center">
+                    <p class="info_text_bold_sm" style="">Associar trabalhador a esta tarefa</p>
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col-lg-12 col-md-12 mx-auto text-center">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary-style dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Escolher trabalhador
+                        </button>
+                        <div class="dropdown-menu ">
+                            <a class="dropdown-item dropdown-style" href="#">catarinapm28@hotmail.com</a>
+                            <a class="dropdown-item dropdown-style" href="#">catarinapm28@hotmail.com</a>
+                            <a class="dropdown-item dropdown-style" href="#">catarinapm28@hotmail.com</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row" style="margin-top: 4rem">
+                <div class="col-lg-6 col-md-6 mx-auto text-center">
+                    <p class="info_text_bold_sm">Tarefa</p>
+                </div>
+                <div class="col-lg-6 col-md-6 mx-auto text-left">
+                    <p class="info_text_response">Limpar Mato</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6 col-md-6 mx-auto text-center">
+                    <p class="info_text_bold_sm">Trabalhador Associado</p>
+                </div>
+                <div class="col-lg-6 col-md-6 mx-auto text-left">
+                    <p class="info_text_response">Catarina Matos</p>
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6 col-md-6 mx-auto text-center">
+                    <p class="info_text_bold_sm" >Indicações</p>
+                </div>
+                <div class="col-lg-6 col-md-6 mx-auto text-left">
+                    <input class="form-control">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12 mx-lg-auto text-center" style="margin-top: 3rem">
+                    <button id="" type="button" class="btn btn-circle btn-lg-org"><i class="fa fa-check" id="worker_register"> </i> </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
             <div class="row" >
                 <div class="col-lg-8 col-md-8 text-right ">
                     <div class="row" >
@@ -338,7 +395,7 @@
                 <div class="col-lg-4 col-md-4 text-left"></div>
             </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-lg-3">
 
             <div class="col-lg-6 text-center">
                 <div class="row">
@@ -389,6 +446,8 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAfHsLp6fKLK4YZ2WSoXO0KsM58Clspg8k"></script>
 <script src="../js/bootbox.min.js"></script>
 <script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/bootstrap.bundle.js"></script>
 <script src="../js/DashboardOrg.js"></script>
+
 </body>
 </html>
