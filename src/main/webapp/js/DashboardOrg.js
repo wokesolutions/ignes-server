@@ -6,6 +6,7 @@ var feedCursor;
 var commentsCursor;
 var current_position = "map_variable";
 var infowindow = new google.maps.InfoWindow();
+var idReportCurr;
 var currentLoc ={
     center: {lat: 38.661148, lng: -9.203075},
     zoom: 18
@@ -292,6 +293,7 @@ function fillMap(reports, cursor, zone){
 }
 
 function getInfo(idReport, i){
+    idReportCurr = idReport;
     fetch(URL_BASE + '/api/report/thumbnail/' + idReport, {
         method: 'GET',
         headers: {
@@ -788,7 +790,26 @@ function getAvailableWorker(cursor){
                                 var i;
                                 console.log(data.length);
                                 for(i = 0; i < data.length; i++){
-                                    $(".dropdown-menu").append("<option value=" + data[i].Worker + ">" + data[i].Worker + "</option>");
+                                    var email = data[i].Worker;
+                                    $(".dropdown-menu").append("<option value=" + email + ">" + email + "</option>");
+                                    $(".dropdown-menu").children().last().click(function() {
+                                        fetch(URK_BASE + "/api/org/givetask", {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Authorization': localStorage.getItem('token')
+                                            },
+                                            body: JSON.stringify({
+                                                email: email,
+                                                report: idReportCurr,
+                                                indications: "Por favor, tenha cuidado com a lenha."
+                                            })
+                                        }).then(function() {
+                                            alert("Tarefa atribuida com sucesso");
+                                        }).catch(function(err) {
+                                            console.log('Fetch Error', err);
+                                        });;
+                                    });
                                 }
 
                             }else{
