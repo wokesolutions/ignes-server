@@ -788,8 +788,7 @@ function getAvailableWorker(cursor){
                                 var i;
                                 console.log(data.length);
                                 for(i = 0; i < data.length; i++){
-                                    document.getElementById("dropdown").append(data[i].Worker);
-
+                                    $(".dropdown-menu").append("<option value=" + data[i].Worker + ">" + data[i].Worker + "</option>");
                                 }
 
                             }else{
