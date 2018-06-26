@@ -21,6 +21,7 @@ google.maps.event.addDomListener(window, 'load', init());
 function init() {
 
     verifyIsLoggedIn();
+    getAvailableWorker("");
 
     document.getElementById("search_location").onclick = searchLocation;
     document.getElementById('map_button').onclick = showMap;
@@ -36,6 +37,7 @@ function init() {
     document.getElementById("close_window").onclick = closeWindow;
 
     getFirstWorkers();
+
 
 }
 
@@ -681,9 +683,7 @@ var loadMore = function (cursor) {
 
                             var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
                                 '<div class="row" >' +
-                                '<div class="col-lg-3 col-md-3 mx-auto">' +
-                                '<div clss="col-lg-6 text-left"><p class="info_text_bold_sm text-left">Gravidade</p></div>'+
-                                '<div clss="col-lg-6 text-left"><p class="text-left"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_gravity+'</p></div>'+
+                                '<div class="col-lg-3 col-md-3 mx-auto">'+
                                 '</div>'+
                                 '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
                                 '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
@@ -693,12 +693,19 @@ var loadMore = function (cursor) {
                                 ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">'+
                                 '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].report_address + '</p>' +'</div>' +'</div><hr>'+
                                 '<div class="row"><div class="col-lg-6 text-center">' +'<img style="height:10rem;"id=' +i + '>' +
-                                '</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p class="text-center" style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_description+' </p>'+
-                                '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].task_indications+' </p></div></div><hr style="margin-bottom: 0; margin-top:0">'+
-                                '<div class="row"><div class="col-lg-6 text-left">'+'<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' +data[i].task_worker + '</p></div>'+
-                                '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">'+ data[i].report_creationtimeformatted+' </p></div></div>';
+                                '</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p class="text-center" style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_description+' </p>';
 
-                            $(".inner").append(contentString);
+                            if(data[i].task_indications === undefined)
+
+                                contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"></p></div></div><hr style="margin-bottom: 0; margin-top:0">'+
+                                    '<div class="row"><div class="col-lg-6 text-left">'+'<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' +data[i].task_worker + '</p></div>'+
+                                    '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">'+ data[i].report_creationtimeformatted+' </p></div></div>';
+                            else
+                                contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].task_indications+' </p></div></div><hr style="margin-bottom: 0; margin-top:0">'+
+                                    '<div class="row"><div class="col-lg-6 text-left">'+'<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' +data[i].task_worker + '</p></div>'+
+                                    '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">'+ data[i].report_creationtimeformatted+' </p></div></div>';
+
+                                $(".inner").append(contentString);
 
                             var image = document.getElementById(i);
                             image.src = "data:image/jpg;base64," + data[i].report_thumbnail;
@@ -762,4 +769,47 @@ $('.comments').scroll(function () {
         loadMoreComments(reportID,commentsCursor);
     }
 });
+
+function getAvailableWorker(cursor){
+    if(cursor !== null) {
+        fetch(URL_BASE + '/api/org/listworkers?cursor=' + cursor ,{
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('token')
+            }
+        }).then(function(response) {
+
+                if (response.status === 200) {
+                    var newCursor = response.headers.get("Cursor");
+                        response.json().then(function(data) {
+                            console.log(JSON.stringify(data));
+                            if(data !== null){
+                                var i;
+                                console.log(data.length);
+                                for(i = 0; i < data.length; i++){
+                                    document.getElementById("dropdown").append(data[i].Worker);
+
+                                }
+
+                            }else{
+                                alert("Esta empresa ainda não tem trabalhadores associados.")
+                            }
+                        });
+                    if(newCursor !== null) {
+                        getAvailableWorker(newCursor);
+                    }
+
+                }else{
+                    console.log("Tratar do Forbidden");
+                }
+
+
+            }
+        )
+            .catch(function(err) {
+                console.log('Fetch Error', err);
+            });
+    }
+}
 

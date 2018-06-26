@@ -5,6 +5,7 @@ var cursor_next_pending;
 var cursor_current_pending;
 var cursor_pre_pending;
 
+var current_position = "list_users_variable";
 var URL_BASE = 'https://hardy-scarab-200218.appspot.com';
 
 init();
@@ -23,8 +24,44 @@ function init() {
     document.getElementById("next_list_pending").onclick = getPendingNext;
     document.getElementById("previous_list_pending").onclick = getPendingPre;
     document.getElementById("refresh_orgs_pending").onclick = getPendingFirst;
+    document.getElementById("list_pending_button").onclick = showPending;
+    document.getElementById("list_users_button").onclick = showUsers;
 
 }
+
+function showUsers(){
+    hideShow("list_users_variable");
+}
+
+function showPending(){
+    hideShow("show_pending_variable");
+}
+
+function hideShow(element){
+
+    if(current_position === "list_users_variable"){
+
+        document.getElementById("list_users").style.display = "none";
+
+    } else if(current_position === "show_pending_variable"){
+
+        document.getElementById("list_pending_orgs").style.display = "none";
+
+    }
+
+    if(element === "show_pending_variable"){
+
+        document.getElementById("list_pending_orgs").style.display = "block";
+        current_position = "show_pending_variable";
+
+    }else if(element === "list_users_variable"){
+
+        document.getElementById("list_users").style.display = "block";
+        current_position = "list_users_variable";
+
+    }
+}
+
 function verifyIsLoggedIn(){
     console.log(localStorage.getItem('token'));
     fetch(URL_BASE + '/api/verifytoken', {
@@ -135,7 +172,7 @@ function getFirstUsers(){
                             cell2.innerHTML = data[i].user_email;
                             cell3.innerHTML = data[i].user_level;
                             cell4.innerHTML = data[i].userpoints_points;
-                            cell5.outerHTML = "<button type='submit' class='btn btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
+                            cell5.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -200,7 +237,7 @@ function getNextUsers(){
                             cell2.innerHTML = data[i].user_email;
                             cell3.innerHTML = data[i].user_level;
                             cell4.innerHTML = data[i].userpoints_points;
-                            cell5.outerHTML = "<button type='submit' class='btn btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
+                            cell5.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -268,7 +305,7 @@ function getPreUsers(){
                                 cell2.innerHTML = data[i].user_email;
                                 cell3.innerHTML = data[i].user_level;
                                 cell4.innerHTML = data[i].userpoints_points;
-                                cell5.outerHTML = "<button type='submit' class='btn btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
+                                cell5.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
                             }
 
                         } else {
@@ -376,7 +413,7 @@ function getPendingNext(){
                             cell7.innerHTML = data[i].org_services;
                             cell8.innerHTML = data[i].org_creationtime;
                             cell9.innerHTML = data[i].org_isfirestation;
-                            cell10.outerHTML = "<button type='submit' class='btn btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -454,7 +491,7 @@ function getPendingPre(){
                             cell7.innerHTML = data[i].org_services;
                             cell8.innerHTML = data[i].org_creationtime;
                             cell9.innerHTML = data[i].org_isfirestation;
-                            cell10.outerHTML = "<button type='submit' class='btn btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -529,7 +566,7 @@ function getPendingFirst(){
                             cell7.innerHTML = data[i].org_services;
                             cell8.innerHTML = data[i].org_creationtime;
                             cell9.innerHTML = data[i].org_isfirestation;
-                            cell10.outerHTML = "<button type='submit' class='btn btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
