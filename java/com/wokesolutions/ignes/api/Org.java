@@ -229,7 +229,9 @@ public class Org {
 					user.getProperty(DSUtils.USER_PASSWORD));
 
 			deletedWorker.setProperty(DSUtils.DELETEDWORKER_DELETIONTIME, new Date());
-
+			
+			LOG.info(userKey.toString());
+			
 			List<Key> list = Arrays.asList(userKey, worker.getKey());
 
 			datastore.delete(txn, list);

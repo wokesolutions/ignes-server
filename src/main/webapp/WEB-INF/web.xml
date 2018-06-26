@@ -93,7 +93,6 @@
 		<url-pattern>/api/report/close/*</url-pattern>
 	</filter-mapping>
 
-	<!-- 
 	<filter>
 		<filter-name>AdminFilter</filter-name>
 		<filter-class>com.wokesolutions.ignes.filters.AdminFilter</filter-class>
@@ -103,7 +102,6 @@
 		<filter-name>AdminFilter</filter-name>
 		<url-pattern>/api/admin/*</url-pattern>
 	</filter-mapping>
-	-->
 
 	<filter>
 		<filter-name>OrgFilter</filter-name>
@@ -129,4 +127,6 @@
 		<url-pattern>/api/task/addnote/*</url-pattern>
 		<url-pattern>/api/worker/*</url-pattern>
 	</filter-mapping>
+	
+	
 </web-app>
