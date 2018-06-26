@@ -793,7 +793,7 @@ function getAvailableWorker(cursor){
                                     var email = data[i].Worker;
                                     $(".dropdown-menu").append("<option value=" + email + ">" + email + "</option>");
                                     $(".dropdown-menu").children().last().click(function() {
-                                        fetch(URK_BASE + "/api/org/givetask", {
+                                        fetch(URL_BASE + "/api/org/givetask", {
                                             method: 'POST',
                                             headers: {
                                                 'Content-Type': 'application/json',
