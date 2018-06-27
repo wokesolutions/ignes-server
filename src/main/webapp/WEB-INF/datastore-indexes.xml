@@ -10,6 +10,10 @@
         <property name="user_level" direction="asc"/>
     </datastore-index>
     
+    <datastore-index kind="Worker" ancestor="true" source="manual">
+        <property name="worker_org" direction="asc"/>
+    </datastore-index>
+    
     <datastore-index kind="ReportComment" ancestor="false" source="manual">
         <property name="reportcomment_report" direction="asc"/>
         <property name="reportcomment_text" direction="asc"/>

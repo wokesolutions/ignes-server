@@ -131,7 +131,7 @@ public class Org {
 			user.setProperty(DSUtils.USER_EMAIL, email);
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.WORKER);
 			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
-			
+
 			Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
 			userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
 
@@ -195,7 +195,7 @@ public class Org {
 		try {
 			Entity user = datastore.get(userKey);
 			Entity worker;
-			
+
 			try {
 				Query query = new Query(DSUtils.WORKER).setAncestor(userKey);
 				worker = datastore.prepare(query).asSingleEntity();
@@ -204,7 +204,7 @@ public class Org {
 				LOG.info(Message.WORKER_NOT_FOUND);
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
-			
+
 			if(worker == null) {
 				txn.rollback();
 				LOG.info(Message.WORKER_NOT_FOUND);
@@ -229,22 +229,22 @@ public class Org {
 					user.getProperty(DSUtils.USER_PASSWORD));
 
 			deletedWorker.setProperty(DSUtils.DELETEDWORKER_DELETIONTIME, new Date());
-			
+
 			LOG.info(userKey.toString());
-			
+
 			List<Key> list = Arrays.asList(userKey, worker.getKey());
 
 			datastore.delete(txn, list);
-			
+
 			Query query = new Query(DSUtils.TOKEN).setAncestor(userKey).setKeysOnly();
 			List<Entity> listToken = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
 			List<Key> tokens = new ArrayList<Key>(listToken.size());
-			
+
 			for(Entity e : listToken)
 				tokens.add(e.getKey());
-			
+
 			datastore.delete(txn, tokens);
-			
+
 			datastore.put(txn, deletedWorker);
 
 			LOG.info(Message.DELETED_WORKER + email);
@@ -287,7 +287,7 @@ public class Org {
 
 	private Response getWorkersRetry(String org, String cursor) {
 		LOG.info("listing workers");
-		
+
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 
 		Query query = new Query(DSUtils.WORKER);
@@ -314,7 +314,7 @@ public class Org {
 			obj.put(DSUtils.WORKER_JOB, worker.getProperty(DSUtils.WORKER_JOB));
 			array.put(obj);
 		}
-		
+
 		if(array.length() < BATCH_SIZE)
 			return Response.ok(array.toString()).build();
 
@@ -338,7 +338,7 @@ public class Org {
 	public Response giveTask(TaskData data, @Context HttpServletRequest request) {
 		if(!data.isValid())
 			return Response.status(Status.BAD_REQUEST).build();
-		
+
 		String org = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		int retries = 5;
@@ -358,24 +358,34 @@ public class Org {
 		String email = data.email;
 		String indications = data.indications;
 
+		LOG.info("1");
+
 		Entity reportE;
-		
-		Query workerQuery = new Query(DSUtils.WORKER).setAncestor(KeyFactory.createKey(DSUtils.USER, email));
+
+		LOG.info("2");
+
+		Query workerQuery = new Query(DSUtils.WORKER)
+				.setAncestor(KeyFactory.createKey(DSUtils.USER, email));
 		workerQuery.addProjection(new PropertyProjection(DSUtils.WORKER_ORG, String.class));
-		
+
+		LOG.info("3");
+
 		Entity worker;
+
 		try {
 			worker = datastore.prepare(workerQuery).asSingleEntity();
 		} catch(TooManyResultsException e) {
 			LOG.info(Message.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
-		
+
+		LOG.info("4");
+
 		if(worker == null) {
 			LOG.info(Message.WORKER_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
-		
+
 		if(!worker.getProperty(DSUtils.WORKER_ORG).toString().equals(org)) {
 			LOG.info(Message.WORKER_NOT_FOUND);
 			return Response.status(Status.FORBIDDEN).build();
@@ -428,24 +438,24 @@ public class Org {
 
 		return Response.ok().build();
 	}
-	
+
 	@GET
 	@Path("/info/{nif}")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response getInfo(@PathParam(ParamName.NIF) String nif) {
 		int retries = 5;
-		
+
 		while(true) {
 			try {
 				Entity org;
-				
+
 				try {
 					org = datastore.get(KeyFactory.createKey(DSUtils.ORG, nif));
 				} catch(EntityNotFoundException e) {
 					LOG.info(Message.ORG_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
-				
+
 				JSONObject obj = new JSONObject();
 				obj.put(DSUtils.ORG, org.getKey().getName());
 				obj.put(DSUtils.ORG_ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
@@ -455,7 +465,7 @@ public class Org {
 				obj.put(DSUtils.ORG_SERVICES, org.getProperty(DSUtils.ORG_SERVICES));
 				obj.put(DSUtils.ORG_ZIP, org.getProperty(DSUtils.ORG_ZIP));
 				obj.put(DSUtils.ORG_LOCALITY, org.getProperty(DSUtils.ORG_LOCALITY));
-				
+
 				return Response.ok(obj.toString()).build();
 			} catch(DatastoreException e) {
 				if(retries == 0)
@@ -464,30 +474,30 @@ public class Org {
 			}
 		}
 	}
-	
+
 	@GET
 	@Path("/alltasks")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response allTasks(@Context HttpServletRequest request,
 			@QueryParam(ParamName.CURSOR) String cursor) {
 		String org = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
-		
+
 		int retries = 5;
 		while(true) {
 			try {
 				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
-				
+
 				if(cursor != null && !cursor.equals(""))
 					fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
-				
+
 				Query query = new Query(DSUtils.TASK);
 				Filter filter = new Query.FilterPredicate(DSUtils.TASK_ORG, FilterOperator.EQUAL, org);
-				
+
 				QueryResultList<Entity> list = datastore.prepare(query.setFilter(filter))
 						.asQueryResultList(fetchOptions);
-				
+
 				JSONArray array = new JSONArray();
-				
+
 				for(Entity task : list) {
 					Entity report;
 					try {
@@ -496,9 +506,9 @@ public class Org {
 						LOG.info(Message.UNEXPECTED_ERROR);
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 					}
-					
+
 					JSONObject jsonReport = new JSONObject();
-					
+
 					jsonReport.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE));
 					jsonReport.put(DSUtils.REPORT_ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
 					jsonReport.put(DSUtils.REPORT_USERNAME, report.getProperty(DSUtils.REPORT_USERNAME));
@@ -511,20 +521,20 @@ public class Org {
 					jsonReport.put(DSUtils.TASK, task.getParent().getName());
 					jsonReport.put(DSUtils.TASK_WORKER, task.getProperty(DSUtils.TASK_WORKER));
 					jsonReport.put(DSUtils.TASK_INDICATIONS, task.getProperty(DSUtils.TASK_INDICATIONS));
-					
+
 					String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
 					jsonReport.put(DSUtils.REPORT_THUMBNAIL, tn);
-					
+
 					array.put(jsonReport);
 				}
-				
+
 				if(array.length() < BATCH_SIZE)
 					return Response.ok(array.toString()).build();
-				
+
 				cursor = list.getCursor().toWebSafeString();
-				
+
 				return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
-				
+
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();

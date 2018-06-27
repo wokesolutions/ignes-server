@@ -9,7 +9,9 @@ public class UserRegisterData {
 	public UserRegisterData() {}
 	
 	public boolean isValid() {
-		return username != null && email != null && password != null;
+		return username != null && email != null && password != null
+				&& !username.equals("") && !password.equals("") && !email.equals("")
+				&& email.contains("@") && isUsernameValid(username);
 	}
 	
 	public static boolean isUsernameValid(String username) {
