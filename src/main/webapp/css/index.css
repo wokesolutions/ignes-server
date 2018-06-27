@@ -114,6 +114,17 @@ header.masthead .site-heading {
     height: auto;
 }
 
+.dropdown-m{
+    color: #fff;
+    background-color: #3b4955;
+    border-color: #3b4955;
+    font-size: 15px;
+    font-family: Quicksand;
+    width: 100% !important;
+    margin-left: 1rem;
+}
+
+
 .divisoria {
     margin-top: 30px;
     margin-bottom: 30px;
