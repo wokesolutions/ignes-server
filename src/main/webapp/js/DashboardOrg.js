@@ -11,6 +11,7 @@ var currentLoc ={
     center: {lat: 38.661148, lng: -9.203075},
     zoom: 18
 };
+var email_current;
 
 getCurrentLocation();
 
@@ -36,6 +37,12 @@ function init() {
     document.getElementById("refresh_workers").onclick = getFirstWorkers;
     document.getElementById("show_more_button").onclick = getShowMore;
     document.getElementById("close_window").onclick = closeWindow;
+    document.getElementById("add_task").onclick = giveTask;
+    $("#email_select").change(function(){
+        document.getElementById('email_task').innerHTML= JSON.parse($("#email_select").val()).Worker;
+        document.getElementById('name_worker').innerHTML= JSON.parse($("#email_select").val()).worker_name;
+
+    })
 
     getFirstWorkers();
 
@@ -142,13 +149,15 @@ function hideShow(element){
 
 function verifyIsLoggedIn(){
     console.log(localStorage.getItem('token'));
-    fetch(URL_BASE + '/api/verifytoken', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/verifytoken','GET', headers, body)).then(function(response) {
 
             if (response.status !== 200) {
 
@@ -264,11 +273,27 @@ function fillMap(reports, cursor, zone){
     for(i = 0; i<reports.length; i++){
         var lat = reports[i].report_lat;
         var lng = reports[i].report_lng;
+        var marker_color;
+        var gravity = reports[i].report_gravity;
 
+        if(gravity === 1)
+            marker_color = "http://maps.google.com/mapfiles/ms/icons/green-dot.png";
+        else if(gravity === 2)
+            marker_color = "http://maps.google.com/mapfiles/ms/icons/ltblue-dot.png";
+        else if(gravity === 3)
+            marker_color = "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png";
+        else if(gravity === 4)
+            marker_color = "http://maps.google.com/mapfiles/ms/icons/orange-dot.png";
+        else if(gravity === 5)
+            marker_color = "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
+        else{
+            console.log("Não existe gravidade neste reporte");
+        }
 
         marker = new google.maps.Marker({
             position: new google.maps.LatLng(lat, lng),
-            map: map
+            map: map,
+            icon: marker_color
         });
 
 
@@ -707,7 +732,7 @@ var loadMore = function (cursor) {
                                     '<div class="row"><div class="col-lg-6 text-left">'+'<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' +data[i].task_worker + '</p></div>'+
                                     '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">'+ data[i].report_creationtimeformatted+' </p></div></div>';
 
-                                $(".inner").append(contentString);
+                            $(".inner").append(contentString);
 
                             var image = document.getElementById(i);
                             image.src = "data:image/jpg;base64," + data[i].report_thumbnail;
@@ -784,38 +809,22 @@ function getAvailableWorker(cursor){
 
                 if (response.status === 200) {
                     var newCursor = response.headers.get("Cursor");
-                        response.json().then(function(data) {
-                            console.log(JSON.stringify(data));
-                            if(data !== null){
-                                var i;
-                                console.log(data.length);
-                                for(i = 0; i < data.length; i++){
-                                    var email = data[i].Worker;
-                                    $(".dropdown-menu").append("<option style='border: 3px #3b4956 solid' value=" + email + "><a href='#'>" + email + "</a></option>");
-                                    $(".dropdown-menu").children().last().click(function() {
-                                        fetch(URL_BASE + "/api/org/givetask", {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'Authorization': localStorage.getItem('token')
-                                            },
-                                            body: JSON.stringify({
-                                                email: email,
-                                                report: idReportCurr,
-                                                indications: "Por favor, tenha cuidado com a lenha."
-                                            })
-                                        }).then(function() {
-                                            alert("Tarefa atribuida com sucesso");
-                                        }).catch(function(err) {
-                                            console.log('Fetch Error', err);
-                                        });;
-                                    });
-                                }
-
-                            }else{
-                                alert("Esta empresa ainda não tem trabalhadores associados.")
+                    response.json().then(function(data) {
+                        console.log(JSON.stringify(data));
+                        if(data !== null){
+                            var i;
+                            console.log(data.length);
+                            for(i = 0; i < data.length; i++){
+                                var email = data[i].Worker;
+                                $(".dropdown-m").append("<option class='pointer-finger'" +
+                                    "style='font-family:Quicksand border: 1px rgba(144,148,156,0.51) solid' value=" + JSON.stringify(data[i]) + ">" + email + "</option>");
+                                console.log($('email_select').child().last().val());
                             }
-                        });
+
+                        }else{
+                            alert("Esta empresa ainda não tem trabalhadores associados.")
+                        }
+                    });
                     if(newCursor !== null) {
                         getAvailableWorker(newCursor);
                     }
@@ -831,5 +840,25 @@ function getAvailableWorker(cursor){
                 console.log('Fetch Error', err);
             });
     }
+}
+
+function giveTask(){
+    fetch(URL_BASE + "/api/org/givetask", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+        },
+        body: JSON.stringify({
+            email: JSON.parse($("#email_select").val()).Worker,
+            report: idReportCurr,
+            indications: "Por favor, tenha cuidado com a lenha."
+        })
+    }).then(function() {
+        alert("Tarefa atribuida com sucesso");
+    }).catch(function(err) {
+        console.log('Fetch Error', err);
+    });;
+
 }
 

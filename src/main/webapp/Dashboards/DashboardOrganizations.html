@@ -317,29 +317,25 @@
             <div class="row">
                 <div class="col-lg-12 col-md-12 mx-auto text-center">
                     <div class="dropdown">
-                        <button class="btn btn-secondary-style dropdown-toggle" type="button" id="dropdownMenuButton"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Escolher trabalhador
-                        </button>
-                        <div class="dropdown-menu">
-                        </div>
+                        <select class="dropdown-m" id="email_select">
+                        </select>
                     </div>
                 </div>
             </div>
             <div class="row" style="margin-top: 4rem">
                 <div class="col-lg-6 col-md-6 mx-auto text-center">
-                    <p class="info_text_bold_sm">Tarefa</p>
+                    <p class="info_text_bold_sm">Nome Trabalhador</p>
                 </div>
                 <div class="col-lg-6 col-md-6 mx-auto text-left">
-                    <p class="info_text_response">Limpar Mato</p>
+                    <p class="info_text_response" id="name_worker"></p>
                 </div>
             </div>
             <div class="row">
                 <div class="col-lg-6 col-md-6 mx-auto text-center">
-                    <p class="info_text_bold_sm">Trabalhador Associado</p>
+                    <p class="info_text_bold_sm">Email Trabalhador</p>
                 </div>
                 <div class="col-lg-6 col-md-6 mx-auto text-left">
-                    <p class="info_text_response">Catarina Matos</p>
+                    <p class="info_text_response" id="email_task"></p>
 
                 </div>
             </div>
@@ -348,12 +344,12 @@
                     <p class="info_text_bold_sm" >Indicações</p>
                 </div>
                 <div class="col-lg-6 col-md-6 mx-auto text-left">
-                    <input class="form-control">
+                    <input class="form-control" id="input_ind">
                 </div>
             </div>
             <div class="row">
                 <div class="col-lg-12 mx-lg-auto text-center" style="margin-top: 3rem">
-                    <button id="" type="button" class="btn btn-circle btn-lg-org"><i class="fa fa-check" id="worker_register"> </i> </button>
+                    <button id="add_task" type="button" class="btn btn-circle btn-lg-org"><i class="fa fa-check" id="worker_register"> </i> </button>
                 </div>
             </div>
         </div>
@@ -438,6 +434,7 @@
     </div>
 </div>
 
+<script src="../js/RestApi.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAfHsLp6fKLK4YZ2WSoXO0KsM58Clspg8k"></script>
 <script src="../js/bootbox.min.js"></script>
 <script src="../js/jquery-3.3.1.min.js"></script>
