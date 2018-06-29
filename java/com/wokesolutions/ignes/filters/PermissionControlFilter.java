@@ -158,45 +158,9 @@ public class PermissionControlFilter implements Filter {
 
 	private void verifyWith(String token, Algorithm algorithm, String userlevel)
 			throws Exception {
-		String claim;
-		final String finallevel = userlevel;
-
-		switch(finallevel) {
-		case UserLevel.LEVEL1:
-			claim = JWTUtils.LEVEL1;
-			break;
-
-		case UserLevel.LEVEL2:
-			claim = JWTUtils.LEVEL2;
-			break;
-
-		case UserLevel.LEVEL3:
-			claim = JWTUtils.LEVEL3;
-			break;
-
-		case UserLevel.ADMIN:
-			claim = JWTUtils.ADMIN;
-			break;
-
-		case UserLevel.ORG:
-			claim = JWTUtils.ORG;
-			break;
-
-		case UserLevel.WORKER:
-			claim = JWTUtils.WORKER;
-			break;
-
-		default:
-			claim = null;
-			break;
-		}
-
-		if(claim == null)
-			throw new Exception();
-
 		JWTVerifier verifier = JWT.require(algorithm)
 				.withIssuer(JWTUtils.ISSUER)
-				.withClaim(claim, userlevel)
+				.withClaim(JWTUtils.LEVEL, userlevel)
 				.build();
 
 		verifier.verify(token);

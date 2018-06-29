@@ -111,6 +111,8 @@ public class PermissionMapper {
 		}
 
 		if(req.contains(CLOSE_REPORT)) {
+			permissions.add(UserLevel.LEVEL1);
+			permissions.add(UserLevel.LEVEL2);
 			permissions.add(UserLevel.LEVEL3);
 			permissions.add(UserLevel.ADMIN);
 			permissions.add(UserLevel.WORKER);

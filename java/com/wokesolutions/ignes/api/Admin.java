@@ -1,5 +1,6 @@
 package com.wokesolutions.ignes.api;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -7,8 +8,8 @@ import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -44,6 +45,7 @@ import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.UserRegisterData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
+import com.wokesolutions.ignes.util.JSONNames;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.UserLevel;
@@ -118,6 +120,8 @@ public class Admin {
 			user.setProperty(DSUtils.USER_EMAIL, registerData.email);
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.ADMIN);
 			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
+			user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED,
+					new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
 
 			Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
 			
@@ -170,27 +174,21 @@ public class Admin {
 			// If the entity does not exist an Exception is thrown. Otherwise,
 			Key userKey = KeyFactory.createKey(DSUtils.USER, username);
 			Entity user = datastore.get(userKey);
+			
+			Date date = new Date();
 
 			Entity admin = new Entity(userKey);
-			admin.setUnindexedProperty(DSUtils.ADMIN_CREATIONTIME, new Date());
-			admin.setUnindexedProperty(DSUtils.ADMIN_WASPROMOTED, true);
+			admin.setUnindexedProperty(DSUtils.ADMIN_CREATIONTIME, date);
 			admin.setUnindexedProperty(DSUtils.ADMIN_OLDLEVEL, user.getProperty(DSUtils.USER_LEVEL));
 
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.ADMIN);
 
-			Key promoterKey = null;
-			try {
-				promoterKey = getMoterKey(request);
-			} catch(InternalServerErrorException e) {
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			if(promoterKey == null)
-				return Response.status(Status.EXPECTATION_FAILED).entity(Message.MOTER_NOT_ADMIN).build();
+			String promoterUsername = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+			Key promoterKey = KeyFactory.createKey(DSUtils.ADMIN, promoterUsername);
 
 			Entity adminLog = new Entity(DSUtils.ADMINLOG, promoterKey);
 			adminLog.setProperty(DSUtils.ADMINLOG_PROMOTED, username);
-			adminLog.setUnindexedProperty(DSUtils.ADMINLOG_TIME, new Date());
+			adminLog.setUnindexedProperty(DSUtils.ADMINLOG_TIME, date);
 
 			List<Entity> list = Arrays.asList(admin, adminLog, user);
 
@@ -242,22 +240,20 @@ public class Admin {
 			try {
 				admin = datastore.prepare(adminQuery).asSingleEntity();
 			} catch(TooManyResultsException e) {
+				txn.rollback();
+				LOG.info(Message.UNEXPECTED_ERROR);
 				Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
-			user.setProperty(DSUtils.USER_LEVEL, admin.getProperty(DSUtils.ADMIN_OLDLEVEL));
+			if(admin.hasProperty(DSUtils.ADMIN_OLDLEVEL))
+				user.setProperty(DSUtils.USER_LEVEL, admin.getProperty(DSUtils.ADMIN_OLDLEVEL));
+			else
+				user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1);
 
 			datastore.delete(txn, admin.getKey());
 
-			Key demoterKey = null;
-			try {
-				demoterKey = getMoterKey(request);
-			} catch(InternalServerErrorException e) {
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			if(demoterKey == null)
-				return Response.status(Status.EXPECTATION_FAILED).entity(Message.MOTER_NOT_ADMIN).build();
+			String demoterUsername = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+			Key demoterKey = KeyFactory.createKey(DSUtils.ADMIN, demoterUsername);
 
 			Entity adminLog = new Entity(DSUtils.ADMINLOG, demoterKey);
 			adminLog.setProperty(DSUtils.ADMINLOG_DEMOTED, username);
@@ -266,7 +262,7 @@ public class Admin {
 			List<Entity> list = Arrays.asList(adminLog, user);
 
 			datastore.put(txn, list);
-			LOG.info(Message.ADMIN_PROMOTED + username);
+			LOG.info(Message.ADMIN_DEMOTED + username);
 			txn.commit();
 			return Response.ok().build();
 
@@ -279,22 +275,6 @@ public class Admin {
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 		}
-	}
-
-	private Key getMoterKey(HttpServletRequest request) {
-		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
-		Key promoterKey = KeyFactory.createKey(DSUtils.USER, username);
-
-		Query promoterQuery = new Query(DSUtils.ADMIN).setAncestor(promoterKey);
-		Entity promoter = null;
-		try {
-			promoter = datastore.prepare(promoterQuery).asSingleEntity();
-		} catch(TooManyResultsException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
-			throw new InternalServerErrorException();
-		}
-
-		return promoter.getKey();
 	}
 
 	@GET
@@ -354,10 +334,11 @@ public class Admin {
 			}
 
 			JSONObject us = new JSONObject();
-			us.put(DSUtils.USER, user.getKey().getName());
-			us.put(DSUtils.USER_EMAIL, user.getProperty(DSUtils.USER_EMAIL));
-			us.put(DSUtils.USER_LEVEL, user.getProperty(DSUtils.USER_LEVEL));
-			us.put(DSUtils.USERPOINTS_POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
+			us.put(JSONNames.USERNAME, user.getKey().getName());
+			us.put(JSONNames.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
+			us.put(JSONNames.LEVEL, user.getProperty(DSUtils.USER_LEVEL));
+			us.put(JSONNames.CREATIONTIME, user.getProperty(DSUtils.USER_CREATIONTIMEFORMATTED));
+			us.put(JSONNames.POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
 			array.put(us);
 		}
 		
@@ -410,8 +391,9 @@ public class Admin {
 
 		for(Entity user : list) {
 			JSONObject us = new JSONObject();
-			us.put(DSUtils.ADMIN, user.getKey().getName());
-			us.put(DSUtils.USER_EMAIL, user.getProperty(DSUtils.USER_EMAIL));
+			us.put(JSONNames.USERNAME, user.getKey().getName());
+			us.put(JSONNames.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
+			us.put(JSONNames.CREATIONTIME, user.getProperty(DSUtils.USER_CREATIONTIMEFORMATTED));
 			array.put(us);
 		}
 		
@@ -455,7 +437,7 @@ public class Admin {
 
 		query.addProjection(new PropertyProjection(DSUtils.REPORT_TITLE, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_ADDRESS, String.class))
-		.addProjection(new PropertyProjection(DSUtils.REPORT_USERNAME, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_USER, Key.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_GRAVITY, Integer.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
@@ -471,15 +453,16 @@ public class Admin {
 
 		for(Entity report : list) {
 			JSONObject rep = new JSONObject();
-			rep.put(DSUtils.REPORT, report.getKey().getName());
-			rep.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE));
-			rep.put(DSUtils.REPORT_ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
-			rep.put(DSUtils.REPORT_GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
-			rep.put(DSUtils.REPORT_USERNAME, report.getProperty(DSUtils.REPORT_USERNAME));
-			rep.put(DSUtils.REPORT_LAT, report.getProperty(DSUtils.REPORT_LAT));
-			rep.put(DSUtils.REPORT_LNG, report.getProperty(DSUtils.REPORT_LNG));
-			rep.put(DSUtils.REPORT_STATUS, report.getProperty(DSUtils.REPORT_STATUS));
-			rep.put(DSUtils.REPORT_CREATIONTIMEFORMATTED,
+			rep.put(JSONNames.REPORT, report.getKey().getName());
+			rep.put(JSONNames.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
+			rep.put(JSONNames.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+			rep.put(JSONNames.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+			rep.put(JSONNames.USERNAME,
+					((Key) report.getProperty(DSUtils.REPORT_USER)).getName());
+			rep.put(JSONNames.LAT, report.getProperty(DSUtils.REPORT_LAT));
+			rep.put(JSONNames.LNG, report.getProperty(DSUtils.REPORT_LNG));
+			rep.put(JSONNames.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
+			rep.put(JSONNames.CREATIONTIME,
 					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
 			
 			array.put(rep);
@@ -568,15 +551,15 @@ public class Admin {
 					}
 					
 					JSONObject obj = new JSONObject();
-					obj.put(DSUtils.ORG, org.getKey().getName());
-					obj.put(DSUtils.ORG_NAME, org.getProperty(DSUtils.ORG_NAME));
-					obj.put(DSUtils.ORG_ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
-					obj.put(DSUtils.ORG_EMAIL, org.getProperty(DSUtils.ORG_EMAIL));
-					obj.put(DSUtils.ORG_ISFIRESTATION, org.getProperty(DSUtils.ORG_ISFIRESTATION));
-					obj.put(DSUtils.ORG_LOCALITY, org.getProperty(DSUtils.ORG_LOCALITY));
-					obj.put(DSUtils.ORG_PHONE, org.getProperty(DSUtils.ORG_PHONE));
-					obj.put(DSUtils.ORG_SERVICES, org.getProperty(DSUtils.ORG_SERVICES));
-					obj.put(DSUtils.ORG_ZIP, org.getProperty(DSUtils.ORG_ZIP));
+					obj.put(JSONNames.NIF, org.getKey().getName());
+					obj.put(JSONNames.NAME, org.getProperty(DSUtils.ORG_NAME));
+					obj.put(JSONNames.ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
+					obj.put(JSONNames.EMAIL, org.getProperty(DSUtils.ORG_EMAIL));
+					obj.put(JSONNames.ISFIRESTATION, org.getProperty(DSUtils.ORG_ISFIRESTATION));
+					obj.put(JSONNames.LOCALITY, org.getProperty(DSUtils.ORG_LOCALITY));
+					obj.put(JSONNames.PHONE, org.getProperty(DSUtils.ORG_PHONE));
+					obj.put(JSONNames.SERVICES, org.getProperty(DSUtils.ORG_SERVICES));
+					obj.put(JSONNames.ZIP, org.getProperty(DSUtils.ORG_ZIP));
 					array.put(obj);
 				}
 				
@@ -595,4 +578,12 @@ public class Admin {
 			}
 		}
 	}
+	
+	/* TODO
+	@DELETE
+	@Path("/delete/user/{username}")
+	public Response deleteUser() {
+		
+	}
+	*/
 }

@@ -85,7 +85,7 @@ public class Logout {
 	}
 
 	@POST
-	public Response logoutUser(@Context HttpHeaders headers,
+	public Response logout(@Context HttpHeaders headers,
 			@Context HttpServletRequest request) {
 
 		Object user = request.getAttribute(CustomHeader.USERNAME_ATT);

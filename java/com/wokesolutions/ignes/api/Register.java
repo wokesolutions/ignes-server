@@ -1,5 +1,6 @@
 package com.wokesolutions.ignes.api;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -92,12 +93,16 @@ public class Register {
 					if(existingUser != null)
 						return Response.status(Status.CONFLICT).entity(Message.EMAIL_ALREADY_IN_USE).build();
 
+					Date date = new Date();
+					
 					Entity user = new Entity(DSUtils.USER, registerData.username);
 					userKey = user.getKey();
 					user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(registerData.password));
 					user.setProperty(DSUtils.USER_EMAIL, registerData.email);
 					user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1.toString());
-					user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, new Date());
+					user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
+					user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED,
+							new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
 
 					String code = Long.toString(System.currentTimeMillis()).substring(6, 13);
 

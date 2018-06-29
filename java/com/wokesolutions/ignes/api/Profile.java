@@ -48,6 +48,7 @@ import com.wokesolutions.ignes.data.UserOptionalData;
 import com.wokesolutions.ignes.exceptions.NotSameNorAdminException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
+import com.wokesolutions.ignes.util.JSONNames;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Storage;
@@ -269,15 +270,14 @@ public class Profile {
 			JSONObject voteJson = new JSONObject();
 			Map<String, Object> props = vote.getProperties();
 
-			voteJson.put(DSUtils.USERVOTE_TYPE, props.get(DSUtils.USERVOTE_TYPE));
-			//voteJson.put(DSUtils.USERVOTE_USER, props.get(DSUtils.USERVOTE_USER));
+			voteJson.put(JSONNames.VOTE, props.get(DSUtils.USERVOTE_TYPE));
 
 			if(props.containsKey(DSUtils.USERVOTE_REPORT))
-				voteJson.put(DSUtils.USERVOTE_REPORT, props.get(DSUtils.USERVOTE_REPORT));
+				voteJson.put(JSONNames.REPORT, props.get(DSUtils.USERVOTE_REPORT));
 			else if(props.containsKey(DSUtils.USERVOTE_EVENT))
-				voteJson.put(DSUtils.USERVOTE_EVENT, props.get(DSUtils.USERVOTE_EVENT));
+				voteJson.put(JSONNames.EVENT, props.get(DSUtils.USERVOTE_EVENT));
 			else if(props.containsKey(DSUtils.USERVOTE_COMMENT))
-				voteJson.put(DSUtils.USERVOTE_COMMENT, props.get(DSUtils.USERVOTE_COMMENT));
+				voteJson.put(JSONNames.COMMENT, props.get(DSUtils.USERVOTE_COMMENT));
 			else {
 				LOG.info(Message.UNEXPECTED_ERROR + " " + vote.getKey().getId());
 				continue;
@@ -460,8 +460,8 @@ public class Profile {
 		object.put(DSUtils.USERPOINTS_POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
 
 		Query query3 = new Query(DSUtils.REPORT);
-		Filter filter = new Query.FilterPredicate(DSUtils.REPORT_USERNAME,
-				FilterOperator.EQUAL, username);
+		Filter filter = new Query.FilterPredicate(DSUtils.REPORT_USER,
+				FilterOperator.EQUAL, user.getKey());
 		query3.setFilter(filter);
 
 		int reports = datastore.prepare(query3).asList(FetchOptions.Builder.withDefaults()).size();
@@ -473,7 +473,7 @@ public class Profile {
 		if(pic != null) {
 			String picpath = pic.toString();
 			String picb64 = Storage.getImage(picpath);
-			object.put(DSUtils.USER_PROFPICTN, picb64);
+			object.put(DSUtils.USER_PROFPIC, picb64);
 		}
 
 		return Response.ok(object.toString()).build();
@@ -579,8 +579,8 @@ public class Profile {
 	private Response getAllReportsRetry(String username, String cursor) {
 		Query reportQuery = new Query(DSUtils.REPORT);
 
-		Filter userFilter = new Query.FilterPredicate(DSUtils.REPORT_USERNAME,
-				FilterOperator.EQUAL, username);
+		Filter userFilter = new Query.FilterPredicate(DSUtils.REPORT_USER,
+				FilterOperator.EQUAL, KeyFactory.createKey(DSUtils.USER, username));
 
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 

@@ -51,7 +51,7 @@ public class DSUtils {
 		public static final String USER_CREATIONTIME = "user_creationtime";
 		public static final String USER_ACTIVATION = "user_activation";
 		public static final String USER_PROFPIC = "user_profpic";
-		public static final String USER_PROFPICTN = "user_profpictn";
+		public static final String USER_CREATIONTIMEFORMATTED = "user_creationtimeformatted";
 
 	// UserOptional
 		public static final String USEROPTIONAL_NAME = "useroptional_name";
@@ -170,7 +170,7 @@ public class DSUtils {
 		public static final String REPORT_ADDRESS = "report_address";
 		public static final String REPORT_DISTRICT = "report_district";
 		public static final String REPORT_LOCALITY = "report_locality";
-		public static final String REPORT_USERNAME = "report_username";
+		public static final String REPORT_USER = "report_user";
 		public static final String REPORT_CREATIONTIME = "report_creationtime";
 		public static final String REPORT_CREATIONTIMEFORMATTED = "report_creationtimeformatted";
 		public static final String REPORT_GRAVITY = "report_gravity";
@@ -260,7 +260,6 @@ public class DSUtils {
 		public static final String REPORTSTATUSLOG_USER = "reportstatuslog_user";
 		public static final String REPORTSTATUSLOG_OLDSTATUS = "reportstatuslog_oldstatus";
 		public static final String REPORTSTATUSLOG_NEWSTATUS = "reportstatuslog_newstatus";
-		public static final String REPORTSTATUSLOG_REPORT = "reportstatuslog_report";
 		
 	// Device
 		public static final String DEVICE_ID = "device_id";

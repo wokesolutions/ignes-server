@@ -8,6 +8,7 @@ public class Message {
 		public static final String USER_NOT_FOUND = "Utilizador não existe";
 		public static final String USER_NOT_ADMIN = "Utilizador não é administrador";
 		public static final String NO_TOKENS_FOUND = "Nenhum token encontrado para o utilizador";
+		public static final String NOT_REPORTER = "Utilizador não é o autor do report";
 	
 	// Error Org
 		public static final String ORG_ALREADY_EXISTS = "Este NIF já está a ser usado por outra organização";
@@ -30,6 +31,7 @@ public class Message {
 		
 	// Error Worker
 		public static final String WORKER_NOT_FOUND = "Trabalhador não encontrado";
+		public static final String WORKER_NOT_ALLOWED = "Trabalhador não está autorizado a alterar esta ocorrência";
 		
 	// Error Task
 		public static final String NOTE_TOO_LONG = "Nota é demasiado longa";
@@ -95,6 +97,8 @@ public class Message {
 		public static final String ATTEMPT_GIVE_ALL_REPORTS = "Tentando dar todas as ocorrências";
 		public static final String VOTED_REPORT = "Ocorrência votada com sucesso";
 		public static final String SEARCHING_IN_COORDS = "Procurando nas seguintes coords: ";
+		public static final String REPORT_CLOSED = "Ocorrência fechada com sucesso";
+		public static final String REPORT_WIPED = "Ocorrência posta em trabalhos com sucesso";
 		
 	// Info Levels
 		public static final String TRYING_TO_CHANGE_LEVEL1 = "Tentando mudar para nível 1 o utilizador: ";

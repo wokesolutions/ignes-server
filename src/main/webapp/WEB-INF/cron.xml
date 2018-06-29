@@ -3,6 +3,6 @@
   <cron>
     <url>/api/report/closedef</url>
     <description>Close reports</description>
-    <schedule>every 24 hours</schedule>
+    <schedule>every 72 hours</schedule>
   </cron>
 </cronentries>
