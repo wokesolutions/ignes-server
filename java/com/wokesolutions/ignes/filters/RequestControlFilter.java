@@ -3,6 +3,7 @@ package com.wokesolutions.ignes.filters;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import javax.annotation.Priority;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -16,10 +17,12 @@ import javax.ws.rs.core.Response.Status;
 import com.google.appengine.api.memcache.Expiration;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
-import com.wokesolutions.ignes.util.Cache;
+import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.Message;
 
+@Priority(1)
 public class RequestControlFilter implements Filter {
+	
 	public static final Logger LOG = Logger.getLogger(RequestControlFilter.class.getName());
 	MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 
@@ -32,81 +35,81 @@ public class RequestControlFilter implements Filter {
 	public void doFilter(ServletRequest req, ServletResponse resp,  
 			FilterChain chain) throws IOException, ServletException {
 
-		HttpServletRequest newreq = ((HttpServletRequest)req);
+		LOG.info(this.getClass().getSimpleName() + Message.FILTER_VERIFYING);
 
-		if(req instanceof HttpServletRequest) {
-			String url = newreq.getRequestURL().toString();
-			String compUrl;
-			String id = null;
-
-			LOG.info(this.getClass().getSimpleName() + Message.FILTER_VERIFYING + " " + url);
-			
-			String method = newreq.getMethod();
-
-			if(method.equalsIgnoreCase(GET) || method.equalsIgnoreCase(DELETE)) {
-				String queryString = newreq.getQueryString();
-				if(queryString == null)
-					compUrl = url + "?" + queryString;
-				else
-					compUrl = url;
-
-				id = Cache.GETId(compUrl, newreq);
-			} else if(method.equals(POST)) {
-				compUrl = url;
-				id = Cache.POSTId(compUrl, newreq);
-			} else
-				chain.doFilter(req, resp);
-
-			if(id == null) {
-				LOG.info(Message.REQUEST_ID_ERROR);
-				((HttpServletResponse) resp).setHeader("Content-Type", "application/json");
-				((HttpServletResponse) resp).setStatus(Status.INTERNAL_SERVER_ERROR.getStatusCode());
-				resp.getWriter().println(Message.REQUEST_ID_ERROR);
-				return;
-			}
-			
-			LOG.info("-------ID------> " + id);
-			
-			// String ip = newreq.getRemoteAddr();
-			
-			/*if(cache.get(ip) == null)
-				cache.put(ip, 1L, Expiration.byDeltaSeconds(15));
-			else
-				cache.increment(ip, 1L);
-			
-			if((long) cache.get(ip) > 50L) {
-				LOG.info(Message.TOO_MANY_REQUESTS);
-				((HttpServletResponse) resp).setHeader("Content-Type", "application/json");
-				((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
-				resp.getWriter().println(Message.TOO_MANY_REQUESTS);
-				return;
-			}*/
-			
-			if(cache.get(id) == null)
-				cache.put(id, 1L, Expiration.byDeltaSeconds(15));
-			else
-				cache.increment(id, 1L);
-			
-			if((long) cache.get(id) > 10L) {
-				LOG.info(Message.TOO_MANY_REQUESTS);
-				((HttpServletResponse) resp).setHeader("Content-Type", "application/json");
-				((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
-				resp.getWriter().println(Message.TOO_MANY_REQUESTS);
-				return;
-			} else {
-				LOG.info(Message.REQUEST_IS_GOOD);
-				chain.doFilter(req, resp);
-			}
-			
-			cache.increment(newreq.getRemoteAddr(), 1L, 0L); //TODO
-		} else {
-			LOG.info(Message.NOT_HTTP_REQUEST);
-			((HttpServletResponse) resp).setHeader("Content-Type", "application/json");
-			((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
-			resp.getWriter().println(Message.NOT_HTTP_REQUEST);
+		if(!(req instanceof HttpServletRequest)) {
+			changeResp(resp, Message.NOT_HTTP_REQUEST);
 			return;
 		}
+
+		HttpServletRequest newreq = (HttpServletRequest) req;
+
+		String deviceid = newreq.getHeader(CustomHeader.DEVICE_ID);
+		String deviceapp = newreq.getHeader(CustomHeader.DEVICE_APP);
+		String deviceinfo = newreq.getHeader(CustomHeader.DEVICE_INFO);
+
+		if(deviceid == null || deviceapp == null || deviceinfo == null) {
+			LOG.info(deviceinfo);
+			LOG.info(deviceapp);
+			LOG.info(deviceid);
+			changeResp(resp, Message.MISSING_DEVICE_HEADER);
+			return;
+		}
+
+		String url = newreq.getRequestURL().toString();
+		String method = newreq.getMethod();
+
+		if(!(method.equals(DELETE) || method.equals(POST) || method.equals(GET))) {
+			chain.doFilter(req, resp);
+			return;
+		}
+
+		String query = newreq.getQueryString();
+		if(query != null)
+			url += "?" + query;
+
+		String id = deviceid + " " + url;
+
+		LOG.info("-------ID------> " + id);
+
+		if(cache.get(deviceid) == null)
+			cache.put(deviceid, 1L, Expiration.byDeltaSeconds(15));
+		else
+			cache.increment(deviceid, 1L);
+
+		if((long) cache.get(deviceid) > 50L) {
+			changeResp(resp, Message.TOO_MANY_REQUESTS);
+			return;
+		}
+
+		if(cache.get(id) == null)
+			cache.put(id, 1L, Expiration.byDeltaSeconds(15));
+		else
+			cache.increment(id, 1L);
+
+		if((long) cache.get(id) > 10L) {
+			changeResp(resp, Message.TOO_MANY_REQUESTS);
+			return;
+		}
+		
+		req.setAttribute(CustomHeader.DEVICE_ID_ATT, deviceid);
+		req.setAttribute(CustomHeader.DEVICE_APP_ATT, deviceapp);
+		req.setAttribute(CustomHeader.DEVICE_INFO_ATT, deviceinfo);
+		
+		LOG.info(deviceid);
+		
+		LOG.info(Message.REQUEST_IS_GOOD);
+		chain.doFilter(req, resp);
 	}
 
 	public void destroy() {}
+
+	private void changeResp(ServletResponse resp, String toLog) throws IOException {
+		LOG.info(toLog);
+		((HttpServletResponse) resp).setHeader("Content-Type",
+				CustomHeader.JSON_CHARSET_UTF8);
+		((HttpServletResponse) resp).setStatus(Status.FORBIDDEN.getStatusCode());
+		resp.getWriter().println(toLog);
+		return;
+	}
 }

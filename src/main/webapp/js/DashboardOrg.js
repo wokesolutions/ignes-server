@@ -41,7 +41,6 @@ function init() {
     $("#email_select").change(function(){
         document.getElementById('email_task').innerHTML= JSON.parse($("#email_select").val()).Worker;
         document.getElementById('name_worker').innerHTML= JSON.parse($("#email_select").val()).worker_name;
-
     })
 
     getFirstWorkers();

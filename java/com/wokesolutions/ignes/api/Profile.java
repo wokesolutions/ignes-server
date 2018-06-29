@@ -48,6 +48,7 @@ import com.wokesolutions.ignes.data.UserOptionalData;
 import com.wokesolutions.ignes.exceptions.NotSameNorAdminException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
+import com.wokesolutions.ignes.util.JSONNames;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Storage;
@@ -63,6 +64,7 @@ public class Profile {
 	private static final int BATCH_SIZE = 20;
 
 	public static final String ACTIVATED = "activated";
+	public static final String NOT_ACTIVATED = "notactivated";
 
 	private static final String USER_REPORTS = "user_reports";
 	private static final String PROFILEPIC = "profilepic";
@@ -268,15 +270,14 @@ public class Profile {
 			JSONObject voteJson = new JSONObject();
 			Map<String, Object> props = vote.getProperties();
 
-			voteJson.put(DSUtils.USERVOTE_TYPE, props.get(DSUtils.USERVOTE_TYPE));
-			//voteJson.put(DSUtils.USERVOTE_USER, props.get(DSUtils.USERVOTE_USER));
+			voteJson.put(JSONNames.VOTE, props.get(DSUtils.USERVOTE_TYPE));
 
 			if(props.containsKey(DSUtils.USERVOTE_REPORT))
-				voteJson.put(DSUtils.USERVOTE_REPORT, props.get(DSUtils.USERVOTE_REPORT));
+				voteJson.put(JSONNames.REPORT, props.get(DSUtils.USERVOTE_REPORT));
 			else if(props.containsKey(DSUtils.USERVOTE_EVENT))
-				voteJson.put(DSUtils.USERVOTE_EVENT, props.get(DSUtils.USERVOTE_EVENT));
+				voteJson.put(JSONNames.EVENT, props.get(DSUtils.USERVOTE_EVENT));
 			else if(props.containsKey(DSUtils.USERVOTE_COMMENT))
-				voteJson.put(DSUtils.USERVOTE_COMMENT, props.get(DSUtils.USERVOTE_COMMENT));
+				voteJson.put(JSONNames.COMMENT, props.get(DSUtils.USERVOTE_COMMENT));
 			else {
 				LOG.info(Message.UNEXPECTED_ERROR + " " + vote.getKey().getId());
 				continue;
@@ -323,13 +324,8 @@ public class Profile {
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
-		LOG.info("code - " + code);
-
 		JSONObject codejson = new JSONObject(code);
 		code = codejson.getString("code");
-
-		LOG.info("new code - " + code);
-
 		Key userkey = KeyFactory.createKey(DSUtils.USER, username);
 		Entity user;
 		try {
@@ -339,11 +335,11 @@ public class Profile {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
-		boolean bool = code.equals(user.getProperty(DSUtils.USER_CODE));
+		boolean bool = code.equals(user.getProperty(DSUtils.USER_ACTIVATION));
 		if(!bool)
 			return Response.status(Status.EXPECTATION_FAILED).build();
 
-		user.setProperty(DSUtils.USER_CODE, ACTIVATED);
+		user.setProperty(DSUtils.USER_ACTIVATION, ACTIVATED);
 
 		datastore.put(user);
 
@@ -388,9 +384,9 @@ public class Profile {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
-		boolean yes =  entUser.getProperty(DSUtils.USER_CODE).toString().equals(ACTIVATED);
+		boolean yes = entUser.getProperty(DSUtils.USER_ACTIVATION).toString().equals(ACTIVATED);
 
-		return Response.ok().entity(yes).build();
+		return Response.ok(yes).build();
 	}
 
 	@GET
@@ -399,13 +395,6 @@ public class Profile {
 	public Response getUserProfile(@Context HttpServletRequest request,
 			@PathParam(ParamName.USERNAME) String username) {
 		int retries = 5;
-
-		try {
-			sameUserOrAdmin(request, username);
-		} catch(NotSameNorAdminException e) {
-			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
-			return Response.status(Status.FORBIDDEN).build();
-		}
 
 		while(true) {
 			try {
@@ -464,8 +453,8 @@ public class Profile {
 		object.put(DSUtils.USERPOINTS_POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
 
 		Query query3 = new Query(DSUtils.REPORT);
-		Filter filter = new Query.FilterPredicate(DSUtils.REPORT_USERNAME,
-				FilterOperator.EQUAL, username);
+		Filter filter = new Query.FilterPredicate(DSUtils.REPORT_USER,
+				FilterOperator.EQUAL, user.getKey());
 		query3.setFilter(filter);
 
 		int reports = datastore.prepare(query3).asList(FetchOptions.Builder.withDefaults()).size();
@@ -477,7 +466,7 @@ public class Profile {
 		if(pic != null) {
 			String picpath = pic.toString();
 			String picb64 = Storage.getImage(picpath);
-			object.put(DSUtils.USER_PROFPICTN, picb64);
+			object.put(DSUtils.USER_PROFPIC, picb64);
 		}
 
 		return Response.ok(object.toString()).build();
@@ -583,8 +572,8 @@ public class Profile {
 	private Response getAllReportsRetry(String username, String cursor) {
 		Query reportQuery = new Query(DSUtils.REPORT);
 
-		Filter userFilter = new Query.FilterPredicate(DSUtils.REPORT_USERNAME,
-				FilterOperator.EQUAL, username);
+		Filter userFilter = new Query.FilterPredicate(DSUtils.REPORT_USER,
+				FilterOperator.EQUAL, KeyFactory.createKey(DSUtils.USER, username));
 
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 

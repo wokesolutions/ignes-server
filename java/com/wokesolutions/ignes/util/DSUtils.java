@@ -31,6 +31,7 @@ public class DSUtils {
 		public static final String NOTE = "Note";
 		public static final String REPORTSTATUSLOG = "ReportStatusLog";
 		public static final String REPORTCOMMENT = "ReportComment";
+		public static final String DEVICE = "Device";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -48,9 +49,9 @@ public class DSUtils {
 		public static final String USER_EMAIL = "user_email";
 		public static final String USER_LEVEL = "user_level";
 		public static final String USER_CREATIONTIME = "user_creationtime";
-		public static final String USER_CODE = "user_code";
+		public static final String USER_ACTIVATION = "user_activation";
 		public static final String USER_PROFPIC = "user_profpic";
-		public static final String USER_PROFPICTN = "user_profpictn";
+		public static final String USER_CREATIONTIMEFORMATTED = "user_creationtimeformatted";
 
 	// UserOptional
 		public static final String USEROPTIONAL_NAME = "useroptional_name";
@@ -101,6 +102,7 @@ public class DSUtils {
 		public static final String USERLOG_CITY = "userlog_city";
 		public static final String USERLOG_COUNTRY = "userlog_country";
 		public static final String USERLOG_TIME = "userlog_time";
+		public static final String USERLOG_DEVICE = "userlog_device";
 
 	// Worker
 		public static final String WORKER_ORG = "worker_org";
@@ -118,15 +120,12 @@ public class DSUtils {
 	// Org
 		public static final String ORG_NAME = "org_name";
 		public static final String ORG_ADDRESS = "org_address";
-		public static final String ORG_PASSWORD = "org_password";
 		public static final String ORG_PHONE = "org_phone";
-		public static final String ORG_EMAIL = "org_email";
 		public static final String ORG_ZIP = "org_zip";
 		public static final String ORG_LOCALITY = "org_locality";
 		public static final String ORG_SERVICES = "org_services";
 		public static final String ORG_ISFIRESTATION = "org_isfirestation";
-		public static final String ORG_CREATIONTIME = "org_creationtime";
-		public static final String ORG_CONFIRMED = "org_confirmed";
+		public static final String ORG_EMAIL = "org_email";
 		
 	// UnconfOrg
 		public static final String UNCONFORG_NAME = "unconforg_name";
@@ -171,7 +170,7 @@ public class DSUtils {
 		public static final String REPORT_ADDRESS = "report_address";
 		public static final String REPORT_DISTRICT = "report_district";
 		public static final String REPORT_LOCALITY = "report_locality";
-		public static final String REPORT_USERNAME = "report_username";
+		public static final String REPORT_USER = "report_user";
 		public static final String REPORT_CREATIONTIME = "report_creationtime";
 		public static final String REPORT_CREATIONTIMEFORMATTED = "report_creationtimeformatted";
 		public static final String REPORT_GRAVITY = "report_gravity";
@@ -230,7 +229,8 @@ public class DSUtils {
 	// Token
 		public static final String TOKEN_STRING = "token_string";
 		public static final String TOKEN_DATE = "token_date";
-		public static final String TOKEN_IP = "token_ip";
+		public static final String TOKEN_DEVICE = "token_device";
+		public static final String TOKEN_USER = "token_user";
 		
 	// LevelLog
 		public static final String LEVELLOG_OLDLEVEL = "levellog_oldlevel";
@@ -260,5 +260,9 @@ public class DSUtils {
 		public static final String REPORTSTATUSLOG_USER = "reportstatuslog_user";
 		public static final String REPORTSTATUSLOG_OLDSTATUS = "reportstatuslog_oldstatus";
 		public static final String REPORTSTATUSLOG_NEWSTATUS = "reportstatuslog_newstatus";
-		public static final String REPORTSTATUSLOG_REPORT = "reportstatuslog_report";
+		
+	// Device
+		public static final String DEVICE_ID = "device_id";
+		public static final String DEVICE_COUNT = "device_count";
+		public static final String DEVICE_USER = "device_user";
 }
