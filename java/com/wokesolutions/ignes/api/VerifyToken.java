@@ -60,12 +60,8 @@ public class VerifyToken {
 			try {
 				user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
 			} catch (EntityNotFoundException e) {
-				try {
-					user = datastore.get(KeyFactory.createKey(DSUtils.ORG, username));
-				} catch (EntityNotFoundException e1) {
-					LOG.info(Message.INVALID_TOKEN);
-					return Response.status(Status.FORBIDDEN).build();
-				}
+				LOG.info(Message.INVALID_TOKEN);
+				return Response.status(Status.FORBIDDEN).build();
 			}
 
 			Entity tokenE;

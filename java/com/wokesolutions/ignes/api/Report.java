@@ -588,60 +588,6 @@ public class Report {
 		return Arrays.asList(ids);
 	}
 
-	@POST
-	@Path("/close/{report}")
-	public Response closeReport(@PathParam("report") String report) {
-		int retries = 5;
-
-		if(report == null || report.equals(""))
-			return Response.status(Status.BAD_REQUEST).build();
-
-		while(true) {
-			try {
-				return closeReportRetry(report);
-			} catch(DatastoreException e) {
-				if(retries == 0)
-					return Response.status(Status.REQUEST_TIMEOUT).build();
-				retries--;
-			}
-		}
-	}
-
-	private Response closeReportRetry(String report) {
-		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
-
-		try {
-			Entity reportEnt;
-			Key key = KeyFactory.createKey(DSUtils.REPORT, report);
-
-			try {
-				reportEnt = datastore.get(key);
-			} catch (EntityNotFoundException e) {
-				LOG.info(Message.REPORT_NOT_FOUND);
-				txn.rollback();
-				return Response.status(Status.EXPECTATION_FAILED).build();
-			}
-
-			Entity closedRep = new Entity(DSUtils.CLOSEDREPORT, report);
-
-			closedRep.setPropertiesFrom(reportEnt);
-			closedRep.setProperty(DSUtils.REPORT_STATUS, CLOSED);
-
-			datastore.delete(txn, key);
-
-			datastore.put(txn, closedRep);
-
-			txn.commit();
-			return Response.ok().build();
-		} finally {
-			if(txn.isActive()) {
-				LOG.info(Message.TXN_ACTIVE);
-				txn.rollback();
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-		}
-	}
-
 	public static JSONArray buildJsonReports(QueryResultList<Entity> reports, boolean withTn) {
 		JSONArray array = new JSONArray();
 

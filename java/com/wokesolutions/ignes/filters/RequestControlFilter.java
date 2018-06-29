@@ -22,6 +22,7 @@ import com.wokesolutions.ignes.util.Message;
 
 @Priority(1)
 public class RequestControlFilter implements Filter {
+	
 	public static final Logger LOG = Logger.getLogger(RequestControlFilter.class.getName());
 	MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 
@@ -48,6 +49,9 @@ public class RequestControlFilter implements Filter {
 		String deviceinfo = newreq.getHeader(CustomHeader.DEVICE_INFO);
 
 		if(deviceid == null || deviceapp == null || deviceinfo == null) {
+			LOG.info(deviceinfo);
+			LOG.info(deviceapp);
+			LOG.info(deviceid);
 			changeResp(resp, Message.MISSING_DEVICE_HEADER);
 			return;
 		}
@@ -55,8 +59,10 @@ public class RequestControlFilter implements Filter {
 		String url = newreq.getRequestURL().toString();
 		String method = newreq.getMethod();
 
-		if(!(method.equals(DELETE) || method.equals(POST) || method.equals(GET)))
+		if(!(method.equals(DELETE) || method.equals(POST) || method.equals(GET))) {
 			chain.doFilter(req, resp);
+			return;
+		}
 
 		String query = newreq.getQueryString();
 		if(query != null)
@@ -89,6 +95,8 @@ public class RequestControlFilter implements Filter {
 		req.setAttribute(CustomHeader.DEVICE_ID_ATT, deviceid);
 		req.setAttribute(CustomHeader.DEVICE_APP_ATT, deviceapp);
 		req.setAttribute(CustomHeader.DEVICE_INFO_ATT, deviceinfo);
+		
+		LOG.info(deviceid);
 		
 		LOG.info(Message.REQUEST_IS_GOOD);
 		chain.doFilter(req, resp);

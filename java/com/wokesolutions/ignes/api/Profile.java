@@ -396,13 +396,6 @@ public class Profile {
 			@PathParam(ParamName.USERNAME) String username) {
 		int retries = 5;
 
-		try {
-			sameUserOrAdmin(request, username);
-		} catch(NotSameNorAdminException e) {
-			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
-			return Response.status(Status.FORBIDDEN).build();
-		}
-
 		while(true) {
 			try {
 				return getUserProfileRetry(username);

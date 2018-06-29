@@ -4,6 +4,11 @@
 		<property name="user_login_time" direction="desc" />
 		<property name="user_login_ip" direction="asc" />
 	</datastore-index>
+	
+    <datastore-index kind="Token" ancestor="false" source="manual">
+        <property name="token_user" direction="asc"/>
+        <property name="token_device" direction="asc"/>
+    </datastore-index>
     
     <datastore-index kind="User" ancestor="false" source="manual">
         <property name="user_email" direction="asc"/>

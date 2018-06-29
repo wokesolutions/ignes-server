@@ -87,7 +87,7 @@ public class Login {
 	private Response loginUserRetry(LoginData data, final HttpServletRequest request) {
 		LOG.info(Message.ATTEMPT_LOGIN + data.username);
 
-		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withDefaults());
+		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
 		final Key userKey = KeyFactory.createKey(DSUtils.USER, data.username);
 		try {
@@ -205,10 +205,8 @@ public class Login {
 			newToken.setProperty(DSUtils.TOKEN_USER, userKey);
 
 			LOG.info(data.username + Message.LOGGED_IN);
-			// Batch operation
 			List<Entity> logs = Arrays.asList(log, stats, newToken);
 			datastore.put(txn, logs);
-			txn.commit();
 
 			ResponseBuilder response;
 
@@ -233,8 +231,13 @@ public class Login {
 
 				response.header(CustomHeader.ACTIVATED, activated);
 			}
-
+			
+			txn.commit();
 			return response.build();	
+		} catch(Exception e) {
+			LOG.info(e.toString());
+			LOG.info(e.getMessage());
+			return null;
 		} finally {
 			if (txn.isActive()) {
 				txn.rollback();

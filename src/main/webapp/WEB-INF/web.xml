@@ -36,6 +36,16 @@
 	<!-- Filters -->
 
 	<filter>
+		<filter-name>DeviceControlFilter</filter-name>
+		<filter-class>com.wokesolutions.ignes.filters.DeviceControlFilter</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>RequestControlFilter</filter-name>
+		<url-pattern>/api/*</url-pattern>
+	</filter-mapping>
+
+	<filter>
 		<filter-name>RequestControlFilter</filter-name>
 		<filter-class>com.wokesolutions.ignes.filters.RequestControlFilter</filter-class>
 	</filter>
@@ -60,8 +70,8 @@
 		<filter-class>com.wokesolutions.ignes.filters.PermissionControlFilter</filter-class>
 	</filter>
 	
-	<filter>
+	<filter-mapping>
 		<filter-name>PermissionControlFilter</filter-name>
 		<url-pattern>/api/*</url-pattern>
-	</filter>
+	</filter-mapping>
 </web-app>

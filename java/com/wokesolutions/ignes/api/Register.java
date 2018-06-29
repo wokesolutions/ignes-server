@@ -190,6 +190,8 @@ public class Register {
 
 			Transaction txn = datastore.beginTransaction();
 
+			Date date = new Date();
+			
 			try {
 				Entity user = new Entity(DSUtils.USER, registerData.org_nif);
 				user.setProperty(DSUtils.USER_EMAIL, registerData.org_email);
@@ -197,7 +199,9 @@ public class Register {
 						DigestUtils.sha512Hex(registerData.org_password));
 				user.setProperty(DSUtils.USER_ACTIVATION, Profile.NOT_ACTIVATED);
 				user.setProperty(DSUtils.USER_LEVEL, UserLevel.ORG);
-				user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, new Date());
+				user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
+				user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED,
+						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
 
 				Entity org = new Entity(DSUtils.ORG, user.getKey());
 				org.setUnindexedProperty(DSUtils.ORG_NAME, registerData.org_name);

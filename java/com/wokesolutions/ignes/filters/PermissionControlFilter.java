@@ -119,8 +119,7 @@ public class PermissionControlFilter implements Filter {
 				FilterOperator.EQUAL, username);
 		query.setFilter(filter);
 
-		query.addProjection(new PropertyProjection(DSUtils.TOKEN_USER, String.class))
-		.addProjection(new PropertyProjection(DSUtils.TOKEN_DEVICE, String.class));
+		query.addProjection(new PropertyProjection(DSUtils.TOKEN_DEVICE, String.class));
 
 		List<Entity> allTokens = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
 
@@ -147,6 +146,7 @@ public class PermissionControlFilter implements Filter {
 				req.setAttribute(CustomHeader.LEVEL_ATT, userlevel);
 				req.setAttribute(CustomHeader.USERNAME_ATT, username);
 				chain.doFilter(req, resp);
+				return;
 			}
 
 		changeResp(resp, Message.INVALID_TOKEN);
