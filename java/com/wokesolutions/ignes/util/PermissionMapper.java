@@ -20,12 +20,18 @@ public class PermissionMapper {
 	private final static String ORG = "org";
 	private final static String WORKER = "worker";
 	private final static String TASK = "task";
+	private final static String REGISTER = "register";
 
 	public static List<String> getPermissions(String url) {
 		String req = url.substring(url.indexOf("/api/") + 5);
 
 		List<String> permissions = new ArrayList<String>(7);
 
+		if(req.contains(REGISTER)) {
+			permissions.add(UserLevel.GUEST);
+			return permissions;
+		}
+		
 		if(req.contains(POST_COMMENT)) {
 			permissions.add(UserLevel.LEVEL2);
 			permissions.add(UserLevel.LEVEL3);

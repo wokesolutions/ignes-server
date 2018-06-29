@@ -115,6 +115,7 @@ public class Message {
 		public static final String PROFILE_UPDATED = "Perfil do utilizador foi atualizado";
 		public static final String VERIFYING_TOKEN = "Verificando o token";
 		public static final String VERIFYING_TOKEN_OF_USER = "Verificando o token do user: ";
+		public static final String NOT_GUEST_REQUEST = "Pedido exige autenticação";
 		
 	// Info Requests
 		public static final String REQUEST_IS_GOOD = "Pedido foi aceite";

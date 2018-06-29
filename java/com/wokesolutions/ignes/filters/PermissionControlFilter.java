@@ -55,6 +55,8 @@ public class PermissionControlFilter implements Filter {
 			changeResp(resp, Message.NOT_HTTP_REQUEST);
 			return;
 		}
+		
+		LOG.info(Message.NOT_GUEST_REQUEST);
 
 		HttpServletRequest request = (HttpServletRequest) req;
 
