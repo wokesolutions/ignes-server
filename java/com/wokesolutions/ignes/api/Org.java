@@ -110,6 +110,7 @@ public class Org {
 			Key orgKey = KeyFactory.createKey(DSUtils.ORG, org);
 
 			if(userResult != null) {
+				LOG.info(Message.USER_ALREADY_EXISTS);
 				txn.rollback();
 				return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build();
 			}
@@ -126,6 +127,18 @@ public class Org {
 			worker.setProperty(DSUtils.WORKER_JOB, registerData.worker_job);
 			worker.setProperty(DSUtils.WORKER_NAME, registerData.worker_name);
 			worker.setUnindexedProperty(DSUtils.WORKER_CREATIONTIME, date);
+			
+			String orgName;
+			try {
+				Entity orgE = datastore.get(KeyFactory.createKey(DSUtils.ORG, org));
+				orgName = orgE.getProperty(DSUtils.ORG_NAME).toString();
+			} catch(EntityNotFoundException e) {
+				LOG.info(Message.UNEXPECTED_ERROR);
+				txn.rollback();
+				return Response.status(Status.EXPECTATION_FAILED).build();
+			}
+			
+			worker.setUnindexedProperty(DSUtils.WORKER_ORG, orgName);
 
 			user.setUnindexedProperty(DSUtils.USER_PASSWORD, pwSha);
 			user.setProperty(DSUtils.USER_EMAIL, email);
@@ -358,17 +371,11 @@ public class Org {
 		String email = data.email;
 		String indications = data.indications;
 
-		LOG.info("1");
-
 		Entity reportE;
-
-		LOG.info("2");
 
 		Query workerQuery = new Query(DSUtils.WORKER)
 				.setAncestor(KeyFactory.createKey(DSUtils.USER, email));
 		workerQuery.addProjection(new PropertyProjection(DSUtils.WORKER_ORG, String.class));
-
-		LOG.info("3");
 
 		Entity worker;
 
@@ -378,8 +385,6 @@ public class Org {
 			LOG.info(Message.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
-
-		LOG.info("4");
 
 		if(worker == null) {
 			LOG.info(Message.WORKER_NOT_FOUND);
@@ -455,11 +460,19 @@ public class Org {
 					LOG.info(Message.ORG_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
+				
+				Entity user;
+				try {
+					user = datastore.get(org.getParent());
+				} catch (EntityNotFoundException e) {
+					LOG.info(Message.ORG_NOT_FOUND);
+					return Response.status(Status.NOT_FOUND).build();
+				}
 
 				JSONObject obj = new JSONObject();
 				obj.put(DSUtils.ORG, org.getKey().getName());
 				obj.put(DSUtils.ORG_ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
-				obj.put(DSUtils.ORG_EMAIL, org.getProperty(DSUtils.ORG_EMAIL));
+				obj.put(DSUtils.ORG_EMAIL, user.getProperty(DSUtils.USER_EMAIL));
 				obj.put(DSUtils.ORG_NAME, org.getProperty(DSUtils.ORG_NAME));
 				obj.put(DSUtils.ORG_PHONE, org.getProperty(DSUtils.ORG_PHONE));
 				obj.put(DSUtils.ORG_SERVICES, org.getProperty(DSUtils.ORG_SERVICES));

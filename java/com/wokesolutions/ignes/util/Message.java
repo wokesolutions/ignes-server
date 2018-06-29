@@ -59,7 +59,7 @@ public class Message {
 		public static final String TOO_MANY_REQUESTS = "Demasiados pedidos do mesmo IP";
 		public static final String NOT_HTTP_REQUEST = "Pedido não é HTTP";
 		public static final String REQUEST_ID_ERROR = "Erro a obter ID do pedido";
-		
+		public static final String MISSING_DEVICE_HEADER = "Não foi encontrado um dos headers";
 	
 	// Info User
 		public static final String ATTEMPT_REGISTER_USER = "Tentando registar o utilizador: ";

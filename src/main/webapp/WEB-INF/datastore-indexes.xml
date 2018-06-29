@@ -10,6 +10,11 @@
         <property name="user_level" direction="asc"/>
     </datastore-index>
     
+    <datastore-index kind="Token" ancestor="true" source="manual">
+        <property name="token_string" direction="asc"/>
+        <property name="token_device" direction="asc"/>
+    </datastore-index>
+    
     <datastore-index kind="Worker" ancestor="true" source="manual">
         <property name="worker_org" direction="asc"/>
     </datastore-index>

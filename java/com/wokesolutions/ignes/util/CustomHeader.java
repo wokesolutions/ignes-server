@@ -5,6 +5,10 @@ public class CustomHeader {
 	public static final String USERNAME_ATT = "username";
 	public static final String NIF_ATT = "nif";
 	public static final String LEVEL_ATT = "level";
+	public static final String DEVICE_ID_ATT = "deviceid";
+	public static final String DEVICE_APP_ATT = "deviceapp";
+	public static final String DEVICE_INFO_ATT = "deviceapp";
+	public static final String ACTIVATED_ATT = "activated";
 
 	public final static String AUTHORIZATION = "Authorization";
 	
@@ -22,6 +26,10 @@ public class CustomHeader {
 	public static final String CURSOR = "Cursor";
 	public static final String REPORTS = "Reports";
 	public static final String USERNAMES = "Usernames";
+	
+	public static final String DEVICE_ID = "Device-ID";
+	public static final String DEVICE_APP = "Device-App";
+	public static final String DEVICE_INFO = "Device-Info";
 }
 
 

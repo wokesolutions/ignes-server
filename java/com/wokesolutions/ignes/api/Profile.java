@@ -63,6 +63,7 @@ public class Profile {
 	private static final int BATCH_SIZE = 20;
 
 	public static final String ACTIVATED = "activated";
+	public static final String NOT_ACTIVATED = "notactivated";
 
 	private static final String USER_REPORTS = "user_reports";
 	private static final String PROFILEPIC = "profilepic";
@@ -323,13 +324,8 @@ public class Profile {
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
-		LOG.info("code - " + code);
-
 		JSONObject codejson = new JSONObject(code);
 		code = codejson.getString("code");
-
-		LOG.info("new code - " + code);
-
 		Key userkey = KeyFactory.createKey(DSUtils.USER, username);
 		Entity user;
 		try {
@@ -339,11 +335,11 @@ public class Profile {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
-		boolean bool = code.equals(user.getProperty(DSUtils.USER_CODE));
+		boolean bool = code.equals(user.getProperty(DSUtils.USER_ACTIVATION));
 		if(!bool)
 			return Response.status(Status.EXPECTATION_FAILED).build();
 
-		user.setProperty(DSUtils.USER_CODE, ACTIVATED);
+		user.setProperty(DSUtils.USER_ACTIVATION, ACTIVATED);
 
 		datastore.put(user);
 
@@ -388,9 +384,9 @@ public class Profile {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
-		boolean yes =  entUser.getProperty(DSUtils.USER_CODE).toString().equals(ACTIVATED);
+		boolean yes = entUser.getProperty(DSUtils.USER_ACTIVATION).toString().equals(ACTIVATED);
 
-		return Response.ok().entity(yes).build();
+		return Response.ok(yes).build();
 	}
 
 	@GET

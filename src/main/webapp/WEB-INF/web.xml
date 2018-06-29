@@ -56,77 +56,12 @@
 	</filter-mapping>
 
 	<filter>
-		<filter-name>UserFilter</filter-name>
-		<filter-class>com.wokesolutions.ignes.filters.UserFilter</filter-class>
+		<filter-name>PermissionControlFilter</filter-name>
+		<filter-class>com.wokesolutions.ignes.filters.PermissionControlFilter</filter-class>
 	</filter>
-
-	<filter-mapping>
-		<filter-name>UserFilter</filter-name>
-		<url-pattern>/api/report/create</url-pattern>
-		<url-pattern>/api/report/vote/up</url-pattern>
-		<url-pattern>/api/report/vote/down</url-pattern>
-		<url-pattern>/api/report/vote/spam</url-pattern>
-		<url-pattern>/api/report/vote/multiple</url-pattern>
-		<url-pattern>/api/profile/*</url-pattern>
-		<url-pattern>/api/logout</url-pattern>
-		<url-pattern>/api/logout/everywhere</url-pattern>
-		<url-pattern>/api/report/comment/get/*</url-pattern>
-	</filter-mapping>
-
-	<filter>
-		<filter-name>User2Filter</filter-name>
-		<filter-class>com.wokesolutions.ignes.filters.User2Filter</filter-class>
-	</filter>
-
-	<filter-mapping>
-		<filter-name>User2Filter</filter-name>
-		<url-pattern>/api/report/comment/post/*</url-pattern>
-	</filter-mapping>
 	
 	<filter>
-		<filter-name>User3Filter</filter-name>
-		<filter-class>com.wokesolutions.ignes.filters.User3Filter</filter-class>
+		<filter-name>PermissionControlFilter</filter-name>
+		<url-pattern>/api/*</url-pattern>
 	</filter>
-
-	<filter-mapping>
-		<filter-name>User3Filter</filter-name>
-		<url-pattern>/api/report/close/*</url-pattern>
-	</filter-mapping>
-
-	<filter>
-		<filter-name>AdminFilter</filter-name>
-		<filter-class>com.wokesolutions.ignes.filters.AdminFilter</filter-class>
-	</filter>
-
-	<filter-mapping>
-		<filter-name>AdminFilter</filter-name>
-		<url-pattern>/api/admin/*</url-pattern>
-	</filter-mapping>
-
-	<filter>
-		<filter-name>OrgFilter</filter-name>
-		<filter-class>com.wokesolutions.ignes.filters.OrgFilter</filter-class>
-	</filter>
-
-	<filter-mapping>
-		<filter-name>OrgFilter</filter-name>
-		<url-pattern>/api/org/givetask</url-pattern>
-		<url-pattern>/api/org/listworkers</url-pattern>
-		<url-pattern>/api/org/deleteworker/*</url-pattern>
-		<url-pattern>/api/org/registerworker</url-pattern>
-		<url-pattern>/api/org/alltasks</url-pattern>
-	</filter-mapping>
-
-	<filter>
-		<filter-name>WorkerFilter</filter-name>
-		<filter-class>com.wokesolutions.ignes.filters.WorkerFilter</filter-class>
-	</filter>
-
-	<filter-mapping>
-		<filter-name>WorkerFilter</filter-name>
-		<url-pattern>/api/task/addnote/*</url-pattern>
-		<url-pattern>/api/worker/*</url-pattern>
-	</filter-mapping>
-	
-	
 </web-app>

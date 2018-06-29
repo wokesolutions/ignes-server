@@ -31,6 +31,8 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PropertyProjection;
 import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
+import com.google.appengine.api.datastore.Query.CompositeFilter;
+import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.QueryResultList;
@@ -499,12 +501,12 @@ public class Admin {
 
 		while(true) {
 			try {
-				Key orgkey = KeyFactory.createKey(DSUtils.ORG, org);
+				Key orgkey = KeyFactory.createKey(DSUtils.USER, org);
 				
 				try {
 					Entity orgE = datastore.get(orgkey);
 					
-					orgE.setProperty(DSUtils.ORG_CONFIRMED, true);
+					orgE.setProperty(DSUtils.USER_ACTIVATION, true);
 					
 					datastore.put(orgE);
 					
@@ -531,11 +533,20 @@ public class Admin {
 
 		while(true) {
 			try {
-				Filter filter = new Query.FilterPredicate(DSUtils.ORG_CONFIRMED, FilterOperator.EQUAL, false);
+				Filter activationFilter = new Query.FilterPredicate(DSUtils.USER_ACTIVATION,
+						FilterOperator.EQUAL, Profile.NOT_ACTIVATED);
+
+				Filter orgFilter = new Query.FilterPredicate(DSUtils.USER_LEVEL,
+						FilterOperator.EQUAL, UserLevel.ORG);
+				
+				List<Filter> filters = Arrays.asList(activationFilter, orgFilter);
+				
+				CompositeFilter filter = new Query
+						.CompositeFilter(CompositeFilterOperator.AND, filters);
 				
 				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 				
-				Query query = new Query(DSUtils.ORG).setFilter(filter);
+				Query query = new Query(DSUtils.USER).setFilter(filter);
 				
 				if(cursor != null && !cursor.equals(""))
 					fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
@@ -545,18 +556,27 @@ public class Admin {
 				
 				JSONArray array = new JSONArray();
 				
-				for(Entity e : list) {
+				for(Entity user : list) {
+					Query orgQuery = new Query(DSUtils.ORG).setAncestor(user.getKey());
+					Entity org;
+					
+					try {
+						org = datastore.prepare(orgQuery).asSingleEntity();
+					} catch(TooManyResultsException e) {
+						LOG.info(Message.UNEXPECTED_ERROR);
+						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+					}
+					
 					JSONObject obj = new JSONObject();
-					obj.put(DSUtils.ORG, e.getKey().getName());
-					obj.put(DSUtils.ORG_NAME, e.getProperty(DSUtils.ORG_NAME));
-					obj.put(DSUtils.ORG_ADDRESS, e.getProperty(DSUtils.ORG_ADDRESS));
-					obj.put(DSUtils.ORG_CREATIONTIME, e.getProperty(DSUtils.ORG_CREATIONTIME));
-					obj.put(DSUtils.ORG_EMAIL, e.getProperty(DSUtils.ORG_EMAIL));
-					obj.put(DSUtils.ORG_ISFIRESTATION, e.getProperty(DSUtils.ORG_ISFIRESTATION));
-					obj.put(DSUtils.ORG_LOCALITY, e.getProperty(DSUtils.ORG_LOCALITY));
-					obj.put(DSUtils.ORG_PHONE, e.getProperty(DSUtils.ORG_PHONE));
-					obj.put(DSUtils.ORG_SERVICES, e.getProperty(DSUtils.ORG_SERVICES));
-					obj.put(DSUtils.ORG_ZIP, e.getProperty(DSUtils.ORG_ZIP));
+					obj.put(DSUtils.ORG, org.getKey().getName());
+					obj.put(DSUtils.ORG_NAME, org.getProperty(DSUtils.ORG_NAME));
+					obj.put(DSUtils.ORG_ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
+					obj.put(DSUtils.ORG_EMAIL, org.getProperty(DSUtils.ORG_EMAIL));
+					obj.put(DSUtils.ORG_ISFIRESTATION, org.getProperty(DSUtils.ORG_ISFIRESTATION));
+					obj.put(DSUtils.ORG_LOCALITY, org.getProperty(DSUtils.ORG_LOCALITY));
+					obj.put(DSUtils.ORG_PHONE, org.getProperty(DSUtils.ORG_PHONE));
+					obj.put(DSUtils.ORG_SERVICES, org.getProperty(DSUtils.ORG_SERVICES));
+					obj.put(DSUtils.ORG_ZIP, org.getProperty(DSUtils.ORG_ZIP));
 					array.put(obj);
 				}
 				

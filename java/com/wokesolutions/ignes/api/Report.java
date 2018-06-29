@@ -1037,7 +1037,7 @@ public class Report {
 	}
 
 	@GET
-	@Path("/vote/{report}")
+	@Path("/vote/get/{report}")
 	public Response getVotes(@PathParam (ParamName.REPORT) String report) {
 		if(report == null || report == "")
 			return Response.status(Status.BAD_REQUEST).build();
