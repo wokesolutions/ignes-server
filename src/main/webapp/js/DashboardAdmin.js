@@ -64,36 +64,43 @@ function hideShow(element){
 
 function verifyIsLoggedIn(){
     console.log(localStorage.getItem('token'));
-    fetch(URL_BASE + '/api/verifytoken', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/verifytoken','GET', headers, body)).then(function(response) {
 
             if (response.status !== 200) {
-                window.location.href = "../index.html";
+
+                window.location.href = "index.html";
+
             }
+
         }
     )
         .catch(function(err) {
             console.log('Fetch Error', err);
         });
+
+
+
 }
 
 function promoDepromo (row){
     var table = document.getElementById("user_table");
     var username = table.rows[row].cells[0].innerHTML;
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
     if(table.rows[row].cells[2].innerHTML === "ADMIN"){
-
-        fetch(URL_BASE + '/api/admin/demote/' + username, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('token')
-            }
-        }).then(function(response) {
+        fetch(restRequest('/api/admin/demote/' + username, 'POST', headers, body)).then(function(response) {
 
                 if (response.status === 200 || response.status === 204) {
                     alert("Trabalhador despromovido com sucesso.")
@@ -107,13 +114,7 @@ function promoDepromo (row){
                 console.log('Fetch Error', err);
             });
     } else{
-        fetch(URL_BASE + '/api/admin/promote/' + username, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('token')
-            }
-        }).then(function(response) {
+        fetch(restRequest('/api/admin/promote/' + username, 'POST', headers, body)).then(function(response) {
 
                 if (response.status === 200 || response.status === 204) {
                     alert("Trabalhador promovido com sucesso.")
@@ -130,13 +131,15 @@ function promoDepromo (row){
 }
 
 function getFirstUsers(){
-    fetch(URL_BASE + '/api/admin/userlist?cursor=', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/userlist?cursor=','GET', headers, body)).then(function(response) {
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
@@ -168,10 +171,10 @@ function getFirstUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
-                            cell1.innerHTML = data[i].User;
-                            cell2.innerHTML = data[i].user_email;
-                            cell3.innerHTML = data[i].user_level;
-                            cell4.innerHTML = data[i].userpoints_points;
+                            cell1.innerHTML = data[i].user;
+                            cell2.innerHTML = data[i].email;
+                            cell3.innerHTML = data[i].level;
+                            cell4.innerHTML = data[i].points;
                             cell5.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
                         }
 
@@ -194,13 +197,15 @@ function getFirstUsers(){
 }
 
 function getNextUsers(){
-    fetch(URL_BASE + '/api/admin/userlist?cursor=' + cursor_next, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/userlist?cursor=' + cursor_next,'GET', headers, body)).then(function(response) {
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
@@ -233,10 +238,10 @@ function getNextUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
-                            cell1.innerHTML = data[i].User;
-                            cell2.innerHTML = data[i].user_email;
-                            cell3.innerHTML = data[i].user_level;
-                            cell4.innerHTML = data[i].userpoints_points;
+                            cell1.innerHTML = data[i].user;
+                            cell2.innerHTML = data[i].email;
+                            cell3.innerHTML = data[i].level;
+                            cell4.innerHTML = data[i].points;
                             cell5.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
                         }
 
@@ -261,81 +266,81 @@ function getNextUsers(){
 function getPreUsers(){
     if(cursor_pre === "") getFirstUsers();
 
-    else {
-        fetch(URL_BASE + '/api/admin/listworkers?cursor=' + cursor_pre, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('token')
-            }
-        }).then(function (response) {
-                var table = document.getElementById("user_table");
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
-                if (response.status === 200) {
-                    if(table.rows.length > 1) {
-                        table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-                    }
-                    if (document.getElementById("previous_list").style.display === "none")
-                        document.getElementById("previous_list").style.display = "block";
-                    if (response.headers.get("Cursor") !== null) {
 
-                        cursor_next= cursor_current;
-                        cursor_current = cursor_pre;
-                        cursor_pre = response.headers.get("Cursor");
+    fetch(restRequest('/api/admin/userlist?cursor=' + cursor_pre,'GET', headers, body)).then(function (response) {
+            var table = document.getElementById("user_table");
 
-                        if (document.getElementById("next_list").style.display === "none")
-                            document.getElementById("next_list").style.display = "block";
+            if (response.status === 200) {
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+                if (document.getElementById("previous_list").style.display === "none")
+                    document.getElementById("previous_list").style.display = "block";
+                if (response.headers.get("Cursor") !== null) {
 
-                    } else {
-                        if (document.getElementById("next_list").style.display === "block")
-                            document.getElementById("next_list").style.display = "none";
-                    }
-                    response.json().then(function (data) {
-                        console.log(JSON.stringify(data));
-                        if (data != null) {
-                            var i;
-                            for (i = 0; i < data.length; i++) {
-                                var row = table.insertRow(-1);
-                                var cell1 = row.insertCell(0);
-                                var cell2 = row.insertCell(1);
-                                var cell3 = row.insertCell(2);
-                                var cell4 = row.insertCell(3);
-                                var cell5 = row.insertCell(4);
-                                cell1.innerHTML = data[i].User;
-                                cell2.innerHTML = data[i].user_email;
-                                cell3.innerHTML = data[i].user_level;
-                                cell4.innerHTML = data[i].userpoints_points;
-                                cell5.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
-                            }
+                    cursor_next= cursor_current;
+                    cursor_current = cursor_pre;
+                    cursor_pre = response.headers.get("Cursor");
 
-                        } else {
-                            alert("Esta empresa ainda não tem trabalhadores associados.")
-                        }
-                    });
+                    if (document.getElementById("next_list").style.display === "none")
+                        document.getElementById("next_list").style.display = "block";
 
                 } else {
-                    console.log("Tratar do Forbidden");
+                    if (document.getElementById("next_list").style.display === "block")
+                        document.getElementById("next_list").style.display = "none";
                 }
+                response.json().then(function (data) {
+                    console.log(JSON.stringify(data));
+                    if (data != null) {
+                        var i;
+                        for (i = 0; i < data.length; i++) {
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            cell1.innerHTML = data[i].user;
+                            cell2.innerHTML = data[i].email;
+                            cell3.innerHTML = data[i].level;
+                            cell4.innerHTML = data[i].points;
+                            cell5.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
+                        }
 
+                    } else {
+                        alert("Esta empresa ainda não tem trabalhadores associados.")
+                    }
+                });
 
+            } else {
+                console.log("Tratar do Forbidden");
             }
-        )
-            .catch(function (err) {
-                console.log('Fetch Error', err);
-            });
-    }
+
+
+        }
+    )
+        .catch(function (err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 function logOut(){
-    console.log(localStorage.getItem('token'));
-    fetch(URL_BASE + '/api/logout', {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/logout','POST', headers, body)).then(function(response) {
 
             if (response.status === 200) {
                 localStorage.removeItem('token');
@@ -358,13 +363,15 @@ function logOut(){
 }
 
 function getPendingNext(){
-    fetch(URL_BASE + '/api/admin/orgstoconfirm?cursor=' + cursor_next_pending, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/orgstoconfirm?cursor=' + cursor_next_pending,'GET', headers, body)).then(function(response) {
             var table = document.getElementById("orgs_pending_table");
 
             if (response.status === 200) {
@@ -404,15 +411,15 @@ function getPendingNext(){
                             var cell8 = row.insertCell(7);
                             var cell9 = row.insertCell(8);
                             var cell10 = row.insertCell(9);
-                            cell1.innerHTML = data[i].Org;
-                            cell2.innerHTML = data[i].org_name;
-                            cell4.innerHTML = data[i].org_email;
-                            cell3.innerHTML = data[i].org_address;
-                            cell5.innerHTML = data[i].org_locality;
-                            cell6.innerHTML = data[i].org_phone;
-                            cell7.innerHTML = data[i].org_services;
-                            cell8.innerHTML = data[i].org_creationtime;
-                            cell9.innerHTML = data[i].org_isfirestation;
+                            cell1.innerHTML = data[i].org;
+                            cell2.innerHTML = data[i].name;
+                            cell4.innerHTML = data[i].email;
+                            cell3.innerHTML = data[i].address;
+                            cell5.innerHTML = data[i].locality;
+                            cell6.innerHTML = data[i].phone;
+                            cell7.innerHTML = data[i].services;
+                            cell8.innerHTML = data[i].creationtime;
+                            cell9.innerHTML = data[i].isfirestation;
                             cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
                         }
 
@@ -436,13 +443,15 @@ function getPendingNext(){
 function getPendingPre(){
     if(cursor_pre_workers === "") getPendingFirst();
 
-    fetch(URL_BASE + '/api/admin/orgstoconfirm?cursor=' + cursor_pre_pending, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/orgstoconfirm?cursor=' + cursor_pre_pending,'GET', headers, body)).then(function(response) {
             var table = document.getElementById("orgs_pending_table");
 
             if (response.status === 200) {
@@ -482,15 +491,15 @@ function getPendingPre(){
                             var cell8 = row.insertCell(7);
                             var cell9 = row.insertCell(8);
                             var cell10 = row.insertCell(9);
-                            cell1.innerHTML = data[i].Org;
-                            cell2.innerHTML = data[i].org_name;
-                            cell4.innerHTML = data[i].org_email;
-                            cell3.innerHTML = data[i].org_address;
-                            cell5.innerHTML = data[i].org_locality;
-                            cell6.innerHTML = data[i].org_phone;
-                            cell7.innerHTML = data[i].org_services;
-                            cell8.innerHTML = data[i].org_creationtime;
-                            cell9.innerHTML = data[i].org_isfirestation;
+                            cell1.innerHTML = data[i].org;
+                            cell2.innerHTML = data[i].name;
+                            cell4.innerHTML = data[i].email;
+                            cell3.innerHTML = data[i].address;
+                            cell5.innerHTML = data[i].locality;
+                            cell6.innerHTML = data[i].phone;
+                            cell7.innerHTML = data[i].services;
+                            cell8.innerHTML = data[i].creationtime;
+                            cell9.innerHTML = data[i].isfirestation;
                             cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
                         }
 
@@ -512,13 +521,15 @@ function getPendingPre(){
 }
 
 function getPendingFirst(){
-    fetch(URL_BASE + '/api/admin/orgstoconfirm?cursor=', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/orgstoconfirm?cursor=','GET', headers, body)).then(function(response) {
             var table = document.getElementById("orgs_pending_table");
 
             if (response.status === 200) {
@@ -557,15 +568,15 @@ function getPendingFirst(){
                             var cell8 = row.insertCell(7);
                             var cell9 = row.insertCell(8);
                             var cell10 = row.insertCell(9);
-                            cell1.innerHTML = data[i].Org;
-                            cell2.innerHTML = data[i].org_name;
-                            cell4.innerHTML = data[i].org_email;
-                            cell3.innerHTML = data[i].org_address;
-                            cell5.innerHTML = data[i].org_locality;
-                            cell6.innerHTML = data[i].org_phone;
-                            cell7.innerHTML = data[i].org_services;
-                            cell8.innerHTML = data[i].org_creationtime;
-                            cell9.innerHTML = data[i].org_isfirestation;
+                            cell1.innerHTML = data[i].org;
+                            cell2.innerHTML = data[i].name;
+                            cell4.innerHTML = data[i].email;
+                            cell3.innerHTML = data[i].address;
+                            cell5.innerHTML = data[i].locality;
+                            cell6.innerHTML = data[i].phone;
+                            cell7.innerHTML = data[i].services;
+                            cell8.innerHTML = data[i].creationtime;
+                            cell9.innerHTML = data[i].isfirestation;
                             cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
                         }
 
@@ -589,13 +600,16 @@ function getPendingFirst(){
 function activateOrg(row){
     var table = document.getElementById("orgs_pending_table");
     var nif = table.rows[row].cells[0].innerHTML;
-    fetch(URL_BASE + '/api/admin/confirmorg/' + nif, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/confirmorg/' + nif,'POST', headers, body)).then(function(response) {
 
             if (response.status === 200 || response.status === 204) {
                 alert("Organização ativa com sucesso.")
