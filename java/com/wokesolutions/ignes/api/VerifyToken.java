@@ -1,6 +1,7 @@
 package com.wokesolutions.ignes.api;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
@@ -19,8 +20,11 @@ import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
+import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
+import com.google.appengine.api.datastore.Query.CompositeFilter;
+import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query;
@@ -66,9 +70,15 @@ public class VerifyToken {
 
 			Entity tokenE;
 			try {
-				Query query = new Query(DSUtils.TOKEN).setAncestor(KeyFactory.createKey(DSUtils.USER, username));
-				Filter filter = new Query.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL, token);
-				query.setFilter(filter);
+				Key userKey = KeyFactory.createKey(DSUtils.USER, username);
+				Query query = new Query(DSUtils.TOKEN);
+				Filter filter = new Query.FilterPredicate(DSUtils.TOKEN_STRING,
+						FilterOperator.EQUAL, token);
+				Filter filter2 = new Query.FilterPredicate(DSUtils.TOKEN_USER,
+						FilterOperator.EQUAL, userKey);
+				CompositeFilter filters = new Query.CompositeFilter(CompositeFilterOperator.AND,
+						Arrays.asList(filter, filter2));
+				query.setFilter(filters);
 
 				tokenE = datastore.prepare(query).asSingleEntity();
 				if(tokenE == null) {

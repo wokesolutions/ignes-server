@@ -1,6 +1,6 @@
 package com.wokesolutions.ignes.util;
 
-public class JSONNames {
+public class Prop {
 
 	public static final String REPORT = "report";
 	public static final String USERNAME = "username";
@@ -29,4 +29,18 @@ public class JSONNames {
 	public static final String VOTE = "vote";
 	public static final String DESCRIPTION = "description";
 	public static final String ISPRIVATE = "isprivate";
+	public static final String JOB = "job";
+	public static final String SKILLS = "skills";
+	public static final String GENDER = "gender";
+	public static final String BIRTH = "birth";
+	public static final String REPORTS = "reports";
+	public static final String PROFPIC = "profpic";
+	public static final String THUMBNAIL = "thumbnail";
+	public static final String TEXT = "text";
+	public static final String TASK = "task";
+	public static final String WORKER = "worker";
+	public static final String INDICATIONS = "indications";
+	public static final String TASK_TIME = "tasktime";
+	public static final String NOTE = "note";
+	public static final String COMMENTS = "comments";
 }

@@ -6,25 +6,25 @@ import com.google.api.client.util.Base64;
 
 public class ReportData {
 	
-	public String report_title;
-	public double report_lat;
-	public double report_lng;
-	public int report_gravity;
-	public String report_description;
-	public String report_city;
-	public String report_locality;
-	public String report_address;
-	public String report_img;
-	public boolean report_private;
-	public int report_imgheight;
-	public int report_imgwidth;
-	public int report_imgorientation;
+	public String title;
+	public double lat;
+	public double lng;
+	public int gravity;
+	public String description;
+	public String city;
+	public String locality;
+	public String address;
+	public String img;
+	public boolean isprivate;
+	public int imgheight;
+	public int imgwidth;
+	public int imgorientation;
 	
 	public ReportData() {}
 	
 	public boolean isValid() {
-		return report_lat != 0 && report_lng != 0 && report_img != null 
-				&& report_imgwidth != 0 && report_imgheight != 0;
+		return lat != 0 && lng != 0 && img != null 
+				&& imgwidth != 0 && imgheight != 0;
 	}
 	
 	public static String generateId(String username, Date creationtime) {

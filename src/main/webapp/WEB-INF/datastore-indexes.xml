@@ -8,6 +8,12 @@
     <datastore-index kind="Token" ancestor="false" source="manual">
         <property name="token_user" direction="asc"/>
         <property name="token_device" direction="asc"/>
+        <property name="token_string" direction="asc"/>
+    </datastore-index>
+	
+    <datastore-index kind="Token" ancestor="false" source="manual">
+        <property name="token_user" direction="asc"/>
+        <property name="token_device" direction="asc"/>
     </datastore-index>
     
     <datastore-index kind="User" ancestor="false" source="manual">

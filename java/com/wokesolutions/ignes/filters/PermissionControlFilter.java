@@ -23,6 +23,7 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
+import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PropertyProjection;
 import com.google.appengine.api.datastore.Query;
@@ -64,8 +65,10 @@ public class PermissionControlFilter implements Filter {
 
 		List<String> permissions = PermissionMapper.getPermissions(url);
 
-		if(permissions.contains(UserLevel.GUEST))
+		if(permissions.contains(UserLevel.GUEST)) {
 			chain.doFilter(req, resp);
+			return;
+		}
 
 		Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 
@@ -80,6 +83,7 @@ public class PermissionControlFilter implements Filter {
 		try {
 			username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
 		} catch(Exception e) {
+			LOG.info("deocding");
 			changeResp(resp, Message.INVALID_TOKEN);
 			return;
 		}
@@ -91,6 +95,7 @@ public class PermissionControlFilter implements Filter {
 				verifyWith(token, algorithm, permission);
 			} catch (Exception e) {
 				if(i == permissions.size() - 1) {
+					LOG.info("permissions");
 					changeResp(resp, Message.INVALID_TOKEN);
 					return;
 				}
@@ -103,11 +108,13 @@ public class PermissionControlFilter implements Filter {
 				try {
 					user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
 				} catch (EntityNotFoundException e) {
+					LOG.info("org not found");
 					changeResp(resp, Message.INVALID_TOKEN);
 					return;
 				}
 				
 				if(!user.getProperty(DSUtils.USER_ACTIVATION).toString().equals(Profile.ACTIVATED)) {
+					LOG.info("org not confirmed");
 					changeResp(resp, Message.ORG_NOT_CONFIRMED);
 					return;
 				}
@@ -117,23 +124,25 @@ public class PermissionControlFilter implements Filter {
 		}
 
 		Query query = new Query(DSUtils.TOKEN);
+		Key userKey = KeyFactory.createKey(DSUtils.USER, username);
 		Query.Filter filter = new Query.FilterPredicate(DSUtils.TOKEN_USER,
-				FilterOperator.EQUAL, username);
+				FilterOperator.EQUAL, userKey);
 		query.setFilter(filter);
 
-		query.addProjection(new PropertyProjection(DSUtils.TOKEN_DEVICE, String.class));
+		query.addProjection(new PropertyProjection(DSUtils.TOKEN_DEVICE, String.class))
+		.addProjection(new PropertyProjection(DSUtils.TOKEN_STRING, String.class));
 
 		List<Entity> allTokens = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
 
 		String deviceid = request.getAttribute(CustomHeader.DEVICE_ID_ATT).toString();
 
-		for(Entity tokenE : allTokens)
+		for(Entity tokenE : allTokens) {
 			if(tokenE.getProperty(DSUtils.TOKEN_STRING).equals(token) &&
 					tokenE.getProperty(DSUtils.TOKEN_DEVICE).equals(deviceid)) {
 
 				Entity user;
 				try {
-					user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
+					user = datastore.get(userKey);
 				} catch (EntityNotFoundException e) {
 					changeResp(resp, Message.USER_NOT_FOUND);
 					return;
@@ -150,7 +159,9 @@ public class PermissionControlFilter implements Filter {
 				chain.doFilter(req, resp);
 				return;
 			}
+		}
 
+		LOG.info("token nao existe");
 		changeResp(resp, Message.INVALID_TOKEN);
 		return;
 	}

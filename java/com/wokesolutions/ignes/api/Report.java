@@ -3,6 +3,7 @@ package com.wokesolutions.ignes.api;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -56,7 +57,7 @@ import com.wokesolutions.ignes.data.ReportData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Haversine;
-import com.wokesolutions.ignes.util.JSONNames;
+import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Storage;
@@ -77,6 +78,8 @@ public class Report {
 	private static final String NOT_FOUND = "NOT_FOUND";
 
 	private static final String OCORRENCIA_RAPIDA = "Ocorrência rápida - ";
+	
+	private static final long TO_CLOSE = TimeUnit.DAYS.toMillis(3);  
 
 	private static final int DEFAULT_GRAVITY = 2;
 	private static final int NO_TRUST_GRAVITY = 1;
@@ -139,10 +142,10 @@ public class Report {
 
 				Entity report = new Entity(DSUtils.REPORT, reportid);
 
-				report.setProperty(DSUtils.REPORT_LAT, data.report_lat);
-				report.setProperty(DSUtils.REPORT_LNG, data.report_lng);
+				report.setProperty(DSUtils.REPORT_LAT, data.lat);
+				report.setProperty(DSUtils.REPORT_LNG, data.lng);
 				report.setProperty(DSUtils.REPORT_CREATIONTIME, creationtime);
-				report.setProperty(DSUtils.REPORT_PRIVATE, data.report_private);
+				report.setProperty(DSUtils.REPORT_PRIVATE, data.isprivate);
 				report.setProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED,
 						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(creationtime));
 				report.setProperty(DSUtils.REPORT_USER, userKey);
@@ -169,10 +172,10 @@ public class Report {
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 
-				if(data.report_gravity >= 1 && data.report_gravity <= 5) {
-					report.setProperty(DSUtils.REPORT_GRAVITY, data.report_gravity);
+				if(data.gravity >= 1 && data.gravity <= 5) {
+					report.setProperty(DSUtils.REPORT_GRAVITY, data.gravity);
 
-					if(data.report_gravity == 5 && level.equals(UserLevel.LEVEL2))
+					if(data.gravity == 5 && level.equals(UserLevel.LEVEL2))
 						report.setProperty(DSUtils.REPORT_STATUS, STANDBY);
 
 				} else {
@@ -183,30 +186,30 @@ public class Report {
 					report.setProperty(DSUtils.REPORT_GRAVITY, gravity);
 				}
 
-				if(data.report_address != null)
-					report.setProperty(DSUtils.REPORT_ADDRESS, data.report_address);
+				if(data.address != null)
+					report.setProperty(DSUtils.REPORT_ADDRESS, data.address);
 
-				if(data.report_title != null)
-					report.setProperty(DSUtils.REPORT_TITLE, data.report_title);
+				if(data.title != null)
+					report.setProperty(DSUtils.REPORT_TITLE, data.title);
 				else
 					report.setProperty(DSUtils.REPORT_TITLE, "");
 
-				if(data.report_description != null)
-					report.setProperty(DSUtils.REPORT_DESCRIPTION, data.report_description);
+				if(data.description != null)
+					report.setProperty(DSUtils.REPORT_DESCRIPTION, data.description);
 				else
-					report.setProperty(DSUtils.REPORT_DESCRIPTION, OCORRENCIA_RAPIDA + data.report_locality);
+					report.setProperty(DSUtils.REPORT_DESCRIPTION, OCORRENCIA_RAPIDA + data.locality);
 
-				if(data.report_locality != null)
-					report.setProperty(DSUtils.REPORT_LOCALITY, data.report_locality);
-				if(data.report_city != null)
-					report.setProperty(DSUtils.REPORT_DISTRICT, data.report_city);
+				if(data.locality != null)
+					report.setProperty(DSUtils.REPORT_LOCALITY, data.locality);
+				if(data.city != null)
+					report.setProperty(DSUtils.REPORT_DISTRICT, data.city);
 
 				LinkedList<String> folders = new LinkedList<String>();
 				folders.add(Storage.IMG_FOLDER);
 				folders.add(Storage.REPORT_FOLDER);
 				StoragePath pathImg = new StoragePath(folders, reportid);
-				if(!Storage.saveImage(data.report_img, Storage.BUCKET, pathImg,
-						data.report_imgwidth, data.report_imgheight, data.report_imgorientation, true)) {
+				if(!Storage.saveImage(data.img, Storage.BUCKET, pathImg,
+						data.imgwidth, data.imgheight, data.imgorientation, true)) {
 					LOG.info(Message.STORAGE_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 				}
@@ -220,7 +223,7 @@ public class Report {
 				reportVotes.setProperty(DSUtils.REPORTVOTES_DOWN, 0L);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_RELEVANCE, 0);
 
-				report.setPropertiesFrom(makeCoordProps(data.report_lat, data.report_lng));
+				report.setPropertiesFrom(makeCoordProps(data.lat, data.lng));
 
 				List<Entity> entities = Arrays.asList(report, reportVotes);
 
@@ -329,7 +332,7 @@ public class Report {
 		JSONObject obj = new JSONObject();
 		try {
 			String tn = Storage.getImage(rep.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
-			obj.put(DSUtils.REPORT_THUMBNAIL, tn);
+			obj.put(Prop.THUMBNAIL, tn);
 
 			LOG.info(tn);
 		} catch(Exception e) {
@@ -594,24 +597,24 @@ public class Report {
 		for(Entity report : reports) {
 			JSONObject jsonReport = new JSONObject();
 
-			jsonReport.put(JSONNames.REPORT, report.getKey().getName());
-			jsonReport.put(JSONNames.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
-			jsonReport.put(JSONNames.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
-			jsonReport.put(JSONNames.USERNAME,
+			jsonReport.put(Prop.REPORT, report.getKey().getName());
+			jsonReport.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
+			jsonReport.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+			jsonReport.put(Prop.USERNAME,
 					((Key) report.getProperty(DSUtils.REPORT_USER)).getName());
-			jsonReport.put(JSONNames.LAT, report.getProperty(DSUtils.REPORT_LAT));
-			jsonReport.put(JSONNames.LNG, report.getProperty(DSUtils.REPORT_LNG));
-			jsonReport.put(JSONNames.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
-			jsonReport.put(JSONNames.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
-			jsonReport.put(JSONNames.DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION));
-			jsonReport.put(JSONNames.CREATIONTIME,
+			jsonReport.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
+			jsonReport.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
+			jsonReport.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+			jsonReport.put(Prop.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
+			jsonReport.put(Prop.DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION));
+			jsonReport.put(Prop.CREATIONTIME,
 					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
-			jsonReport.put(JSONNames.ISPRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
+			jsonReport.put(Prop.ISPRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
 
 			if(withTn) {
 				String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
 
-				jsonReport.put(DSUtils.REPORT_THUMBNAIL, tn);
+				jsonReport.put(Prop.THUMBNAIL, tn);
 			}
 
 			appendVotesAndComments(jsonReport, report);
@@ -650,9 +653,9 @@ public class Report {
 		numUpvotes = (long) votes.getProperty(DSUtils.REPORTVOTES_UP);
 		numDownvotes = (long) votes.getProperty(DSUtils.REPORTVOTES_DOWN);
 
-		jsonReport.put(DSUtils.REPORT_COMMENTSNUM, numComments);
-		jsonReport.put(DSUtils.REPORTVOTES_UP, numUpvotes);
-		jsonReport.put(DSUtils.REPORTVOTES_DOWN, numDownvotes);
+		jsonReport.put(Prop.COMMENTS, numComments);
+		jsonReport.put(Prop.UPS, numUpvotes);
+		jsonReport.put(Prop.DOWNS, numDownvotes);
 	}
 
 	private PropertyContainer makeCoordProps(double lat, double lng) {
@@ -729,21 +732,36 @@ public class Report {
 
 	@DELETE
 	@Path("/closedef")
-	public Response closeDef() { //TODO fix this when possible
+	public Response closeDef() {
 		Query query = new Query(DSUtils.REPORT);
 		Filter filter = new Query.FilterPredicate(DSUtils.REPORT_STATUS,
 				FilterOperator.EQUAL, CLOSED);
 		query.setFilter(filter);
+		
+		FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
 
-		List<Entity> list = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
+		List<Entity> list = datastore.prepare(query).asList(fetchOptions);
 
 		for(Entity rep : list) {
+			long closetime = ((Date) rep.getProperty(DSUtils.REPORT_CLOSETIME)).getTime();
+			long currtime = System.currentTimeMillis();
+			if(currtime - closetime < TO_CLOSE)
+				continue;
+			
 			Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 			try {
 				Entity closedR = new Entity(DSUtils.CLOSEDREPORT);
 				closedR.setPropertiesFrom(rep);
+				
+				Query taskQ = new Query(DSUtils.TASK).setAncestor(rep.getKey()).setKeysOnly();
+				List<Entity> tasks = datastore.prepare(taskQ).asList(fetchOptions);
+				List<Key> taskKeys = new ArrayList<Key>(tasks.size());
+				for(Entity task : tasks)
+					taskKeys.add(task.getKey());
+				
 				datastore.put(txn, closedR);
 				datastore.delete(txn, rep.getKey());
+				datastore.delete(txn, taskKeys);
 				txn.commit();
 			} catch(Exception e) {
 				txn.rollback();
@@ -805,9 +823,7 @@ public class Report {
 							txn.rollback();
 							return Response.status(Status.FORBIDDEN).build();
 						}
-					}
-					
-					if(Arrays.asList(UserLevel.LEVEL1, UserLevel.LEVEL2)
+					} else if(Arrays.asList(UserLevel.LEVEL1, UserLevel.LEVEL2)
 							.contains(userlevel)) {
 						Key reporter = (Key) reportE.getProperty(DSUtils.REPORT_USER);
 						if(!reporter.equals(user.getKey())) {
@@ -817,14 +833,17 @@ public class Report {
 						}
 					}
 					
+					Date date = new Date();
+					
 					Entity reportStatusLog = new Entity(DSUtils.REPORTSTATUSLOG, reportE.getKey());
 					reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_NEWSTATUS, CLOSED);
 					reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_OLDSTATUS,
 							reportE.getProperty(DSUtils.REPORT_STATUS));
-					reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_TIME, new Date());
+					reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_TIME, date);
 					reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_USER, user.getKey());
 
 					reportE.setProperty(DSUtils.REPORT_STATUS, CLOSED);
+					reportE.setProperty(DSUtils.REPORT_CLOSETIME, date);
 
 					datastore.put(txn, Arrays.asList(reportStatusLog, reportE));
 					LOG.info(Message.REPORT_CLOSED);
@@ -1231,7 +1250,8 @@ public class Report {
 			while(true) {
 				try {
 					while(keys.hasNext()) {
-						Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
+						Transaction txn = datastore
+								.beginTransaction(TransactionOptions.Builder.withXG(true));
 
 						String reportid = keys.next();
 						String vote = votes.getString(reportid);
@@ -1252,7 +1272,8 @@ public class Report {
 									FilterOperator.EQUAL, username);
 
 							List<Filter> filters = Arrays.asList(filter1, filter2);
-							Filter filter = new Query.CompositeFilter(CompositeFilterOperator.AND, filters);
+							Filter filter = new Query
+									.CompositeFilter(CompositeFilterOperator.AND, filters);
 							query.setFilter(filter);
 
 							Entity existingVote;
@@ -1307,14 +1328,18 @@ public class Report {
 
 							if(oldVote.equals(DOWN)) {
 								reportvote.setProperty(DSUtils.REPORTVOTES_DOWN,
-										(long) reportvote.getProperty(DSUtils.REPORTVOTES_DOWN) - 1L);
+										(long) reportvote
+										.getProperty(DSUtils.REPORTVOTES_DOWN) - 1L);
 								reportvote.setProperty(DSUtils.REPORTVOTES_RELEVANCE,
-										(long) reportvote.getProperty(DSUtils.REPORTVOTES_RELEVANCE) + 1L);
+										(long) reportvote
+										.getProperty(DSUtils.REPORTVOTES_RELEVANCE) + 1L);
 							} else if(oldVote.equals(UP)) {
 								reportvote.setProperty(DSUtils.REPORTVOTES_UP,
-										(long) reportvote.getProperty(DSUtils.REPORTVOTES_UP) - 1L);
+										(long) reportvote
+										.getProperty(DSUtils.REPORTVOTES_UP) - 1L);
 								reportvote.setProperty(DSUtils.REPORTVOTES_RELEVANCE,
-										(long) reportvote.getProperty(DSUtils.REPORTVOTES_RELEVANCE) - 3L);
+										(long) reportvote
+										.getProperty(DSUtils.REPORTVOTES_RELEVANCE) - 3L);
 							} else {
 								LOG.info(Message.BAD_FORMAT);
 								txn.rollback();
@@ -1358,7 +1383,7 @@ public class Report {
 			String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 			JSONObject obj = new JSONObject(text);
-			text = obj.getString(DSUtils.REPORTCOMMENT_TEXT);
+			text = obj.getString(Prop.TEXT);
 
 			int retries = 5;
 			while(true) {
@@ -1369,11 +1394,16 @@ public class Report {
 						LOG.info(Message.REPORT_NOT_FOUND);
 						return Response.status(Status.NOT_FOUND).build();
 					}
+					
+					Date date = new Date();
 
 					Entity comment = new Entity(DSUtils.REPORTCOMMENT);
 					comment.setProperty(DSUtils.REPORTCOMMENT_TEXT, text);
-					comment.setProperty(DSUtils.REPORTCOMMENT_TIME, new Date());
-					comment.setProperty(DSUtils.REPORTCOMMENT_USER, username);
+					comment.setProperty(DSUtils.REPORTCOMMENT_TIME, date);
+					comment.setProperty(DSUtils.REPORTCOMMENT_TIMEFORMATTED, 
+							new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
+					comment.setProperty(DSUtils.REPORTCOMMENT_USER,
+							KeyFactory.createKey(DSUtils.USER, username));
 					comment.setProperty(DSUtils.REPORTCOMMENT_REPORT, report);
 					datastore.put(comment);
 					return Response.ok().build();
@@ -1422,13 +1452,14 @@ public class Report {
 
 					for(Entity comment : list) {
 						JSONObject obj = new JSONObject();
-						obj.put(DSUtils.REPORTCOMMENT, Long.toString(comment.getKey().getId()));
-						obj.put(DSUtils.REPORTCOMMENT_TEXT, comment.getProperty(DSUtils.REPORTCOMMENT_TEXT));
-						obj.put(DSUtils.REPORTCOMMENT_TIME, comment.getProperty(DSUtils.REPORTCOMMENT_TIME));
+						obj.put(Prop.COMMENT, Long.toString(comment.getKey().getId()));
+						obj.put(Prop.TEXT, comment.getProperty(DSUtils.REPORTCOMMENT_TEXT));
+						obj.put(Prop.CREATIONTIME,
+								comment.getProperty(DSUtils.REPORTCOMMENT_TIMEFORMATTED));
 
-						String username = comment.getProperty(DSUtils.REPORTCOMMENT_USER).toString();
-						obj.put(DSUtils.REPORTCOMMENT_USER, username);
-
+						String username = ((Key) comment
+								.getProperty(DSUtils.REPORTCOMMENT_USER)).getName();
+						obj.put(Prop.USERNAME, username);
 
 						Key user = KeyFactory.createKey(DSUtils.USER, username);
 						Entity userOE;
@@ -1450,7 +1481,7 @@ public class Report {
 
 						if(profpicpath != null) {
 							String profpic = Storage.getImage(profpicpath.toString());
-							obj.put(DSUtils.USER_PROFPIC, profpic);
+							obj.put(Prop.PROFPIC, profpic);
 						}
 
 						array.put(obj);

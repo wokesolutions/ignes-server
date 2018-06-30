@@ -179,10 +179,10 @@ public class DSUtils {
 		public static final String REPORT_IMGPATH = "report_imgpath";
 		public static final String REPORT_IMG = "report_img";
 		public static final String REPORT_THUMBNAILPATH = "report_thumbnailpath";
-		public static final String REPORT_THUMBNAIL = "report_thumbnail";
 		public static final String REPORT_COMMENTSNUM = "report_commentsnum";
 		public static final String REPORT_STATUS = "report_status";
 		public static final String REPORT_PRIVATE = "report_private";
+		public static final String REPORT_CLOSETIME = "report_closetime";
 		
 		public static final String REPORT_P0LAT = "report_p0lat";
 		public static final String REPORT_P1LAT = "report_p1lat";
@@ -220,6 +220,7 @@ public class DSUtils {
 	// ReportComment
 		public static final String REPORTCOMMENT_TEXT = "reportcomment_text";
 		public static final String REPORTCOMMENT_TIME = "reportcomment_time";
+		public static final String REPORTCOMMENT_TIMEFORMATTED = "reportcomment_timeformatted";
 		public static final String REPORTCOMMENT_USER = "reportcomment_user";
 		public static final String REPORTCOMMENT_REPORT = "reportcomment_report";
 		
@@ -254,6 +255,7 @@ public class DSUtils {
 		public static final String NOTE_TIME = "note_time";
 		public static final String NOTE_TASK = "note_task";
 		public static final String NOTE_TEXT = "note_text";
+		public static final String NOTE_TIMEFORMATTED = "note_timeformatted";
 		
 	// ReportStatusLog
 		public static final String REPORTSTATUSLOG_TIME = "reportstatuslog_time";

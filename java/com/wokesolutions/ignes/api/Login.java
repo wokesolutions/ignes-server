@@ -18,7 +18,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 import com.auth0.jwt.exceptions.JWTCreationException;
-import com.google.appengine.api.ThreadManager;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
@@ -149,40 +148,36 @@ public class Login {
 			final String deviceid = request.getAttribute(CustomHeader.DEVICE_ID_ATT).toString();
 			final String username = data.username;
 
-			Runnable deviceChecker = new Runnable() {
-				public void run() {
-					Query deviceQuery = new Query(DSUtils.DEVICE);
-					Filter userFilter = new Query.FilterPredicate(DSUtils.DEVICE_USER,
-							FilterOperator.EQUAL, userKey);
-					deviceQuery.setFilter(userFilter);
+			Query deviceQuery = new Query(DSUtils.DEVICE);
+			Filter userFilter = new Query.FilterPredicate(DSUtils.DEVICE_USER,
+					FilterOperator.EQUAL, userKey);
+			deviceQuery.setFilter(userFilter);
 
-					List<Entity> devices = datastore.prepare(deviceQuery)
-							.asList(FetchOptions.Builder.withDefaults());
+			List<Entity> devices = datastore.prepare(deviceQuery)
+					.asList(FetchOptions.Builder.withDefaults());
 
-					Entity existingDevice = null;
+			Entity existingDevice = null;
 
-					for(Entity device : devices) {
-						if(device.getProperty(DSUtils.DEVICE_ID).toString().equals(deviceid)) {
-							existingDevice = device;
-							break;
-						}
-					}
-
-					if(existingDevice == null) {
-						existingDevice = new Entity(DSUtils.DEVICE);
-						existingDevice.setProperty(DSUtils.DEVICE_ID, deviceid);
-						existingDevice.setUnindexedProperty(DSUtils.DEVICE_COUNT, 1L);
-						existingDevice.setProperty(DSUtils.DEVICE_USER, username);
-
-						Email.sendNewDeviceMessage(email,
-								request.getAttribute(CustomHeader.DEVICE_INFO_ATT).toString());
-					} else
-						existingDevice.setProperty(DSUtils.DEVICE_COUNT,
-								(long) existingDevice.getProperty(DSUtils.DEVICE_COUNT) + 1L);
-
-					datastore.put(existingDevice);
+			for(Entity device : devices) {
+				if(device.getProperty(DSUtils.DEVICE_ID).toString().equals(deviceid)) {
+					existingDevice = device;
+					break;
 				}
-			};
+			}
+
+			if(existingDevice == null) {
+				existingDevice = new Entity(DSUtils.DEVICE);
+				existingDevice.setProperty(DSUtils.DEVICE_ID, deviceid);
+				existingDevice.setUnindexedProperty(DSUtils.DEVICE_COUNT, 1L);
+				existingDevice.setProperty(DSUtils.DEVICE_USER, username);
+
+				Email.sendNewDeviceMessage(email,
+						request.getAttribute(CustomHeader.DEVICE_INFO_ATT).toString());
+			} else
+				existingDevice.setProperty(DSUtils.DEVICE_COUNT,
+						(long) existingDevice.getProperty(DSUtils.DEVICE_COUNT) + 1L);
+
+			datastore.put(txn, existingDevice);
 
 			Entity log = new Entity(DSUtils.USERLOG, user.getKey());
 
@@ -194,9 +189,6 @@ public class Login {
 			log.setProperty(DSUtils.USERLOG_COUNTRY, request.getHeader("X-AppEngine-Country"));
 			log.setProperty(DSUtils.USERLOG_TIME, date);
 			log.setProperty(DSUtils.USERLOG_DEVICE, deviceid);
-
-			Thread checkNewDevice = ThreadManager.createBackgroundThread(deviceChecker);
-			checkNewDevice.start();
 
 			Entity newToken = new Entity(DSUtils.TOKEN);
 			newToken.setProperty(DSUtils.TOKEN_STRING, token);
@@ -231,7 +223,7 @@ public class Login {
 
 				response.header(CustomHeader.ACTIVATED, activated);
 			}
-			
+
 			txn.commit();
 			return response.build();	
 		} catch(Exception e) {

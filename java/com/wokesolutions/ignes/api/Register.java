@@ -63,7 +63,7 @@ public class Register {
 
 	private Response registerUserRetry(UserRegisterData registerData) {
 		LOG.info(Message.ATTEMPT_REGISTER_USER + registerData.username);
-
+		String code = null;
 		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 		try {
 			// If the entity does not exist an Exception is thrown. Otherwise,
@@ -72,63 +72,67 @@ public class Register {
 			try {
 				datastore.get(userKey);
 			} catch(EntityNotFoundException e2) {
+				Filter filter =
+						new Query.FilterPredicate(DSUtils.USER_EMAIL,
+								FilterOperator.EQUAL, registerData.email);
+				
+				Query emailQuery = new Query(DSUtils.USER).setFilter(filter);
+
+				Entity existingUser;
+
 				try {
-					Key orgKey = KeyFactory.createKey(DSUtils.ORG, registerData.username);
-					datastore.get(orgKey);
-				} catch(EntityNotFoundException e3) {
-					Filter filter =
-							new Query.FilterPredicate(DSUtils.USER_EMAIL,
-									FilterOperator.EQUAL, registerData.email);
-
-					Query emailQuery = new Query(DSUtils.USER).setFilter(filter);
-
-					Entity existingUser;
-
-					try {
-						existingUser = datastore.prepare(emailQuery).asSingleEntity();
-					} catch(TooManyResultsException e1) {
-						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-					}
-
-					if(existingUser != null)
-						return Response.status(Status.CONFLICT).entity(Message.EMAIL_ALREADY_IN_USE).build();
-
-					Date date = new Date();
-					
-					Entity user = new Entity(DSUtils.USER, registerData.username);
-					userKey = user.getKey();
-					user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(registerData.password));
-					user.setProperty(DSUtils.USER_EMAIL, registerData.email);
-					user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1.toString());
-					user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
-					user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED,
-							new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
-
-					String code = Long.toString(System.currentTimeMillis()).substring(6, 13);
-
-					user.setUnindexedProperty(DSUtils.USER_ACTIVATION, code);
-
-					Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
-					userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
-
-					Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
-
-					List<Entity> list = Arrays.asList(user, useroptional, userPoints);
-
-					datastore.put(txn, list);
-
-					LOG.info(Message.USER_REGISTERED + registerData.username);
-					txn.commit();
-
-					Email.sendConfirmMessage(registerData.email, code);
-
-					return Response.ok().build();
+					existingUser = datastore.prepare(emailQuery).asSingleEntity();
+				} catch(TooManyResultsException e1) {
+					LOG.info(Message.UNEXPECTED_ERROR);
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
+
+				if(existingUser != null) {
+					txn.rollback();
+					LOG.info(Message.EMAIL_ALREADY_IN_USE);
+					return Response.status(Status.CONFLICT).entity(Message.EMAIL_ALREADY_IN_USE).build();
+				}
+				
+				Date date = new Date();
+
+				Entity user = new Entity(DSUtils.USER, registerData.username);
+				userKey = user.getKey();
+				user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(registerData.password));
+				user.setProperty(DSUtils.USER_EMAIL, registerData.email);
+				user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1.toString());
+				user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
+				user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED,
+						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
+
+				code = Long.toString(System.currentTimeMillis()).substring(6, 13);
+
+				user.setUnindexedProperty(DSUtils.USER_ACTIVATION, code);
+				
+				Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
+				userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
+
+				Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
+
+				List<Entity> list = Arrays.asList(user, useroptional, userPoints);
+
+				datastore.put(txn, list);
+
+				LOG.info(Message.USER_REGISTERED + registerData.username);
+				txn.commit();
+
+				return Response.ok().build();
 			}
 
 			txn.rollback();
 			return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build(); 
+		} catch(Exception e) {
+			LOG.info(e.getMessage());
+			LOG.info(e.toString());
+			return null;
 		} finally {
+			if(code != null)
+				Email.sendConfirmMessage(registerData.email, code);
+			
 			if (txn.isActive() ) {
 				txn.rollback();
 				LOG.info(Message.TXN_ACTIVE);
@@ -191,7 +195,7 @@ public class Register {
 			Transaction txn = datastore.beginTransaction();
 
 			Date date = new Date();
-			
+
 			try {
 				Entity user = new Entity(DSUtils.USER, registerData.org_nif);
 				user.setProperty(DSUtils.USER_EMAIL, registerData.org_email);
