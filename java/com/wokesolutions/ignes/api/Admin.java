@@ -45,7 +45,7 @@ import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.UserRegisterData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
-import com.wokesolutions.ignes.util.JSONNames;
+import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.UserLevel;
@@ -334,11 +334,11 @@ public class Admin {
 			}
 
 			JSONObject us = new JSONObject();
-			us.put(JSONNames.USERNAME, user.getKey().getName());
-			us.put(JSONNames.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
-			us.put(JSONNames.LEVEL, user.getProperty(DSUtils.USER_LEVEL));
-			us.put(JSONNames.CREATIONTIME, user.getProperty(DSUtils.USER_CREATIONTIMEFORMATTED));
-			us.put(JSONNames.POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
+			us.put(Prop.USERNAME, user.getKey().getName());
+			us.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
+			us.put(Prop.LEVEL, user.getProperty(DSUtils.USER_LEVEL));
+			us.put(Prop.CREATIONTIME, user.getProperty(DSUtils.USER_CREATIONTIMEFORMATTED));
+			us.put(Prop.POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
 			array.put(us);
 		}
 		
@@ -391,9 +391,9 @@ public class Admin {
 
 		for(Entity user : list) {
 			JSONObject us = new JSONObject();
-			us.put(JSONNames.USERNAME, user.getKey().getName());
-			us.put(JSONNames.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
-			us.put(JSONNames.CREATIONTIME, user.getProperty(DSUtils.USER_CREATIONTIMEFORMATTED));
+			us.put(Prop.USERNAME, user.getKey().getName());
+			us.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
+			us.put(Prop.CREATIONTIME, user.getProperty(DSUtils.USER_CREATIONTIMEFORMATTED));
 			array.put(us);
 		}
 		
@@ -453,16 +453,16 @@ public class Admin {
 
 		for(Entity report : list) {
 			JSONObject rep = new JSONObject();
-			rep.put(JSONNames.REPORT, report.getKey().getName());
-			rep.put(JSONNames.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
-			rep.put(JSONNames.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
-			rep.put(JSONNames.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
-			rep.put(JSONNames.USERNAME,
+			rep.put(Prop.REPORT, report.getKey().getName());
+			rep.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
+			rep.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+			rep.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+			rep.put(Prop.USERNAME,
 					((Key) report.getProperty(DSUtils.REPORT_USER)).getName());
-			rep.put(JSONNames.LAT, report.getProperty(DSUtils.REPORT_LAT));
-			rep.put(JSONNames.LNG, report.getProperty(DSUtils.REPORT_LNG));
-			rep.put(JSONNames.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
-			rep.put(JSONNames.CREATIONTIME,
+			rep.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
+			rep.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
+			rep.put(Prop.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
+			rep.put(Prop.CREATIONTIME,
 					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
 			
 			array.put(rep);
@@ -551,15 +551,15 @@ public class Admin {
 					}
 					
 					JSONObject obj = new JSONObject();
-					obj.put(JSONNames.NIF, org.getKey().getName());
-					obj.put(JSONNames.NAME, org.getProperty(DSUtils.ORG_NAME));
-					obj.put(JSONNames.ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
-					obj.put(JSONNames.EMAIL, org.getProperty(DSUtils.ORG_EMAIL));
-					obj.put(JSONNames.ISFIRESTATION, org.getProperty(DSUtils.ORG_ISFIRESTATION));
-					obj.put(JSONNames.LOCALITY, org.getProperty(DSUtils.ORG_LOCALITY));
-					obj.put(JSONNames.PHONE, org.getProperty(DSUtils.ORG_PHONE));
-					obj.put(JSONNames.SERVICES, org.getProperty(DSUtils.ORG_SERVICES));
-					obj.put(JSONNames.ZIP, org.getProperty(DSUtils.ORG_ZIP));
+					obj.put(Prop.NIF, org.getKey().getName());
+					obj.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
+					obj.put(Prop.ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
+					obj.put(Prop.EMAIL, org.getProperty(DSUtils.ORG_EMAIL));
+					obj.put(Prop.ISFIRESTATION, org.getProperty(DSUtils.ORG_ISFIRESTATION));
+					obj.put(Prop.LOCALITY, org.getProperty(DSUtils.ORG_LOCALITY));
+					obj.put(Prop.PHONE, org.getProperty(DSUtils.ORG_PHONE));
+					obj.put(Prop.SERVICES, org.getProperty(DSUtils.ORG_SERVICES));
+					obj.put(Prop.ZIP, org.getProperty(DSUtils.ORG_ZIP));
 					array.put(obj);
 				}
 				
@@ -578,12 +578,22 @@ public class Admin {
 			}
 		}
 	}
-	
-	/* TODO
+
 	@DELETE
 	@Path("/delete/user/{username}")
 	public Response deleteUser() {
-		
+		int retries = 5;
+
+		while(true) {
+			try {
+				return null;
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+				retries--;
+			}
+		}
 	}
-	*/
 }

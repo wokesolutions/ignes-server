@@ -5,8 +5,8 @@
 	<threadsafe>true</threadsafe>
 	<sessions-enabled>true</sessions-enabled>
 
-	<manual-scaling>
-		<instances>2</instances>
-	</manual-scaling>
+	<automatic-scaling>
+		<min-instances>2</min-instances>
+	</automatic-scaling>
 
 </appengine-web-app>

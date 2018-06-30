@@ -1,5 +1,6 @@
 package com.wokesolutions.ignes.api;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
@@ -35,6 +36,7 @@ import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
+import com.wokesolutions.ignes.util.Prop;
 
 @Path("/task")
 public class Task {
@@ -43,7 +45,6 @@ public class Task {
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
 	private static final int BATCH_SIZE = 10;
-	private static final String NOTE = "note";
 	
 	public Task() {}
 
@@ -91,12 +92,14 @@ public class Task {
 		}
 
 		JSONObject obj = new JSONObject(note);
-		note = obj.getString(NOTE);
+		note = obj.getString(Prop.NOTE);
 		
 		noteE.setProperty(DSUtils.NOTE_TASK, task);
 		noteE.setUnindexedProperty(DSUtils.NOTE_TEXT, note);
 		noteE.setProperty(DSUtils.NOTE_WORKER, worker);
 		noteE.setProperty(DSUtils.NOTE_TIME, time);
+		noteE.setProperty(DSUtils.NOTE_TIMEFORMATTED,
+				new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(time));
 		
 		datastore.put(noteE);
 
@@ -155,11 +158,11 @@ public class Task {
 		for(Entity note : notes) {
 			JSONObject obj = new JSONObject();
 			
-			obj.put(DSUtils.NOTE, note.getKey().getName());
-			obj.put(DSUtils.NOTE_TASK, note.getProperty(DSUtils.NOTE_TASK));
-			obj.put(DSUtils.NOTE_TIME, note.getProperty(DSUtils.NOTE_TIME));
-			obj.put(DSUtils.NOTE_TEXT, note.getProperty(DSUtils.NOTE_TEXT));
-			obj.put(DSUtils.NOTE_WORKER, note.getProperty(DSUtils.NOTE_WORKER));
+			obj.put(Prop.NOTE, note.getKey().getName());
+			obj.put(Prop.TASK, note.getProperty(DSUtils.NOTE_TASK));
+			obj.put(Prop.CREATIONTIME, note.getProperty(DSUtils.NOTE_TIMEFORMATTED));
+			obj.put(Prop.TEXT, note.getProperty(DSUtils.NOTE_TEXT));
+			obj.put(Prop.WORKER, note.getProperty(DSUtils.NOTE_WORKER));
 			
 			array.put(obj);
 		}

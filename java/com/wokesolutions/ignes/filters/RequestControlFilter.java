@@ -1,6 +1,7 @@
 package com.wokesolutions.ignes.filters;
 
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import javax.annotation.Priority;
@@ -44,6 +45,12 @@ public class RequestControlFilter implements Filter {
 
 		HttpServletRequest newreq = (HttpServletRequest) req;
 
+		@SuppressWarnings("unchecked")
+		Enumeration<Object> e = newreq.getHeaderNames();
+		
+		while(e.hasMoreElements())
+			LOG.info(e.nextElement().toString());
+		
 		String deviceid = newreq.getHeader(CustomHeader.DEVICE_ID);
 		String deviceapp = newreq.getHeader(CustomHeader.DEVICE_APP);
 		String deviceinfo = newreq.getHeader(CustomHeader.DEVICE_INFO);

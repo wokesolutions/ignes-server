@@ -43,6 +43,7 @@ import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
+import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.UserLevel;
 
@@ -180,21 +181,22 @@ public class Worker {
 
 			Entity report = reports.get(task.getParent());
 
-			jsonReport.put(DSUtils.REPORT, report.getKey().getName());
-			jsonReport.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE));
-			jsonReport.put(DSUtils.REPORT_ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
-			jsonReport.put(DSUtils.REPORT_USER,
+			jsonReport.put(Prop.TASK, report.getKey().getName());
+			jsonReport.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
+			jsonReport.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+			jsonReport.put(Prop.USERNAME,
 					((Key) report.getProperty(DSUtils.REPORT_USER)).getName());
-			jsonReport.put(DSUtils.REPORT_LAT, report.getProperty(DSUtils.REPORT_LAT));
-			jsonReport.put(DSUtils.REPORT_LNG, report.getProperty(DSUtils.REPORT_LNG));
-			jsonReport.put(DSUtils.REPORT_GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
-			jsonReport.put(DSUtils.REPORT_STATUS, report.getProperty(DSUtils.REPORT_STATUS));
-			jsonReport.put(DSUtils.REPORT_CREATIONTIMEFORMATTED,
+			jsonReport.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
+			jsonReport.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
+			jsonReport.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+			jsonReport.put(Prop.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
+			jsonReport.put(Prop.DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION));
+			jsonReport.put(Prop.CREATIONTIME,
 					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
-			jsonReport.put(DSUtils.REPORT_PRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
+			jsonReport.put(Prop.CREATIONTIME, report.getProperty(DSUtils.REPORT_PRIVATE));
 
-			jsonReport.put(DSUtils.TASK_INDICATIONS, task.getProperty(DSUtils.TASK_INDICATIONS));
-			jsonReport.put(DSUtils.TASK_TIME, task.getProperty(DSUtils.TASK_TIME));
+			jsonReport.put(Prop.INDICATIONS, task.getProperty(DSUtils.TASK_INDICATIONS));
+			jsonReport.put(Prop.TASK_TIME, task.getProperty(DSUtils.TASK_TIME));
 
 			Entity userKey;
 
@@ -216,11 +218,11 @@ public class Worker {
 			}
 
 			if(optional.hasProperty(DSUtils.USEROPTIONAL_PHONE))
-				jsonReport.put(DSUtils.USEROPTIONAL_PHONE,
+				jsonReport.put(Prop.PHONE,
 						optional.getProperty(DSUtils.USEROPTIONAL_PHONE));
 
 			String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
-			jsonReport.put(DSUtils.REPORT_THUMBNAIL, tn);
+			jsonReport.put(Prop.THUMBNAIL, tn);
 
 			array.put(jsonReport);
 		}
