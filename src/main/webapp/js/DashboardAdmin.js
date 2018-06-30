@@ -171,7 +171,7 @@ function getFirstUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
-                            cell1.innerHTML = data[i].user;
+                            cell1.innerHTML = data[i].username;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
                             cell4.innerHTML = data[i].points;
@@ -238,7 +238,7 @@ function getNextUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
-                            cell1.innerHTML = data[i].user;
+                            cell1.innerHTML = data[i].username;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
                             cell4.innerHTML = data[i].points;
@@ -307,7 +307,7 @@ function getPreUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
-                            cell1.innerHTML = data[i].user;
+                            cell1.innerHTML = data[i].username;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
                             cell4.innerHTML = data[i].points;
