@@ -5,9 +5,10 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
-import com.google.appengine.api.datastore.PrePut;
+import com.google.appengine.api.datastore.PostPut;
 import com.google.appengine.api.datastore.PutContext;
 import com.google.appengine.api.datastore.Transaction;
+import com.wokesolutions.ignes.api.Profile;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.UserLevel;
@@ -21,22 +22,35 @@ public class LevelManager {
 
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	private static Logger LOG = Logger.getLogger(LevelManager.class.getName());
-	public final static int LEVEL2_POINTS = 10;
-	public final static int LEVEL3_POINTS = 25;
+	public final static int LEVEL2_POINTS = 2;
+	public final static int LEVEL3_POINTS = 6;
 
-	@PrePut(kinds = {DSUtils.USERPOINTS})
-	void collectSample(PutContext context) {
+	@PostPut(kinds = {DSUtils.USERPOINTS})
+	void changeLevel(PutContext context) {
 		Transaction txn = datastore.beginTransaction();
 
 		try {
 			Entity points = context.getCurrentElement();
 			Key userKey = points.getParent();
+			
+			LOG.info(Message.LEVEL_MANAGER_CHECKING + userKey.getName());
 
 			Entity user;
 			try {
 				user = datastore.get(points.getParent());
 			} catch (EntityNotFoundException e) {
 				LOG.info(Message.UNEXPECTED_ERROR);
+				return;
+			}
+			
+			String level = user.getProperty(DSUtils.USER_LEVEL).toString();
+			
+			if(!level.equals(UserLevel.LEVEL1) && !level.equals(UserLevel.LEVEL2)
+					&& !level.equals(UserLevel.LEVEL3))
+				return;
+			
+			if(!user.getProperty(DSUtils.USER_ACTIVATION).toString().equals(Profile.ACTIVATED)) {
+				LOG.info(Message.USER_NOT_ACTIVE);
 				return;
 			}
 

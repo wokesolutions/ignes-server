@@ -9,6 +9,7 @@ public class Message {
 		public static final String USER_NOT_ADMIN = "Utilizador não é administrador";
 		public static final String NO_TOKENS_FOUND = "Nenhum token encontrado para o utilizador";
 		public static final String NOT_REPORTER = "Utilizador não é o autor do report";
+		public static final String USER_NOT_ACTIVE = "Utilizador não ativou ainda a conta";
 	
 	// Error Org
 		public static final String ORG_ALREADY_EXISTS = "Este NIF já está a ser usado por outra organização";
@@ -119,6 +120,8 @@ public class Message {
 		
 	// Info Requests
 		public static final String REQUEST_IS_GOOD = "Pedido foi aceite";
+		public static final String LEVEL_MANAGER_CHECKING = "Gestor de níveis verificando o"
+				+ " utilizador: ";
 	
 	// Status
 		public static final String OK = "OK";

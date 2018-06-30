@@ -1,6 +1,7 @@
 package com.wokesolutions.ignes.api;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -45,6 +46,7 @@ import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.UserRegisterData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
+import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
@@ -124,7 +126,7 @@ public class Admin {
 					new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
 
 			Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
-			
+
 			Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
 			userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
 
@@ -135,7 +137,7 @@ public class Admin {
 			txn.commit();
 			return Response.ok().build();
 		} finally {
-			if (txn.isActive() ) {
+			if(txn.isActive()) {
 				txn.rollback();
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
@@ -174,7 +176,7 @@ public class Admin {
 			// If the entity does not exist an Exception is thrown. Otherwise,
 			Key userKey = KeyFactory.createKey(DSUtils.USER, username);
 			Entity user = datastore.get(userKey);
-			
+
 			Date date = new Date();
 
 			Entity admin = new Entity(userKey);
@@ -200,7 +202,7 @@ public class Admin {
 			txn.rollback();
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.USER_NOT_FOUND).build();
 		} finally {
-			if (txn.isActive() ) {
+			if(txn.isActive()) {
 				txn.rollback();
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
@@ -270,7 +272,7 @@ public class Admin {
 			txn.rollback();
 			return Response.status(Status.EXPECTATION_FAILED).entity(Message.USER_NOT_ADMIN).build();
 		} finally {
-			if (txn.isActive() ) {
+			if(txn.isActive()) {
 				txn.rollback();
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
@@ -317,7 +319,7 @@ public class Admin {
 		for(Entity user : list) {
 
 			LOG.info(user.getKey().getName());
-			
+
 			Query queryPoints = new Query(DSUtils.USERPOINTS).setAncestor(user.getKey());
 
 			Entity points;
@@ -327,7 +329,7 @@ public class Admin {
 			} catch(TooManyResultsException e) {
 				continue;
 			}
-			
+
 			if(points == null) {
 				LOG.info(Message.UNEXPECTED_ERROR);
 				return Response.status(Status.EXPECTATION_FAILED).build();
@@ -341,9 +343,9 @@ public class Admin {
 			us.put(Prop.POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
 			array.put(us);
 		}
-		
+
 		cursor = list.getCursor().toWebSafeString();
-		
+
 		if(array.length() < BATCH_SIZE)
 			return Response.ok(array.toString()).build();
 
@@ -374,7 +376,7 @@ public class Admin {
 
 		if(cursor != null && !cursor.equals(""))
 			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
-		
+
 		Filter adminFilter = new Query.FilterPredicate(DSUtils.USER_LEVEL,
 				FilterOperator.EQUAL, UserLevel.ADMIN);
 
@@ -396,15 +398,15 @@ public class Admin {
 			us.put(Prop.CREATIONTIME, user.getProperty(DSUtils.USER_CREATIONTIMEFORMATTED));
 			array.put(us);
 		}
-		
+
 		cursor = list.getCursor().toWebSafeString();
-		
+
 		if(array.length() < BATCH_SIZE)
 			return Response.ok(array.toString()).build();
 
 		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 	}
-	
+
 	@GET
 	@Path("/standbyreports")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
@@ -429,7 +431,7 @@ public class Admin {
 
 		if(cursor != null && !cursor.equals(""))
 			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
-		
+
 		Filter adminFilter = new Query.FilterPredicate(DSUtils.REPORT_STATUS,
 				FilterOperator.EQUAL, Report.STANDBY);
 
@@ -464,18 +466,18 @@ public class Admin {
 			rep.put(Prop.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
 			rep.put(Prop.CREATIONTIME,
 					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
-			
+
 			array.put(rep);
 		}
-		
+
 		cursor = list.getCursor().toWebSafeString();
-		
+
 		if(array.length() < BATCH_SIZE)
 			return Response.ok(array.toString()).build();
 
 		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 	}
-	
+
 	@POST
 	@Path("/confirmorg/{nif}")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
@@ -485,14 +487,16 @@ public class Admin {
 		while(true) {
 			try {
 				Key orgkey = KeyFactory.createKey(DSUtils.USER, org);
-				
+
 				try {
 					Entity orgE = datastore.get(orgkey);
-					
+
 					orgE.setProperty(DSUtils.USER_ACTIVATION, true);
-					
+
 					datastore.put(orgE);
-					
+
+					Email.sendOrgConfirmedMessage(orgE.getProperty(DSUtils.ORG_EMAIL).toString());
+
 					return Response.ok().build();
 				} catch (EntityNotFoundException e) {
 					LOG.info(Message.ORG_NOT_FOUND);
@@ -507,7 +511,7 @@ public class Admin {
 			}
 		}
 	}
-	
+
 	@GET
 	@Path("/orgstoconfirm")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
@@ -521,35 +525,35 @@ public class Admin {
 
 				Filter orgFilter = new Query.FilterPredicate(DSUtils.USER_LEVEL,
 						FilterOperator.EQUAL, UserLevel.ORG);
-				
+
 				List<Filter> filters = Arrays.asList(activationFilter, orgFilter);
-				
+
 				CompositeFilter filter = new Query
 						.CompositeFilter(CompositeFilterOperator.AND, filters);
-				
+
 				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
-				
+
 				Query query = new Query(DSUtils.USER).setFilter(filter);
-				
+
 				if(cursor != null && !cursor.equals(""))
 					fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
-				
+
 				QueryResultList<Entity> list = datastore.prepare(query)
 						.asQueryResultList(fetchOptions);
-				
+
 				JSONArray array = new JSONArray();
-				
+
 				for(Entity user : list) {
 					Query orgQuery = new Query(DSUtils.ORG).setAncestor(user.getKey());
 					Entity org;
-					
+
 					try {
 						org = datastore.prepare(orgQuery).asSingleEntity();
 					} catch(TooManyResultsException e) {
 						LOG.info(Message.UNEXPECTED_ERROR);
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 					}
-					
+
 					JSONObject obj = new JSONObject();
 					obj.put(Prop.NIF, org.getKey().getName());
 					obj.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
@@ -562,12 +566,12 @@ public class Admin {
 					obj.put(Prop.ZIP, org.getProperty(DSUtils.ORG_ZIP));
 					array.put(obj);
 				}
-				
+
 				if(array.length() < BATCH_SIZE)
 					return Response.ok(array.toString()).build();
-				
+
 				cursor = list.getCursor().toWebSafeString();
-				
+
 				return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
@@ -581,12 +585,46 @@ public class Admin {
 
 	@DELETE
 	@Path("/delete/user/{username}")
-	public Response deleteUser() {
+	public Response deleteUser(@PathParam(ParamName.USERNAME) String username) {
 		int retries = 5;
 
 		while(true) {
 			try {
-				return null;
+				Entity user;
+				try {
+					user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
+				} catch(EntityNotFoundException e) {
+					LOG.info(Message.USER_NOT_FOUND);
+					return Response.status(Status.NOT_FOUND).build();
+				}
+
+				String level = user.getProperty(DSUtils.USER_LEVEL).toString();
+
+				Key userK = user.getKey();
+
+				if(level.equals(UserLevel.LEVEL1)) {
+
+					Transaction txn = datastore
+							.beginTransaction(TransactionOptions.Builder.withXG(true));
+					try {
+						if(deleteUserDef(userK, txn)) {
+							Entity adminLog = new Entity(DSUtils.ADMINLOG);
+							adminLog.setProperty(DSUtils.ADMINLOG_DELETED, userK);
+							adminLog.setProperty(DSUtils.ADMINLOG_TIME, new Date());
+
+							datastore.put(txn, adminLog);
+							txn.commit();
+							return Response.ok().build();
+						}
+					} finally {
+						if(txn.isActive()) {
+							txn.rollback();
+							return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+						}
+					}
+				} else {
+
+				}
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Message.TOO_MANY_RETRIES);
@@ -595,5 +633,49 @@ public class Admin {
 				retries--;
 			}
 		}
+	}
+
+	private boolean deleteUserDef(Key userK, Transaction txn) {
+		Query statQ = new Query(DSUtils.USERSTATS).setAncestor(userK).setKeysOnly();
+
+		Entity stat;
+		try {
+			stat = datastore.prepare(statQ).asSingleEntity();
+		} catch(TooManyResultsException e) {
+			LOG.info(Message.UNEXPECTED_ERROR);
+			return false;
+		}
+
+		if(stat == null) {
+			LOG.info(Message.UNEXPECTED_ERROR);
+			return false;
+		}
+
+		FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
+
+		Query reportQ = new Query(DSUtils.REPORT).setKeysOnly();
+		Filter reportF = new Query.FilterPredicate(DSUtils.REPORT_USER,
+				FilterOperator.EQUAL, userK);
+		reportQ.setFilter(reportF);
+
+		List<Entity> reports = datastore.prepare(reportQ).asList(fetchOptions);
+		List<Key> reportsK = new ArrayList<Key>(reports.size());
+		for(Entity report : reports)
+			reportsK.add(report.getKey());
+
+		Query commentQ = new Query(DSUtils.REPORTCOMMENT).setKeysOnly();
+		Filter commentF = new Query.FilterPredicate(DSUtils.REPORTCOMMENT_USER,
+				FilterOperator.EQUAL, userK);
+		commentQ.setFilter(commentF);
+
+		List<Entity> comments = datastore.prepare(commentQ).asList(fetchOptions);
+		List<Key> commentsK = new ArrayList<Key>(comments.size());
+		for(Entity comment : comments)
+			commentsK.add(comment.getKey());
+
+		datastore.delete(txn, stat.getKey());
+		datastore.delete(txn, reportsK);
+		datastore.delete(txn, commentsK);
+		return true;
 	}
 }

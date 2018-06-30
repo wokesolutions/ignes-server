@@ -25,10 +25,10 @@ public class AdditionalResponseHeadersFilter implements Filter {
 
 		LOG.info(this.getClass().getSimpleName() + Message.FILTER_VERIFYING);
 		((HttpServletResponse) resp).setHeader("Access-Control-Expose-Headers", "*");
-		((HttpServletResponse) resp).setHeader("Access-Control-Allow-Origin", "https://wokesolutionsignes.com");
+		((HttpServletResponse) resp).setHeader("Access-Control-Allow-Origin", "*");
 		((HttpServletResponse) resp).setHeader("Access-Control-Allow-Headers",
-				"Content-Type, X-Requested-With, Authorization");
-		((HttpServletResponse) resp).setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
+				"Content-Type, X-Requested-With, Authorization, Device-ID, Device-Info, Device-App");
+		((HttpServletResponse) resp).setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS");
 		
 		chain.doFilter(req, resp);
 	}

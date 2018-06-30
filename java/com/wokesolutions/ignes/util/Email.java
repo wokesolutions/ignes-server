@@ -30,13 +30,19 @@ public class Email {
 			+ " entre em contacto connosco imediatamente para podermos resolver a situação."
 			+ " Se foi você, pode ignorar este email, e esperemos que esteja a gostar da nossa aplicação!"
 			+ " \n\nA informação do novo dispositivo é a seguinte:\n\n";
+	
+	private static final String ORG_CONFIRMED_SUBJECT = "A sua conta na Ignes foi confirmada";
+	private static final String ORG_CONFIRMED_TEXT = "Obrigado por ter registado a sua organização da sua"
+			+ " empresa na Ignes. A sua conta já foi confirmada, e já pode começar a usufruir das"
+			+ " funcionabilidades da nossa aplicação!\n\n"
+			+ "Bom trabalho!";
+	
+	private static final Configuration configuration = new Configuration()
+			.domain(DOMAIN)
+			.apiKey(Secrets.MAILGUN)
+			.from("WokeSolutions", EMAIL);
 
 	public static void sendConfirmMessage(String email, String code) {
-
-		Configuration configuration = new Configuration()
-				.domain(DOMAIN)
-				.apiKey(Secrets.MAILGUN)
-				.from("WokeSolutions", EMAIL);
 
 		Mail.using(configuration)
 		.to(email)
@@ -48,11 +54,6 @@ public class Email {
 
 	public static void sendWorkerRegisterMessage(String email, String password, String org) {
 
-		Configuration configuration = new Configuration()
-				.domain(DOMAIN)
-				.apiKey(Secrets.MAILGUN)
-				.from("WokeSolutions", EMAIL);
-
 		Mail.using(configuration)
 		.to(email)
 		.subject(WORKER_REGISTER_SUBJECT)
@@ -63,15 +64,20 @@ public class Email {
 
 	public static void sendNewDeviceMessage(String email, String deviceInfo) {
 
-		Configuration configuration = new Configuration()
-				.domain(DOMAIN)
-				.apiKey(Secrets.MAILGUN)
-				.from("WokeSolutions", EMAIL);
-
 		Mail.using(configuration)
 		.to(email)
 		.subject(NEW_DEVICE_SUBJECT)
 		.text(NEW_DEVICE_TEXT + deviceInfo)
+		.build()
+		.send();
+	}
+	
+	public static void sendOrgConfirmedMessage(String email) {
+
+		Mail.using(configuration)
+		.to(email)
+		.subject(ORG_CONFIRMED_SUBJECT)
+		.text(ORG_CONFIRMED_TEXT)
 		.build()
 		.send();
 	}

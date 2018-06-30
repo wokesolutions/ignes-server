@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -73,7 +72,8 @@ public class Profile {
 			@Context HttpServletRequest request) {
 		if(!data.isValid() || username == null || username.equals("")) {
 			LOG.info(Message.PROFILE_UPDATE_DATA_INVALID);
-			return Response.status(Status.BAD_REQUEST).entity(Message.PROFILE_UPDATE_DATA_INVALID).build();
+			return Response.status(Status.BAD_REQUEST)
+					.entity(Message.PROFILE_UPDATE_DATA_INVALID).build();
 		}
 
 		int retries = 5;
@@ -476,7 +476,7 @@ public class Profile {
 
 		object.put(Prop.REPORTS, reports);
 
-		Object pic = optionals.getProperty(DSUtils.USEROPTIONAL_PICTNPATH);
+		Object pic = optionals.getProperty(DSUtils.USEROPTIONAL_PICPATH);
 
 		if(pic != null) {
 			String picpath = pic.toString();
@@ -607,9 +607,11 @@ public class Profile {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LOCALITY, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_THUMBNAILPATH, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, Boolean.class));
 
-		QueryResultList<Entity> reports = datastore.prepare(reportQuery).asQueryResultList(fetchOptions);
+		QueryResultList<Entity> reports = datastore.prepare(reportQuery)
+				.asQueryResultList(fetchOptions);
 
 		if(reports.isEmpty()) {
 			LOG.info(Message.NO_REPORTS_FOUND);
@@ -618,11 +620,28 @@ public class Profile {
 
 		JSONArray array = new JSONArray();
 
-		try {
-			array = Report.buildJsonReports(reports, false);
-		} catch(InternalServerErrorException e) {
-			LOG.info(Message.REPORT_NOT_FOUND);
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		for(Entity report : reports) {
+			JSONObject jsonReport = new JSONObject();
+
+			jsonReport.put(Prop.REPORT, report.getKey().getName());
+			jsonReport.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
+			jsonReport.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+			jsonReport.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
+			jsonReport.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
+			jsonReport.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+			jsonReport.put(Prop.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
+			jsonReport.put(Prop.DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION));
+			jsonReport.put(Prop.CREATIONTIME,
+					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
+			jsonReport.put(Prop.ISPRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
+
+			String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
+
+			jsonReport.put(Prop.THUMBNAIL, tn);
+
+			Report.appendVotesAndComments(jsonReport, report);
+
+			array.put(jsonReport);
 		}
 
 		cursor = reports.getCursor().toWebSafeString();
