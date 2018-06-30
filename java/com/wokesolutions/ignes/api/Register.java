@@ -163,19 +163,19 @@ public class Register {
 	}
 
 	private Response registerOrgRetry(OrgRegisterData registerData) {
-		LOG.info(Message.ATTEMPT_REGISTER_ORG + registerData.org_nif);
+		LOG.info(Message.ATTEMPT_REGISTER_ORG + registerData.nif);
 
 		Key orgKey;
 		try {
 			// If the entity does not exist an Exception is thrown. Otherwise,
-			orgKey = KeyFactory.createKey(DSUtils.USER, registerData.org_nif);
+			orgKey = KeyFactory.createKey(DSUtils.USER, registerData.nif);
 			datastore.get(orgKey);
 			LOG.info(Message.USER_ALREADY_EXISTS);
 			return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build(); 
 		} catch (EntityNotFoundException e) {
 			Filter filter =
 					new Query.FilterPredicate(DSUtils.USER_EMAIL,
-							FilterOperator.EQUAL, registerData.org_email);
+							FilterOperator.EQUAL, registerData.email);
 
 			Query emailQuery = new Query(DSUtils.USER).setFilter(filter);
 
@@ -197,10 +197,10 @@ public class Register {
 			Date date = new Date();
 
 			try {
-				Entity user = new Entity(DSUtils.USER, registerData.org_nif);
-				user.setProperty(DSUtils.USER_EMAIL, registerData.org_email);
+				Entity user = new Entity(DSUtils.USER, registerData.nif);
+				user.setProperty(DSUtils.USER_EMAIL, registerData.email);
 				user.setProperty(DSUtils.USER_PASSWORD,
-						DigestUtils.sha512Hex(registerData.org_password));
+						DigestUtils.sha512Hex(registerData.password));
 				user.setProperty(DSUtils.USER_ACTIVATION, Profile.NOT_ACTIVATED);
 				user.setProperty(DSUtils.USER_LEVEL, UserLevel.ORG);
 				user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
@@ -208,16 +208,16 @@ public class Register {
 						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
 
 				Entity org = new Entity(DSUtils.ORG, user.getKey());
-				org.setUnindexedProperty(DSUtils.ORG_NAME, registerData.org_name);
-				org.setProperty(DSUtils.ORG_ADDRESS, registerData.org_address);
-				org.setProperty(DSUtils.ORG_LOCALITY, registerData.org_locality);
-				org.setUnindexedProperty(DSUtils.ORG_PHONE, registerData.org_phone);
-				org.setUnindexedProperty(DSUtils.ORG_ZIP, registerData.org_zip);
-				org.setProperty(DSUtils.ORG_SERVICES, registerData.org_services);
-				org.setProperty(DSUtils.ORG_ISFIRESTATION, registerData.org_isfirestation);
+				org.setUnindexedProperty(DSUtils.ORG_NAME, registerData.name);
+				org.setProperty(DSUtils.ORG_ADDRESS, registerData.address);
+				org.setProperty(DSUtils.ORG_LOCALITY, registerData.locality);
+				org.setUnindexedProperty(DSUtils.ORG_PHONE, registerData.phone);
+				org.setUnindexedProperty(DSUtils.ORG_ZIP, registerData.zip);
+				org.setProperty(DSUtils.ORG_SERVICES, registerData.services);
+				org.setProperty(DSUtils.ORG_ISFIRESTATION, registerData.isfirestation);
 
 				datastore.put(org);
-				LOG.info(Message.ORG_REGISTERED + registerData.org_nif);
+				LOG.info(Message.ORG_REGISTERED + registerData.nif);
 				return Response.ok().build();
 			} finally {
 				if (txn.isActive() ) {

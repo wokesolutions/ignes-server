@@ -1,5 +1,6 @@
 package com.wokesolutions.ignes.api;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -428,11 +429,15 @@ public class Org {
 			LOG.info(Message.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
+		
+		Date date = new Date();
 
 		Entity task = new Entity(DSUtils.TASK, reportE.getKey());
 
 		task.setProperty(DSUtils.TASK_WORKER, email);
-		task.setProperty(DSUtils.TASK_TIME, new Date());
+		task.setProperty(DSUtils.TASK_TIME, date);
+		task.setProperty(DSUtils.TASK_TIMEFORMATTED,
+				new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
 		task.setProperty(DSUtils.TASK_ORG, org);
 
 		if(indications != null && !indications.equals(""))

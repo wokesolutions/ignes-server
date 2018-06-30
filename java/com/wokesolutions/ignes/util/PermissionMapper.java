@@ -10,6 +10,7 @@ public class PermissionMapper {
 	private final static String POST_COMMENT = "comment/post";
 	private final static String GET_COMMENT = "comment/get";
 	private final static String GET_REPORT = "report/get";
+	private final static String THUMBNAIL = "thumbnail";
 	private final static String CREATE_REPORT = "report/create";
 	private final static String GET_REPORT_VOTE = "report/vote/get";
 	private final static String POST_REPORT_VOTE = "report/vote";
@@ -48,14 +49,14 @@ public class PermissionMapper {
 			permissions.add(UserLevel.WORKER);
 			return permissions;
 		}
+		
+		if(req.contains(THUMBNAIL)) {
+			permissions.add(UserLevel.GUEST);
+			return permissions;
+		}
 
 		if(req.contains(GET_REPORT)) {
 			permissions.add(UserLevel.GUEST);
-			permissions.add(UserLevel.LEVEL1);
-			permissions.add(UserLevel.LEVEL2);
-			permissions.add(UserLevel.LEVEL3);
-			permissions.add(UserLevel.ADMIN);
-			permissions.add(UserLevel.ORG);
 			return permissions;
 		}
 
@@ -69,12 +70,6 @@ public class PermissionMapper {
 
 		if(req.contains(GET_REPORT_VOTE)) {
 			permissions.add(UserLevel.GUEST);
-			permissions.add(UserLevel.LEVEL1);
-			permissions.add(UserLevel.LEVEL2);
-			permissions.add(UserLevel.LEVEL3);
-			permissions.add(UserLevel.ADMIN);
-			permissions.add(UserLevel.ORG);
-			permissions.add(UserLevel.WORKER);
 			return permissions;
 		}
 
@@ -87,12 +82,6 @@ public class PermissionMapper {
 
 		if(req.contains(LOGIN)) {
 			permissions.add(UserLevel.GUEST);
-			permissions.add(UserLevel.LEVEL1);
-			permissions.add(UserLevel.LEVEL2);
-			permissions.add(UserLevel.LEVEL3);
-			permissions.add(UserLevel.ADMIN);
-			permissions.add(UserLevel.ORG);
-			permissions.add(UserLevel.WORKER);
 			return permissions;
 		}
 
@@ -130,12 +119,6 @@ public class PermissionMapper {
 
 		if(req.contains(ORG_INFO)) {
 			permissions.add(UserLevel.GUEST);
-			permissions.add(UserLevel.LEVEL1);
-			permissions.add(UserLevel.LEVEL2);
-			permissions.add(UserLevel.LEVEL3);
-			permissions.add(UserLevel.ADMIN);
-			permissions.add(UserLevel.ORG);
-			permissions.add(UserLevel.WORKER);
 			return permissions;
 		}
 

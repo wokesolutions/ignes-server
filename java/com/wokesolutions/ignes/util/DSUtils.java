@@ -15,8 +15,6 @@ public class DSUtils {
 		public static final String DELETEDWORKER = "DeletedWorker";
 		public static final String ORG = "Org";
 		public static final String UNCONFORG = "UnconfOrg";
-		public static final String ORGSTATS = "OrgStats";
-		public static final String ORGLOG = "OrgLog";
 		public static final String ORGCODE = "OrgCode";
 		public static final String REPORT = "Report";
 		public static final String CLOSEDREPORT = "ClosedReport";
@@ -43,6 +41,7 @@ public class DSUtils {
 		public static final String ADMINLOG_PROMOTED = "adminlog_promoted";
 		public static final String ADMINLOG_DEMOTED = "adminlog_demoted";
 		public static final String ADMINLOG_TIME = "adminlog_time";
+		public static final String ADMINLOG_DELETED = "adminlog_deleted";
 
 	// User
 		public static final String USER_PASSWORD = "user_password";
@@ -50,7 +49,6 @@ public class DSUtils {
 		public static final String USER_LEVEL = "user_level";
 		public static final String USER_CREATIONTIME = "user_creationtime";
 		public static final String USER_ACTIVATION = "user_activation";
-		public static final String USER_PROFPIC = "user_profpic";
 		public static final String USER_CREATIONTIMEFORMATTED = "user_creationtimeformatted";
 
 	// UserOptional
@@ -64,7 +62,6 @@ public class DSUtils {
 		public static final String USEROPTIONAL_SKILLS = "useroptional_skills";
 		public static final String USEROPTIONAL_JOB = "useroptional_job";
 		public static final String USEROPTIONAL_PICPATH = "useroptional_picpath";
-		public static final String USEROPTIONAL_PICTNPATH = "useroptional_pictnpath";
 		
 	// UserOptionalLogs
 		public static final String USEROPTIONALLOGS_USERNAME = "useroptionallogs_username";
@@ -241,6 +238,7 @@ public class DSUtils {
 	// Task
 		public static final String TASK_WORKER = "task_worker";
 		public static final String TASK_TIME = "task_time";
+		public static final String TASK_TIMEFORMATTED = "task_timeformatted";
 		public static final String TASK_INDICATIONS = "task_indications";
 		public static final String TASK_ORG = "task_org";
 		

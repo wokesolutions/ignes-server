@@ -44,7 +44,6 @@ import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Prop;
-import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.UserLevel;
 
 @Path("/worker")
@@ -196,7 +195,7 @@ public class Worker {
 			jsonReport.put(Prop.CREATIONTIME, report.getProperty(DSUtils.REPORT_PRIVATE));
 
 			jsonReport.put(Prop.INDICATIONS, task.getProperty(DSUtils.TASK_INDICATIONS));
-			jsonReport.put(Prop.TASK_TIME, task.getProperty(DSUtils.TASK_TIME));
+			jsonReport.put(Prop.TASK_TIME, task.getProperty(DSUtils.TASK_TIMEFORMATTED));
 
 			Entity userKey;
 
@@ -220,10 +219,7 @@ public class Worker {
 			if(optional.hasProperty(DSUtils.USEROPTIONAL_PHONE))
 				jsonReport.put(Prop.PHONE,
 						optional.getProperty(DSUtils.USEROPTIONAL_PHONE));
-
-			String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
-			jsonReport.put(Prop.THUMBNAIL, tn);
-
+			
 			array.put(jsonReport);
 		}
 
