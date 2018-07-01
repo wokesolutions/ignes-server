@@ -827,7 +827,7 @@ function getAvailableWorker(cursor){
                                 var email = data[i].worker;
                                 $(".dropdown-m").append("<option class='pointer-finger'" +
                                     "style='font-family:Quicksand border: 1px rgba(144,148,156,0.51) solid' value=" + JSON.stringify(data[i]) + ">" + email + "</option>");
-                                console.log($('email_select').child().last().val());
+                                //console.log($('email_select').child().last().val());
                             }
 
                         }else{
