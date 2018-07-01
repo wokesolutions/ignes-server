@@ -161,7 +161,7 @@ function verifyIsLoggedIn(){
 
             if (response.status !== 200) {
 
-                window.location.href = "index.html";
+                window.location.href = "../index.html";
 
             }
 
