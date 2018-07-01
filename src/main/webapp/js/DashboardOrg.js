@@ -39,8 +39,8 @@ function init() {
     document.getElementById("close_window").onclick = closeWindow;
     document.getElementById("add_task").onclick = giveTask;
     $("#email_select").change(function(){
-        document.getElementById('email_task').innerHTML= JSON.parse($("#email_select").val()).Worker;
-        document.getElementById('name_worker').innerHTML= JSON.parse($("#email_select").val()).worker_name;
+        document.getElementById('email_task').innerHTML= JSON.parse($("#email_select").val()).email;
+        document.getElementById('name_worker').innerHTML= JSON.parse($("#email_select").val()).name;
 
     })
 
@@ -853,7 +853,7 @@ function getAvailableWorker(cursor){
 
 function giveTask(){
     var body = {
-        email: JSON.parse($("#email_select").val()).worker,
+        email: JSON.parse($("#email_select").val()).email,
         report: idReportCurr,
         indications: "Por favor, tenha cuidado com a lenha."
     };
