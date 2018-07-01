@@ -484,7 +484,7 @@ function getFirstWorkers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             cell1.innerHTML = data[i].name;
-                            cell2.innerHTML = data[i].worker;
+                            cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
                             cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
 
@@ -549,7 +549,7 @@ function getNextWorkers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             cell1.innerHTML = data[i].name;
-                            cell2.innerHTML = data[i].worker;
+                            cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
                             cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
                         }
@@ -615,7 +615,7 @@ function getPreWorkers(){
                                 var cell3 = row.insertCell(2);
                                 var cell4 = row.insertCell(3);
                                 cell1.innerHTML = data[i].name;
-                                cell2.innerHTML = data[i].worker;
+                                cell2.innerHTML = data[i].email;
                                 cell3.innerHTML = data[i].job;
                                 cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
                             }
