@@ -653,7 +653,7 @@ function getProfile(){
                 response.json().then(function(data) {
 
                     document.getElementById("organization_name").innerHTML = localStorage.getItem('ignes_org_name');
-                    document.getElementById("organization_nif").innerHTML = data.org;
+                    document.getElementById("organization_nif").innerHTML = data.nif;
                     document.getElementById("organization_email").innerHTML = data.email;
                     document.getElementById("organization_addresses").innerHTML = data.address;
                     document.getElementById("organization_locality").innerHTML = data.locality;
