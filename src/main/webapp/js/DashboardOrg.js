@@ -48,8 +48,8 @@ function init() {
 
         var name = worker.name;
 
-        $("#name_worker").val(name);
-        $("#email_task").val(email);
+        $("#name_worker").html(name);
+        $("#email_task").html(email);
     });
 
     emailsarr = [];
@@ -869,6 +869,7 @@ function getAvailableWorker(cursor){
 }
 
 function giveTask(){
+    console.log($("#input_ind").val());
     var body = {
         email: JSON.parse($("#email_select").val()).email,
         report: idReportCurr,
