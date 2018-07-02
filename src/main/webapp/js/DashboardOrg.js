@@ -795,9 +795,10 @@ var loadMoreComments = function(idReport,cursor){
                     console.log(data);
                     var i;
                     for(i = 0; i<data.length; i++){
-                        $(".inner_comment").append("<p style='font-family: 'Quicksand Bold'; color:#AD363B; margin-right:1rem; font-size:15px;'>" +
-                            data[i].username + "</p><p style='font-family: 'Quicksand'; font-size:15px;'>" + data[i].text + "</p>");
-
+                        $(".inner_comment").append(
+                            '<div class="row"><div class="col-lg-6 text-left">'+
+                            '<p style="font-family:Quicksand Bold; color:#AD363B; margin-right:1rem; font-size:15px;">'+  data[i].username +'</p></div>' +
+                            '<div class="col-lg-6 text-left">'+ '<p style="font-family:Quicksand; font-size:15px;">' + data[i].text + '</p></div></div>');
                     }
 
                 });
