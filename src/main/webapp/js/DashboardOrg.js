@@ -50,7 +50,7 @@ function init() {
 
         $("#name_worker").val(name);
         $("#email_task").val(email);
-    };
+    });
 
     emailsarr = [];
     workersarr = [];
