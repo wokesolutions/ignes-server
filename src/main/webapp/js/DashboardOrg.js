@@ -742,16 +742,16 @@ var loadMore = function (cursor) {
                                 '<div class="row"><div class="col-lg-6 text-center">' +'<img style="height:10rem;"id=' +i + '>' +
                                 '</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p class="text-center" style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].description+' </p>';
 
-                            if(data[i].task_indications === undefined)
+                            if(data[i].indications === undefined || data[i].indications === "") {
 
-                                contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"></p></div></div><hr style="margin-bottom: 0; margin-top:0">'+
-                                    '<div class="row"><div class="col-lg-6 text-left">'+'<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' +data[i].worker + '</p></div>'+
-                                    '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">'+ data[i].creationtime+' </p></div></div>';
-                            else
-                                contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].indications+' </p></div></div><hr style="margin-bottom: 0; margin-top:0">'+
-                                    '<div class="row"><div class="col-lg-6 text-left">'+'<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' +data[i].worker + '</p></div>'+
-                                    '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">'+ data[i].creationtime+' </p></div></div>';
-
+                                contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"></p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
+                                    '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].worker + '</p></div>' +
+                                    '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
+                            }else {
+                                contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].indications + ' </p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
+                                    '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].worker + '</p></div>' +
+                                    '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
+                            }
                             $(".inner").append(contentString);
 
                             var image = document.getElementById(i);
