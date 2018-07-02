@@ -65,8 +65,10 @@ public class Org {
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response registerWorker(WorkerRegisterData registerData,
 			@Context HttpServletRequest request) {
-		if(!registerData.isValid())
-			return Response.status(Status.BAD_REQUEST).entity(Message.REGISTER_DATA_INVALID).build();
+		if(!registerData.isValid()) {
+			LOG.info(Message.REGISTER_DATA_INVALID);
+			return Response.status(Status.BAD_REQUEST).build();
+		}
 
 		String org = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
@@ -109,38 +111,61 @@ public class Org {
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
-			Key orgKey = KeyFactory.createKey(DSUtils.ORG, org);
-
 			if(userResult != null) {
 				LOG.info(Message.USER_ALREADY_EXISTS);
 				txn.rollback();
 				return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build();
 			}
-
-			Date date = new Date();
-
-			Entity user = new Entity(DSUtils.USER, email);
-			Key userKey = user.getKey();
-			Entity worker = new Entity(DSUtils.WORKER, userKey);
-
-			String pw = WorkerRegisterData.generateCode(org, email);
-			String pwSha = DigestUtils.sha512Hex(pw);
-			worker.setProperty(DSUtils.WORKER_ORG, org);
-			worker.setProperty(DSUtils.WORKER_JOB, registerData.ob);
-			worker.setProperty(DSUtils.WORKER_NAME, registerData.name);
-			worker.setUnindexedProperty(DSUtils.WORKER_CREATIONTIME, date);
 			
-			String orgName;
+			Key orgKey = KeyFactory.createKey(DSUtils.USER, org);
+
 			try {
-				Entity orgE = datastore.get(KeyFactory.createKey(DSUtils.ORG, org));
-				orgName = orgE.getProperty(DSUtils.ORG_NAME).toString();
+				datastore.get(orgKey);
 			} catch(EntityNotFoundException e) {
 				LOG.info(Message.UNEXPECTED_ERROR);
 				txn.rollback();
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
+
+			Date date = new Date();
+
 			
-			worker.setUnindexedProperty(DSUtils.WORKER_ORG, orgName);
+			LOG.info(org);
+			Entity user = new Entity(DSUtils.USER, email);
+			Key userK = user.getKey();
+			Entity worker = new Entity(DSUtils.WORKER, userK);
+
+			String pw = WorkerRegisterData.generateCode(org, email);
+			String pwSha = DigestUtils.sha512Hex(pw);
+			worker.setProperty(DSUtils.WORKER_ORG, org);
+			worker.setProperty(DSUtils.WORKER_JOB, registerData.job);
+			worker.setProperty(DSUtils.WORKER_NAME, registerData.name);
+			worker.setUnindexedProperty(DSUtils.WORKER_CREATIONTIME, date);
+			
+			String orgName;
+			Query orgQ;
+
+			orgQ = new Query(DSUtils.ORG).setAncestor(orgKey)
+					.addProjection(new PropertyProjection(DSUtils.ORG_NAME, String.class));
+			
+			Entity orgE;
+			try {
+				orgE = datastore.prepare(orgQ).asSingleEntity();
+				
+				if(orgE == null) {
+					LOG.info(Message.UNEXPECTED_ERROR);
+					txn.rollback();
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+				}
+				
+				orgName = orgE.getProperty(DSUtils.ORG_NAME).toString();
+			} catch(TooManyResultsException e) {
+				LOG.info(Message.UNEXPECTED_ERROR);
+				txn.rollback();
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
+			
+			worker.setUnindexedProperty(DSUtils.WORKER_ORGNAME, orgName);
 
 			user.setUnindexedProperty(DSUtils.USER_PASSWORD, pwSha);
 			user.setProperty(DSUtils.USER_EMAIL, email);
@@ -150,19 +175,11 @@ public class Org {
 			Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
 			userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
 
-			Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
-
-			List<Entity> list = Arrays.asList(user, worker, userPoints, useroptional);
-
-			try {
-				Entity orgEntity = datastore.get(orgKey);
-				Email.sendWorkerRegisterMessage(email, pw,
-						orgEntity.getProperty(DSUtils.ORG_NAME).toString());
-			} catch(EntityNotFoundException e) {
-				LOG.info(Message.UNEXPECTED_ERROR);
-				txn.rollback();
-				return Response.status(Status.EXPECTATION_FAILED).build();
-			}
+			List<Entity> list = Arrays.asList(user, worker, userPoints);
+			
+			Email.sendWorkerRegisterMessage(email, pw,
+					orgE.getProperty(DSUtils.ORG_NAME).toString());
+			
 			datastore.put(txn, list);
 			txn.commit();
 			LOG.info(Message.WORKER_REGISTERED + registerData.email);
@@ -456,25 +473,31 @@ public class Org {
 
 		while(true) {
 			try {
-				Entity org;
+				Entity user;
 
 				try {
-					org = datastore.get(KeyFactory.createKey(DSUtils.ORG, nif));
+					user = datastore.get(KeyFactory.createKey(DSUtils.USER, nif));
 				} catch(EntityNotFoundException e) {
 					LOG.info(Message.ORG_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
 				
-				Entity user;
+				Entity org;
 				try {
-					user = datastore.get(org.getParent());
-				} catch (EntityNotFoundException e) {
-					LOG.info(Message.ORG_NOT_FOUND);
-					return Response.status(Status.NOT_FOUND).build();
+					Query orgQ = new Query(DSUtils.ORG).setAncestor(user.getKey());
+					org = datastore.prepare(orgQ).asSingleEntity();
+					
+					if(org == null) {
+						LOG.info(Message.ORG_NOT_FOUND);
+						return Response.status(Status.NOT_FOUND).build();
+					}
+				} catch (TooManyResultsException e) {
+					LOG.info(Message.UNEXPECTED_ERROR);
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 
 				JSONObject obj = new JSONObject();
-				obj.put(Prop.NIF, org.getKey().getName());
+				obj.put(Prop.NIF, org.getParent().getName());
 				obj.put(Prop.ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
 				obj.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
 				obj.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));

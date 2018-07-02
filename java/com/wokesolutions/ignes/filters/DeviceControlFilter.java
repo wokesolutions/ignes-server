@@ -70,10 +70,12 @@ public class DeviceControlFilter implements Filter {
 		String email = user.getProperty(DSUtils.USER_EMAIL).toString();
 
 		if(existingDevice == null) {
-			existingDevice = new Entity(DSUtils.DEVICE);
-			existingDevice.setProperty(DSUtils.DEVICE_ID, deviceid);
+			String app = request.getAttribute(CustomHeader.DEVICE_APP_ATT).toString();
+			
+			existingDevice = new Entity(DSUtils.DEVICE, deviceid);
 			existingDevice.setUnindexedProperty(DSUtils.DEVICE_COUNT, 1L);
 			existingDevice.setProperty(DSUtils.DEVICE_USER, username);
+			existingDevice.setProperty(DSUtils.DEVICE_APP, app);
 			
 			Email.sendNewDeviceMessage(email,
 					request.getAttribute(CustomHeader.DEVICE_INFO_ATT).toString());

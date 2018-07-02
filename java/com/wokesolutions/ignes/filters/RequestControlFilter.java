@@ -1,7 +1,6 @@
 package com.wokesolutions.ignes.filters;
 
 import java.io.IOException;
-import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import javax.annotation.Priority;
@@ -44,21 +43,12 @@ public class RequestControlFilter implements Filter {
 		}
 
 		HttpServletRequest newreq = (HttpServletRequest) req;
-
-		@SuppressWarnings("unchecked")
-		Enumeration<Object> e = newreq.getHeaderNames();
-		
-		while(e.hasMoreElements())
-			LOG.info(e.nextElement().toString());
 		
 		String deviceid = newreq.getHeader(CustomHeader.DEVICE_ID);
 		String deviceapp = newreq.getHeader(CustomHeader.DEVICE_APP);
 		String deviceinfo = newreq.getHeader(CustomHeader.DEVICE_INFO);
 
 		if(deviceid == null || deviceapp == null || deviceinfo == null) {
-			LOG.info(deviceinfo);
-			LOG.info(deviceapp);
-			LOG.info(deviceid);
 			changeResp(resp, Message.MISSING_DEVICE_HEADER);
 			return;
 		}
@@ -76,8 +66,6 @@ public class RequestControlFilter implements Filter {
 			url += "?" + query;
 
 		String id = deviceid + " " + url;
-
-		LOG.info("-------ID------> " + id);
 
 		if(cache.get(deviceid) == null)
 			cache.put(deviceid, 1L, Expiration.byDeltaSeconds(15));

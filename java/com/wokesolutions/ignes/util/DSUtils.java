@@ -30,6 +30,7 @@ public class DSUtils {
 		public static final String REPORTSTATUSLOG = "ReportStatusLog";
 		public static final String REPORTCOMMENT = "ReportComment";
 		public static final String DEVICE = "Device";
+		public static final String SKIPLOGIN = "SkipLogin";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -40,6 +41,7 @@ public class DSUtils {
 	// AdminLog
 		public static final String ADMINLOG_PROMOTED = "adminlog_promoted";
 		public static final String ADMINLOG_DEMOTED = "adminlog_demoted";
+		public static final String ADMINLOG_ADMIN = "adminlog_admin";
 		public static final String ADMINLOG_TIME = "adminlog_time";
 		public static final String ADMINLOG_DELETED = "adminlog_deleted";
 
@@ -103,6 +105,7 @@ public class DSUtils {
 
 	// Worker
 		public static final String WORKER_ORG = "worker_org";
+		public static final String WORKER_ORGNAME = "worker_orgname";
 		public static final String WORKER_JOB = "worker_job";
 		public static final String WORKER_CREATIONTIME = "worker_creationtime";
 		public static final String WORKER_NAME = "worker_name";
@@ -213,6 +216,7 @@ public class DSUtils {
 		public static final String USERVOTE_EVENT = "uservote_event";
 		public static final String USERVOTE_COMMENT = "uservote_comment";
 		public static final String USERVOTE_TYPE = "uservote_type";
+		public static final String USERVOTE_TIME = "uservote_time";
 		
 	// ReportComment
 		public static final String REPORTCOMMENT_TEXT = "reportcomment_text";
@@ -233,7 +237,8 @@ public class DSUtils {
 	// LevelLog
 		public static final String LEVELLOG_OLDLEVEL = "levellog_oldlevel";
 		public static final String LEVELLOG_NEWLEVEL = "levellog_newlevel";
-		public static final String LEVELLOG_DATE = "levellog_date";
+		public static final String LEVELLOG_TIME = "levellog_time";
+		public static final String LEVELLOG_USER = "levellog_user";
 		
 	// Task
 		public static final String TASK_WORKER = "task_worker";
@@ -265,4 +270,9 @@ public class DSUtils {
 		public static final String DEVICE_ID = "device_id";
 		public static final String DEVICE_COUNT = "device_count";
 		public static final String DEVICE_USER = "device_user";
+		public static final String DEVICE_APP = "device_app";
+		
+	// SkipLogin
+		public static final String SKIPLOGIN_TIME = "skiplogin_time";
+		public static final String SKIPLOGIN_DEVICE = "skiplogin_device";
 }

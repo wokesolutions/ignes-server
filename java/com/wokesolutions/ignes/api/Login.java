@@ -70,7 +70,7 @@ public class Login {
 		int retries = 5;
 		while(true) {
 			try {
-				return loginUserRetry(data, request);
+				return loginRetry(data, request);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Message.TOO_MANY_RETRIES);
@@ -83,7 +83,7 @@ public class Login {
 	}
 
 
-	private Response loginUserRetry(LoginData data, final HttpServletRequest request) {
+	private Response loginRetry(LoginData data, final HttpServletRequest request) {
 		LOG.info(Message.ATTEMPT_LOGIN + data.username);
 
 		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
@@ -97,6 +97,17 @@ public class Login {
 				LOG.warning(Message.FAILED_LOGIN + data.username);
 				txn.rollback();
 				return Response.status(Status.FORBIDDEN).build();
+			}
+
+			String level = user.getProperty(DSUtils.USER_LEVEL).toString();
+
+			if(level.equals(UserLevel.ORG)) {
+				String activation = user.getProperty(DSUtils.USER_ACTIVATION).toString();
+				if(!activation.equals(Profile.ACTIVATED)) {
+					LOG.info(Message.ORG_NOT_CONFIRMED);
+					txn.rollback();
+					return Response.status(Status.FORBIDDEN).build();
+				}
 			}
 
 			final String email = user.getProperty(DSUtils.USER_EMAIL).toString();
@@ -118,7 +129,7 @@ public class Login {
 
 			String hashedPWD = (String) user.getProperty(DSUtils.USER_PASSWORD);
 			if(!hashedPWD.equals(DigestUtils.sha512Hex(data.password))) {
-				LOG.warning(Message.WRONG_PASSWORD + data.username);
+				LOG.info(Message.WRONG_PASSWORD + data.username);
 
 				if(!stats.hasProperty(DSUtils.USERSTATS_LOGINSFAILED))
 					stats.setProperty(DSUtils.USERSTATS_LOGINSFAILED, 1L);
@@ -143,10 +154,10 @@ public class Login {
 				LOG.warning(e.getMessage());
 				txn.rollback();
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}	
+			}
 
 			final String deviceid = request.getAttribute(CustomHeader.DEVICE_ID_ATT).toString();
-			final String username = data.username;
+			//final String username = data.username;
 
 			Query deviceQuery = new Query(DSUtils.DEVICE);
 			Filter userFilter = new Query.FilterPredicate(DSUtils.DEVICE_USER,
@@ -159,20 +170,23 @@ public class Login {
 			Entity existingDevice = null;
 
 			for(Entity device : devices) {
-				if(device.getProperty(DSUtils.DEVICE_ID).toString().equals(deviceid)) {
+				if(device.getKey().getName().equals(deviceid)) {
 					existingDevice = device;
 					break;
 				}
 			}
 
 			if(existingDevice == null) {
-				existingDevice = new Entity(DSUtils.DEVICE);
-				existingDevice.setProperty(DSUtils.DEVICE_ID, deviceid);
+				String app = request.getAttribute(CustomHeader.DEVICE_APP_ATT).toString();
+				
+				existingDevice = new Entity(DSUtils.DEVICE, deviceid);
 				existingDevice.setUnindexedProperty(DSUtils.DEVICE_COUNT, 1L);
-				existingDevice.setProperty(DSUtils.DEVICE_USER, username);
+				existingDevice.setProperty(DSUtils.DEVICE_USER, userKey);
+				existingDevice.setProperty(DSUtils.DEVICE_APP, app);
 
-				Email.sendNewDeviceMessage(email,
-						request.getAttribute(CustomHeader.DEVICE_INFO_ATT).toString());
+				if(devices.size() != 0)
+					Email.sendNewDeviceMessage(email,
+							request.getAttribute(CustomHeader.DEVICE_INFO_ATT).toString());
 			} else
 				existingDevice.setProperty(DSUtils.DEVICE_COUNT,
 						(long) existingDevice.getProperty(DSUtils.DEVICE_COUNT) + 1L);
@@ -202,34 +216,50 @@ public class Login {
 
 			ResponseBuilder response;
 
-			String level = user.getProperty(DSUtils.USER_LEVEL).toString();
-
 			response = Response.ok()
 					.header(CustomHeader.AUTHORIZATION, token)
 					.header(CustomHeader.LEVEL, level);
 
 			if(level.equals(UserLevel.WORKER)) {
 				response.header(CustomHeader.ORG, user.getProperty(DSUtils.WORKER_ORG));
+				txn.commit();
 				return response.build();
 			}
 
-			String userLevel = user.getProperty(DSUtils.USER_LEVEL).toString();
+			if(level.equals(UserLevel.ORG)) {
+				response.header(CustomHeader.NIF, user.getKey().getName());
 
-			if(!(userLevel.equals(UserLevel.GUEST) || userLevel.equals(UserLevel.WORKER))
-					|| userLevel.equals(UserLevel.ADMIN)) {
+				Query orgQ = new Query(DSUtils.ORG).setAncestor(userKey);
+				Entity org;
+				try {
+					org = datastore.prepare(orgQ).asSingleEntity();
+				} catch(TooManyResultsException e) {
+					LOG.info(Message.UNEXPECTED_ERROR);
+					txn.rollback();
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+				}
+
+				if(org == null) {
+					LOG.info(Message.UNEXPECTED_ERROR);
+					txn.rollback();
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+				}
+
+				response.header(CustomHeader.ORG, org.getProperty(DSUtils.ORG_NAME).toString());
+			}
+
+			if(!(level.equals(UserLevel.GUEST) || level.equals(UserLevel.WORKER)
+					|| level.equals(UserLevel.ADMIN))) {
 				String actProp = user.getProperty(DSUtils.USER_ACTIVATION).toString();
-				String activated = actProp.equals(Profile.ACTIVATED) ?
+
+				String activated = actProp.equals(Profile.ACTIVATED)?
 						CustomHeader.TRUE : CustomHeader.FALSE;
 
 				response.header(CustomHeader.ACTIVATED, activated);
 			}
-
+			
 			txn.commit();
 			return response.build();	
-		} catch(Exception e) {
-			LOG.info(e.toString());
-			LOG.info(e.getMessage());
-			return null;
 		} finally {
 			if (txn.isActive()) {
 				txn.rollback();

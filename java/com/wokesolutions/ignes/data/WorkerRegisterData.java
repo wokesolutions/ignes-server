@@ -4,13 +4,13 @@ public class WorkerRegisterData {
 
 	public String name;
 	public String email;
-	public String ob;
+	public String job;
 	
 	public WorkerRegisterData() {}
 	
 	public boolean isValid() {
 		return email != null && email.contains("@")
-				&& name != null && ob != null;
+				&& name != null && job != null;
 	}
 	
 	public static String generateCode(String org, String email) {

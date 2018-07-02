@@ -117,6 +117,8 @@ public class Message {
 		public static final String VERIFYING_TOKEN = "Verificando o token";
 		public static final String VERIFYING_TOKEN_OF_USER = "Verificando o token do user: ";
 		public static final String NOT_GUEST_REQUEST = "Pedido exige autenticação";
+		public static final String GUEST_REQUEST = "Pedido não exige autenticação";
+		public static final String PERMISSION_GRANTED = "Autenticação foi verificada";
 		
 	// Info Requests
 		public static final String REQUEST_IS_GOOD = "Pedido foi aceite";

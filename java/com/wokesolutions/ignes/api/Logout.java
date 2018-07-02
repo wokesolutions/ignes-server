@@ -22,11 +22,11 @@ import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
-import com.google.appengine.api.datastore.PropertyProjection;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Transaction;
+import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
@@ -115,7 +115,6 @@ public class Logout {
 			try {
 				return logoutUserRetry(username, request, isOrg);
 			} catch(DatastoreException e) {
-				LOG.info("Trying again");
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				retries--;
@@ -124,7 +123,8 @@ public class Logout {
 	}
 
 	public Response logoutUserRetry(String username, HttpServletRequest request, boolean isOrg) {
-		Transaction txn = datastore.beginTransaction();
+		Transaction txn = datastore.beginTransaction
+				(TransactionOptions.Builder.withXG(true));
 		try {
 			LOG.info(Message.LOGGING_OUT + username);
 
@@ -135,12 +135,14 @@ public class Logout {
 			try {
 				stats = datastore.prepare(statsQuery).asSingleEntity();
 			} catch(TooManyResultsException e2) {
+				LOG.info(Message.UNEXPECTED_ERROR);
 				txn.rollback();
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
 			if(stats == null) {
 				txn.rollback();
+				LOG.info(Message.UNEXPECTED_ERROR);
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
@@ -148,29 +150,25 @@ public class Logout {
 				datastore.get(userKey);
 			} catch(EntityNotFoundException e) {
 				txn.rollback();
+				LOG.info(Message.UNEXPECTED_ERROR);
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
-			Query query = new Query(DSUtils.TOKEN).setAncestor(userKey)
-					.addProjection(new PropertyProjection(DSUtils.TOKEN_DEVICE, String.class));
+			Query query = new Query(DSUtils.TOKEN).setKeysOnly();
 
 			String token = request.getHeader(CustomHeader.AUTHORIZATION);
 
-			Filter filter = new Query
-					.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL,
-							request.getHeader(CustomHeader.AUTHORIZATION));
+			LOG.info(token);
 
-			query.setFilter(filter);
+			Filter stringF = new Query
+					.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL, token);
+
+			query.setFilter(stringF);
 
 			Entity tokenE;
 			try {
-				tokenE = datastore.prepare(txn, query).asSingleEntity();
+				tokenE = datastore.prepare(query).asSingleEntity();
 			} catch(TooManyResultsException e2) {
-				LOG.info(Message.UNEXPECTED_ERROR);
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			if(token == null) {
 				LOG.info(Message.UNEXPECTED_ERROR);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
@@ -189,7 +187,6 @@ public class Logout {
 			log.setProperty(DSUtils.USERLOG_COUNTRY, request.getHeader("X-AppEngine-Country"));
 			log.setProperty(DSUtils.USERLOG_TIME, new Date());
 			log.setProperty(DSUtils.USERLOG_DEVICE, deviceid);
-
 			if(stats.hasProperty(DSUtils.USERSTATS_LOGOUTS))
 				stats.setProperty(DSUtils.USERSTATS_LOGOUTS,
 						1L + (long) stats.getProperty(DSUtils.USERSTATS_LOGOUTS));

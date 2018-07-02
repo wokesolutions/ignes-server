@@ -179,7 +179,7 @@ public class Admin {
 
 			Date date = new Date();
 
-			Entity admin = new Entity(userKey);
+			Entity admin = new Entity(DSUtils.ADMIN, userKey);
 			admin.setUnindexedProperty(DSUtils.ADMIN_CREATIONTIME, date);
 			admin.setUnindexedProperty(DSUtils.ADMIN_OLDLEVEL, user.getProperty(DSUtils.USER_LEVEL));
 
@@ -188,7 +188,8 @@ public class Admin {
 			String promoterUsername = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 			Key promoterKey = KeyFactory.createKey(DSUtils.ADMIN, promoterUsername);
 
-			Entity adminLog = new Entity(DSUtils.ADMINLOG, promoterKey);
+			Entity adminLog = new Entity(DSUtils.ADMINLOG);
+			adminLog.setProperty(DSUtils.ADMINLOG_ADMIN, promoterKey);
 			adminLog.setProperty(DSUtils.ADMINLOG_PROMOTED, username);
 			adminLog.setUnindexedProperty(DSUtils.ADMINLOG_TIME, date);
 
@@ -243,8 +244,14 @@ public class Admin {
 				admin = datastore.prepare(adminQuery).asSingleEntity();
 			} catch(TooManyResultsException e) {
 				txn.rollback();
-				LOG.info(Message.UNEXPECTED_ERROR);
-				Response.status(Status.INTERNAL_SERVER_ERROR).build();
+				LOG.info(Message.USER_NOT_ADMIN);
+				return Response.status(Status.EXPECTATION_FAILED).build();
+			}
+			
+			if(admin == null) {
+				txn.rollback();
+				LOG.info(Message.USER_NOT_ADMIN);
+				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
 			if(admin.hasProperty(DSUtils.ADMIN_OLDLEVEL))
@@ -267,13 +274,14 @@ public class Admin {
 			LOG.info(Message.ADMIN_DEMOTED + username);
 			txn.commit();
 			return Response.ok().build();
-
 		} catch (EntityNotFoundException e) {
 			txn.rollback();
-			return Response.status(Status.EXPECTATION_FAILED).entity(Message.USER_NOT_ADMIN).build();
+			LOG.info(Message.UNEXPECTED_ERROR);
+			return Response.status(Status.EXPECTATION_FAILED).build();
 		} finally {
 			if(txn.isActive()) {
 				txn.rollback();
+				LOG.info(Message.TXN_ACTIVE);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 		}
@@ -320,27 +328,32 @@ public class Admin {
 
 			LOG.info(user.getKey().getName());
 
-			Query queryPoints = new Query(DSUtils.USERPOINTS).setAncestor(user.getKey());
-
-			Entity points;
-
-			try {
-				points = datastore.prepare(queryPoints).asSingleEntity();
-			} catch(TooManyResultsException e) {
-				continue;
-			}
-
-			if(points == null) {
-				LOG.info(Message.UNEXPECTED_ERROR);
-				return Response.status(Status.EXPECTATION_FAILED).build();
-			}
+			String level = user.getProperty(DSUtils.USER_LEVEL).toString();
 
 			JSONObject us = new JSONObject();
 			us.put(Prop.USERNAME, user.getKey().getName());
 			us.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
-			us.put(Prop.LEVEL, user.getProperty(DSUtils.USER_LEVEL));
+			us.put(Prop.LEVEL, level);
 			us.put(Prop.CREATIONTIME, user.getProperty(DSUtils.USER_CREATIONTIMEFORMATTED));
-			us.put(Prop.POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
+
+			if(!level.equals(UserLevel.ORG)) {
+				Query queryPoints = new Query(DSUtils.USERPOINTS).setAncestor(user.getKey());
+
+				Entity points;
+
+				try {
+					points = datastore.prepare(queryPoints).asSingleEntity();
+				} catch(TooManyResultsException e) {
+					continue;
+				}
+
+				if(points == null) {
+					LOG.info(Message.UNEXPECTED_ERROR + user.getKey().getName());
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+				us.put(Prop.POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
+			}
+			
 			array.put(us);
 		}
 
@@ -491,11 +504,14 @@ public class Admin {
 				try {
 					Entity orgE = datastore.get(orgkey);
 
-					orgE.setProperty(DSUtils.USER_ACTIVATION, true);
+					Entity userE = datastore.get(orgE.getParent());
+
+					orgE.setProperty(DSUtils.USER_ACTIVATION, Profile.ACTIVATED);
 
 					datastore.put(orgE);
 
-					Email.sendOrgConfirmedMessage(orgE.getProperty(DSUtils.ORG_EMAIL).toString());
+					Email.sendOrgConfirmedMessage(
+							userE.getProperty(DSUtils.USER_EMAIL).toString());
 
 					return Response.ok().build();
 				} catch (EntityNotFoundException e) {
@@ -555,15 +571,18 @@ public class Admin {
 					}
 
 					JSONObject obj = new JSONObject();
-					obj.put(Prop.NIF, org.getKey().getName());
+					obj.put(Prop.NIF, org.getParent().getName());
 					obj.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
 					obj.put(Prop.ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
-					obj.put(Prop.EMAIL, org.getProperty(DSUtils.ORG_EMAIL));
+					obj.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
 					obj.put(Prop.ISFIRESTATION, org.getProperty(DSUtils.ORG_ISFIRESTATION));
 					obj.put(Prop.LOCALITY, org.getProperty(DSUtils.ORG_LOCALITY));
 					obj.put(Prop.PHONE, org.getProperty(DSUtils.ORG_PHONE));
 					obj.put(Prop.SERVICES, org.getProperty(DSUtils.ORG_SERVICES));
 					obj.put(Prop.ZIP, org.getProperty(DSUtils.ORG_ZIP));
+					obj.put(Prop.CREATIONTIME,
+							user.getProperty(DSUtils.USER_CREATIONTIMEFORMATTED));
+
 					array.put(obj);
 				}
 

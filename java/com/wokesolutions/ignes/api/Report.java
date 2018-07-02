@@ -54,10 +54,12 @@ import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.callbacks.LevelManager;
 import com.wokesolutions.ignes.data.ReportData;
+import com.wokesolutions.ignes.exceptions.VoteException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Haversine;
 import com.wokesolutions.ignes.util.Prop;
+import com.wokesolutions.ignes.util.ReportVotes;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Storage;
@@ -216,8 +218,8 @@ public class Report {
 					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 				}
 
-				report.setUnindexedProperty(DSUtils.REPORT_IMGPATH, pathImg.makePath());
-				report.setUnindexedProperty(DSUtils.REPORT_THUMBNAILPATH, pathImg.makeTnPath());
+				report.setProperty(DSUtils.REPORT_IMGPATH, pathImg.makePath());
+				report.setProperty(DSUtils.REPORT_THUMBNAILPATH, pathImg.makeTnPath());
 
 				Entity reportVotes = new Entity(DSUtils.REPORTVOTES, reportKey);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_UP, 0L);
@@ -494,7 +496,7 @@ public class Report {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_GRAVITY, Integer.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
-		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, Integer.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, Boolean.class));
@@ -868,14 +870,6 @@ public class Report {
 
 	// ---------------x--------------- SUBCLASS
 
-	private static final String UP = "up";
-	private static final String DOWN = "down";
-	private static final String NEUTRAL = "neutral";
-	private static final String SPAM = "spam";
-	
-	private static final long TO_DOWN_POINTS_REL = 6;
-	private static final long TO_DOWN_POINTS_UPS = 3;
-
 	@POST
 	@Path("/vote/up/{report}")
 	public Response upvoteReport(@PathParam (ParamName.REPORT) String report,
@@ -888,135 +882,16 @@ public class Report {
 		int retries = 5;
 		while(true) {
 			try {
-				return upvoteReportRetry(report, username);
+				try {
+					ReportVotes.vote(ReportVotes.UP, report, username);
+				} catch (VoteException e) {
+					LOG.info(Message.UNEXPECTED_ERROR);
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+				}
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				retries--;
-			}
-		}
-	}
-
-	private Response upvoteReportRetry(String report, String username) {
-		TransactionOptions options = TransactionOptions.Builder.withXG(true);
-		Transaction txn = datastore.beginTransaction(options);
-
-		try {
-			Key reportKey = KeyFactory.createKey(DSUtils.REPORT, report);
-			Query votesQuery = new Query(DSUtils.REPORTVOTES).setAncestor(reportKey);
-
-			String reporterUsername;
-			try {
-				reporterUsername = ((Key) datastore.get(reportKey)
-						.getProperty(DSUtils.REPORT_USER)).getName();
-			} catch (EntityNotFoundException e) {
-				LOG.info(Message.UNEXPECTED_ERROR);
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			Key reporterkey = KeyFactory.createKey(DSUtils.USER, reporterUsername);
-			Query pointsQuery = new Query(DSUtils.USERPOINTS).setAncestor(reporterkey);
-
-			Entity userPoints;
-
-			try {
-				userPoints = datastore.prepare(pointsQuery).asSingleEntity();
-			} catch(TooManyResultsException e) {
-				LOG.info(Message.UNEXPECTED_ERROR);
-				txn.rollback();
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			if(userPoints == null) {
-				LOG.info(Message.UNEXPECTED_ERROR);
-				txn.rollback();
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			userPoints.setProperty(DSUtils.USERPOINTS_POINTS,
-					(long) userPoints.getProperty(DSUtils.USERPOINTS_POINTS) + 2);
-
-			datastore.put(txn, userPoints);
-
-			Entity reportvote;
-
-			try {
-				reportvote = datastore.prepare(votesQuery).asSingleEntity();
-			} catch(TooManyResultsException e) {
-				txn.rollback();
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			Query query = new Query(DSUtils.USERVOTE);
-			Filter filter1 = new Query.FilterPredicate(DSUtils.USERVOTE_REPORT, FilterOperator.EQUAL, report);
-			Filter filter2 = new Query.FilterPredicate(DSUtils.USERVOTE_USER, FilterOperator.EQUAL, username);
-			List<Filter> filters = Arrays.asList(filter1, filter2);
-			Filter filter = new Query.CompositeFilter(CompositeFilterOperator.AND, filters);
-			query.setFilter(filter);
-
-			Entity existingVote;
-			try {
-				existingVote = datastore.prepare(query).asSingleEntity();
-			} catch(TooManyResultsException e) {
-				txn.rollback();
-				LOG.info(Message.UNEXPECTED_ERROR);
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			Entity uservote;
-
-			if(existingVote == null) {
-				uservote = new Entity(DSUtils.USERVOTE);
-				uservote.setProperty(DSUtils.USERVOTE_USER, username);
-				uservote.setProperty(DSUtils.USERVOTE_REPORT, reportKey.getName());
-				uservote.setUnindexedProperty(DSUtils.USERVOTE_TYPE, UP);
-
-				reportvote.setProperty(DSUtils.REPORTVOTES_UP,
-						(long) reportvote.getProperty(DSUtils.REPORTVOTES_UP) + 1);
-				reportvote.setProperty(DSUtils.REPORTVOTES_RELEVANCE,
-						(long) reportvote.getProperty(DSUtils.REPORTVOTES_RELEVANCE) + 3);
-
-				datastore.put(txn, uservote);
-				datastore.put(txn, reportvote);
-				txn.commit();
-				LOG.info(Message.VOTED_REPORT);
-				return Response.ok().build();
-			}
-
-			String oldVote = existingVote.getProperty(DSUtils.USERVOTE_TYPE).toString();
-
-			if(oldVote.equals(UP)) {
-				txn.rollback();
-				return Response.ok().build();
-			} else if(oldVote.equals(DOWN)) {
-				existingVote.setProperty(DSUtils.USERVOTE_TYPE, UP);
-
-				long downs = (long) reportvote.getProperty(DSUtils.REPORTVOTES_UP);
-				long ups = (long) reportvote.getProperty(DSUtils.REPORTVOTES_DOWN);
-
-				reportvote.setProperty(DSUtils.REPORTVOTES_DOWN, downs - 1L);
-				reportvote.setProperty(DSUtils.REPORTVOTES_UP, ups + 1L);
-
-				downs = downs - 1L;
-				ups = ups + 1L;
-
-				reportvote.setProperty(DSUtils.REPORTVOTES_RELEVANCE, 3 * ups - downs);
-
-				datastore.put(txn, existingVote);
-				datastore.put(txn, reportvote);
-				txn.commit();
-				LOG.info(Message.VOTED_REPORT);
-				return Response.ok().build();
-			} else {
-				txn.rollback();
-				LOG.info(Message.BAD_FORMAT);
-				return Response.status(Status.BAD_REQUEST).build();
-			}
-		} finally {
-			if(txn.isActive()) {
-				LOG.info(Message.TXN_ACTIVE);
-				txn.rollback();
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 		}
 	}
@@ -1033,7 +908,12 @@ public class Report {
 		int retries = 5;
 		while(true) {
 			try {
-				return downvoteReportRetry(report, username);
+				try {
+					ReportVotes.vote(ReportVotes.DOWN, report, username);
+				} catch (VoteException e) {
+					LOG.info(Message.UNEXPECTED_ERROR);
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+				}
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -1042,136 +922,28 @@ public class Report {
 		}
 	}
 
-	private Response downvoteReportRetry(String report, String username) {
-		TransactionOptions options = TransactionOptions.Builder.withXG(true);
-		Transaction txn = datastore.beginTransaction(options);
+	@POST
+	@Path("/vote/spam/{report}")
+	public Response spamvoteReport(@PathParam (ParamName.REPORT) String report,
+			@Context HttpServletRequest request) {
+		if(report == null || report == "")
+			return Response.status(Status.BAD_REQUEST).build();
 
-		try {
-			Key reportKey = KeyFactory.createKey(DSUtils.REPORT, report);
-			Query votesQuery = new Query(DSUtils.REPORTVOTES).setAncestor(reportKey);
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
-			Entity reportvote;
-
+		int retries = 5;
+		while(true) {
 			try {
-				reportvote = datastore.prepare(votesQuery).asSingleEntity();
-			} catch(TooManyResultsException e) {
-				LOG.info(Message.UNEXPECTED_ERROR);
-				txn.rollback();
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			Query query = new Query(DSUtils.USERVOTE);
-			Filter filter1 = new Query.FilterPredicate(DSUtils.USERVOTE_REPORT,
-					FilterOperator.EQUAL, report);
-			Filter filter2 = new Query.FilterPredicate(DSUtils.USERVOTE_USER,
-					FilterOperator.EQUAL, username);
-			List<Filter> filters = Arrays.asList(filter1, filter2);
-			Filter filter = new Query.CompositeFilter(CompositeFilterOperator.AND, filters);
-			query.setFilter(filter);
-
-			Entity existingVote;
-			try {
-				existingVote = datastore.prepare(query).asSingleEntity();
-			} catch(TooManyResultsException e) {
-				txn.rollback();
-				LOG.info(Message.UNEXPECTED_ERROR);
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			String reporterUsername;
-			try {
-				reporterUsername = ((Key) datastore.get(reportKey)
-						.getProperty(DSUtils.REPORT_USER)).getName();
-			} catch (EntityNotFoundException e) {
-				LOG.info(Message.UNEXPECTED_ERROR);
-				txn.rollback();
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			Key reporterkey = KeyFactory.createKey(DSUtils.USER, reporterUsername);
-			Query pointsQuery = new Query(DSUtils.USERPOINTS).setAncestor(reporterkey);
-
-			if((long) reportvote.getProperty(DSUtils.REPORTVOTES_RELEVANCE)
-					<= TO_DOWN_POINTS_REL
-					&& (long) reportvote.getProperty(DSUtils.REPORTVOTES_UP)
-					>= TO_DOWN_POINTS_UPS) {
-
-				Entity userPoints;
-
 				try {
-					userPoints = datastore.prepare(pointsQuery).asSingleEntity();
-				} catch(TooManyResultsException e) {
+					ReportVotes.vote(ReportVotes.SPAM, report, username);
+				} catch (VoteException e) {
 					LOG.info(Message.UNEXPECTED_ERROR);
-					txn.rollback();
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
-
-				if(userPoints == null) {
-					LOG.info(Message.UNEXPECTED_ERROR);
-					txn.rollback();
-					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-				}
-
-				userPoints.setProperty(DSUtils.USERPOINTS_POINTS,
-						(long) userPoints.getProperty(DSUtils.USERPOINTS_POINTS) - 1);
-
-				datastore.put(txn, userPoints);
-			}
-
-			Entity uservote;
-
-			if(existingVote == null) {
-				uservote = new Entity(DSUtils.USERVOTE);
-				uservote.setProperty(DSUtils.USERVOTE_USER, username);
-				uservote.setProperty(DSUtils.USERVOTE_REPORT, reportKey.getName());
-				uservote.setUnindexedProperty(DSUtils.USERVOTE_TYPE, DOWN);
-
-				reportvote.setProperty(DSUtils.REPORTVOTES_DOWN,
-						(long) reportvote.getProperty(DSUtils.REPORTVOTES_DOWN) + 1);
-				reportvote.setProperty(DSUtils.REPORTVOTES_RELEVANCE,
-						(long) reportvote.getProperty(DSUtils.REPORTVOTES_RELEVANCE) - 1);
-
-				datastore.put(txn, uservote);
-				datastore.put(txn, reportvote);
-				txn.commit();
-				LOG.info(Message.VOTED_REPORT);
-				return Response.ok().build();
-			}
-
-			String oldVote = existingVote.getProperty(DSUtils.USERVOTE_TYPE).toString();
-
-			if(oldVote.equals(DOWN)) {
-				txn.rollback();
-				return Response.ok().build();
-			} else if(oldVote.equals(UP)) {
-				existingVote.setProperty(DSUtils.USERVOTE_TYPE, DOWN);
-
-				long downs = (long) reportvote.getProperty(DSUtils.REPORTVOTES_DOWN);
-				long ups = (long) reportvote.getProperty(DSUtils.REPORTVOTES_UP);
-
-				reportvote.setProperty(DSUtils.REPORTVOTES_DOWN, downs + 1L);
-				reportvote.setProperty(DSUtils.REPORTVOTES_UP, ups - 1L);
-
-				downs = downs + 1L;
-				ups = ups - 1L;
-
-				reportvote.setProperty(DSUtils.REPORTVOTES_RELEVANCE, 3 * ups - downs);
-
-				datastore.put(txn, existingVote);
-				datastore.put(txn, reportvote);
-				txn.commit();
-				LOG.info(Message.VOTED_REPORT);
-				return Response.ok().build();
-			} else {
-				txn.rollback();
-				LOG.info(Message.BAD_FORMAT);
-				return Response.status(Status.BAD_REQUEST).build();
-			}
-		} finally {
-			if(txn.isActive()) {
-				LOG.info(Message.TXN_ACTIVE);
-				txn.rollback();
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
 			}
 		}
 	}
@@ -1228,92 +1000,6 @@ public class Report {
 	}
 
 	@POST
-	@Path("/vote/spam/{report}")
-	public Response spamvoteReport(@PathParam (ParamName.REPORT) String report,
-			@Context HttpServletRequest request) {
-		if(report == null || report == "")
-			return Response.status(Status.BAD_REQUEST).build();
-
-		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
-
-		int retries = 5;
-		while(true) {
-			try {
-				return spamvoteReportRetry(report, username);
-			} catch(DatastoreException e) {
-				if(retries == 0)
-					return Response.status(Status.REQUEST_TIMEOUT).build();
-				retries--;
-			}
-		}
-	}
-
-	private Response spamvoteReportRetry(String report, String username) {
-		TransactionOptions options = TransactionOptions.Builder.withXG(true);
-		Transaction txn = datastore.beginTransaction(options);
-
-		try {
-			Key reportKey = KeyFactory.createKey(DSUtils.REPORT, report);
-			Query votesQuery = new Query(DSUtils.REPORTVOTES).setAncestor(reportKey);
-
-			String reporterUsername = ((Key) datastore.get(reportKey)
-					.getProperty(DSUtils.REPORT_USER)).getName();
-			Key reporterkey = KeyFactory.createKey(DSUtils.USER, reporterUsername);
-			Query pointsQuery = new Query(DSUtils.USERPOINTS).setAncestor(reporterkey);
-
-			Entity userPoints;
-			Entity vote;
-
-			try {
-				vote = datastore.prepare(votesQuery).asSingleEntity();
-				userPoints = datastore.prepare(pointsQuery).asSingleEntity();
-			} catch(TooManyResultsException e) {
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			long spams = (long) vote.getProperty(DSUtils.REPORTVOTES_SPAM) + 1;
-			long ups = (long) vote.getProperty(DSUtils.REPORTVOTES_UP);
-			long relevance = (long) vote.getProperty(DSUtils.REPORTVOTES_RELEVANCE) - 4;
-
-			vote.setProperty(DSUtils.REPORTVOTES_SPAM,
-					spams);
-
-			vote.setProperty(DSUtils.REPORTVOTES_RELEVANCE, relevance);
-
-			Entity uservote = new Entity(DSUtils.USERVOTE);
-			uservote.setProperty(DSUtils.USERVOTE_USER, username);
-			uservote.setProperty(DSUtils.USERVOTE_REPORT, reportKey.getName());
-			uservote.setUnindexedProperty(DSUtils.USERVOTE_TYPE, "spam");
-
-			List<Entity> entities = Arrays.asList(vote, userPoints, uservote);
-
-			if(spams > ups / 4 || spams > 25) {
-				Entity spammedRep = new Entity(DSUtils.SPAMMEDREPORT, reportKey);
-				spammedRep.setPropertiesFrom(datastore.get(reportKey));
-				entities.add(spammedRep);
-			}
-
-			userPoints.setProperty(DSUtils.USERPOINTS_POINTS,
-					(long) userPoints.getProperty(DSUtils.USERPOINTS_POINTS) - 3);
-
-			datastore.put(txn, entities);
-			LOG.info(Message.VOTED_REPORT);
-			return Response.ok().build();
-
-		} catch(EntityNotFoundException e) {
-			txn.rollback();
-			LOG.info(Message.UNEXPECTED_ERROR);
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-		} finally {
-			if(txn.isActive()) {
-				LOG.info(Message.TXN_ACTIVE);
-				txn.rollback();
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-		}
-	}
-
-	@POST
 	@Path("/vote/multiple")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response voteAll(String votesO, @Context HttpServletRequest request) {
@@ -1328,118 +1014,16 @@ public class Report {
 		while(true) {
 			try {
 				while(keys.hasNext()) {
-					Transaction txn = datastore
-							.beginTransaction(TransactionOptions.Builder.withXG(true));
-
 					String reportid = keys.next();
 					String vote = votes.getString(reportid);
-					Response response;
 
-					if(vote.equals(UP))
-						response = upvoteReportRetry(reportid, username);
-					else if(vote.equals(DOWN))
-						response = downvoteReportRetry(reportid, username);
-					else if(vote.equals(SPAM))
-						response = spamvoteReportRetry(reportid, username);
-					else if(vote.equals(NEUTRAL)) {
-
-						Query query = new Query(DSUtils.USERVOTE);
-						Filter filter1 = new Query.FilterPredicate(DSUtils.USERVOTE_REPORT,
-								FilterOperator.EQUAL, reportid);
-						Filter filter2 = new Query.FilterPredicate(DSUtils.USERVOTE_USER,
-								FilterOperator.EQUAL, username);
-
-						List<Filter> filters = Arrays.asList(filter1, filter2);
-						Filter filter = new Query
-								.CompositeFilter(CompositeFilterOperator.AND, filters);
-						query.setFilter(filter);
-
-						Entity existingVote;
-						try {
-							existingVote = datastore.prepare(query).asSingleEntity();
-						} catch(TooManyResultsException e) {
-							LOG.info(Message.UNEXPECTED_ERROR);
-							txn.rollback();
-							response = Response.status(Status.NOT_FOUND).build();
-							continue;
-						}
-
-						if(existingVote == null) {
-							response = Response.ok().build();
-							txn.rollback();
-							continue;
-						}
-
-						LOG.info(existingVote.toString());
-
-						String oldVote = existingVote.getProperty(DSUtils.USERVOTE_TYPE).toString();
-
-						Entity report;
-						try {
-							report = datastore
-									.get(KeyFactory.createKey(DSUtils.REPORT, reportid));
-						} catch (EntityNotFoundException e) {
-							LOG.info(Message.REPORT_NOT_FOUND);
-							txn.rollback();
-							response = Response.status(Status.NOT_FOUND).build();
-							continue;
-						}
-
-						Query query2 = new Query(DSUtils.REPORTVOTES).setAncestor(report.getKey());
-						Entity reportvote;
-
-						try {
-							reportvote = datastore.prepare(query2).asSingleEntity();
-						} catch(TooManyResultsException e) {
-							txn.rollback();
-							LOG.info(Message.UNEXPECTED_ERROR);
-							response = Response.status(Status.INTERNAL_SERVER_ERROR).build();
-							continue;
-						}
-
-						if(reportvote == null) {
-							txn.rollback();
-							LOG.info(Message.UNEXPECTED_ERROR);
-							response = Response.status(Status.INTERNAL_SERVER_ERROR).build();
-							continue;
-						}
-
-						if(oldVote.equals(DOWN)) {
-							reportvote.setProperty(DSUtils.REPORTVOTES_DOWN,
-									(long) reportvote
-									.getProperty(DSUtils.REPORTVOTES_DOWN) - 1L);
-							reportvote.setProperty(DSUtils.REPORTVOTES_RELEVANCE,
-									(long) reportvote
-									.getProperty(DSUtils.REPORTVOTES_RELEVANCE) + 1L);
-						} else if(oldVote.equals(UP)) {
-							reportvote.setProperty(DSUtils.REPORTVOTES_UP,
-									(long) reportvote
-									.getProperty(DSUtils.REPORTVOTES_UP) - 1L);
-							reportvote.setProperty(DSUtils.REPORTVOTES_RELEVANCE,
-									(long) reportvote
-									.getProperty(DSUtils.REPORTVOTES_RELEVANCE) - 3L);
-						} else {
-							LOG.info(Message.BAD_FORMAT);
-							txn.rollback();
-							response = Response.status(Status.NOT_FOUND).build();
-							continue;
-						}
-
-						datastore.delete(txn, existingVote.getKey());
-						datastore.put(txn, reportvote);
-						txn.commit();
-						response = Response.ok().build();
-					} else {
-						txn.rollback();
-						return Response.status(Status.BAD_REQUEST).build();
-					}
-
-					if(response.getStatus() != Status.OK.getStatusCode()) {
-						LOG.info(Message.VOTED_REPORT_ERROR + reportid);
-						txn.rollback();
+					try {
+						ReportVotes.vote(vote, reportid, username);
+					} catch (VoteException e) {
+						LOG.info(Message.UNEXPECTED_ERROR + " " + reportid);
+						continue;
 					}
 				}
-
 				return Response.ok().build();
 			} catch(DatastoreException e) {
 				if(retries == 0)
@@ -1479,8 +1063,7 @@ public class Report {
 				comment.setProperty(DSUtils.REPORTCOMMENT_TIMEFORMATTED, 
 						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
 				comment.setProperty(DSUtils.REPORTCOMMENT_USER,
-						KeyFactory.createKey(DSUtils.USER,
-								KeyFactory.createKeyString(DSUtils.USER, username)));
+						KeyFactory.createKey(DSUtils.USER, username));
 				comment.setProperty(DSUtils.REPORTCOMMENT_REPORT, report);
 				datastore.put(comment);
 				return Response.ok().build();
@@ -1520,10 +1103,12 @@ public class Report {
 				query.setFilter(filter);
 
 				query.addProjection(new PropertyProjection(DSUtils.REPORTCOMMENT_TEXT, String.class))
-				.addProjection(new PropertyProjection(DSUtils.REPORTCOMMENT_TIME, Date.class))
-				.addProjection(new PropertyProjection(DSUtils.REPORTCOMMENT_USER, String.class));
+				.addProjection(new PropertyProjection(DSUtils.REPORTCOMMENT_TIMEFORMATTED,
+						String.class))
+				.addProjection(new PropertyProjection(DSUtils.REPORTCOMMENT_USER, Key.class));
 
-				QueryResultList<Entity> list = datastore.prepare(query).asQueryResultList(fetchOptions);
+				QueryResultList<Entity> list = datastore.prepare(query)
+						.asQueryResultList(fetchOptions);
 
 				JSONArray array = new JSONArray();
 
@@ -1546,8 +1131,10 @@ public class Report {
 
 						userOE = datastore.prepare(query2).asSingleEntity();
 
-						if(userOE == null)
-							throw new TooManyResultsException();
+						if(userOE == null) {
+							LOG.info(Message.UNEXPECTED_ERROR + " " + comment.toString() + " " + username);
+							continue;
+						}
 					} catch (TooManyResultsException e) {
 						LOG.info(Message.UNEXPECTED_ERROR + " " + comment.toString() + " " + username);
 						continue;

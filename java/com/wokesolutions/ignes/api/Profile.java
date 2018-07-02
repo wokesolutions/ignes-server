@@ -125,8 +125,8 @@ public class Profile {
 
 			if(useroptional == null) {
 				txn.rollback();
-				return Response.status(Status.EXPECTATION_FAILED)
-						.entity(Message.NO_OPTIONAL_USER_ENTITY_FOUND).build();
+				LOG.info(Message.NO_OPTIONAL_USER_ENTITY_FOUND);
+				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
 			Entity useroptionallog = new Entity(DSUtils.USEROPTIONALLOGS, altererKey);
@@ -157,55 +157,64 @@ public class Profile {
 	private void fillOptional(String username, UserOptionalData data, Entity useroptional,Entity useroptionallog) {
 		if(data.address != null && !data.address.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_ADDRESS))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDADDRESS, useroptional.getProperty(DSUtils.USEROPTIONAL_ADDRESS));
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDADDRESS,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_ADDRESS));
 			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWADDRESS, data.address);
 			useroptional.setProperty(DSUtils.USEROPTIONAL_ADDRESS, data.address);
 		}
 		if(data.birth != null && !data.birth.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_BIRTH))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDBIRTH, useroptional.getProperty(DSUtils.USEROPTIONAL_BIRTH));
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDBIRTH,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_BIRTH));
 			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWBIRTH, data.birth);
 			useroptional.setProperty(DSUtils.USEROPTIONAL_BIRTH, data.birth);
 		}
 		if(data.gender != null && !data.gender.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_GENDER))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDGENDER, useroptional.getProperty(DSUtils.USEROPTIONAL_GENDER));
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDGENDER,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_GENDER));
 			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWGENDER, data.gender);
 			useroptional.setProperty(DSUtils.USEROPTIONAL_GENDER, data.gender);
 		}
 		if(data.job != null && !data.job.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_JOB))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDJOB, useroptional.getProperty(DSUtils.USEROPTIONAL_ADDRESS));
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDJOB,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_ADDRESS));
 			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWJOB, data.job);
 			useroptional.setProperty(DSUtils.USEROPTIONAL_JOB, data.job);
 		}
 		if(data.locality != null && !data.locality.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_LOCALITY))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDLOCALITY, useroptional.getProperty(DSUtils.USEROPTIONAL_LOCALITY));
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDLOCALITY,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_LOCALITY));
 			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWLOCALITY, data.locality);
 			useroptional.setProperty(DSUtils.USEROPTIONAL_LOCALITY, data.locality);
 		}
 		if(data.name != null && !data.name.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_NAME))
-				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDNAME, useroptional.getProperty(DSUtils.USEROPTIONAL_NAME));
+				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDNAME,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_NAME));
 			useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_NEWNAME, data.name);
 			useroptional.setUnindexedProperty(DSUtils.USEROPTIONAL_NAME, data.name);
 		}
 		if(data.phone != null && !data.phone.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_PHONE))
-				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDPHONE, useroptional.getProperty(DSUtils.USEROPTIONAL_PHONE));
+				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDPHONE,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_PHONE));
 			useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_NEWPHONE, data.phone);
 			useroptional.setUnindexedProperty(DSUtils.USEROPTIONAL_PHONE, data.phone);
 		}
 		if(data.skills != null && !data.skills.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_SKILLS))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDSKILLS, useroptional.getProperty(DSUtils.USEROPTIONAL_SKILLS));
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDSKILLS,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_SKILLS));
 			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWSKILLS, data.skills);
 			useroptional.setProperty(DSUtils.USEROPTIONAL_SKILLS, data.skills);
 		}
 		if(data.zip != null && !data.zip.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_ZIP))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDZIP, useroptional.getProperty(DSUtils.USEROPTIONAL_ZIP));
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDZIP,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_ZIP));
 			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWZIP, data.zip);
 			useroptional.setProperty(DSUtils.USEROPTIONAL_ZIP, data.zip);
 		}
@@ -456,6 +465,9 @@ public class Profile {
 		if(optionals.hasProperty(DSUtils.USEROPTIONAL_BIRTH))
 			object.put(Prop.BIRTH, optionals.getProperty(DSUtils.USEROPTIONAL_BIRTH));
 
+		if(optionals.hasProperty(DSUtils.USEROPTIONAL_PHONE))
+			object.put(Prop.PHONE, optionals.getProperty(DSUtils.USEROPTIONAL_PHONE));
+
 		Query query2 = new Query(DSUtils.USERPOINTS).setAncestor(user.getKey());
 		Entity points;
 		try {
@@ -615,7 +627,7 @@ public class Profile {
 
 		if(reports.isEmpty()) {
 			LOG.info(Message.NO_REPORTS_FOUND);
-			return Response.status(Status.NOT_FOUND).build();
+			return Response.status(Status.NO_CONTENT).build();
 		}
 
 		JSONArray array = new JSONArray();
@@ -679,6 +691,9 @@ public class Profile {
 		folders.add(Storage.IMG_FOLDER);
 		folders.add(Storage.PROFILE_FOLDER);
 		StoragePath pathImg = new StoragePath(folders, username);
+
+		LOG.info(Message.ATTEMPT_UPDATE_PROFILE);
+		
 		if(!Storage.saveImage(data.pic, Storage.BUCKET, pathImg,
 				data.width, data.height, data.orientation, false))
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
@@ -689,7 +704,10 @@ public class Profile {
 
 		try {
 			Entity optional = datastore.prepare(query).asSingleEntity();
+			LOG.info(optional.toString());
+			
 			optional.setProperty(DSUtils.USEROPTIONAL_PICPATH, pathImg.makePath());
+			LOG.info(optional.toString());
 
 			datastore.put(optional);
 		} catch(TooManyResultsException e) {

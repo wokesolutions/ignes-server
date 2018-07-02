@@ -56,19 +56,22 @@ public class PermissionControlFilter implements Filter {
 			changeResp(resp, Message.NOT_HTTP_REQUEST);
 			return;
 		}
-		
-		LOG.info(Message.NOT_GUEST_REQUEST);
 
 		HttpServletRequest request = (HttpServletRequest) req;
 
 		String url = request.getRequestURL().toString();
+		
+		LOG.info(url);
 
 		List<String> permissions = PermissionMapper.getPermissions(url);
 
 		if(permissions.contains(UserLevel.GUEST)) {
+			LOG.info(Message.GUEST_REQUEST);
 			chain.doFilter(req, resp);
 			return;
 		}
+		
+		LOG.info(Message.NOT_GUEST_REQUEST);
 
 		Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 
@@ -83,7 +86,6 @@ public class PermissionControlFilter implements Filter {
 		try {
 			username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
 		} catch(Exception e) {
-			LOG.info("deocding");
 			changeResp(resp, Message.INVALID_TOKEN);
 			return;
 		}
@@ -95,7 +97,6 @@ public class PermissionControlFilter implements Filter {
 				verifyWith(token, algorithm, permission);
 			} catch (Exception e) {
 				if(i == permissions.size() - 1) {
-					LOG.info("permissions");
 					changeResp(resp, Message.INVALID_TOKEN);
 					return;
 				}
@@ -108,13 +109,12 @@ public class PermissionControlFilter implements Filter {
 				try {
 					user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
 				} catch (EntityNotFoundException e) {
-					LOG.info("org not found");
 					changeResp(resp, Message.INVALID_TOKEN);
 					return;
 				}
 				
-				if(!user.getProperty(DSUtils.USER_ACTIVATION).toString().equals(Profile.ACTIVATED)) {
-					LOG.info("org not confirmed");
+				if(!user.getProperty(DSUtils.USER_ACTIVATION)
+						.toString().equals(Profile.ACTIVATED)) {
 					changeResp(resp, Message.ORG_NOT_CONFIRMED);
 					return;
 				}
@@ -148,12 +148,10 @@ public class PermissionControlFilter implements Filter {
 					return;
 				}
 
-				boolean activated = user.getProperty(DSUtils.USER_ACTIVATION).toString()
-						.equals(Profile.ACTIVATED);
-
 				String userlevel = user.getProperty(DSUtils.USER_LEVEL).toString();
 
-				req.setAttribute(CustomHeader.ACTIVATED, activated);
+				LOG.info(Message.PERMISSION_GRANTED);
+				
 				req.setAttribute(CustomHeader.LEVEL_ATT, userlevel);
 				req.setAttribute(CustomHeader.USERNAME_ATT, username);
 				chain.doFilter(req, resp);
@@ -161,7 +159,6 @@ public class PermissionControlFilter implements Filter {
 			}
 		}
 
-		LOG.info("token nao existe");
 		changeResp(resp, Message.INVALID_TOKEN);
 		return;
 	}

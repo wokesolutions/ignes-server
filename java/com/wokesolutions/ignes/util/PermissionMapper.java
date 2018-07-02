@@ -7,6 +7,7 @@ public class PermissionMapper {
 
 	private final static String LOGIN = "login";
 	private final static String LOGOUT = "logout";
+	private final static String VERIFYTOKEN = "verifytoken";
 	private final static String POST_COMMENT = "comment/post";
 	private final static String GET_COMMENT = "comment/get";
 	private final static String GET_REPORT = "report/get";
@@ -23,20 +24,25 @@ public class PermissionMapper {
 	private final static String TASK = "task";
 	private final static String REGISTER = "register";
 
-	public static List<String> getPermissions(String url) {
+	public static List<String> getPermissions(String url) { //TODO fix time
 		String req = url.substring(url.indexOf("/api/") + 5);
 
 		List<String> permissions = new ArrayList<String>(7);
-
-		if(req.contains(REGISTER)) {
-			permissions.add(UserLevel.GUEST);
-			return permissions;
-		}
 		
 		if(req.contains(POST_COMMENT)) {
 			permissions.add(UserLevel.LEVEL2);
 			permissions.add(UserLevel.LEVEL3);
 			permissions.add(UserLevel.ADMIN);
+			return permissions;
+		}
+		
+		if(req.contains(VERIFYTOKEN)) {
+			permissions.add(UserLevel.LEVEL1);
+			permissions.add(UserLevel.LEVEL2);
+			permissions.add(UserLevel.LEVEL3);
+			permissions.add(UserLevel.ADMIN);
+			permissions.add(UserLevel.ORG);
+			permissions.add(UserLevel.WORKER);
 			return permissions;
 		}
 
@@ -78,6 +84,7 @@ public class PermissionMapper {
 			permissions.add(UserLevel.LEVEL2);
 			permissions.add(UserLevel.LEVEL3);
 			permissions.add(UserLevel.ADMIN);
+			return permissions;
 		}
 
 		if(req.contains(LOGIN)) {
@@ -100,8 +107,6 @@ public class PermissionMapper {
 			permissions.add(UserLevel.LEVEL2);
 			permissions.add(UserLevel.LEVEL3);
 			permissions.add(UserLevel.ADMIN);
-			permissions.add(UserLevel.ORG);
-			permissions.add(UserLevel.WORKER);
 			return permissions;
 		}
 
@@ -111,10 +116,12 @@ public class PermissionMapper {
 			permissions.add(UserLevel.LEVEL3);
 			permissions.add(UserLevel.ADMIN);
 			permissions.add(UserLevel.WORKER);
+			return permissions;
 		}
 
 		if(req.contains(ADMIN)) {
 			permissions.add(UserLevel.ADMIN);
+			return permissions;
 		}
 
 		if(req.contains(ORG_INFO)) {
@@ -137,6 +144,11 @@ public class PermissionMapper {
 		if(req.contains(TASK)) {
 			permissions.add(UserLevel.WORKER);
 			permissions.add(UserLevel.ADMIN);
+			return permissions;
+		}
+
+		if(req.contains(REGISTER)) {
+			permissions.add(UserLevel.GUEST);
 			return permissions;
 		}
 

@@ -206,9 +206,11 @@ public class Register {
 				user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
 				user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED,
 						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
+				
+				datastore.put(txn, user);
 
 				Entity org = new Entity(DSUtils.ORG, user.getKey());
-				org.setUnindexedProperty(DSUtils.ORG_NAME, registerData.name);
+				org.setProperty(DSUtils.ORG_NAME, registerData.name);
 				org.setProperty(DSUtils.ORG_ADDRESS, registerData.address);
 				org.setProperty(DSUtils.ORG_LOCALITY, registerData.locality);
 				org.setUnindexedProperty(DSUtils.ORG_PHONE, registerData.phone);
@@ -216,7 +218,8 @@ public class Register {
 				org.setProperty(DSUtils.ORG_SERVICES, registerData.services);
 				org.setProperty(DSUtils.ORG_ISFIRESTATION, registerData.isfirestation);
 
-				datastore.put(org);
+				datastore.put(txn, org);
+				txn.commit();
 				LOG.info(Message.ORG_REGISTERED + registerData.nif);
 				return Response.ok().build();
 			} finally {
