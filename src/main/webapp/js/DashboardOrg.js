@@ -840,7 +840,7 @@ function getAvailableWorker(cursor){
 
 
                                 $(".dropdown-m").append("<option class='pointer-finger'" +
-                                    "style='font-family:Quicksand border: 1px rgba(144,148,156,0.51) solid' value=" + i + ">" + email + "</option>");
+                                    "style='font-family:Quicksand border: 1px rgba(144,148,156,0.51) solid' value=" + email + ">" + email + "</option>");
                                 //console.log($('email_select').child().last().val());
 
                                 emailsarr.push(email);
