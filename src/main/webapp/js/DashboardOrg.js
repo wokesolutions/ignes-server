@@ -13,6 +13,9 @@ var currentLoc ={
 };
 var email_current;
 
+var emailsarr;
+var workersarr;
+
 getCurrentLocation();
 
 var URL_BASE = 'https://hardy-scarab-200218.appspot.com';
@@ -39,10 +42,18 @@ function init() {
     document.getElementById("close_window").onclick = closeWindow;
     document.getElementById("add_task").onclick = giveTask;
     $("#email_select").change(function(){
-        document.getElementById('email_task').innerHTML= JSON.parse($("#email_select").val()).email;
-        document.getElementById('name_worker').innerHTML= JSON.parse($("#email_select").val()).name;
+        var email = $("#email_select").val();
+        var index = emailsarr.indexOf(email);
+        var worker = workersarr[index];
 
-    })
+        var name = worker.name;
+
+        $("#name_worker").val(name);
+        $("#email_task").val(email);
+    };
+
+    emailsarr = [];
+    workersarr = [];
 
     getFirstWorkers();
 
@@ -827,10 +838,13 @@ function getAvailableWorker(cursor){
 
                                 var email = data[i].email;
 
-                                console.log( JSON.stringify(data[i]));
+
                                 $(".dropdown-m").append("<option class='pointer-finger'" +
-                                    "style='font-family:Quicksand border: 1px rgba(144,148,156,0.51) solid' value=" + JSON.stringify(data[i]) + ">" + email + "</option>");
+                                    "style='font-family:Quicksand border: 1px rgba(144,148,156,0.51) solid' value=" + i + ">" + email + "</option>");
                                 //console.log($('email_select').child().last().val());
+
+                                emailsarr.push(email);
+                                workersarr.push(data[i]);
                             }
 
                         }else{
@@ -858,7 +872,7 @@ function giveTask(){
     var body = {
         email: JSON.parse($("#email_select").val()).email,
         report: idReportCurr,
-        indications: "Por favor, tenha cuidado com a lenha."
+        indications: $("#input_ind").val()
     };
     var headers = new Headers();
     headers.append('Authorization', localStorage.getItem('token'));
