@@ -13,6 +13,9 @@ var currentLoc ={
 };
 var email_current;
 
+var emailsarr;
+var workersarr;
+
 getCurrentLocation();
 
 var URL_BASE = 'https://hardy-scarab-200218.appspot.com';
@@ -39,10 +42,18 @@ function init() {
     document.getElementById("close_window").onclick = closeWindow;
     document.getElementById("add_task").onclick = giveTask;
     $("#email_select").change(function(){
-        document.getElementById('email_task').innerHTML= $("#email_select").data("value").Worker;
-        document.getElementById('name_worker').innerHTML= $("#email_select").data("value").worker_name;
+        var email = $("#email_select").val();
+        var index = emailsarr.indexOf(email);
+        var worker = workersarr[index];
 
-    })
+        var name = worker.name;
+
+        $("#name_worker").html(name);
+        $("#email_task").html(email);
+    });
+
+    emailsarr = [];
+    workersarr = [];
 
     getFirstWorkers();
 
@@ -149,17 +160,19 @@ function hideShow(element){
 
 function verifyIsLoggedIn(){
     console.log(localStorage.getItem('token'));
-    fetch(URL_BASE + '/api/verifytoken', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/verifytoken','GET', headers, body)).then(function(response) {
 
             if (response.status !== 200) {
 
-                window.location.href = "index.html";
+                window.location.href = "../index.html";
 
             }
 
@@ -175,13 +188,15 @@ function verifyIsLoggedIn(){
 
 function logOut(){
     console.log(localStorage.getItem('token'));
-    fetch(URL_BASE + '/api/logout', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/logout','POST', headers, body)).then(function(response) {
 
             if (response.status === 200) {
                 localStorage.removeItem('token');
@@ -205,13 +220,16 @@ function logOut(){
 
 function getMarkersByLocation(zone, cursor){
     if(cursor===undefined) cursor = "";
-    fetch(URL_BASE + '/api/report/getinlocation?' + "location=" + zone + "&cursor=" + cursor, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/report/getinlocation?' + "location=" + zone + "&cursor=" + cursor,'GET', headers, body)).then(function(response) {
 
             if (response.status === 200) {
                 var newCursor = response.headers.get("Cursor");
@@ -235,14 +253,16 @@ function getMarkersByLocation(zone, cursor){
 
 function getMarkers(radius, cursor){
     if(cursor===undefined) cursor = "";
-    fetch(URL_BASE + '/api/report/getwithinradius?' + "lat=" + currentLoc.center.lat + "&lng=" + currentLoc.center.lng +
-        "&radius=" + radius + "&cursor=" + cursor, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+    fetch(restRequest('/api/report/getwithinradius?' + "lat=" + currentLoc.center.lat + "&lng=" + currentLoc.center.lng +
+        "&radius=" + radius + "&cursor=" + cursor, 'GET', headers, body)).then(function(response) {
 
             if (response.status === 200) {
                 var newCursor = response.headers.get("Cursor");
@@ -269,19 +289,19 @@ function getMarkers(radius, cursor){
 function fillMap(reports, cursor, zone){
     var i, marker ;
     for(i = 0; i<reports.length; i++){
-        var lat = reports[i].report_lat;
-        var lng = reports[i].report_lng;
+        var lat = reports[i].lat;
+        var lng = reports[i].lng;
         var marker_color;
-        var gravity = reports[i].report_gravity;
+        var gravity = reports[i].gravity;
 
         if(gravity === 1)
             marker_color = "http://maps.google.com/mapfiles/ms/icons/green-dot.png";
         else if(gravity === 2)
-            marker_color = "http://maps.google.com/mapfiles/ms/icons/purple-dot.png";
+            marker_color = "http://maps.google.com/mapfiles/ms/icons/ltblue-dot.png";
         else if(gravity === 3)
-            marker_color = "http://maps.google.com/mapfiles/ms/icons/blue-dot.png";
-        else if(gravity === 4)
             marker_color = "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png";
+        else if(gravity === 4)
+            marker_color = "http://maps.google.com/mapfiles/ms/icons/orange-dot.png";
         else if(gravity === 5)
             marker_color = "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
         else{
@@ -298,7 +318,7 @@ function fillMap(reports, cursor, zone){
         google.maps.event.addListener(marker, 'click', (function(marker, i) {
 
             return function() {
-                reportID = reports[i].Report;
+                reportID = reports[i].report;
                 getInfo(reportID, i);
 
             }
@@ -317,56 +337,58 @@ function fillMap(reports, cursor, zone){
 
 function getInfo(idReport, i){
     idReportCurr = idReport;
-    fetch(URL_BASE + '/api/report/thumbnail/' + idReport, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+    fetch(restRequest('/api/report/thumbnail/' + idReport, 'GET', headers, body)).then(function(response) {
 
             if (response.status === 200) {
 
                 response.json().then(function(data) {
                     var image = document.getElementById("thumb_report");
-                    image.src = "data:image/jpg;base64," + data.report_thumbnail;
+                    image.src = "data:image/jpg;base64," + data.thumbnail;
                     var image = document.getElementById("thumb_report_2");
-                    image.src = "data:image/jpg;base64," + data.report_thumbnail;
+                    image.src = "data:image/jpg;base64," + data.thumbnail;
                 });
 
 
-                if(reports[i].report_title !== ""){
-                    document.getElementById('report_title_id').innerHTML= reports[i].report_title;
-                    document.getElementById('report_title_id_2').innerHTML= reports[i].report_title;
+                if(reports[i].title !== ""){
+                    document.getElementById('report_title_id').innerHTML= reports[i].title;
+                    document.getElementById('report_title_id_2').innerHTML= reports[i].title;
                 }
                 else {
                     document.getElementById('report_title_id').innerHTML = "-";
                     document.getElementById('report_title_id_2').innerHTML = "-";
                 }
 
-                document.getElementById('report_address_id').innerHTML= reports[i].report_address;
-                document.getElementById('report_address_id_2').innerHTML= reports[i].report_address;
+                document.getElementById('report_address_id').innerHTML= reports[i].address;
+                document.getElementById('report_address_id_2').innerHTML= reports[i].address;
 
-                if(reports[i].report_description !== "")
-                    document.getElementById('report_description_id').innerHTML= reports[i].report_description;
+                if(reports[i].description !== "")
+                    document.getElementById('report_description_id').innerHTML= reports[i].description;
                 else
                     document.getElementById('report_description_id').innerHTML= "-";
 
-                document.getElementById('report_state_id').innerHTML= reports[i].report_status;
-                document.getElementById('report_state_id_2').innerHTML= reports[i].report_status;
-                document.getElementById('report_gravity_id').innerHTML= reports[i].report_gravity;
-                document.getElementById('report_gravity_id_2').innerHTML= reports[i].report_gravity;
+                document.getElementById('report_state_id').innerHTML= reports[i].status;
+                document.getElementById('report_state_id_2').innerHTML= reports[i].status;
+                document.getElementById('report_gravity_id').innerHTML= reports[i].gravity;
+                document.getElementById('report_gravity_id_2').innerHTML= reports[i].gravity;
 
-                if(reports[i].report_private === true)
+                if(reports[i].private === true)
                     document.getElementById('report_private_id').innerHTML= "Privado";
                 else
                     document.getElementById('report_private_id').innerHTML= "Público";
 
-                document.getElementById('report_comments_id').innerHTML= reports[i].report_commentsnum;
-                document.getElementById('report_user_id').innerHTML= reports[i].report_username;
-                document.getElementById('report_creationtime_id').innerHTML= reports[i].report_creationtimeformatted;
-                document.getElementById('report_up_id').innerHTML= reports[i].reportvotes_up;
-                document.getElementById('report_down_id').innerHTML= reports[i].reportvotes_down;
+                document.getElementById('report_comments_id').innerHTML= reports[i].comments;
+                document.getElementById('report_user_id').innerHTML= reports[i].username;
+                document.getElementById('report_creationtime_id').innerHTML= reports[i].creationtime;
+                document.getElementById('report_up_id').innerHTML= reports[i].ups;
+                document.getElementById('report_down_id').innerHTML= reports[i].downs;
 
                 loadMoreComments(idReport ,"");
 
@@ -410,19 +432,14 @@ function createWorker(){
     var name = document.getElementById("worker_username").value;
     var email = document.getElementById("worker_email").value;
     var job = document.getElementById("worker_jobs").value;
+    var headers = new Headers();
+    var body = {name:name,email:email,job:job};
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
-    fetch(URL_BASE + '/api/org/registerworker', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        },
-        body: JSON.stringify({
-            worker_name: name,
-            worker_email: email,
-            worker_job: job
-        })
-    }).then(function(response) {
+    fetch(restRequest('/api/org/registerworker', 'POST', headers, JSON.stringify(body))).then(function(response) {
 
             if (response.status === 200) {
                 alert("Trabalhador registado com sucesso.")
@@ -438,13 +455,14 @@ function createWorker(){
 }
 
 function getFirstWorkers(){
-    fetch(URL_BASE + '/api/org/listworkers?cursor=', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+    fetch(restRequest('/api/org/listworkers?cursor=', 'GET', headers, body)).then(function(response) {
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
@@ -476,9 +494,9 @@ function getFirstWorkers(){
                             var cell2 = row.insertCell(1);
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
-                            cell1.innerHTML = data[i].worker_name;
-                            cell2.innerHTML = data[i].Worker;
-                            cell3.innerHTML = data[i].worker_job;
+                            cell1.innerHTML = data[i].name;
+                            cell2.innerHTML = data[i].email;
+                            cell3.innerHTML = data[i].job;
                             cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
 
                         }
@@ -502,13 +520,14 @@ function getFirstWorkers(){
 }
 
 function getNextWorkers(){
-    fetch(URL_BASE + '/api/org/listworkers?cursor=' + cursor_next_workers, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+    fetch(restRequest('/api/org/listworkers?cursor=' + cursor_next_workers, 'GET', headers, body)).then(function(response) {
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
@@ -540,9 +559,9 @@ function getNextWorkers(){
                             var cell2 = row.insertCell(1);
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
-                            cell1.innerHTML = data[i].worker_name;
-                            cell2.innerHTML = data[i].Worker;
-                            cell3.innerHTML = data[i].worker_job;
+                            cell1.innerHTML = data[i].name;
+                            cell2.innerHTML = data[i].email;
+                            cell3.innerHTML = data[i].job;
                             cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
                         }
 
@@ -567,13 +586,14 @@ function getNextWorkers(){
 function getPreWorkers(){
     if(cursor_pre_workers === "") getFirstWorkers();
     else{
-        fetch(URL_BASE + '/api/org/listworkers?cursor=' + cursor_pre_workers, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('token')
-            }
-        }).then(function(response) {
+        var body = "";
+        var headers = new Headers();
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
+
+        fetch(restRequest('/api/org/listworkers?cursor=' + cursor_pre_workers, 'GET', headers, body)).then(function(response) {
                 var table = document.getElementById("user_table");
 
                 if (response.status === 200) {
@@ -605,9 +625,9 @@ function getPreWorkers(){
                                 var cell2 = row.insertCell(1);
                                 var cell3 = row.insertCell(2);
                                 var cell4 = row.insertCell(3);
-                                cell1.innerHTML = data[i].worker_name;
-                                cell2.innerHTML = data[i].Worker;
-                                cell3.innerHTML = data[i].worker_job;
+                                cell1.innerHTML = data[i].name;
+                                cell2.innerHTML = data[i].email;
+                                cell3.innerHTML = data[i].job;
                                 cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
                             }
 
@@ -631,25 +651,25 @@ function getPreWorkers(){
 }
 
 function getProfile(){
-    fetch(URL_BASE + '/api/org/info/' + localStorage.getItem('ignes_org_nif'), {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+    fetch(restRequest('/api/org/info/' + localStorage.getItem('ignes_org_nif'), 'GET', headers, body)).then(function(response) {
 
             if (response.status === 200) {
                 response.json().then(function(data) {
 
                     document.getElementById("organization_name").innerHTML = localStorage.getItem('ignes_org_name');
-                    document.getElementById("organization_nif").innerHTML = data.Org;
-                    document.getElementById("organization_email").innerHTML = data.org_email;
-                    document.getElementById("organization_addresses").innerHTML = data.org_address;
-                    document.getElementById("organization_locality").innerHTML = data.org_locality;
-                    document.getElementById("organization_zip").innerHTML = data.org_zip;
-                    document.getElementById("organization_service").innerHTML = data.org_services;
+                    document.getElementById("organization_nif").innerHTML = data.nif;
+                    document.getElementById("organization_email").innerHTML = data.email;
+                    document.getElementById("organization_addresses").innerHTML = data.address;
+                    document.getElementById("organization_locality").innerHTML = data.locality;
+                    document.getElementById("organization_zip").innerHTML = data.zip;
+                    document.getElementById("organization_service").innerHTML = data.services;
                 });
 
             }else{
@@ -667,13 +687,15 @@ function getProfile(){
 
 function deleteWorker (row){
     var email = document.getElementById("user_table").rows[row].cells[1].innerHTML;
-    fetch(URL_BASE + '/api/org/deleteworker/' + email, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+    fetch(restRequest('/api/org/deleteworker/' + email, 'DELETE', headers, body)).then(function(response) {
 
             if (response.status === 200 || response.status === 204) {
                 alert("Trabalhador apagado com sucesso.")
@@ -691,13 +713,13 @@ function deleteWorker (row){
 var loadMore = function (cursor) {
 
     if(cursor!==null){
-        fetch(URL_BASE + '/api/org/alltasks?cursor=' + cursor, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('token')
-            }
-        }).then(function(response) {
+        var body = "";
+        var headers = new Headers();
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
+        fetch(restRequest('/api/org/alltasks?cursor=' + cursor, 'GET', headers, body)).then(function(response) {
 
                 if (response.status === 200 || response.status === 204) {
                     feedCursor = response.headers.get("Cursor");
@@ -713,27 +735,27 @@ var loadMore = function (cursor) {
                                 '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
                                 '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
                                 '</div>' +
-                                '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_status+'</p></div>'+
+                                '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].status+'</p></div>'+
                                 '</div>' +
                                 ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">'+
-                                '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].report_address + '</p>' +'</div>' +'</div><hr>'+
+                                '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].address + '</p>' +'</div>' +'</div><hr>'+
                                 '<div class="row"><div class="col-lg-6 text-center">' +'<img style="height:10rem;"id=' +i + '>' +
-                                '</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p class="text-center" style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].report_description+' </p>';
+                                '</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p class="text-center" style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].description+' </p>';
 
-                            if(data[i].task_indications === undefined)
+                            if(data[i].indications === undefined || data[i].indications === "") {
 
-                                contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"></p></div></div><hr style="margin-bottom: 0; margin-top:0">'+
-                                    '<div class="row"><div class="col-lg-6 text-left">'+'<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' +data[i].task_worker + '</p></div>'+
-                                    '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">'+ data[i].report_creationtimeformatted+' </p></div></div>';
-                            else
-                                contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].task_indications+' </p></div></div><hr style="margin-bottom: 0; margin-top:0">'+
-                                    '<div class="row"><div class="col-lg-6 text-left">'+'<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' +data[i].task_worker + '</p></div>'+
-                                    '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">'+ data[i].report_creationtimeformatted+' </p></div></div>';
-
+                                contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"></p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
+                                    '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].worker + '</p></div>' +
+                                    '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
+                            }else {
+                                contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].indications + ' </p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
+                                    '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].worker + '</p></div>' +
+                                    '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
+                            }
                             $(".inner").append(contentString);
 
                             var image = document.getElementById(i);
-                            image.src = "data:image/jpg;base64," + data[i].report_thumbnail;
+                            image.src = "data:image/jpg;base64," + data[i].thumbnail;
 
                         }
                     });
@@ -759,13 +781,13 @@ $('.on').scroll(function () {
 loadMore("");
 
 var loadMoreComments = function(idReport,cursor){
-    fetch(URL_BASE + "/api/report/comment/get/" + idReport + "?cursor=" + cursor, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        }
-    }).then(function(response) {
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+    fetch(restRequest("/api/report/comment/get/" + idReport + "?cursor=" + cursor, 'GET', headers, body)).then(function(response) {
 
             if (response.status === 200 || response.status === 204) {
                 commentsCursor = response.headers.get("Cursor");
@@ -773,7 +795,8 @@ var loadMoreComments = function(idReport,cursor){
                     console.log(data);
                     var i;
                     for(i = 0; i<data.length; i++){
-                        $(".inner_comment").append("<p>" + data[i].ReportComment + "</p>");
+                        $(".inner_comment").append("<p style='font-family: 'Quicksand Bold'; color:#AD363B; margin-right:1rem; font-size:15px;'>" +
+                            data[i].username + "</p><p style='font-family: 'Quicksand'; font-size:15px;'>" + data[i].text + "</p>");
                     }
 
                 });
@@ -797,13 +820,13 @@ $('.comments').scroll(function () {
 
 function getAvailableWorker(cursor){
     if(cursor !== null) {
-        fetch(URL_BASE + '/api/org/listworkers?cursor=' + cursor ,{
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('token')
-            }
-        }).then(function(response) {
+        var body = "";
+        var headers = new Headers();
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
+        fetch(restRequest('/api/org/listworkers?cursor=' + cursor, 'GET', headers, body)).then(function(response) {
 
                 if (response.status === 200) {
                     var newCursor = response.headers.get("Cursor");
@@ -813,8 +836,16 @@ function getAvailableWorker(cursor){
                             var i;
                             console.log(data.length);
                             for(i = 0; i < data.length; i++){
-                                var email = data[i].Worker;
-                                $(".dropdown-m").append("<option class='pointer-finger' style='font-family:Quicksand border: 1px rgba(144,148,156,0.51) solid' data-value=" + JSON.stringify(data[i]) + ">" + email + "</option>");
+
+                                var email = data[i].email;
+
+
+                                $(".dropdown-m").append("<option class='pointer-finger'" +
+                                    "style='font-family:Quicksand border: 1px rgba(144,148,156,0.51) solid' value=" + email + ">" + email + "</option>");
+                                //console.log($('email_select').child().last().val());
+
+                                emailsarr.push(email);
+                                workersarr.push(data[i]);
                             }
 
                         }else{
@@ -839,18 +870,18 @@ function getAvailableWorker(cursor){
 }
 
 function giveTask(){
-    fetch(URL_BASE + "/api/org/givetask", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-        },
-        body: JSON.stringify({
-            email: $("#email_select").val().Worker,
-            report: idReportCurr,
-            indications: "Por favor, tenha cuidado com a lenha."
-        })
-    }).then(function() {
+    console.log($("#input_ind").val());
+    var body = {
+        email: JSON.parse($("#email_select").val()).email,
+        report: idReportCurr,
+        indications: $("#input_ind").val()
+    };
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+    fetch(restRequest('/api/org/givetask', 'POST', headers, JSON.stringify(body))).then(function() {
         alert("Tarefa atribuida com sucesso");
     }).catch(function(err) {
         console.log('Fetch Error', err);
