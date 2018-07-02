@@ -5,13 +5,11 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -48,6 +46,7 @@ import com.wokesolutions.ignes.data.UserOptionalData;
 import com.wokesolutions.ignes.exceptions.NotSameNorAdminException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
+import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Storage;
@@ -63,9 +62,7 @@ public class Profile {
 	private static final int BATCH_SIZE = 20;
 
 	public static final String ACTIVATED = "activated";
-
-	private static final String USER_REPORTS = "user_reports";
-	private static final String PROFILEPIC = "profilepic";
+	public static final String NOT_ACTIVATED = "notactivated";
 
 	@POST
 	@Path("/update/{username}")
@@ -75,7 +72,8 @@ public class Profile {
 			@Context HttpServletRequest request) {
 		if(!data.isValid() || username == null || username.equals("")) {
 			LOG.info(Message.PROFILE_UPDATE_DATA_INVALID);
-			return Response.status(Status.BAD_REQUEST).entity(Message.PROFILE_UPDATE_DATA_INVALID).build();
+			return Response.status(Status.BAD_REQUEST)
+					.entity(Message.PROFILE_UPDATE_DATA_INVALID).build();
 		}
 
 		int retries = 5;
@@ -127,8 +125,8 @@ public class Profile {
 
 			if(useroptional == null) {
 				txn.rollback();
-				return Response.status(Status.EXPECTATION_FAILED)
-						.entity(Message.NO_OPTIONAL_USER_ENTITY_FOUND).build();
+				LOG.info(Message.NO_OPTIONAL_USER_ENTITY_FOUND);
+				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
 			Entity useroptionallog = new Entity(DSUtils.USEROPTIONALLOGS, altererKey);
@@ -157,59 +155,68 @@ public class Profile {
 	}
 
 	private void fillOptional(String username, UserOptionalData data, Entity useroptional,Entity useroptionallog) {
-		if(data.useroptional_address != null && !data.useroptional_address.equals("")) {
+		if(data.address != null && !data.address.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_ADDRESS))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDADDRESS, useroptional.getProperty(DSUtils.USEROPTIONAL_ADDRESS));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWADDRESS, data.useroptional_address);
-			useroptional.setProperty(DSUtils.USEROPTIONAL_ADDRESS, data.useroptional_address);
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDADDRESS,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_ADDRESS));
+			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWADDRESS, data.address);
+			useroptional.setProperty(DSUtils.USEROPTIONAL_ADDRESS, data.address);
 		}
-		if(data.useroptional_birth != null && !data.useroptional_birth.equals("")) {
+		if(data.birth != null && !data.birth.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_BIRTH))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDBIRTH, useroptional.getProperty(DSUtils.USEROPTIONAL_BIRTH));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWBIRTH, data.useroptional_birth);
-			useroptional.setProperty(DSUtils.USEROPTIONAL_BIRTH, data.useroptional_birth);
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDBIRTH,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_BIRTH));
+			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWBIRTH, data.birth);
+			useroptional.setProperty(DSUtils.USEROPTIONAL_BIRTH, data.birth);
 		}
-		if(data.useroptional_gender != null && !data.useroptional_gender.equals("")) {
+		if(data.gender != null && !data.gender.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_GENDER))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDGENDER, useroptional.getProperty(DSUtils.USEROPTIONAL_GENDER));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWGENDER, data.useroptional_gender);
-			useroptional.setProperty(DSUtils.USEROPTIONAL_GENDER, data.useroptional_gender);
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDGENDER,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_GENDER));
+			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWGENDER, data.gender);
+			useroptional.setProperty(DSUtils.USEROPTIONAL_GENDER, data.gender);
 		}
-		if(data.useroptional_job != null && !data.useroptional_job.equals("")) {
+		if(data.job != null && !data.job.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_JOB))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDJOB, useroptional.getProperty(DSUtils.USEROPTIONAL_ADDRESS));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWJOB, data.useroptional_job);
-			useroptional.setProperty(DSUtils.USEROPTIONAL_JOB, data.useroptional_job);
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDJOB,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_ADDRESS));
+			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWJOB, data.job);
+			useroptional.setProperty(DSUtils.USEROPTIONAL_JOB, data.job);
 		}
-		if(data.useroptional_locality != null && !data.useroptional_locality.equals("")) {
+		if(data.locality != null && !data.locality.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_LOCALITY))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDLOCALITY, useroptional.getProperty(DSUtils.USEROPTIONAL_LOCALITY));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWLOCALITY, data.useroptional_locality);
-			useroptional.setProperty(DSUtils.USEROPTIONAL_LOCALITY, data.useroptional_locality);
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDLOCALITY,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_LOCALITY));
+			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWLOCALITY, data.locality);
+			useroptional.setProperty(DSUtils.USEROPTIONAL_LOCALITY, data.locality);
 		}
-		if(data.useroptional_name != null && !data.useroptional_name.equals("")) {
+		if(data.name != null && !data.name.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_NAME))
-				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDNAME, useroptional.getProperty(DSUtils.USEROPTIONAL_NAME));
-			useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_NEWNAME, data.useroptional_name);
-			useroptional.setUnindexedProperty(DSUtils.USEROPTIONAL_NAME, data.useroptional_name);
+				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDNAME,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_NAME));
+			useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_NEWNAME, data.name);
+			useroptional.setUnindexedProperty(DSUtils.USEROPTIONAL_NAME, data.name);
 		}
-		if(data.useroptional_phone != null && !data.useroptional_phone.equals("")) {
+		if(data.phone != null && !data.phone.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_PHONE))
-				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDPHONE, useroptional.getProperty(DSUtils.USEROPTIONAL_PHONE));
-			useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_NEWPHONE, data.useroptional_phone);
-			useroptional.setUnindexedProperty(DSUtils.USEROPTIONAL_PHONE, data.useroptional_phone);
+				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDPHONE,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_PHONE));
+			useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_NEWPHONE, data.phone);
+			useroptional.setUnindexedProperty(DSUtils.USEROPTIONAL_PHONE, data.phone);
 		}
-		if(data.useroptional_skills != null && !data.useroptional_skills.equals("")) {
+		if(data.skills != null && !data.skills.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_SKILLS))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDSKILLS, useroptional.getProperty(DSUtils.USEROPTIONAL_SKILLS));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWSKILLS, data.useroptional_skills);
-			useroptional.setProperty(DSUtils.USEROPTIONAL_SKILLS, data.useroptional_skills);
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDSKILLS,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_SKILLS));
+			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWSKILLS, data.skills);
+			useroptional.setProperty(DSUtils.USEROPTIONAL_SKILLS, data.skills);
 		}
-		if(data.useroptional_zip != null && !data.useroptional_zip.equals("")) {
+		if(data.zip != null && !data.zip.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_ZIP))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDZIP, useroptional.getProperty(DSUtils.USEROPTIONAL_ZIP));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWZIP, data.useroptional_zip);
-			useroptional.setProperty(DSUtils.USEROPTIONAL_ZIP, data.useroptional_zip);
+				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDZIP,
+						useroptional.getProperty(DSUtils.USEROPTIONAL_ZIP));
+			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWZIP, data.zip);
+			useroptional.setProperty(DSUtils.USEROPTIONAL_ZIP, data.zip);
 		}
 	}
 
@@ -268,15 +275,14 @@ public class Profile {
 			JSONObject voteJson = new JSONObject();
 			Map<String, Object> props = vote.getProperties();
 
-			voteJson.put(DSUtils.USERVOTE_TYPE, props.get(DSUtils.USERVOTE_TYPE));
-			//voteJson.put(DSUtils.USERVOTE_USER, props.get(DSUtils.USERVOTE_USER));
+			voteJson.put(Prop.VOTE, props.get(DSUtils.USERVOTE_TYPE));
 
 			if(props.containsKey(DSUtils.USERVOTE_REPORT))
-				voteJson.put(DSUtils.USERVOTE_REPORT, props.get(DSUtils.USERVOTE_REPORT));
+				voteJson.put(Prop.REPORT, props.get(DSUtils.USERVOTE_REPORT));
 			else if(props.containsKey(DSUtils.USERVOTE_EVENT))
-				voteJson.put(DSUtils.USERVOTE_EVENT, props.get(DSUtils.USERVOTE_EVENT));
+				voteJson.put(Prop.EVENT, props.get(DSUtils.USERVOTE_EVENT));
 			else if(props.containsKey(DSUtils.USERVOTE_COMMENT))
-				voteJson.put(DSUtils.USERVOTE_COMMENT, props.get(DSUtils.USERVOTE_COMMENT));
+				voteJson.put(Prop.COMMENT, props.get(DSUtils.USERVOTE_COMMENT));
 			else {
 				LOG.info(Message.UNEXPECTED_ERROR + " " + vote.getKey().getId());
 				continue;
@@ -323,13 +329,8 @@ public class Profile {
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
-		LOG.info("code - " + code);
-
 		JSONObject codejson = new JSONObject(code);
 		code = codejson.getString("code");
-
-		LOG.info("new code - " + code);
-
 		Key userkey = KeyFactory.createKey(DSUtils.USER, username);
 		Entity user;
 		try {
@@ -339,11 +340,11 @@ public class Profile {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
-		boolean bool = code.equals(user.getProperty(DSUtils.USER_CODE));
+		boolean bool = code.equals(user.getProperty(DSUtils.USER_ACTIVATION));
 		if(!bool)
 			return Response.status(Status.EXPECTATION_FAILED).build();
 
-		user.setProperty(DSUtils.USER_CODE, ACTIVATED);
+		user.setProperty(DSUtils.USER_ACTIVATION, ACTIVATED);
 
 		datastore.put(user);
 
@@ -388,9 +389,9 @@ public class Profile {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
-		boolean yes =  entUser.getProperty(DSUtils.USER_CODE).toString().equals(ACTIVATED);
+		boolean yes = entUser.getProperty(DSUtils.USER_ACTIVATION).toString().equals(ACTIVATED);
 
-		return Response.ok().entity(yes).build();
+		return Response.ok(yes).build();
 	}
 
 	@GET
@@ -399,13 +400,6 @@ public class Profile {
 	public Response getUserProfile(@Context HttpServletRequest request,
 			@PathParam(ParamName.USERNAME) String username) {
 		int retries = 5;
-
-		try {
-			sameUserOrAdmin(request, username);
-		} catch(NotSameNorAdminException e) {
-			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
-			return Response.status(Status.FORBIDDEN).build();
-		}
 
 		while(true) {
 			try {
@@ -433,11 +427,9 @@ public class Profile {
 
 		JSONObject object = new JSONObject();
 
-		object.put(DSUtils.USER, username);
-
-		for(Entry<String, Object> prop : user.getProperties().entrySet())
-			if(!prop.getKey().equals(DSUtils.USER_PASSWORD))
-				object.put(prop.getKey(), prop.getValue().toString());
+		object.put(Prop.USERNAME, username);
+		object.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
+		object.put(Prop.LEVEL, user.getProperty(DSUtils.USER_LEVEL));
 
 		Query query = new Query(DSUtils.USEROPTIONAL).setAncestor(user.getKey());
 
@@ -449,8 +441,32 @@ public class Profile {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
-		for(Entry<String, Object> prop : optionals.getProperties().entrySet())
-			object.put(prop.getKey(), prop.getValue().toString());
+		if(optionals.hasProperty(DSUtils.USEROPTIONAL_ADDRESS))
+			object.put(Prop.ADDRESS, optionals.getProperty(DSUtils.USEROPTIONAL_ADDRESS));
+
+		if(optionals.hasProperty(DSUtils.USEROPTIONAL_ZIP))
+			object.put(Prop.ZIP, optionals.getProperty(DSUtils.USEROPTIONAL_ZIP));
+
+		if(optionals.hasProperty(DSUtils.USEROPTIONAL_JOB))
+			object.put(Prop.JOB, optionals.getProperty(DSUtils.USEROPTIONAL_JOB));
+
+		if(optionals.hasProperty(DSUtils.USEROPTIONAL_SKILLS))
+			object.put(Prop.SKILLS, optionals.getProperty(DSUtils.USEROPTIONAL_SKILLS));
+
+		if(optionals.hasProperty(DSUtils.USEROPTIONAL_GENDER))
+			object.put(Prop.GENDER, optionals.getProperty(DSUtils.USEROPTIONAL_GENDER));
+
+		if(optionals.hasProperty(DSUtils.USEROPTIONAL_NAME))
+			object.put(Prop.NAME, optionals.getProperty(DSUtils.USEROPTIONAL_NAME));
+
+		if(optionals.hasProperty(DSUtils.USEROPTIONAL_LOCALITY))
+			object.put(Prop.LOCALITY, optionals.getProperty(DSUtils.USEROPTIONAL_LOCALITY));
+
+		if(optionals.hasProperty(DSUtils.USEROPTIONAL_BIRTH))
+			object.put(Prop.BIRTH, optionals.getProperty(DSUtils.USEROPTIONAL_BIRTH));
+
+		if(optionals.hasProperty(DSUtils.USEROPTIONAL_PHONE))
+			object.put(Prop.PHONE, optionals.getProperty(DSUtils.USEROPTIONAL_PHONE));
 
 		Query query2 = new Query(DSUtils.USERPOINTS).setAncestor(user.getKey());
 		Entity points;
@@ -461,23 +477,23 @@ public class Profile {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
-		object.put(DSUtils.USERPOINTS_POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
+		object.put(Prop.POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
 
 		Query query3 = new Query(DSUtils.REPORT);
-		Filter filter = new Query.FilterPredicate(DSUtils.REPORT_USERNAME,
-				FilterOperator.EQUAL, username);
+		Filter filter = new Query.FilterPredicate(DSUtils.REPORT_USER,
+				FilterOperator.EQUAL, user.getKey());
 		query3.setFilter(filter);
 
 		int reports = datastore.prepare(query3).asList(FetchOptions.Builder.withDefaults()).size();
 
-		object.put(USER_REPORTS, reports);
-		
-		Object pic = optionals.getProperty(DSUtils.USEROPTIONAL_PICTNPATH);
-		
+		object.put(Prop.REPORTS, reports);
+
+		Object pic = optionals.getProperty(DSUtils.USEROPTIONAL_PICPATH);
+
 		if(pic != null) {
 			String picpath = pic.toString();
 			String picb64 = Storage.getImage(picpath);
-			object.put(DSUtils.USER_PROFPICTN, picb64);
+			object.put(Prop.PROFPIC, picb64);
 		}
 
 		return Response.ok(object.toString()).build();
@@ -583,8 +599,8 @@ public class Profile {
 	private Response getAllReportsRetry(String username, String cursor) {
 		Query reportQuery = new Query(DSUtils.REPORT);
 
-		Filter userFilter = new Query.FilterPredicate(DSUtils.REPORT_USERNAME,
-				FilterOperator.EQUAL, username);
+		Filter userFilter = new Query.FilterPredicate(DSUtils.REPORT_USER,
+				FilterOperator.EQUAL, KeyFactory.createKey(DSUtils.USER, username));
 
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 
@@ -603,26 +619,45 @@ public class Profile {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LOCALITY, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_THUMBNAILPATH, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, Boolean.class));
 
-		QueryResultList<Entity> reports = datastore.prepare(reportQuery).asQueryResultList(fetchOptions);
+		QueryResultList<Entity> reports = datastore.prepare(reportQuery)
+				.asQueryResultList(fetchOptions);
 
 		if(reports.isEmpty()) {
 			LOG.info(Message.NO_REPORTS_FOUND);
-			return Response.status(Status.NOT_FOUND).build();
+			return Response.status(Status.NO_CONTENT).build();
 		}
 
 		JSONArray array = new JSONArray();
 
-		try {
-			array = Report.buildJsonReports(reports, false);
-		} catch(InternalServerErrorException e) {
-			LOG.info(Message.REPORT_NOT_FOUND);
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		for(Entity report : reports) {
+			JSONObject jsonReport = new JSONObject();
+
+			jsonReport.put(Prop.REPORT, report.getKey().getName());
+			jsonReport.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
+			jsonReport.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+			jsonReport.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
+			jsonReport.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
+			jsonReport.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+			jsonReport.put(Prop.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
+			jsonReport.put(Prop.DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION));
+			jsonReport.put(Prop.CREATIONTIME,
+					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
+			jsonReport.put(Prop.ISPRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
+
+			String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
+
+			jsonReport.put(Prop.THUMBNAIL, tn);
+
+			Report.appendVotesAndComments(jsonReport, report);
+
+			array.put(jsonReport);
 		}
 
 		cursor = reports.getCursor().toWebSafeString();
-		
+
 		if(array.length() < BATCH_SIZE)
 			return Response.ok(array.toString()).build();
 
@@ -656,6 +691,9 @@ public class Profile {
 		folders.add(Storage.IMG_FOLDER);
 		folders.add(Storage.PROFILE_FOLDER);
 		StoragePath pathImg = new StoragePath(folders, username);
+
+		LOG.info(Message.ATTEMPT_UPDATE_PROFILE);
+		
 		if(!Storage.saveImage(data.pic, Storage.BUCKET, pathImg,
 				data.width, data.height, data.orientation, false))
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
@@ -666,8 +704,11 @@ public class Profile {
 
 		try {
 			Entity optional = datastore.prepare(query).asSingleEntity();
-			optional.setProperty(DSUtils.USEROPTIONAL_PICPATH, pathImg.makePath());
+			LOG.info(optional.toString());
 			
+			optional.setProperty(DSUtils.USEROPTIONAL_PICPATH, pathImg.makePath());
+			LOG.info(optional.toString());
+
 			datastore.put(optional);
 		} catch(TooManyResultsException e) {
 			LOG.info(Message.UNEXPECTED_ERROR);
@@ -676,7 +717,7 @@ public class Profile {
 
 		return Response.ok().build();
 	}
-	
+
 	@GET
 	@Path("/getprofilepic/{username}")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
@@ -695,31 +736,31 @@ public class Profile {
 			}
 		}
 	}
-	
+
 	public Response getProfPicRetry(String username) {
 		String img;
 		String path;
 		Entity optional;
-		
+
 		try {
 			optional = datastore.get(KeyFactory.createKey(DSUtils.USEROPTIONAL_PICPATH, username));
 		} catch(EntityNotFoundException e) {
 			LOG.info(Message.USER_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
-		
+
 		path = optional.getProperty(DSUtils.USEROPTIONAL_PICPATH).toString();
-		
+
 		if(path == null) {
 			LOG.info(Message.USER_HAS_NO_IMAGE);
 			return Response.status(Status.NO_CONTENT).build();
 		}
-		
+
 		img = Storage.getImage(path);
-		
+
 		JSONObject obj = new JSONObject();
-		obj.put(PROFILEPIC, img);
-		
+		obj.put(Prop.PROFPIC, img);
+
 		return Response.ok(obj.toString()).build();
 	}
 }

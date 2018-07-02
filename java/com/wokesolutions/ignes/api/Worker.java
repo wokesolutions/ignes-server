@@ -43,7 +43,7 @@ import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
-import com.wokesolutions.ignes.util.Storage;
+import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.UserLevel;
 
 @Path("/worker")
@@ -59,12 +59,15 @@ public class Worker {
 
 	@POST
 	@Path("/wipreport/{report}")
-	public Response wipReport(@PathParam(ParamName.REPORT) String report) {
+	public Response wipReport(@PathParam(ParamName.REPORT) String report,
+			@Context HttpServletRequest request) {
 		int retries = 5;
+		
+		String worker = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		while(true) {
 			try {
-				return wipReportRetry(report);
+				return wipReportRetry(report, worker);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Message.TOO_MANY_RETRIES);
@@ -75,7 +78,7 @@ public class Worker {
 		}
 	}
 
-	private Response wipReportRetry(String report) {
+	private Response wipReportRetry(String report, String worker) {
 		Entity reportE ;
 
 		try {
@@ -85,21 +88,33 @@ public class Worker {
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
+		Key userKey = KeyFactory.createKey(DSUtils.USER, worker);
+		Query query = new Query(DSUtils.WORKER).setAncestor(userKey);
+		
+		Entity workerE;
+		try {
+			workerE = datastore.prepare(query).asSingleEntity();
+		} catch(TooManyResultsException e) {
+			LOG.info(Message.UNEXPECTED_ERROR);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+		
 		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
 		try {
-			reportE.setProperty(DSUtils.REPORT_STATUS, WIP);
-
-			Entity reportStatusLog = new Entity(DSUtils.REPORTSTATUSLOG);
-			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_NEWSTATUS, null);
-			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_OLDSTATUS, null);
+			Entity reportStatusLog = new Entity(DSUtils.REPORTSTATUSLOG, reportE.getKey());
+			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_NEWSTATUS, WIP);
+			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_OLDSTATUS,
+					reportE.getProperty(DSUtils.REPORT_STATUS));
 			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_TIME, new Date());
-			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_REPORT, null);
-			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_USER, null);
+			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_USER, workerE.getParent());
+
+			reportE.setProperty(DSUtils.REPORT_STATUS, WIP);
 
 			List<Entity> list = Arrays.asList(reportE, reportStatusLog);
 
 			datastore.put(txn, list);
+			LOG.info(Message.REPORT_WIPED);
 			txn.commit();
 			return Response.ok().build();
 		} finally {
@@ -165,26 +180,27 @@ public class Worker {
 
 			Entity report = reports.get(task.getParent());
 
-			jsonReport.put(DSUtils.REPORT, report.getKey().getName());
-			jsonReport.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE));
-			jsonReport.put(DSUtils.REPORT_ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
-			jsonReport.put(DSUtils.REPORT_USERNAME, report.getProperty(DSUtils.REPORT_USERNAME));
-			jsonReport.put(DSUtils.REPORT_LAT, report.getProperty(DSUtils.REPORT_LAT));
-			jsonReport.put(DSUtils.REPORT_LNG, report.getProperty(DSUtils.REPORT_LNG));
-			jsonReport.put(DSUtils.REPORT_GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
-			jsonReport.put(DSUtils.REPORT_STATUS, report.getProperty(DSUtils.REPORT_STATUS));
-			jsonReport.put(DSUtils.REPORT_CREATIONTIMEFORMATTED,
+			jsonReport.put(Prop.TASK, report.getKey().getName());
+			jsonReport.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
+			jsonReport.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+			jsonReport.put(Prop.USERNAME,
+					((Key) report.getProperty(DSUtils.REPORT_USER)).getName());
+			jsonReport.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
+			jsonReport.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
+			jsonReport.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+			jsonReport.put(Prop.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
+			jsonReport.put(Prop.DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION));
+			jsonReport.put(Prop.CREATIONTIME,
 					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
-			jsonReport.put(DSUtils.REPORT_PRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
+			jsonReport.put(Prop.CREATIONTIME, report.getProperty(DSUtils.REPORT_PRIVATE));
 
-			jsonReport.put(DSUtils.TASK_INDICATIONS, task.getProperty(DSUtils.TASK_INDICATIONS));
-			jsonReport.put(DSUtils.TASK_TIME, task.getProperty(DSUtils.TASK_TIME));
+			jsonReport.put(Prop.INDICATIONS, task.getProperty(DSUtils.TASK_INDICATIONS));
+			jsonReport.put(Prop.TASK_TIME, task.getProperty(DSUtils.TASK_TIMEFORMATTED));
 
 			Entity userKey;
 
 			try {
-				userKey = datastore.get(KeyFactory.createKey(DSUtils.USER,
-						report.getProperty(DSUtils.REPORT_USERNAME).toString()));
+				userKey = datastore.get(((Key) report.getProperty(DSUtils.REPORT_USER)));
 			} catch (EntityNotFoundException e) {
 				LOG.info(Message.UNEXPECTED_ERROR);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -201,12 +217,9 @@ public class Worker {
 			}
 
 			if(optional.hasProperty(DSUtils.USEROPTIONAL_PHONE))
-				jsonReport.put(DSUtils.USEROPTIONAL_PHONE,
+				jsonReport.put(Prop.PHONE,
 						optional.getProperty(DSUtils.USEROPTIONAL_PHONE));
-
-			String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
-			jsonReport.put(DSUtils.REPORT_THUMBNAIL, tn);
-
+			
 			array.put(jsonReport);
 		}
 

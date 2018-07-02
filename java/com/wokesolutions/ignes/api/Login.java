@@ -17,27 +17,28 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
+import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.Filter;
+import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.LoginData;
 import com.wokesolutions.ignes.util.Message;
-import com.wokesolutions.ignes.util.Secrets;
 import com.wokesolutions.ignes.util.UserLevel;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
+import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.JWTUtils;
 
 @Path("/login")
@@ -53,30 +54,23 @@ public class Login {
 	@POST
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
-	public Response loginUser(LoginData data,
+	public Response login(LoginData data,
 			@Context HttpServletRequest request,
 			@Context HttpHeaders headers) {
 		if(!data.isValid())
 			return Response.status(Status.FORBIDDEN).entity(Message.LOGIN_DATA_INVALID).build();
 
-		boolean isOrg = false;
-
 		try {
 			datastore.get(KeyFactory.createKey(DSUtils.USER, data.username));
 		} catch (EntityNotFoundException e1) {
-			try {
-				datastore.get(KeyFactory.createKey(DSUtils.ORG, data.username));
-				isOrg = true;
-			} catch (EntityNotFoundException e) {
-				LOG.info(Message.USER_NOT_FOUND);
-				return Response.status(Status.FORBIDDEN).build();
-			}
+			LOG.info(Message.USER_NOT_FOUND);
+			return Response.status(Status.FORBIDDEN).build();
 		}
 
 		int retries = 5;
 		while(true) {
 			try {
-				return loginUserRetry(data, request, isOrg);
+				return loginRetry(data, request);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Message.TOO_MANY_RETRIES);
@@ -89,256 +83,188 @@ public class Login {
 	}
 
 
-	private Response loginUserRetry(LoginData data, HttpServletRequest request,
-			boolean isOrg) { //TODO organize code
+	private Response loginRetry(LoginData data, final HttpServletRequest request) {
 		LOG.info(Message.ATTEMPT_LOGIN + data.username);
 
 		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
-		if(!isOrg) {
-			Key userKey = KeyFactory.createKey(DSUtils.USER, data.username);
+		final Key userKey = KeyFactory.createKey(DSUtils.USER, data.username);
+		try {
+			Entity user;
 			try {
-				Entity user = datastore.get(userKey);
-
-				// Obtain the user login statistics
-				Query statsQuery = new Query(DSUtils.USERSTATS).setAncestor(userKey);
-
-				Entity result;
-				try {
-					result = datastore.prepare(statsQuery).asSingleEntity();
-				} catch(TooManyResultsException e2) {
-					LOG.info(Message.UNEXPECTED_ERROR);
-					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-				}
-
-				Entity ustats = null;
-				if(result == null) {
-					ustats = new Entity(DSUtils.USERSTATS, user.getKey());
-					ustats.setProperty(DSUtils.USERSTATS_LOGINS, 0L);
-					ustats.setProperty(DSUtils.USERSTATS_LOGINSFAILED, 0L);
-					ustats.setProperty(DSUtils.USERSTATS_LOGOUTS, 0L);
-				} else {
-					ustats = result;
-				}
-
-				Date date = new Date();
-
-				String hashedPWD = (String) user.getProperty(DSUtils.USER_PASSWORD);
-				if (hashedPWD.equals(DigestUtils.sha512Hex(data.password))) {
-
-					// Construct the logs
-					Entity log = new Entity(DSUtils.USERLOG, user.getKey());
-
-					log.setProperty(DSUtils.USERLOG_TYPE, IN);
-					log.setProperty(DSUtils.USERLOG_IP, request.getRemoteAddr());
-					log.setProperty(DSUtils.USERLOG_HOST, request.getRemoteHost());
-					log.setProperty(DSUtils.USERLOG_LATLON, request.getHeader("X-AppEngine-CityLatLong"));
-					log.setProperty(DSUtils.USERLOG_CITY, request.getHeader("X-AppEngine-City"));
-					log.setProperty(DSUtils.USERLOG_COUNTRY, request.getHeader("X-AppEngine-Country"));
-					log.setProperty(DSUtils.USERLOG_TIME, date);
-
-					// Get the user statistics and updates it
-					ustats.setProperty(DSUtils.USERSTATS_LOGINS,
-							1L + (long) ustats.getProperty(DSUtils.USERSTATS_LOGINS));
-					ustats.setProperty(DSUtils.USERSTATS_LASTIN, date);
-
-					// Return token		
-					try {
-						String token = JWTUtils.createJWT(data.username,
-								user.getProperty(DSUtils.USER_LEVEL).toString(), date);
-
-						Entity newToken = new Entity(DSUtils.TOKEN, userKey);
-
-						newToken.setProperty(DSUtils.TOKEN_STRING, token);
-						newToken.setProperty(DSUtils.TOKEN_DATE, date);
-						newToken.setProperty(DSUtils.TOKEN_IP, request.getRemoteAddr());
-
-						LOG.info(data.username + Message.LOGGED_IN);
-						// Batch operation
-						List<Entity> logs = Arrays.asList(log, ustats, newToken);
-						datastore.put(txn, logs);
-						txn.commit();
-
-						ResponseBuilder response;
-						
-						String level = user.getProperty(DSUtils.USER_LEVEL).toString();
-						
-						response = Response.ok()
-								.header(CustomHeader.AUTHORIZATION, token)
-								.header(CustomHeader.LEVEL, level);
-						
-						if(level.equals(UserLevel.WORKER)) {
-							Query query = new Query(DSUtils.WORKER).setAncestor(userKey);
-							Entity orgE;
-
-							try {
-								String org = datastore.prepare(query).asSingleEntity()
-										.getProperty(DSUtils.WORKER_ORG).toString();
-
-								try {
-									orgE = datastore.get(KeyFactory.createKey(DSUtils.ORG, org));
-								} catch(EntityNotFoundException e3) {
-									LOG.info(Message.UNEXPECTED_ERROR);
-									return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-								}
-							} catch(TooManyResultsException e4) {
-								LOG.info(Message.UNEXPECTED_ERROR);
-								return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-							}
-
-							response.header(CustomHeader.ORG, orgE.getProperty(DSUtils.ORG_NAME).toString());
-							return response.build();
-						}
-						
-						LOG.info(response.build().getHeaders().toString());
-						
-						String activated = null;
-						if(!user.getProperty(DSUtils.USER_LEVEL).toString().equals(UserLevel.WORKER) &&
-								!user.getProperty(DSUtils.USER_LEVEL).toString().equals(UserLevel.ADMIN)) {
-							boolean act = user.getProperty(DSUtils.USER_CODE).equals(Profile.ACTIVATED);
-
-							if(act)
-								activated = CustomHeader.TRUE;
-							else
-								activated = CustomHeader.FALSE;
-						}
-
-						if(activated != null)
-							response.header(CustomHeader.ACTIVATED, activated);
-
-						return response.build();
-					} catch (UnsupportedEncodingException e){
-						LOG.warning(e.getMessage());
-						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-					} catch (JWTCreationException e){
-						LOG.warning(e.getMessage());
-						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-					}		
-				} else {
-					// Incorrect password
-					LOG.warning(Message.WRONG_PASSWORD + data.username);
-					ustats.setProperty(DSUtils.USERSTATS_LOGINSFAILED,
-							1L + (long) ustats.getProperty(DSUtils.USERSTATS_LOGINSFAILED));
-					datastore.put(txn,ustats);				
-					txn.commit();
-					return Response.status(Status.FORBIDDEN).build();				
-				}
+				user = datastore.get(userKey);
 			} catch (EntityNotFoundException e) {
-				// Username does not exist
 				LOG.warning(Message.FAILED_LOGIN + data.username);
 				txn.rollback();
 				return Response.status(Status.FORBIDDEN).build();
-			} finally {
-				if (txn.isActive()) {
-					txn.rollback();
-					LOG.info(Message.TXN_ACTIVE);
-					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-				}
 			}
-		} else {
-			Key orgKey = KeyFactory.createKey(DSUtils.ORG, data.username);
-			try {
-				Entity org = datastore.get(orgKey);
 
-				if(org.getProperty(DSUtils.ORG_CONFIRMED).toString().equals(CustomHeader.FALSE)) {
+			String level = user.getProperty(DSUtils.USER_LEVEL).toString();
+
+			if(level.equals(UserLevel.ORG)) {
+				String activation = user.getProperty(DSUtils.USER_ACTIVATION).toString();
+				if(!activation.equals(Profile.ACTIVATED)) {
 					LOG.info(Message.ORG_NOT_CONFIRMED);
 					txn.rollback();
 					return Response.status(Status.FORBIDDEN).build();
 				}
+			}
 
-				// Obtain the user login statistics
-				Query statsQuery = new Query(DSUtils.ORGSTATS).setAncestor(orgKey);
-				Entity stat;
-				try {
-					stat = datastore.prepare(statsQuery).asSingleEntity();
-				} catch(TooManyResultsException e3) {
-					LOG.info(Message.UNEXPECTED_ERROR);
-					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-				}
+			final String email = user.getProperty(DSUtils.USER_EMAIL).toString();
 
-				if(stat == null) {
-					stat = new Entity(DSUtils.ORGSTATS, orgKey);
-					stat.setProperty(DSUtils.ORGSTATS_LOGINS, 0L);
-					stat.setProperty(DSUtils.ORGSTATS_LOGINSFAILED, 0L);
-					stat.setProperty(DSUtils.ORGSTATS_LOGOUTS, 0L);
-				}
+			Date date = new Date();
 
-				Date date = new Date();
+			Query statsQuery = new Query(DSUtils.USERSTATS).setAncestor(userKey);
 
-				String hashedPWD = (String) org.getProperty(DSUtils.ORG_PASSWORD);
-				if (hashedPWD.equals(DigestUtils.sha512Hex(data.password))) {
+			Entity stats;
+			try {
+				stats = datastore.prepare(statsQuery).asSingleEntity();
+			} catch(TooManyResultsException e2) {
+				LOG.info(Message.UNEXPECTED_ERROR);
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
 
-					// Construct the logs
-					Entity log = new Entity(DSUtils.ORGLOG, org.getKey());
+			if(stats == null)
+				stats = new Entity(DSUtils.USERSTATS, user.getKey());
 
-					log.setProperty(DSUtils.ORGLOG_TYPE, IN);
-					log.setProperty(DSUtils.ORGLOG_IP, request.getRemoteAddr());
-					log.setProperty(DSUtils.ORGLOG_HOST, request.getRemoteHost());
-					log.setProperty(DSUtils.ORGLOG_LATLON, request.getHeader("X-AppEngine-CityLatLong"));
-					log.setProperty(DSUtils.ORGLOG_CITY, request.getHeader("X-AppEngine-City"));
-					log.setProperty(DSUtils.ORGLOG_COUNTRY, request.getHeader("X-AppEngine-Country"));
-					log.setProperty(DSUtils.ORGLOG_TIME, date);
+			String hashedPWD = (String) user.getProperty(DSUtils.USER_PASSWORD);
+			if(!hashedPWD.equals(DigestUtils.sha512Hex(data.password))) {
+				LOG.info(Message.WRONG_PASSWORD + data.username);
 
-					// Get the org statistics and updates it
-					stat.setProperty(DSUtils.ORGSTATS_LOGINS, 1L + (long) stat.getProperty(DSUtils.ORGSTATS_LOGINS));
-					stat.setProperty(DSUtils.ORGSTATS_LASTIN, date);
+				if(!stats.hasProperty(DSUtils.USERSTATS_LOGINSFAILED))
+					stats.setProperty(DSUtils.USERSTATS_LOGINSFAILED, 1L);
+				else
+					stats.setProperty(DSUtils.USERSTATS_LOGINSFAILED,
+							1L + (long) stats.getProperty(DSUtils.USERSTATS_LOGINSFAILED));
 
-					// Return token		
-					try {
-						Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
-						String token = JWT.create()
-								.withIssuer(JWTUtils.ISSUER)
-								.withClaim(JWTUtils.ORG, UserLevel.ORG)
-								.withClaim(JWTUtils.USERNAME, data.username)
-								.withClaim(JWTUtils.IAT, date)
-								.sign(algorithm);
-
-						LOG.info(data.username + Message.LOGGED_IN);
-
-						Entity newToken = new Entity(DSUtils.TOKEN, orgKey);
-
-						newToken.setProperty(DSUtils.TOKEN_STRING, token);
-						newToken.setProperty(DSUtils.TOKEN_DATE, date);
-						newToken.setProperty(DSUtils.TOKEN_IP, request.getRemoteAddr());
-
-						// Batch operation
-						List<Entity> stuff = Arrays.asList(log, stat, newToken);
-						datastore.put(txn, stuff);
-						txn.commit();
-
-						return Response.ok()
-								.header(CustomHeader.AUTHORIZATION, token)
-								.header(CustomHeader.LEVEL, UserLevel.ORG)
-								.header(CustomHeader.ORG, org.getProperty(DSUtils.ORG_NAME))
-								.header(CustomHeader.NIF, org.getKey().getName())
-								.build();
-					} catch (UnsupportedEncodingException e){
-						LOG.warning(e.getMessage());
-						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-					} catch (JWTCreationException e){
-						LOG.warning(e.getMessage());
-						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-					}		
-				} else {
-					// Incorrect password
-					LOG.warning(Message.WRONG_PASSWORD + data.username);
-					stat.setProperty(DSUtils.ORGSTATS_LOGINSFAILED,
-							1L + (long) stat.getProperty(DSUtils.ORGSTATS_LOGINSFAILED));
-					datastore.put(txn, stat);				
-					txn.rollback();
-					return Response.status(Status.FORBIDDEN).build();				
-				}
-			} catch (EntityNotFoundException e) {
-				// Username does not exist
-				LOG.warning(Message.FAILED_LOGIN + data.username);
-				txn.rollback();
+				datastore.put(txn,stats);				
+				txn.commit();
 				return Response.status(Status.FORBIDDEN).build();
-			} finally {
-				if (txn.isActive()) {
+			}
+
+			String token;
+			try {
+				token = JWTUtils.createJWT(data.username,
+						user.getProperty(DSUtils.USER_LEVEL).toString(), date);
+			} catch (UnsupportedEncodingException e){
+				LOG.warning(e.getMessage());
+				txn.rollback();
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			} catch (JWTCreationException e){
+				LOG.warning(e.getMessage());
+				txn.rollback();
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
+
+			final String deviceid = request.getAttribute(CustomHeader.DEVICE_ID_ATT).toString();
+			//final String username = data.username;
+
+			Query deviceQuery = new Query(DSUtils.DEVICE);
+			Filter userFilter = new Query.FilterPredicate(DSUtils.DEVICE_USER,
+					FilterOperator.EQUAL, userKey);
+			deviceQuery.setFilter(userFilter);
+
+			List<Entity> devices = datastore.prepare(deviceQuery)
+					.asList(FetchOptions.Builder.withDefaults());
+
+			Entity existingDevice = null;
+
+			for(Entity device : devices) {
+				if(device.getKey().getName().equals(deviceid)) {
+					existingDevice = device;
+					break;
+				}
+			}
+
+			if(existingDevice == null) {
+				String app = request.getAttribute(CustomHeader.DEVICE_APP_ATT).toString();
+				
+				existingDevice = new Entity(DSUtils.DEVICE, deviceid);
+				existingDevice.setUnindexedProperty(DSUtils.DEVICE_COUNT, 1L);
+				existingDevice.setProperty(DSUtils.DEVICE_USER, userKey);
+				existingDevice.setProperty(DSUtils.DEVICE_APP, app);
+
+				if(devices.size() != 0)
+					Email.sendNewDeviceMessage(email,
+							request.getAttribute(CustomHeader.DEVICE_INFO_ATT).toString());
+			} else
+				existingDevice.setProperty(DSUtils.DEVICE_COUNT,
+						(long) existingDevice.getProperty(DSUtils.DEVICE_COUNT) + 1L);
+
+			datastore.put(txn, existingDevice);
+
+			Entity log = new Entity(DSUtils.USERLOG, user.getKey());
+
+			log.setProperty(DSUtils.USERLOG_TYPE, IN);
+			log.setProperty(DSUtils.USERLOG_IP, request.getRemoteAddr());
+			log.setProperty(DSUtils.USERLOG_HOST, request.getRemoteHost());
+			log.setProperty(DSUtils.USERLOG_LATLON, request.getHeader("X-AppEngine-CityLatLong"));
+			log.setProperty(DSUtils.USERLOG_CITY, request.getHeader("X-AppEngine-City"));
+			log.setProperty(DSUtils.USERLOG_COUNTRY, request.getHeader("X-AppEngine-Country"));
+			log.setProperty(DSUtils.USERLOG_TIME, date);
+			log.setProperty(DSUtils.USERLOG_DEVICE, deviceid);
+
+			Entity newToken = new Entity(DSUtils.TOKEN);
+			newToken.setProperty(DSUtils.TOKEN_STRING, token);
+			newToken.setUnindexedProperty(DSUtils.TOKEN_DATE, date);
+			newToken.setProperty(DSUtils.TOKEN_DEVICE, deviceid);
+			newToken.setProperty(DSUtils.TOKEN_USER, userKey);
+
+			LOG.info(data.username + Message.LOGGED_IN);
+			List<Entity> logs = Arrays.asList(log, stats, newToken);
+			datastore.put(txn, logs);
+
+			ResponseBuilder response;
+
+			response = Response.ok()
+					.header(CustomHeader.AUTHORIZATION, token)
+					.header(CustomHeader.LEVEL, level);
+
+			if(level.equals(UserLevel.WORKER)) {
+				response.header(CustomHeader.ORG, user.getProperty(DSUtils.WORKER_ORG));
+				txn.commit();
+				return response.build();
+			}
+
+			if(level.equals(UserLevel.ORG)) {
+				response.header(CustomHeader.NIF, user.getKey().getName());
+
+				Query orgQ = new Query(DSUtils.ORG).setAncestor(userKey);
+				Entity org;
+				try {
+					org = datastore.prepare(orgQ).asSingleEntity();
+				} catch(TooManyResultsException e) {
+					LOG.info(Message.UNEXPECTED_ERROR);
 					txn.rollback();
-					LOG.info(Message.TXN_ACTIVE);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
+
+				if(org == null) {
+					LOG.info(Message.UNEXPECTED_ERROR);
+					txn.rollback();
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+				}
+
+				response.header(CustomHeader.ORG, org.getProperty(DSUtils.ORG_NAME).toString());
+			}
+
+			if(!(level.equals(UserLevel.GUEST) || level.equals(UserLevel.WORKER)
+					|| level.equals(UserLevel.ADMIN))) {
+				String actProp = user.getProperty(DSUtils.USER_ACTIVATION).toString();
+
+				String activated = actProp.equals(Profile.ACTIVATED)?
+						CustomHeader.TRUE : CustomHeader.FALSE;
+
+				response.header(CustomHeader.ACTIVATED, activated);
+			}
+			
+			txn.commit();
+			return response.build();	
+		} finally {
+			if (txn.isActive()) {
+				txn.rollback();
+				LOG.info(Message.TXN_ACTIVE);
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 		}
 	}

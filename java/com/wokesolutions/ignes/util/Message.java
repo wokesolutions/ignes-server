@@ -8,6 +8,8 @@ public class Message {
 		public static final String USER_NOT_FOUND = "Utilizador não existe";
 		public static final String USER_NOT_ADMIN = "Utilizador não é administrador";
 		public static final String NO_TOKENS_FOUND = "Nenhum token encontrado para o utilizador";
+		public static final String NOT_REPORTER = "Utilizador não é o autor do report";
+		public static final String USER_NOT_ACTIVE = "Utilizador não ativou ainda a conta";
 	
 	// Error Org
 		public static final String ORG_ALREADY_EXISTS = "Este NIF já está a ser usado por outra organização";
@@ -30,6 +32,7 @@ public class Message {
 		
 	// Error Worker
 		public static final String WORKER_NOT_FOUND = "Trabalhador não encontrado";
+		public static final String WORKER_NOT_ALLOWED = "Trabalhador não está autorizado a alterar esta ocorrência";
 		
 	// Error Task
 		public static final String NOTE_TOO_LONG = "Nota é demasiado longa";
@@ -59,7 +62,7 @@ public class Message {
 		public static final String TOO_MANY_REQUESTS = "Demasiados pedidos do mesmo IP";
 		public static final String NOT_HTTP_REQUEST = "Pedido não é HTTP";
 		public static final String REQUEST_ID_ERROR = "Erro a obter ID do pedido";
-		
+		public static final String MISSING_DEVICE_HEADER = "Não foi encontrado um dos headers";
 	
 	// Info User
 		public static final String ATTEMPT_REGISTER_USER = "Tentando registar o utilizador: ";
@@ -95,6 +98,8 @@ public class Message {
 		public static final String ATTEMPT_GIVE_ALL_REPORTS = "Tentando dar todas as ocorrências";
 		public static final String VOTED_REPORT = "Ocorrência votada com sucesso";
 		public static final String SEARCHING_IN_COORDS = "Procurando nas seguintes coords: ";
+		public static final String REPORT_CLOSED = "Ocorrência fechada com sucesso";
+		public static final String REPORT_WIPED = "Ocorrência posta em trabalhos com sucesso";
 		
 	// Info Levels
 		public static final String TRYING_TO_CHANGE_LEVEL1 = "Tentando mudar para nível 1 o utilizador: ";
@@ -111,9 +116,14 @@ public class Message {
 		public static final String PROFILE_UPDATED = "Perfil do utilizador foi atualizado";
 		public static final String VERIFYING_TOKEN = "Verificando o token";
 		public static final String VERIFYING_TOKEN_OF_USER = "Verificando o token do user: ";
+		public static final String NOT_GUEST_REQUEST = "Pedido exige autenticação";
+		public static final String GUEST_REQUEST = "Pedido não exige autenticação";
+		public static final String PERMISSION_GRANTED = "Autenticação foi verificada";
 		
 	// Info Requests
 		public static final String REQUEST_IS_GOOD = "Pedido foi aceite";
+		public static final String LEVEL_MANAGER_CHECKING = "Gestor de níveis verificando o"
+				+ " utilizador: ";
 	
 	// Status
 		public static final String OK = "OK";

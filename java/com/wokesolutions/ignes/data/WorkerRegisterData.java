@@ -2,15 +2,15 @@ package com.wokesolutions.ignes.data;
 
 public class WorkerRegisterData {
 
-	public String worker_name;
-	public String worker_email;
-	public String worker_job;
+	public String name;
+	public String email;
+	public String job;
 	
 	public WorkerRegisterData() {}
 	
 	public boolean isValid() {
-		return worker_email != null && worker_email.contains("@")
-				&& worker_name != null && worker_job != null;
+		return email != null && email.contains("@")
+				&& name != null && job != null;
 	}
 	
 	public static String generateCode(String org, String email) {

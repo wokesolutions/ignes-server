@@ -4,20 +4,40 @@
 		<property name="user_login_time" direction="desc" />
 		<property name="user_login_ip" direction="asc" />
 	</datastore-index>
+	
+    <datastore-index kind="Token" ancestor="false" source="manual">
+        <property name="token_user" direction="asc"/>
+        <property name="token_device" direction="asc"/>
+        <property name="token_string" direction="asc"/>
+    </datastore-index>
+	
+    <datastore-index kind="Token" ancestor="false" source="manual">
+        <property name="token_user" direction="asc"/>
+        <property name="token_device" direction="asc"/>
+    </datastore-index>
     
     <datastore-index kind="User" ancestor="false" source="manual">
         <property name="user_email" direction="asc"/>
         <property name="user_level" direction="asc"/>
     </datastore-index>
     
+    <datastore-index kind="Token" ancestor="true" source="manual">
+        <property name="token_string" direction="asc"/>
+        <property name="token_device" direction="asc"/>
+    </datastore-index>
+    
     <datastore-index kind="Worker" ancestor="true" source="manual">
         <property name="worker_org" direction="asc"/>
+    </datastore-index>
+    
+    <datastore-index kind="Org" ancestor="true" source="manual">
+        <property name="org_name" direction="asc"/>
     </datastore-index>
     
     <datastore-index kind="ReportComment" ancestor="false" source="manual">
         <property name="reportcomment_report" direction="asc"/>
         <property name="reportcomment_text" direction="asc"/>
-        <property name="reportcomment_time" direction="asc"/>
+        <property name="reportcomment_timeformatted" direction="asc"/>
         <property name="reportcomment_user" direction="asc"/>
     </datastore-index>
     
@@ -31,34 +51,25 @@
         <property name="report_title" direction="asc"/>
         <property name="report_private" direction="desc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
-        <property name="report_username" direction="asc"/>
+        <property name="report_user" direction="asc"/>
         <property name="report_status" direction="desc"/>
         <property name="report_description" direction="desc"/>
     </datastore-index>
     
     <datastore-index kind="Report" ancestor="false" source="manual">
-        <property name="report_p1lng" direction="asc"/>
         <property name="report_p1lat" direction="asc"/>
-        <property name="report_address" direction="asc"/>
-        <property name="report_gravity" direction="asc"/>
-        <property name="report_lat" direction="asc"/>
-        <property name="report_lng" direction="asc"/>
-        <property name="report_private" direction="desc"/>
-        <property name="report_title" direction="asc"/>
-        <property name="report_creationtimeformatted" direction="desc"/>
-        <property name="report_username" direction="asc"/>
-        <property name="report_status" direction="desc"/>
-        <property name="report_description" direction="desc"/>
-    </datastore-index>
-    
-    <!--<datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p1lng" direction="asc"/>
         <property name="report_address" direction="asc"/>
+        <property name="report_creationtimeformatted" direction="asc"/>
+        <property name="report_description" direction="asc"/>
         <property name="report_gravity" direction="asc"/>
         <property name="report_lat" direction="asc"/>
         <property name="report_lng" direction="asc"/>
-        <property name="report_username" direction="asc"/>
-    </datastore-index>-->
+        <property name="report_private" direction="asc"/>
+        <property name="report_status" direction="asc"/>
+        <property name="report_title" direction="asc"/>
+        <property name="report_user" direction="asc"/>
+    </datastore-index>
      
     <datastore-index kind="Report" ancestor="false" source="manual">
         <property name="report_p2lng" direction="asc"/>
@@ -70,7 +81,7 @@
         <property name="report_private" direction="desc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
-        <property name="report_username" direction="asc"/>
+        <property name="report_user" direction="asc"/>
         <property name="report_status" direction="desc"/>
         <property name="report_description" direction="desc"/>
     </datastore-index>
@@ -85,7 +96,7 @@
         <property name="report_lng" direction="asc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
-        <property name="report_username" direction="asc"/>
+        <property name="report_user" direction="asc"/>
         <property name="report_status" direction="desc"/>
         <property name="report_description" direction="desc"/>
     </datastore-index>
@@ -100,7 +111,7 @@
         <property name="report_private" direction="desc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
-        <property name="report_username" direction="asc"/>
+        <property name="report_user" direction="asc"/>
         <property name="report_status" direction="desc"/>
         <property name="report_description" direction="desc"/>
     </datastore-index>
@@ -115,7 +126,7 @@
         <property name="report_lng" direction="asc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
-        <property name="report_username" direction="asc"/>
+        <property name="report_user" direction="asc"/>
         <property name="report_status" direction="desc"/>
         <property name="report_description" direction="desc"/>
     </datastore-index>
@@ -130,7 +141,7 @@
         <property name="report_lng" direction="asc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
-        <property name="report_username" direction="asc"/>
+        <property name="report_user" direction="asc"/>
         <property name="report_status" direction="desc"/>
         <property name="report_description" direction="desc"/>
     </datastore-index>
@@ -145,7 +156,7 @@
         <property name="report_private" direction="desc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
-        <property name="report_username" direction="asc"/>
+        <property name="report_user" direction="asc"/>
         <property name="report_status" direction="desc"/>
         <property name="report_description" direction="desc"/>
     </datastore-index>
@@ -160,13 +171,13 @@
         <property name="report_private" direction="desc"/>
         <property name="report_title" direction="asc"/>
         <property name="report_creationtimeformatted" direction="desc"/>
-        <property name="report_username" direction="asc"/>
+        <property name="report_user" direction="asc"/>
         <property name="report_status" direction="desc"/>
         <property name="report_description" direction="desc"/>
     </datastore-index>
     
     <datastore-index kind="Report" ancestor="false" source="manual">
-        <property name="report_username" direction="asc"/>
+        <property name="report_user" direction="asc"/>
         <property name="report_address" direction="asc"/>
     	<property name="report_locality" direction="asc"/>
         <property name="report_creationtimeformatted" direction="asc"/>
@@ -189,7 +200,21 @@
         <property name="report_lng" direction="asc"/>
         <property name="report_status" direction="asc"/>
         <property name="report_title" direction="asc"/>
-        <property name="report_username" direction="asc"/>
+        <property name="report_user" direction="asc"/>
+    </datastore-index>
+    
+    <datastore-index kind="Report" ancestor="false" source="manual">
+        <property name="report_locality" direction="asc"/>
+        <property name="report_address" direction="asc"/>
+        <property name="report_creationtimeformatted" direction="asc"/>
+        <property name="report_description" direction="asc"/>
+        <property name="report_gravity" direction="asc"/>
+        <property name="report_lat" direction="asc"/>
+        <property name="report_lng" direction="asc"/>
+        <property name="report_private" direction="asc"/>
+        <property name="report_status" direction="asc"/>
+        <property name="report_title" direction="asc"/>
+        <property name="report_user" direction="asc"/>
     </datastore-index>
     
     <datastore-index kind="Worker" ancestor="false" source="manual">

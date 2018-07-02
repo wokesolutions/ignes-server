@@ -1,5 +1,6 @@
 package com.wokesolutions.ignes.api;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -48,6 +49,7 @@ import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
+import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.UserLevel;
 
@@ -63,8 +65,10 @@ public class Org {
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response registerWorker(WorkerRegisterData registerData,
 			@Context HttpServletRequest request) {
-		if(!registerData.isValid())
-			return Response.status(Status.BAD_REQUEST).entity(Message.REGISTER_DATA_INVALID).build();
+		if(!registerData.isValid()) {
+			LOG.info(Message.REGISTER_DATA_INVALID);
+			return Response.status(Status.BAD_REQUEST).build();
+		}
 
 		String org = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
@@ -84,12 +88,12 @@ public class Org {
 	}
 
 	private Response registerWorkerRetry(WorkerRegisterData registerData, String org) {
-		LOG.info(Message.ATTEMPT_REGISTER_WORKER + registerData.worker_name);
+		LOG.info(Message.ATTEMPT_REGISTER_WORKER + registerData.name);
 
 		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
 		try {
-			String email = registerData.worker_email;
+			String email = registerData.email;
 
 			Filter emailFilter =
 					new Query.FilterPredicate(DSUtils.USER_EMAIL, FilterOperator.EQUAL, email);
@@ -107,25 +111,61 @@ public class Org {
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
-			Key orgKey = KeyFactory.createKey(DSUtils.ORG, org);
-
 			if(userResult != null) {
+				LOG.info(Message.USER_ALREADY_EXISTS);
 				txn.rollback();
 				return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build();
+			}
+			
+			Key orgKey = KeyFactory.createKey(DSUtils.USER, org);
+
+			try {
+				datastore.get(orgKey);
+			} catch(EntityNotFoundException e) {
+				LOG.info(Message.UNEXPECTED_ERROR);
+				txn.rollback();
+				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
 			Date date = new Date();
 
+			
+			LOG.info(org);
 			Entity user = new Entity(DSUtils.USER, email);
-			Key userKey = user.getKey();
-			Entity worker = new Entity(DSUtils.WORKER, userKey);
+			Key userK = user.getKey();
+			Entity worker = new Entity(DSUtils.WORKER, userK);
 
 			String pw = WorkerRegisterData.generateCode(org, email);
 			String pwSha = DigestUtils.sha512Hex(pw);
 			worker.setProperty(DSUtils.WORKER_ORG, org);
-			worker.setProperty(DSUtils.WORKER_JOB, registerData.worker_job);
-			worker.setProperty(DSUtils.WORKER_NAME, registerData.worker_name);
+			worker.setProperty(DSUtils.WORKER_JOB, registerData.job);
+			worker.setProperty(DSUtils.WORKER_NAME, registerData.name);
 			worker.setUnindexedProperty(DSUtils.WORKER_CREATIONTIME, date);
+			
+			String orgName;
+			Query orgQ;
+
+			orgQ = new Query(DSUtils.ORG).setAncestor(orgKey)
+					.addProjection(new PropertyProjection(DSUtils.ORG_NAME, String.class));
+			
+			Entity orgE;
+			try {
+				orgE = datastore.prepare(orgQ).asSingleEntity();
+				
+				if(orgE == null) {
+					LOG.info(Message.UNEXPECTED_ERROR);
+					txn.rollback();
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+				}
+				
+				orgName = orgE.getProperty(DSUtils.ORG_NAME).toString();
+			} catch(TooManyResultsException e) {
+				LOG.info(Message.UNEXPECTED_ERROR);
+				txn.rollback();
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
+			
+			worker.setUnindexedProperty(DSUtils.WORKER_ORGNAME, orgName);
 
 			user.setUnindexedProperty(DSUtils.USER_PASSWORD, pwSha);
 			user.setProperty(DSUtils.USER_EMAIL, email);
@@ -135,22 +175,14 @@ public class Org {
 			Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
 			userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
 
-			Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
-
-			List<Entity> list = Arrays.asList(user, worker, userPoints, useroptional);
-
-			try {
-				Entity orgEntity = datastore.get(orgKey);
-				Email.sendWorkerRegisterMessage(email, pw,
-						orgEntity.getProperty(DSUtils.ORG_NAME).toString());
-			} catch(EntityNotFoundException e) {
-				LOG.info(Message.UNEXPECTED_ERROR);
-				txn.rollback();
-				return Response.status(Status.EXPECTATION_FAILED).build();
-			}
+			List<Entity> list = Arrays.asList(user, worker, userPoints);
+			
+			Email.sendWorkerRegisterMessage(email, pw,
+					orgE.getProperty(DSUtils.ORG_NAME).toString());
+			
 			datastore.put(txn, list);
 			txn.commit();
-			LOG.info(Message.WORKER_REGISTERED + registerData.worker_email);
+			LOG.info(Message.WORKER_REGISTERED + registerData.email);
 			return Response.ok().build();
 		} finally {
 			if(txn.isActive()) {
@@ -286,8 +318,6 @@ public class Org {
 	}
 
 	private Response getWorkersRetry(String org, String cursor) {
-		LOG.info("listing workers");
-
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 
 		Query query = new Query(DSUtils.WORKER);
@@ -309,9 +339,9 @@ public class Org {
 
 		for(Entity worker : list) {
 			JSONObject obj = new JSONObject();
-			obj.put(DSUtils.WORKER, worker.getParent().getName());
-			obj.put(DSUtils.WORKER_NAME, worker.getProperty(DSUtils.WORKER_NAME));
-			obj.put(DSUtils.WORKER_JOB, worker.getProperty(DSUtils.WORKER_JOB));
+			obj.put(Prop.EMAIL, worker.getParent().getName());
+			obj.put(Prop.NAME, worker.getProperty(DSUtils.WORKER_NAME));
+			obj.put(Prop.JOB, worker.getProperty(DSUtils.WORKER_JOB));
 			array.put(obj);
 		}
 
@@ -358,17 +388,11 @@ public class Org {
 		String email = data.email;
 		String indications = data.indications;
 
-		LOG.info("1");
-
 		Entity reportE;
-
-		LOG.info("2");
 
 		Query workerQuery = new Query(DSUtils.WORKER)
 				.setAncestor(KeyFactory.createKey(DSUtils.USER, email));
 		workerQuery.addProjection(new PropertyProjection(DSUtils.WORKER_ORG, String.class));
-
-		LOG.info("3");
 
 		Entity worker;
 
@@ -378,8 +402,6 @@ public class Org {
 			LOG.info(Message.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
-
-		LOG.info("4");
 
 		if(worker == null) {
 			LOG.info(Message.WORKER_NOT_FOUND);
@@ -424,11 +446,15 @@ public class Org {
 			LOG.info(Message.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
+		
+		Date date = new Date();
 
 		Entity task = new Entity(DSUtils.TASK, reportE.getKey());
 
 		task.setProperty(DSUtils.TASK_WORKER, email);
-		task.setProperty(DSUtils.TASK_TIME, new Date());
+		task.setProperty(DSUtils.TASK_TIME, date);
+		task.setProperty(DSUtils.TASK_TIMEFORMATTED,
+				new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
 		task.setProperty(DSUtils.TASK_ORG, org);
 
 		if(indications != null && !indications.equals(""))
@@ -447,24 +473,38 @@ public class Org {
 
 		while(true) {
 			try {
-				Entity org;
+				Entity user;
 
 				try {
-					org = datastore.get(KeyFactory.createKey(DSUtils.ORG, nif));
+					user = datastore.get(KeyFactory.createKey(DSUtils.USER, nif));
 				} catch(EntityNotFoundException e) {
 					LOG.info(Message.ORG_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
+				
+				Entity org;
+				try {
+					Query orgQ = new Query(DSUtils.ORG).setAncestor(user.getKey());
+					org = datastore.prepare(orgQ).asSingleEntity();
+					
+					if(org == null) {
+						LOG.info(Message.ORG_NOT_FOUND);
+						return Response.status(Status.NOT_FOUND).build();
+					}
+				} catch (TooManyResultsException e) {
+					LOG.info(Message.UNEXPECTED_ERROR);
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+				}
 
 				JSONObject obj = new JSONObject();
-				obj.put(DSUtils.ORG, org.getKey().getName());
-				obj.put(DSUtils.ORG_ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
-				obj.put(DSUtils.ORG_EMAIL, org.getProperty(DSUtils.ORG_EMAIL));
-				obj.put(DSUtils.ORG_NAME, org.getProperty(DSUtils.ORG_NAME));
-				obj.put(DSUtils.ORG_PHONE, org.getProperty(DSUtils.ORG_PHONE));
-				obj.put(DSUtils.ORG_SERVICES, org.getProperty(DSUtils.ORG_SERVICES));
-				obj.put(DSUtils.ORG_ZIP, org.getProperty(DSUtils.ORG_ZIP));
-				obj.put(DSUtils.ORG_LOCALITY, org.getProperty(DSUtils.ORG_LOCALITY));
+				obj.put(Prop.NIF, org.getParent().getName());
+				obj.put(Prop.ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
+				obj.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
+				obj.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
+				obj.put(Prop.PHONE, org.getProperty(DSUtils.ORG_PHONE));
+				obj.put(Prop.SERVICES, org.getProperty(DSUtils.ORG_SERVICES));
+				obj.put(Prop.ZIP, org.getProperty(DSUtils.ORG_ZIP));
+				obj.put(Prop.LOCALITY, org.getProperty(DSUtils.ORG_LOCALITY));
 
 				return Response.ok(obj.toString()).build();
 			} catch(DatastoreException e) {
@@ -509,21 +549,23 @@ public class Org {
 
 					JSONObject jsonReport = new JSONObject();
 
-					jsonReport.put(DSUtils.REPORT_TITLE, report.getProperty(DSUtils.REPORT_TITLE));
-					jsonReport.put(DSUtils.REPORT_ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
-					jsonReport.put(DSUtils.REPORT_USERNAME, report.getProperty(DSUtils.REPORT_USERNAME));
-					jsonReport.put(DSUtils.REPORT_GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
-					jsonReport.put(DSUtils.REPORT_STATUS, report.getProperty(DSUtils.REPORT_STATUS));
-					jsonReport.put(DSUtils.REPORT_DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION));
-					jsonReport.put(DSUtils.REPORT_CREATIONTIMEFORMATTED,
+					jsonReport.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
+					jsonReport.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+					jsonReport.put(Prop.USERNAME,
+							((Key) report.getProperty(DSUtils.REPORT_USER)).getName());
+					jsonReport.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+					jsonReport.put(Prop.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
+					jsonReport.put(Prop.DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION));
+					jsonReport.put(Prop.CREATIONTIME,
 							report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
-					jsonReport.put(DSUtils.REPORT_PRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
-					jsonReport.put(DSUtils.TASK, task.getParent().getName());
-					jsonReport.put(DSUtils.TASK_WORKER, task.getProperty(DSUtils.TASK_WORKER));
-					jsonReport.put(DSUtils.TASK_INDICATIONS, task.getProperty(DSUtils.TASK_INDICATIONS));
+					jsonReport.put(Prop.ISPRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
+					jsonReport.put(Prop.TASK, task.getParent().getName());
+					jsonReport.put(Prop.WORKER, task.getProperty(DSUtils.TASK_WORKER));
+					jsonReport.put(Prop.INDICATIONS, task.getProperty(DSUtils.TASK_INDICATIONS));
+					jsonReport.put(Prop.TASK_TIME, task.getProperty(DSUtils.TASK_TIME));
 
 					String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
-					jsonReport.put(DSUtils.REPORT_THUMBNAIL, tn);
+					jsonReport.put(Prop.THUMBNAIL, tn);
 
 					array.put(jsonReport);
 				}

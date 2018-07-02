@@ -15,8 +15,6 @@ public class DSUtils {
 		public static final String DELETEDWORKER = "DeletedWorker";
 		public static final String ORG = "Org";
 		public static final String UNCONFORG = "UnconfOrg";
-		public static final String ORGSTATS = "OrgStats";
-		public static final String ORGLOG = "OrgLog";
 		public static final String ORGCODE = "OrgCode";
 		public static final String REPORT = "Report";
 		public static final String CLOSEDREPORT = "ClosedReport";
@@ -31,6 +29,8 @@ public class DSUtils {
 		public static final String NOTE = "Note";
 		public static final String REPORTSTATUSLOG = "ReportStatusLog";
 		public static final String REPORTCOMMENT = "ReportComment";
+		public static final String DEVICE = "Device";
+		public static final String SKIPLOGIN = "SkipLogin";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -41,16 +41,17 @@ public class DSUtils {
 	// AdminLog
 		public static final String ADMINLOG_PROMOTED = "adminlog_promoted";
 		public static final String ADMINLOG_DEMOTED = "adminlog_demoted";
+		public static final String ADMINLOG_ADMIN = "adminlog_admin";
 		public static final String ADMINLOG_TIME = "adminlog_time";
+		public static final String ADMINLOG_DELETED = "adminlog_deleted";
 
 	// User
 		public static final String USER_PASSWORD = "user_password";
 		public static final String USER_EMAIL = "user_email";
 		public static final String USER_LEVEL = "user_level";
 		public static final String USER_CREATIONTIME = "user_creationtime";
-		public static final String USER_CODE = "user_code";
-		public static final String USER_PROFPIC = "user_profpic";
-		public static final String USER_PROFPICTN = "user_profpictn";
+		public static final String USER_ACTIVATION = "user_activation";
+		public static final String USER_CREATIONTIMEFORMATTED = "user_creationtimeformatted";
 
 	// UserOptional
 		public static final String USEROPTIONAL_NAME = "useroptional_name";
@@ -63,7 +64,6 @@ public class DSUtils {
 		public static final String USEROPTIONAL_SKILLS = "useroptional_skills";
 		public static final String USEROPTIONAL_JOB = "useroptional_job";
 		public static final String USEROPTIONAL_PICPATH = "useroptional_picpath";
-		public static final String USEROPTIONAL_PICTNPATH = "useroptional_pictnpath";
 		
 	// UserOptionalLogs
 		public static final String USEROPTIONALLOGS_USERNAME = "useroptionallogs_username";
@@ -101,9 +101,11 @@ public class DSUtils {
 		public static final String USERLOG_CITY = "userlog_city";
 		public static final String USERLOG_COUNTRY = "userlog_country";
 		public static final String USERLOG_TIME = "userlog_time";
+		public static final String USERLOG_DEVICE = "userlog_device";
 
 	// Worker
 		public static final String WORKER_ORG = "worker_org";
+		public static final String WORKER_ORGNAME = "worker_orgname";
 		public static final String WORKER_JOB = "worker_job";
 		public static final String WORKER_CREATIONTIME = "worker_creationtime";
 		public static final String WORKER_NAME = "worker_name";
@@ -118,15 +120,12 @@ public class DSUtils {
 	// Org
 		public static final String ORG_NAME = "org_name";
 		public static final String ORG_ADDRESS = "org_address";
-		public static final String ORG_PASSWORD = "org_password";
 		public static final String ORG_PHONE = "org_phone";
-		public static final String ORG_EMAIL = "org_email";
 		public static final String ORG_ZIP = "org_zip";
 		public static final String ORG_LOCALITY = "org_locality";
 		public static final String ORG_SERVICES = "org_services";
 		public static final String ORG_ISFIRESTATION = "org_isfirestation";
-		public static final String ORG_CREATIONTIME = "org_creationtime";
-		public static final String ORG_CONFIRMED = "org_confirmed";
+		public static final String ORG_EMAIL = "org_email";
 		
 	// UnconfOrg
 		public static final String UNCONFORG_NAME = "unconforg_name";
@@ -171,7 +170,7 @@ public class DSUtils {
 		public static final String REPORT_ADDRESS = "report_address";
 		public static final String REPORT_DISTRICT = "report_district";
 		public static final String REPORT_LOCALITY = "report_locality";
-		public static final String REPORT_USERNAME = "report_username";
+		public static final String REPORT_USER = "report_user";
 		public static final String REPORT_CREATIONTIME = "report_creationtime";
 		public static final String REPORT_CREATIONTIMEFORMATTED = "report_creationtimeformatted";
 		public static final String REPORT_GRAVITY = "report_gravity";
@@ -180,10 +179,10 @@ public class DSUtils {
 		public static final String REPORT_IMGPATH = "report_imgpath";
 		public static final String REPORT_IMG = "report_img";
 		public static final String REPORT_THUMBNAILPATH = "report_thumbnailpath";
-		public static final String REPORT_THUMBNAIL = "report_thumbnail";
 		public static final String REPORT_COMMENTSNUM = "report_commentsnum";
 		public static final String REPORT_STATUS = "report_status";
 		public static final String REPORT_PRIVATE = "report_private";
+		public static final String REPORT_CLOSETIME = "report_closetime";
 		
 		public static final String REPORT_P0LAT = "report_p0lat";
 		public static final String REPORT_P1LAT = "report_p1lat";
@@ -217,10 +216,12 @@ public class DSUtils {
 		public static final String USERVOTE_EVENT = "uservote_event";
 		public static final String USERVOTE_COMMENT = "uservote_comment";
 		public static final String USERVOTE_TYPE = "uservote_type";
+		public static final String USERVOTE_TIME = "uservote_time";
 		
 	// ReportComment
 		public static final String REPORTCOMMENT_TEXT = "reportcomment_text";
 		public static final String REPORTCOMMENT_TIME = "reportcomment_time";
+		public static final String REPORTCOMMENT_TIMEFORMATTED = "reportcomment_timeformatted";
 		public static final String REPORTCOMMENT_USER = "reportcomment_user";
 		public static final String REPORTCOMMENT_REPORT = "reportcomment_report";
 		
@@ -230,16 +231,19 @@ public class DSUtils {
 	// Token
 		public static final String TOKEN_STRING = "token_string";
 		public static final String TOKEN_DATE = "token_date";
-		public static final String TOKEN_IP = "token_ip";
+		public static final String TOKEN_DEVICE = "token_device";
+		public static final String TOKEN_USER = "token_user";
 		
 	// LevelLog
 		public static final String LEVELLOG_OLDLEVEL = "levellog_oldlevel";
 		public static final String LEVELLOG_NEWLEVEL = "levellog_newlevel";
-		public static final String LEVELLOG_DATE = "levellog_date";
+		public static final String LEVELLOG_TIME = "levellog_time";
+		public static final String LEVELLOG_USER = "levellog_user";
 		
 	// Task
 		public static final String TASK_WORKER = "task_worker";
 		public static final String TASK_TIME = "task_time";
+		public static final String TASK_TIMEFORMATTED = "task_timeformatted";
 		public static final String TASK_INDICATIONS = "task_indications";
 		public static final String TASK_ORG = "task_org";
 		
@@ -254,11 +258,21 @@ public class DSUtils {
 		public static final String NOTE_TIME = "note_time";
 		public static final String NOTE_TASK = "note_task";
 		public static final String NOTE_TEXT = "note_text";
+		public static final String NOTE_TIMEFORMATTED = "note_timeformatted";
 		
 	// ReportStatusLog
 		public static final String REPORTSTATUSLOG_TIME = "reportstatuslog_time";
 		public static final String REPORTSTATUSLOG_USER = "reportstatuslog_user";
 		public static final String REPORTSTATUSLOG_OLDSTATUS = "reportstatuslog_oldstatus";
 		public static final String REPORTSTATUSLOG_NEWSTATUS = "reportstatuslog_newstatus";
-		public static final String REPORTSTATUSLOG_REPORT = "reportstatuslog_report";
+		
+	// Device
+		public static final String DEVICE_ID = "device_id";
+		public static final String DEVICE_COUNT = "device_count";
+		public static final String DEVICE_USER = "device_user";
+		public static final String DEVICE_APP = "device_app";
+		
+	// SkipLogin
+		public static final String SKIPLOGIN_TIME = "skiplogin_time";
+		public static final String SKIPLOGIN_DEVICE = "skiplogin_device";
 }

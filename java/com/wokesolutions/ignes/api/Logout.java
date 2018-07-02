@@ -26,6 +26,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Transaction;
+import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
@@ -84,7 +85,7 @@ public class Logout {
 	}
 
 	@POST
-	public Response logoutUser(@Context HttpHeaders headers,
+	public Response logout(@Context HttpHeaders headers,
 			@Context HttpServletRequest request) {
 
 		Object user = request.getAttribute(CustomHeader.USERNAME_ATT);
@@ -114,7 +115,6 @@ public class Logout {
 			try {
 				return logoutUserRetry(username, request, isOrg);
 			} catch(DatastoreException e) {
-				LOG.info("Trying again");
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				retries--;
@@ -122,151 +122,87 @@ public class Logout {
 		}
 	}
 
-	public Response logoutUserRetry(String username, HttpServletRequest request, boolean isOrg) { //TODO organize code
-		Transaction txn;
+	public Response logoutUserRetry(String username, HttpServletRequest request, boolean isOrg) {
+		Transaction txn = datastore.beginTransaction
+				(TransactionOptions.Builder.withXG(true));
+		try {
+			LOG.info(Message.LOGGING_OUT + username);
 
-		if(!isOrg) {
-			txn = datastore.beginTransaction();
+			Key userKey = KeyFactory.createKey(DSUtils.USER, username);
+
+			Query statsQuery = new Query(DSUtils.USERSTATS).setAncestor(userKey);
+			Entity stats;
 			try {
-				LOG.info(Message.LOGGING_OUT + username);
-
-				Key userKey = KeyFactory.createKey(DSUtils.USER, username);
-
-				// Obtain the user login statistics
-				Query statsQuery = new Query(DSUtils.USERSTATS).setAncestor(userKey);
-				Entity stats;
-				try {
-					stats = datastore.prepare(statsQuery).asSingleEntity();
-				} catch(TooManyResultsException e2) {
-					txn.rollback();
-					return Response.status(Status.EXPECTATION_FAILED).build();
-				}
-
-				try {
-					datastore.get(userKey);
-					Entity log = new Entity(DSUtils.USERLOG, userKey);
-
-					log.setProperty(DSUtils.USERLOG_TYPE, OUT);
-					log.setProperty(DSUtils.USERLOG_IP, request.getRemoteAddr());
-					log.setProperty(DSUtils.USERLOG_HOST, request.getRemoteHost());
-					log.setProperty(DSUtils.USERLOG_LATLON, request.getHeader("X-AppEngine-CityLatLong"));
-					log.setProperty(DSUtils.USERLOG_CITY, request.getHeader("X-AppEngine-City"));
-					log.setProperty(DSUtils.USERLOG_COUNTRY, request.getHeader("X-AppEngine-Country"));
-					log.setProperty(DSUtils.USERLOG_TIME, new Date());
-
-					stats.setProperty(DSUtils.USERSTATS_LOGOUTS,
-							1 + (long) stats.getProperty(DSUtils.USERSTATS_LOGOUTS));
-
-					List<Entity> list = Arrays.asList(stats, log);
-					datastore.put(txn, list);
-
-					Query query = new Query(DSUtils.TOKEN).setAncestor(userKey).setKeysOnly();
-
-					Filter filter = new Query
-							.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL,
-									request.getHeader(CustomHeader.AUTHORIZATION));
-
-					query.setFilter(filter);
-
-					Entity token;
-					try {
-						token = datastore.prepare(txn, query).asSingleEntity();
-					} catch(TooManyResultsException e2) {
-						LOG.info(Message.UNEXPECTED_ERROR);
-						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-					}
-
-					if(token == null) {
-						LOG.info(Message.UNEXPECTED_ERROR);
-						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-					}
-
-					datastore.delete(txn, token.getKey());
-
-					txn.commit();
-					return Response.ok().build();
-				} catch(EntityNotFoundException e) {
-					txn.rollback();
-					return Response.status(Status.EXPECTATION_FAILED).build();
-				}
-			} finally {
-				if(txn.isActive()) {
-					txn.rollback();
-					LOG.info(Message.TXN_ACTIVE);
-					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-				}
+				stats = datastore.prepare(statsQuery).asSingleEntity();
+			} catch(TooManyResultsException e2) {
+				LOG.info(Message.UNEXPECTED_ERROR);
+				txn.rollback();
+				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
-		} else {
-			txn = datastore.beginTransaction();
+
+			if(stats == null) {
+				txn.rollback();
+				LOG.info(Message.UNEXPECTED_ERROR);
+				return Response.status(Status.EXPECTATION_FAILED).build();
+			}
+
 			try {
+				datastore.get(userKey);
+			} catch(EntityNotFoundException e) {
+				txn.rollback();
+				LOG.info(Message.UNEXPECTED_ERROR);
+				return Response.status(Status.EXPECTATION_FAILED).build();
+			}
 
-				Key orgKey = KeyFactory.createKey(DSUtils.ORG, username);
+			Query query = new Query(DSUtils.TOKEN).setKeysOnly();
 
-				// Obtain the org login statistics
-				Query statsQuery = new Query(DSUtils.ORGSTATS).setAncestor(orgKey);
-				Entity stats;
-				try {
-					stats = datastore.prepare(statsQuery).asSingleEntity();
-				} catch(TooManyResultsException e2) {
-					txn.rollback();
-					return Response.status(Status.EXPECTATION_FAILED).build();
-				}
+			String token = request.getHeader(CustomHeader.AUTHORIZATION);
 
-				try {
-					datastore.get(orgKey);
-					Entity log = new Entity(DSUtils.ORGLOG, orgKey);
+			LOG.info(token);
 
-					log.setProperty(DSUtils.ORGLOG_TYPE, OUT);
-					log.setProperty(DSUtils.ORGLOG_IP, request.getRemoteAddr());
-					log.setProperty(DSUtils.ORGLOG_HOST, request.getRemoteHost());
-					log.setProperty(DSUtils.ORGLOG_LATLON, request.getHeader("X-AppEngine-CityLatLong"));
-					log.setProperty(DSUtils.ORGLOG_CITY, request.getHeader("X-AppEngine-City"));
-					log.setProperty(DSUtils.ORGLOG_COUNTRY, request.getHeader("X-AppEngine-Country"));
-					log.setProperty(DSUtils.ORGLOG_TIME, new Date());
+			Filter stringF = new Query
+					.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL, token);
 
-					stats.setProperty(DSUtils.ORGSTATS_LOGOUTS,
-							1 + (long) stats.getProperty(DSUtils.ORGSTATS_LOGOUTS));
+			query.setFilter(stringF);
 
-					List<Entity> list = Arrays.asList(stats, log);
-					datastore.put(txn, list);
+			Entity tokenE;
+			try {
+				tokenE = datastore.prepare(query).asSingleEntity();
+			} catch(TooManyResultsException e2) {
+				LOG.info(Message.UNEXPECTED_ERROR);
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
 
-					Query query = new Query(DSUtils.TOKEN).setAncestor(orgKey).setKeysOnly();
+			datastore.delete(txn, tokenE.getKey());
 
-					Filter filter = new Query
-							.FilterPredicate(DSUtils.TOKEN_STRING, FilterOperator.EQUAL,
-									request.getHeader(CustomHeader.AUTHORIZATION));
+			String deviceid = request.getAttribute(CustomHeader.DEVICE_ID_ATT).toString();
 
-					query.setFilter(filter);
+			Entity log = new Entity(DSUtils.USERLOG, userKey);
 
-					Entity token;
+			log.setProperty(DSUtils.USERLOG_TYPE, OUT);
+			log.setProperty(DSUtils.USERLOG_IP, request.getRemoteAddr());
+			log.setProperty(DSUtils.USERLOG_HOST, request.getRemoteHost());
+			log.setProperty(DSUtils.USERLOG_LATLON, request.getHeader("X-AppEngine-CityLatLong"));
+			log.setProperty(DSUtils.USERLOG_CITY, request.getHeader("X-AppEngine-City"));
+			log.setProperty(DSUtils.USERLOG_COUNTRY, request.getHeader("X-AppEngine-Country"));
+			log.setProperty(DSUtils.USERLOG_TIME, new Date());
+			log.setProperty(DSUtils.USERLOG_DEVICE, deviceid);
+			if(stats.hasProperty(DSUtils.USERSTATS_LOGOUTS))
+				stats.setProperty(DSUtils.USERSTATS_LOGOUTS,
+						1L + (long) stats.getProperty(DSUtils.USERSTATS_LOGOUTS));
+			else
+				stats.setProperty(DSUtils.USERSTATS_LOGINSFAILED, 1L);
 
-					try {
-						token = datastore.prepare(txn, query).asSingleEntity();
-					} catch(TooManyResultsException e) {
-						txn.rollback();
-						LOG.info(Message.UNEXPECTED_ERROR);
-						return Response.status(Status.EXPECTATION_FAILED).build();
-					}
+			List<Entity> list = Arrays.asList(stats, log);
+			datastore.put(txn, list);
 
-					if(token != null) {
-						datastore.delete(txn, token.getKey());
-						txn.commit();
-						return Response.ok().build();
-					} else {
-						txn.rollback();
-						return Response.ok().build();
-					}
-				} catch(Exception e) {
-					txn.rollback();
-					return Response.status(Status.EXPECTATION_FAILED).build();
-				}
-
-			} finally {
-				if(txn.isActive()) {
-					txn.rollback();
-					LOG.info(Message.TXN_ACTIVE);
-					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-				}
+			txn.commit();
+			return Response.ok().build();
+		} finally {
+			if(txn.isActive()) {
+				txn.rollback();
+				LOG.info(Message.TXN_ACTIVE);
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 		}
 	}
