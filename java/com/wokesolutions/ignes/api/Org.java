@@ -269,7 +269,7 @@ public class Org {
 
 			datastore.delete(txn, list);
 
-			Filter tokenF = new Query.FilterPredicate(DSUtils.DEVICE_USER,
+			Filter tokenF = new Query.FilterPredicate(DSUtils.TOKEN_USER,
 					FilterOperator.EQUAL, userKey);
 			Query tokenQ = new Query(DSUtils.TOKEN).setKeysOnly().setFilter(tokenF);
 			List<Entity> listToken = datastore.prepare(tokenQ)
