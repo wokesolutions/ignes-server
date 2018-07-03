@@ -9,7 +9,7 @@ public class OrgRegisterData {
 	public String zip;
 	public String email;
 	public String phone;
-	public boolean isfirestation;
+	public boolean isprivate;
 	public String services;
 	public String password;
 

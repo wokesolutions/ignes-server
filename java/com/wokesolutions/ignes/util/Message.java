@@ -26,6 +26,7 @@ public class Message {
 		public static final String TOO_MANY_REPORTS = "Header contém demasiados reports";
 		public static final String NO_REPORTS_FOUND = "Não foram encontradas ocorrências";
 		public static final String VOTED_REPORT_ERROR = "Ocorrência votada com erro: ";
+		public static final String REPORT_IS_PRIVATE = "Ocorrência é privada";
 	
 	// Error Admin
 		public static final String MOTER_NOT_ADMIN = "Utilizador a fazer alterações não é administrador";
@@ -100,6 +101,7 @@ public class Message {
 		public static final String SEARCHING_IN_COORDS = "Procurando nas seguintes coords: ";
 		public static final String REPORT_CLOSED = "Ocorrência fechada com sucesso";
 		public static final String REPORT_WIPED = "Ocorrência posta em trabalhos com sucesso";
+		public static final String TASK_ALREADY_ASSIGNED = "Ocorrência já está atribuída";
 		
 	// Info Levels
 		public static final String TRYING_TO_CHANGE_LEVEL1 = "Tentando mudar para nível 1 o utilizador: ";

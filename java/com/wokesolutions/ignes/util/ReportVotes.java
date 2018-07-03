@@ -221,9 +221,7 @@ public class ReportVotes {
 		if(vote.equals(UP)) {
 			long ups = (long) reportvotes.getProperty(DSUtils.REPORTVOTES_UP);
 
-			LOG.info(Long.toString((long) points.getProperty(DSUtils.USERPOINTS_POINTS)));
 			points.setProperty(DSUtils.USERPOINTS_POINTS, pointsval - POINTS_UP);
-			LOG.info(Long.toString((long) points.getProperty(DSUtils.USERPOINTS_POINTS)));
 
 			reportvotes.setProperty(DSUtils.REPORTVOTES_UP, ups - 1);
 			reportvotes.setProperty(DSUtils.REPORTVOTES_RELEVANCE,

@@ -29,24 +29,6 @@ public class JWTUtils {
 				.withClaim(USERNAME, username)
 				.withClaim(IAT, date);
 		
-		if(level.equals(UserLevel.ADMIN))
-			token.withClaim(LEVEL, UserLevel.ADMIN);
-		
-		else if(level.equals(UserLevel.WORKER))
-			token.withClaim(LEVEL, UserLevel.WORKER);
-		
-		else if(level.equals(UserLevel.LEVEL3))
-			token.withClaim(LEVEL, UserLevel.LEVEL3);
-		
-		else if(level.equals(UserLevel.LEVEL2))
-			token.withClaim(LEVEL, UserLevel.LEVEL2);
-		
-		else if(level.equals(UserLevel.LEVEL1))
-			token.withClaim(LEVEL, UserLevel.LEVEL1);
-		
-		else if(level.equals(UserLevel.ORG))
-			token.withClaim(LEVEL, UserLevel.ORG);
-		
 		return token.sign(algorithm);
 	}
 }

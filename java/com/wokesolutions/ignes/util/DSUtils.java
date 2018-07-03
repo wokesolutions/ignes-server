@@ -31,6 +31,7 @@ public class DSUtils {
 		public static final String REPORTCOMMENT = "ReportComment";
 		public static final String DEVICE = "Device";
 		public static final String SKIPLOGIN = "SkipLogin";
+		public static final String APPLICATION = "Application";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -124,7 +125,7 @@ public class DSUtils {
 		public static final String ORG_ZIP = "org_zip";
 		public static final String ORG_LOCALITY = "org_locality";
 		public static final String ORG_SERVICES = "org_services";
-		public static final String ORG_ISFIRESTATION = "org_isfirestation";
+		public static final String ORG_PRIVATE = "org_private";
 		public static final String ORG_EMAIL = "org_email";
 		
 	// UnconfOrg
@@ -275,4 +276,12 @@ public class DSUtils {
 	// SkipLogin
 		public static final String SKIPLOGIN_TIME = "skiplogin_time";
 		public static final String SKIPLOGIN_DEVICE = "skiplogin_device";
+		
+	// Application
+		public static final String APPLICATION_ORG = "application_org";
+		public static final String APPLICATION_REPORT = "application_report";
+		public static final String APPLICATION_TIME = "application_time";
+		public static final String APPLICATION_FORMATTEDTIME = "application_formattedtime";
+		public static final String APPLICATION_BUGDET = "application_bugdet";
+		public static final String APPLICATION_INFO = "application_info";
 }

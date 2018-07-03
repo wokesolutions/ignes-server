@@ -280,7 +280,7 @@ public class Profile {
 			voteJson.put(Prop.VOTE, props.get(DSUtils.USERVOTE_TYPE));
 
 			if(props.containsKey(DSUtils.USERVOTE_REPORT))
-				voteJson.put(Prop.REPORT, props.get(DSUtils.USERVOTE_REPORT));
+				voteJson.put(Prop.REPORT, ((Key) props.get(DSUtils.USERVOTE_REPORT)).getName());
 			else if(props.containsKey(DSUtils.USERVOTE_EVENT))
 				voteJson.put(Prop.EVENT, props.get(DSUtils.USERVOTE_EVENT));
 			else if(props.containsKey(DSUtils.USERVOTE_COMMENT))
@@ -621,7 +621,6 @@ public class Profile {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LOCALITY, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
-		.addProjection(new PropertyProjection(DSUtils.REPORT_THUMBNAILPATH, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, Boolean.class));
 
 		QueryResultList<Entity> reports = datastore.prepare(reportQuery)
@@ -648,10 +647,6 @@ public class Profile {
 			jsonReport.put(Prop.CREATIONTIME,
 					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
 			jsonReport.put(Prop.ISPRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
-
-			String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
-
-			jsonReport.put(Prop.THUMBNAIL, tn);
 
 			Report.appendVotesAndComments(jsonReport, report);
 

@@ -225,6 +225,7 @@ public class Report {
 				reportVotes.setProperty(DSUtils.REPORTVOTES_UP, 0L);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_DOWN, 0L);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_DOWN, 0L);
+				reportVotes.setProperty(DSUtils.REPORTVOTES_SPAM, 0L);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_RELEVANCE, 0);
 
 				report.setPropertiesFrom(makeCoordProps(data.lat, data.lng));

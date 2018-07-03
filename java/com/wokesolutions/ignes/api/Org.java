@@ -41,6 +41,7 @@ import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.DatastoreException;
+import com.wokesolutions.ignes.data.ApplicationData;
 import com.wokesolutions.ignes.data.TaskData;
 import com.wokesolutions.ignes.data.WorkerRegisterData;
 import com.wokesolutions.ignes.exceptions.UserNotWorkerException;
@@ -583,5 +584,89 @@ public class Org {
 				retries--;
 			}
 		}
+	}
+	
+	@POST
+	@Path("/apply/{report}")
+	public Response apply(@Context HttpServletRequest request,
+			@PathParam(ParamName.REPORT) String reportid, ApplicationData data) {
+		int retries = 5;
+		while(true) {
+			try {
+				return applyRetry(request, reportid, data);
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+	
+	private Response applyRetry(HttpServletRequest request, String reportid,
+			ApplicationData data) {
+		String orgnif = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		
+		Key reportK = KeyFactory.createKey(DSUtils.REPORT, reportid);
+		Entity report;
+		try {
+			report = datastore.get(reportK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Message.REPORT_NOT_FOUND);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+		
+		Query taskQ = new Query(DSUtils.TASK).setAncestor(reportK);
+		Entity task;
+		try {
+			task = datastore.prepare(taskQ).asSingleEntity();
+			
+			if(task != null) {
+				LOG.info(Message.TASK_ALREADY_ASSIGNED);
+				return Response.status(Status.EXPECTATION_FAILED).build();
+			}
+		} catch(TooManyResultsException e) {
+			LOG.info(Message.UNEXPECTED_ERROR);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+		
+		Key userK = KeyFactory.createKey(DSUtils.USER, orgnif);
+		
+		Entity org;
+		Query orgQ = new Query(DSUtils.ORG).setAncestor(userK);
+		try {
+			org = datastore.prepare(orgQ).asSingleEntity();
+			
+			if(org == null) {
+				LOG.info(Message.UNEXPECTED_ERROR);
+				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			}
+		} catch(TooManyResultsException e) {
+			LOG.info(Message.UNEXPECTED_ERROR);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+		
+		Key orgK = org.getKey();
+		
+		boolean orgprivate = (boolean) org.getProperty(DSUtils.ORG_PRIVATE);
+		boolean reportprivate = (boolean) report.getProperty(DSUtils.REPORT_PRIVATE);
+		
+		if(!orgprivate && reportprivate) {
+			LOG.info(Message.REPORT_IS_PRIVATE);
+			return Response.status(Status.FORBIDDEN).build();
+		}
+		
+		Date date = new Date();
+		
+		Entity application = new Entity(DSUtils.APPLICATION);
+		application.setProperty(DSUtils.APPLICATION_BUGDET, data.bugdet);
+		application.setProperty(DSUtils.APPLICATION_TIME, date);
+		application.setProperty(DSUtils.APPLICATION_FORMATTEDTIME,
+				new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
+		application.setProperty(DSUtils.APPLICATION_INFO, data.info);
+		application.setProperty(DSUtils.APPLICATION_ORG, orgK);
+		application.setProperty(DSUtils.APPLICATION_REPORT, reportK);
+		
+		datastore.put(application);
+		return Response.ok().build();
 	}
 }

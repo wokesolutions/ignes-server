@@ -575,7 +575,7 @@ public class Admin {
 					obj.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
 					obj.put(Prop.ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
 					obj.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
-					obj.put(Prop.ISFIRESTATION, org.getProperty(DSUtils.ORG_ISFIRESTATION));
+					obj.put(Prop.ISFIRESTATION, org.getProperty(DSUtils.ORG_PRIVATE));
 					obj.put(Prop.LOCALITY, org.getProperty(DSUtils.ORG_LOCALITY));
 					obj.put(Prop.PHONE, org.getProperty(DSUtils.ORG_PHONE));
 					obj.put(Prop.SERVICES, org.getProperty(DSUtils.ORG_SERVICES));

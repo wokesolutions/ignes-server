@@ -38,7 +38,8 @@ import com.wokesolutions.ignes.util.UserLevel;
 public class Register {
 
 	private static final Logger LOG = Logger.getLogger(Register.class.getName());
-	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+	private static final DatastoreService datastore = DatastoreServiceFactory
+			.getDatastoreService();
 
 	public Register() {}
 
@@ -216,7 +217,7 @@ public class Register {
 				org.setUnindexedProperty(DSUtils.ORG_PHONE, registerData.phone);
 				org.setUnindexedProperty(DSUtils.ORG_ZIP, registerData.zip);
 				org.setProperty(DSUtils.ORG_SERVICES, registerData.services);
-				org.setProperty(DSUtils.ORG_ISFIRESTATION, registerData.isfirestation);
+				org.setProperty(DSUtils.ORG_PRIVATE, registerData.isprivate);
 
 				datastore.put(txn, org);
 				txn.commit();

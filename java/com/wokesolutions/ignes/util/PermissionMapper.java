@@ -28,6 +28,11 @@ public class PermissionMapper {
 		String req = url.substring(url.indexOf("/api/") + 5);
 
 		List<String> permissions = new ArrayList<String>(7);
+
+		if(req.contains(REGISTER)) {
+			permissions.add(UserLevel.GUEST);
+			return permissions;
+		}
 		
 		if(req.contains(POST_COMMENT)) {
 			permissions.add(UserLevel.LEVEL2);
@@ -144,11 +149,6 @@ public class PermissionMapper {
 		if(req.contains(TASK)) {
 			permissions.add(UserLevel.WORKER);
 			permissions.add(UserLevel.ADMIN);
-			return permissions;
-		}
-
-		if(req.contains(REGISTER)) {
-			permissions.add(UserLevel.GUEST);
 			return permissions;
 		}
 

@@ -20,7 +20,7 @@ import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.Message;
 
-@Priority(1)
+@Priority(2)
 public class RequestControlFilter implements Filter {
 	
 	public static final Logger LOG = Logger.getLogger(RequestControlFilter.class.getName());

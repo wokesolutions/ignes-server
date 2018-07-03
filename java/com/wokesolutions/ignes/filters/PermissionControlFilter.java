@@ -37,7 +37,7 @@ import com.wokesolutions.ignes.util.PermissionMapper;
 import com.wokesolutions.ignes.util.Secrets;
 import com.wokesolutions.ignes.util.UserLevel;
 
-@Priority(2)
+@Priority(3)
 public class PermissionControlFilter implements Filter {
 
 	private final static Logger LOG = Logger.getLogger(PermissionControlFilter.class.getName());
@@ -81,7 +81,7 @@ public class PermissionControlFilter implements Filter {
 			changeResp(resp, Message.INVALID_TOKEN);
 			return;
 		}
-
+		
 		String username;
 		try {
 			username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
@@ -90,11 +90,22 @@ public class PermissionControlFilter implements Filter {
 			return;
 		}
 
+		Key userKey = KeyFactory.createKey(DSUtils.USER, username);
+		Entity user;
+		try {
+			user = datastore.get(userKey);
+		} catch (EntityNotFoundException e) {
+			changeResp(resp, Message.USER_NOT_FOUND);
+			return;
+		}
+
+		String userlevel = user.getProperty(DSUtils.USER_LEVEL).toString();
+
 		for(int i = 0; i < permissions.size(); i++) {
 			String permission = permissions.get(i);
 
 			try {
-				verifyWith(token, algorithm, permission);
+				verifyWith(token, algorithm, username);
 			} catch (Exception e) {
 				if(i == permissions.size() - 1) {
 					changeResp(resp, Message.INVALID_TOKEN);
@@ -104,27 +115,17 @@ public class PermissionControlFilter implements Filter {
 				continue;
 			}
 
-			if(permission.equals(UserLevel.ORG)) {
-				Entity user;
-				try {
-					user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
-				} catch (EntityNotFoundException e) {
-					changeResp(resp, Message.INVALID_TOKEN);
-					return;
-				}
-				
+			if(permission.equals(UserLevel.ORG))
 				if(!user.getProperty(DSUtils.USER_ACTIVATION)
 						.toString().equals(Profile.ACTIVATED)) {
 					changeResp(resp, Message.ORG_NOT_CONFIRMED);
 					return;
 				}
-			}
 
 			break;
 		}
 
 		Query query = new Query(DSUtils.TOKEN);
-		Key userKey = KeyFactory.createKey(DSUtils.USER, username);
 		Query.Filter filter = new Query.FilterPredicate(DSUtils.TOKEN_USER,
 				FilterOperator.EQUAL, userKey);
 		query.setFilter(filter);
@@ -139,16 +140,6 @@ public class PermissionControlFilter implements Filter {
 		for(Entity tokenE : allTokens) {
 			if(tokenE.getProperty(DSUtils.TOKEN_STRING).equals(token) &&
 					tokenE.getProperty(DSUtils.TOKEN_DEVICE).equals(deviceid)) {
-
-				Entity user;
-				try {
-					user = datastore.get(userKey);
-				} catch (EntityNotFoundException e) {
-					changeResp(resp, Message.USER_NOT_FOUND);
-					return;
-				}
-
-				String userlevel = user.getProperty(DSUtils.USER_LEVEL).toString();
 
 				LOG.info(Message.PERMISSION_GRANTED);
 				
@@ -166,11 +157,11 @@ public class PermissionControlFilter implements Filter {
 	@Override
 	public void destroy() {}
 
-	private void verifyWith(String token, Algorithm algorithm, String userlevel)
+	private void verifyWith(String token, Algorithm algorithm, String username)
 			throws Exception {
 		JWTVerifier verifier = JWT.require(algorithm)
 				.withIssuer(JWTUtils.ISSUER)
-				.withClaim(JWTUtils.LEVEL, userlevel)
+				.withClaim(JWTUtils.USERNAME, username)
 				.build();
 
 		verifier.verify(token);
