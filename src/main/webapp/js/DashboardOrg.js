@@ -71,6 +71,12 @@ function getShowMore(){
 
 function showButtonDelete(){
 
+    if( document.getElementById("show_button_0" ).style.display === "block") {
+        for (var i = 0; i < numWorkers; i++)
+            document.getElementById("show_button_" + i).style.display = "none";
+        show_view = false;
+    }
+
     if(show === false){
         for(var i = 0; i<numWorkers; i++ )
             document.getElementById("delete_button_" + i ).style.display = "block";
@@ -84,6 +90,12 @@ function showButtonDelete(){
 }
 
 function showButtonView(){
+
+    if( document.getElementById("delete_button_0" ).style.display === "block"){
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("delete_button_" + i ).style.display = "none";
+        show = false;
+    }
 
     if(show_view === false){
         for(var i = 0; i<numWorkers; i++ )
@@ -481,6 +493,8 @@ function createWorker(){
 
             if (response.status === 200) {
                 alert("Trabalhador registado com sucesso.")
+                getFirstWorkers();
+                showWorkers();
             }else{
                 alert("Utilizador já existe ou falta informação em algum campo")
             }
@@ -536,8 +550,8 @@ function getFirstWorkers(){
                             cell1.innerHTML = data[i].name;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
-                            cell4.outerHTML= "<button id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
-                            cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style'><p class='delete_style'>P</p></button>";
+                            cell4.outerHTML= "<button id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
+                            cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style'><a class='fa fa-search'></a></button>";
 
                         }
                         numWorkers= data.length;
@@ -604,7 +618,7 @@ function getNextWorkers(){
                             cell1.innerHTML = data[i].name;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
-                            cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
+                            cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
                             cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style'><a class='fa fa-search'></a></button>";
 
                         }
@@ -673,8 +687,8 @@ function getPreWorkers(){
                                 cell1.innerHTML = data[i].name;
                                 cell2.innerHTML = data[i].email;
                                 cell3.innerHTML = data[i].job;
-                                cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
-                                cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style'><p class='delete_style'></p></button>";
+                                cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
+                                cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style'><a class='fa fa-search'></a></button>";
                             }
                             numWorkers= data.length;
                         }else{
@@ -744,7 +758,6 @@ function deleteWorker (row){
     fetch(restRequest('/api/org/deleteworker/' + email, 'DELETE', headers, body)).then(function(response) {
 
             if (response.status === 200 || response.status === 204) {
-                document.getElementById("delete_button").style.display = "block";
                 alert("Trabalhador apagado com sucesso.")
 
             }else{
