@@ -70,8 +70,7 @@ public class ReportVotes {
 				FilterOperator.EQUAL, user.getKey());
 		CompositeFilter filter = new Query.CompositeFilter
 				(CompositeFilterOperator.AND, Arrays.asList(uservoteFRep, uservoteFUser));
-		Query uservoteQ = new Query(DSUtils.USERVOTE).setAncestor(user.getKey())
-				.setFilter(filter);
+		Query uservoteQ = new Query(DSUtils.USERVOTE).setFilter(filter);
 
 		try {
 			uservote = datastore.prepare(uservoteQ).asSingleEntity();
@@ -129,11 +128,13 @@ public class ReportVotes {
 				if(vote.equals(NEUTRAL))
 					removeVote(points, reportvotes, uservote, txn);
 				else
-					changeVote(vote, uservote, report, reportvotes, txn);
+					changeVote(vote, uservote, points, reportvotes, txn);
 			else
 				newVote(user, points, report, vote, reportvotes, txn);
 
 			LevelManager.changeLevel(points, reporter, txn);
+			
+			txn.commit();
 		} catch(VoteException e) {
 			txn.rollback();
 			throw e;
@@ -156,10 +157,9 @@ public class ReportVotes {
 
 		datastore.put(txn, newvote);
 
-		long pointsval = (int) points.getProperty(DSUtils.USERPOINTS_POINTS);
+		long pointsval = (long) points.getProperty(DSUtils.USERPOINTS_POINTS);
 
 		long relevance = (long) reportvotes.getProperty(DSUtils.REPORTVOTES_RELEVANCE);
-		long spams = (long) reportvotes.getProperty(DSUtils.REPORTVOTES_SPAM);
 
 		if(vote.equals(UP)) {
 			long ups = (long) reportvotes.getProperty(DSUtils.REPORTVOTES_UP);
@@ -177,18 +177,14 @@ public class ReportVotes {
 			points.setProperty(DSUtils.USERPOINTS_POINTS, pointsval + POINTS_DOWN);
 		}
 
-		reportvotes.setProperty(DSUtils.REPORTVOTES_RELEVANCE, relevance + POINTS_SPAM);
-		reportvotes.setProperty(DSUtils.REPORTVOTES_SPAM, spams + 1);
-
 		datastore.put(txn, reportvotes);
 		datastore.put(txn, points);
-		txn.commit();
 	}
 
 	public static void spam(Entity points, Entity reportvotes, Entity user,
 			Entity report, Transaction txn) throws VoteException {
 
-		long pointsval = (int) points.getProperty(DSUtils.USERPOINTS_POINTS);
+		long pointsval = (long) points.getProperty(DSUtils.USERPOINTS_POINTS);
 
 		long relevance = (long) reportvotes.getProperty(DSUtils.REPORTVOTES_RELEVANCE);
 		long spams = (long) reportvotes.getProperty(DSUtils.REPORTVOTES_SPAM);
@@ -218,14 +214,16 @@ public class ReportVotes {
 
 		String vote = voteO.toString();
 
-		long pointsval = (int) points.getProperty(DSUtils.USERPOINTS_POINTS);
+		long pointsval = (long) points.getProperty(DSUtils.USERPOINTS_POINTS);
 
 		long relevance = (long) reportvotes.getProperty(DSUtils.REPORTVOTES_RELEVANCE);
 
 		if(vote.equals(UP)) {
 			long ups = (long) reportvotes.getProperty(DSUtils.REPORTVOTES_UP);
 
+			LOG.info(Long.toString((long) points.getProperty(DSUtils.USERPOINTS_POINTS)));
 			points.setProperty(DSUtils.USERPOINTS_POINTS, pointsval - POINTS_UP);
+			LOG.info(Long.toString((long) points.getProperty(DSUtils.USERPOINTS_POINTS)));
 
 			reportvotes.setProperty(DSUtils.REPORTVOTES_UP, ups - 1);
 			reportvotes.setProperty(DSUtils.REPORTVOTES_RELEVANCE,
@@ -241,7 +239,7 @@ public class ReportVotes {
 		} else
 			throw new VoteException();
 
-		datastore.delete(oldvote.getKey());
+		datastore.delete(txn, oldvote.getKey());
 		datastore.put(txn, points);
 		datastore.put(txn, reportvotes);
 	}
@@ -250,7 +248,7 @@ public class ReportVotes {
 			Entity reportvotes, Transaction txn) throws VoteException {
 		String oldvoteS = oldvote.getProperty(DSUtils.USERVOTE_TYPE).toString();
 
-		long pointsval = (int) points.getProperty(DSUtils.USERPOINTS_POINTS);
+		long pointsval = (long) points.getProperty(DSUtils.USERPOINTS_POINTS);
 
 		long ups = (long) reportvotes.getProperty(DSUtils.REPORTVOTES_UP);
 		long downs = (long) reportvotes.getProperty(DSUtils.REPORTVOTES_DOWN);

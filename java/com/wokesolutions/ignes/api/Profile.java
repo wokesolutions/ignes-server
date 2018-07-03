@@ -256,10 +256,12 @@ public class Profile {
 			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
+		
+		Key userK = KeyFactory.createKey(DSUtils.USER, username);
 
 		Query query = new Query(DSUtils.USERVOTE);
 		Filter filter = new Query.FilterPredicate(DSUtils.USERVOTE_USER,
-				FilterOperator.EQUAL, username);
+				FilterOperator.EQUAL, userK);
 		query.setFilter(filter);
 
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(20);
@@ -694,13 +696,12 @@ public class Profile {
 
 		LOG.info(Message.ATTEMPT_UPDATE_PROFILE);
 		
-		if(!Storage.saveImage(data.pic, Storage.BUCKET, pathImg,
+		if(!Storage.saveImage(data.pic, pathImg,
 				data.width, data.height, data.orientation, false))
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
 		Query query = new Query(DSUtils.USEROPTIONAL)
-				.setAncestor(KeyFactory.createKey(DSUtils.USER, username))
-				.setKeysOnly();
+				.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
 
 		try {
 			Entity optional = datastore.prepare(query).asSingleEntity();

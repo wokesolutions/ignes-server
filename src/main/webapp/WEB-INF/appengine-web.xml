@@ -6,7 +6,7 @@
 	<sessions-enabled>true</sessions-enabled>
 
 	<automatic-scaling>
-		<min-instances>2</min-instances>
+		<min-idle-instances>0</min-idle-instances>
 	</automatic-scaling>
 
 </appengine-web-app>

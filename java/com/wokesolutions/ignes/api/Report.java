@@ -212,10 +212,10 @@ public class Report {
 				folders.add(Storage.IMG_FOLDER);
 				folders.add(Storage.REPORT_FOLDER);
 				StoragePath pathImg = new StoragePath(folders, reportid);
-				if(!Storage.saveImage(data.img, Storage.BUCKET, pathImg,
+				if(!Storage.saveImage(data.img, pathImg,
 						data.imgwidth, data.imgheight, data.imgorientation, true)) {
 					LOG.info(Message.STORAGE_ERROR);
-					return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 
 				report.setProperty(DSUtils.REPORT_IMGPATH, pathImg.makePath());
