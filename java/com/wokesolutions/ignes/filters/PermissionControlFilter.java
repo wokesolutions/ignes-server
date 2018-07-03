@@ -60,7 +60,7 @@ public class PermissionControlFilter implements Filter {
 		HttpServletRequest request = (HttpServletRequest) req;
 
 		String url = request.getRequestURL().toString();
-		
+
 		LOG.info(url);
 
 		List<String> permissions = PermissionMapper.getPermissions(url);
@@ -70,7 +70,7 @@ public class PermissionControlFilter implements Filter {
 			chain.doFilter(req, resp);
 			return;
 		}
-		
+
 		LOG.info(Message.NOT_GUEST_REQUEST);
 
 		Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
@@ -81,7 +81,7 @@ public class PermissionControlFilter implements Filter {
 			changeResp(resp, Message.INVALID_TOKEN);
 			return;
 		}
-		
+
 		String username;
 		try {
 			username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
@@ -101,29 +101,24 @@ public class PermissionControlFilter implements Filter {
 
 		String userlevel = user.getProperty(DSUtils.USER_LEVEL).toString();
 
-		for(int i = 0; i < permissions.size(); i++) {
-			String permission = permissions.get(i);
-
-			try {
-				verifyWith(token, algorithm, username);
-			} catch (Exception e) {
-				if(i == permissions.size() - 1) {
-					changeResp(resp, Message.INVALID_TOKEN);
-					return;
-				}
-
-				continue;
-			}
-
-			if(permission.equals(UserLevel.ORG))
-				if(!user.getProperty(DSUtils.USER_ACTIVATION)
-						.toString().equals(Profile.ACTIVATED)) {
-					changeResp(resp, Message.ORG_NOT_CONFIRMED);
-					return;
-				}
-
-			break;
+		try {
+			verifyWith(token, algorithm, username);
+		} catch (Exception e) {
+			changeResp(resp, Message.INVALID_TOKEN);
+			return;
 		}
+		
+		if(!permissions.contains(userlevel)) {
+			changeResp(resp, Message.INVALID_TOKEN);
+			return;
+		}
+
+		if(userlevel.equals(UserLevel.ORG))
+			if(!user.getProperty(DSUtils.USER_ACTIVATION)
+					.toString().equals(Profile.ACTIVATED)) {
+				changeResp(resp, Message.ORG_NOT_CONFIRMED);
+				return;
+			}
 
 		Query query = new Query(DSUtils.TOKEN);
 		Query.Filter filter = new Query.FilterPredicate(DSUtils.TOKEN_USER,
@@ -142,7 +137,7 @@ public class PermissionControlFilter implements Filter {
 					tokenE.getProperty(DSUtils.TOKEN_DEVICE).equals(deviceid)) {
 
 				LOG.info(Message.PERMISSION_GRANTED);
-				
+
 				req.setAttribute(CustomHeader.LEVEL_ATT, userlevel);
 				req.setAttribute(CustomHeader.USERNAME_ATT, username);
 				chain.doFilter(req, resp);
