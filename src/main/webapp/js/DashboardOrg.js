@@ -6,6 +6,7 @@ var feedCursor;
 var commentsCursor;
 var current_position = "map_variable";
 var idReportCurr;
+var numWorkers;
 var currentLoc ={
     center: {lat: 38.661148, lng: -9.203075},
     zoom: 18
@@ -13,6 +14,7 @@ var currentLoc ={
 
 var emailsarr;
 var workersarr;
+var show = false;
 
 getCurrentLocation();
 
@@ -40,7 +42,7 @@ function init() {
     document.getElementById("close_window").onclick = closeWindow;
     document.getElementById("add_task").onclick = giveTask;
     document.getElementById("remove_button").onclick = showButtonDelete;
-    document.getElementById("add_button").onclick = showButtonAdd;
+
 
     $("#email_select").change(function(){
         var email = $("#email_select").val();
@@ -66,12 +68,17 @@ function getShowMore(){
 }
 
 function showButtonDelete(){
-    document.getElementById("delete_button").style.display = "block";
-}
 
-function showButtonAdd(){
-    document.getElementById("delete_button").style.display = "block";
-    document.getElementById("delete_button").style.display = "block";
+    if(show === false){
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("delete_button_" + i ).style.display = "block";
+        show = true;
+    }else {
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("delete_button_" + i ).style.display = "none";
+        show = true;
+    }
+
 }
 
 function searchLocation(){
@@ -512,10 +519,10 @@ function getFirstWorkers(){
                             cell1.innerHTML = data[i].name;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
-                            cell4.outerHTML= "<button id='delete_button'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
+                            cell4.outerHTML= "<button id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
 
                         }
-
+                        numWorkers= data.length;
                     }else{
                         alert("Esta empresa ainda não tem trabalhadores associados.")
                     }
@@ -568,6 +575,7 @@ function getNextWorkers(){
                     console.log(JSON.stringify(data));
                     if(data != null){
                         var i;
+
                         for(i = 0; i < data.length; i++){
                             var row = table.insertRow(-1);
                             var cell1 = row.insertCell(0);
@@ -577,9 +585,9 @@ function getNextWorkers(){
                             cell1.innerHTML = data[i].name;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
-                            cell4.outerHTML= "<button  id='delete_button'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
+                            cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
                         }
-
+                        numWorkers= data.length;
                     }else{
                         alert("Esta empresa ainda não tem trabalhadores associados.")
                     }
@@ -643,9 +651,9 @@ function getPreWorkers(){
                                 cell1.innerHTML = data[i].name;
                                 cell2.innerHTML = data[i].email;
                                 cell3.innerHTML = data[i].job;
-                                cell4.outerHTML= "<button  id='delete_button'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
+                                cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
                             }
-
+                            numWorkers= data.length;
                         }else{
                             alert("Esta empresa ainda não tem trabalhadores associados.")
                         }
