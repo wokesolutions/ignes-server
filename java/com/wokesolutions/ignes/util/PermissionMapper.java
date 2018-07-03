@@ -15,6 +15,7 @@ public class PermissionMapper {
 	private final static String CREATE_REPORT = "report/create";
 	private final static String GET_REPORT_VOTE = "report/vote/get";
 	private final static String POST_REPORT_VOTE = "report/vote";
+	private final static String CHANGE_PW = "changepassword";
 	private final static String PROFILE = "profile";
 	private final static String CLOSE_REPORT = "report/close";
 	private final static String ADMIN = "admin";
@@ -30,6 +31,16 @@ public class PermissionMapper {
 
 		List<String> permissions = new ArrayList<String>(7);
 
+		if(req.contains(CHANGE_PW)) {
+			permissions.add(UserLevel.LEVEL1);
+			permissions.add(UserLevel.LEVEL2);
+			permissions.add(UserLevel.LEVEL3);
+			permissions.add(UserLevel.ADMIN);
+			permissions.add(UserLevel.ORG);
+			permissions.add(UserLevel.WORKER);
+			return permissions;
+		}
+		
 		if(req.contains(REGISTER_WORKER)) {
 			permissions.add(UserLevel.ORG);
 			return permissions;

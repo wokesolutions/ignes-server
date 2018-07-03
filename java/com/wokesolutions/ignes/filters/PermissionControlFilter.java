@@ -128,7 +128,8 @@ public class PermissionControlFilter implements Filter {
 		query.addProjection(new PropertyProjection(DSUtils.TOKEN_DEVICE, String.class))
 		.addProjection(new PropertyProjection(DSUtils.TOKEN_STRING, String.class));
 
-		List<Entity> allTokens = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
+		List<Entity> allTokens = datastore.prepare(query)
+				.asList(FetchOptions.Builder.withDefaults());
 
 		String deviceid = request.getAttribute(CustomHeader.DEVICE_ID_ATT).toString();
 

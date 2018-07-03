@@ -269,14 +269,29 @@ public class Org {
 
 			datastore.delete(txn, list);
 
-			Query query = new Query(DSUtils.TOKEN).setAncestor(userKey).setKeysOnly();
-			List<Entity> listToken = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
+			Filter tokenF = new Query.FilterPredicate(DSUtils.DEVICE_USER,
+					FilterOperator.EQUAL, userKey);
+			Query tokenQ = new Query(DSUtils.TOKEN).setKeysOnly().setFilter(tokenF);
+			List<Entity> listToken = datastore.prepare(tokenQ)
+					.asList(FetchOptions.Builder.withDefaults());
 			List<Key> tokens = new ArrayList<Key>(listToken.size());
 
 			for(Entity e : listToken)
 				tokens.add(e.getKey());
 
 			datastore.delete(txn, tokens);
+
+			Filter deviceF = new Query.FilterPredicate(DSUtils.DEVICE_USER,
+					FilterOperator.EQUAL, userKey);
+			Query deviceQ = new Query(DSUtils.DEVICE).setAncestor(userKey).setFilter(deviceF);
+			List<Entity> devicelist = datastore.prepare(deviceQ)
+					.asList(FetchOptions.Builder.withDefaults());
+			List<Key> devices = new ArrayList<Key>(devicelist.size());
+
+			for(Entity e : devicelist)
+				devices.add(e.getKey());
+
+			datastore.delete(txn, devices);
 
 			datastore.put(txn, deletedWorker);
 
