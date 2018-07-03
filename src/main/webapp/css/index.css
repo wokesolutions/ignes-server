@@ -279,6 +279,21 @@ footer a{
     margin-top: 1rem;
 }
 
+
+.btn-block-style {
+    display: block;
+    width: 70%;
+    margin-top: .5rem;
+    margin-bottom: .5rem;
+    margin-left: 4rem;
+    background-color: #f8f9fa;
+    border-color: #d8dde2;
+    font-family: "Quicksand Bold";
+    font-size: 1rem;
+    color: #ad363b;
+
+}
+
 .btn-circle.btn-xl-yellow {
     width: 70px;
     height: 70px;
@@ -399,6 +414,10 @@ label {
     font-family: "Quicksand Bold";
     color:#AD363B;
 
+}
+
+.border{
+    border: 1px solid rgba(68, 68, 68, 0.49);
 }
 
 #contactosMarg{

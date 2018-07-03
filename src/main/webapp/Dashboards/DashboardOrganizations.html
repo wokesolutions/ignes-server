@@ -31,12 +31,12 @@
             <a class = "navbar-brand js-scroll-trigger"  id ="expBrand" href="#page-top"><img src="../images/org.png" height="70" width="auto"/> </a>
             <div class="collapse navbar-collapse" id="navbarResponsive">
                 <ul class="navbar-nav ml-auto">
-                    <li id ="profile_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  ><a class="fa fa-user"> </a>Perfil</a></li>
-                    <li id = "map_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  /><a class="fa fa-map-o"> </a>Mapa</a></li>
-                    <li id ="email_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-envelope-o"> </a>Caixa de Entrada</a></li>
-                    <li id ="create_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-edit"> </a>Registar Trabalhador</a></li>
-                    <li id ="user_table_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Trabalhadores </a></li>
-                    <li id = "logout_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"><a class="fa fa-power-off"> </a>Terminar Sessão</a></li>
+                    <li id ="profile_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  ><a class="fa fa-user" style="margin-right:.5rem;"> </a>Perfil</a></li>
+                    <li id = "map_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"  /><a class="fa fa-map-o" style="margin-right:.5rem;"> </a>Mapa</a></li>
+                    <li id ="email_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-envelope-o" style="margin-right:.5rem;"> </a>Caixa de Entrada</a></li>
+                    <li id ="create_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-edit" style="margin-right:.5rem;"> </a>Registar Trabalhador</a></li>
+                    <li id ="user_table_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users" style="margin-right:.5rem;"> </a>Trabalhadores </a></li>
+                    <li id = "logout_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"><a class="fa fa-power-off" style="margin-right:.5rem;"> </a>Terminar Sessão</a></li>
                 </ul>
             </div>
         </div>
@@ -46,37 +46,48 @@
 <!--List Users-->
 <div id="list_users" style="display: none">
     <div class="row">
-        <div class="col-md-12 col-lg-12 text-center" >
-            <div class="row">
-                <div class=" col-md-2 col-lg-2 text-center">
-                    <button class="btn btn-default btn-style" id="refresh_workers"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
-                </div>
-                <div class=" col-md-10 col-lg-10 text-center"></div>
-            </div>
-            <div class="container">
-                <div class="table-responsive">
-                    <table class=" table table-hover table-style text-center" id="user_table">
-                        <tr>
-                            <th class="th-style">Name</th>
-                            <th class="th-style">Email</th>
-                            <th class="th-style"> Serviços</th>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-            <div class="row">
-                <div class=" col-md-8 col-lg-8 text-center"></div>
-                <div class=" col-md-2 col-lg-2 text-center">
-                    <button style="display: none" class="btn btn-default" id="previous_list"><i class="fa fa-toggle-left size"></i> </button>
-                </div>
-                <div class=" col-md-1 col-lg-1 text-center">
-                    <button style="display: none" class="btn btn-default" id="next_list"><i class="fa fa-toggle-right size"></i> </button>
-                </div>
-                <div class=" col-md-1 col-lg-1 text-center"></div>
-            </div>
+        <div class="col-lg-4 text-center" style="margin-top: 3rem">
+            <button id ="add_button" type="button" class="btn btn-lg btn-block-style"><a class="fa fa-edit"> </a> Registar trabalhador</button>
+        </div>
+        <div class="col-lg-4 text-center" style="margin-top: 3rem">
+            <button id="remove_button"type="button" class="btn btn-lg btn-block-style"><a class="fa fa-trash-o" style="margin-right:.5rem;"></a>Remover trabalhador</button>
+        </div>
+        <div class="col-lg-4 text-center" style="margin-top: 3rem">
+            <button type="button" class="btn btn-lg btn-block-style">Block level button</button>
         </div>
     </div>
-</div>
+
+    <div class="col-md-12 col-lg-12 text-center" >
+        <div class="row">
+            <div class=" col-md-2 col-lg-2 text-center">
+                <button class="btn btn-default btn-style" id="refresh_workers"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
+            </div>
+            <div class=" col-md-10 col-lg-10 text-center"></div>
+        </div>
+        <div class="container">
+            <div class="table-responsive">
+                <table class=" table table-hover table-style text-center" id="user_table">
+                    <tr>
+                        <th class="th-style">Name</th>
+                        <th class="th-style">Email</th>
+                        <th class="th-style"> Serviços</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class=" col-md-8 col-lg-8 text-center"></div>
+            <div class=" col-md-2 col-lg-2 text-center">
+                <button style="display: none" class="btn btn-default" id="previous_list"><i class="fa fa-toggle-left size"></i> </button>
+            </div>
+            <div class=" col-md-1 col-lg-1 text-center">
+                <button style="display: none" class="btn btn-default" id="next_list"><i class="fa fa-toggle-right size"></i> </button>
+            </div>
+            <div class=" col-md-1 col-lg-1 text-center"></div>
+        </div>
+    </div>
+
+</div></div>
 
 <!--Profile-->
 <div id="profile" style="display: none">
@@ -134,59 +145,12 @@
 </div>
 
 <!--Email Box-->
-<div id="email_box" style="display: none">
-    <div>
-        <div class="row" id="contactosMarg">
-            <div class="col-sm-3 col-lg-3 mx-auto ">
-
-            </div>
-
-            <div class="col-sm-3 col-lg-3 mx-auto text-center">
-                <img src="../images/avatar.png" class="foto" alt="Icone de Gonçalo"/>
-                <p id="nos"> Gonçalo Roxo</p>
-            </div>
-
-            <div class="col-lg-3 col-sm-3 mx-auto text-center">
-                <img src="../images/avatar.png" class="foto" alt="Icone de Francesco"/>
-                <p id="nos">Francesco Lupo</p>
-            </div>
-
-            <div class="col-sm-3 col-lg-3 mx-auto ">
-
-            </div>
-
-        </div>
-        <div class="row">
-
-            <div class="col-lg-2 col-sm-2 mx-auto text-center ">
-            </div>
-            <div class="col-lg-2 col-sm-2 mx-auto text-center ">
-                <img src="../images/avatar.png" class="foto" alt="Icone de Catarina"/>
-                <p id="nos">Catarina Matos</p>
-            </div>
-
-            <div class="col-lg-4 col-sm-4 mx-auto text-center ">
-                <img src="../images/avatar.png" class="foto" alt="Icone de Maria"/>
-                <p id="nos"> Maria Lobo da Silva</p>
-            </div>
-
-            <div class="col-lg-2 col-sm-2 mx-auto text-center ">
-                <img src="../images/avatar.png" class="foto" alt="Icone de Filipe"/>
-                <p id="nos"> Filipe Medeiros</p>
-            </div>
-            <div class="col-lg-2 col-sm-2 mx-auto text-center ">
-            </div>
-
-
-        </div>
-    </div>
-
-</div></div>
+<div id="email_box" style="display: none"></div>
 
 <!--Create Worker-->
 <div id="create_worker" style="display: none">
-    <div class="container">
-        <div class="row" >
+    <div class="container" style="height: 2rem; margin-top: 2rem" >
+        <div class="row" style="background: #f8f9fa " >
             <div class="col-lg-4 col-md-4 text-center"></div>
             <div class="col-lg-2 col-md-2 text-center" id="pic_top">
                 <img height="170" src="../images/6.1.svg"/>
@@ -196,41 +160,30 @@
             </div>
             <div class="col-lg-4 col-md-4 text-center"></div>
         </div>
-        <div class="row" >
+        <div class="row" style="background: #f8f9fa">
             <div class="col-lg-12 col-md-12 text-center">
                 <p class="info_text">Aréa para registar um trabalhador que fica associado à sua empresa</p>
             </div>
         </div>
-        <div class="row" >
+        <div class="row" style="background: #f8f9fa " >
             <div class="col-lg-12 col-md-12 text-center">
                 <p class="org_name_style" id="org_name"></p>
             </div>
         </div>
-        <div class="row">
+        <div class="row" style="background: #f8f9fa ">
             <div class="col-lg-8 col-md-8 mx-auto">
                 <form name="sentMessage" id="signupForm">
-
-                    <div class="form-group floating-label-form-group-x controls">
-                        <label>Nome </label> <input type="text" class="form-control" id="worker_username" placeholder="Nome" />
-                        <hr/>
-                    </div>
-                    <div class="form-group floating-label-form-group-x controls">
-                        <label>Email</label> <input type="email" class="form-control" id="worker_email" placeholder="Email" />
-                        <hr/>
-                    </div>
-                    <div class="form-group floating-label-form-group-x controls">
-                        <label>Serviços</label> <input type="text" class="form-control" id="worker_jobs" placeholder="Serviços" />
-                        <hr/>
-                    </div>
+                        <label>Nome </label> <input type="text" class="form-control border" id="worker_username" placeholder="Nome" />
+                        <label>Email</label> <input type="email" class="form-control border" id="worker_email" placeholder="Email" />
+                        <label>Serviços</label> <input type="text" class="form-control border" id="worker_jobs" placeholder="Serviços" />
                 </form>
             </div>
         </div>
-    </div>
 
-
-    <div class="row">
-        <div class="col-lg-12 mx-lg-auto text-center">
-            <button id="report_occurrence" type="button" class="btn btn-circle btn-xl-yellow"><i class="fa fa-check" id="worker_register"> </i> </button>
+        <div class="row" style="background: #f8f9fa ">
+            <div class="col-lg-12 mx-lg-auto text-center">
+                <button id="report_occurrence" type="button" class="btn btn-circle btn-xl-yellow"><i class="fa fa-check" id="worker_register"> </i> </button>
+            </div>
         </div>
     </div>
 
@@ -261,18 +214,18 @@
             <div class="col-lg-12 text-center">
                 <img id="thumb_report" style="width:20%; height:20%">
             </div>
-            <p class="info_text_bold_sm text-center">Título</p>
+            <p class="info_text_bold_sm text-center" id="show_title" style="display:none">Título</p>
             <p class="info_text_response text-center" id="report_title_id"></p>
-            <p class="info_text_bold_sm text-center">Morada</p>
-            <p class="info_text_response text-center" id="report_address_id"></p>
-            <p class="info_text_bold_sm text-center">Estado</p>
+            <p class="info_text_bold_sm text-center" id="show_address" style="display:none">Morada</p>
+            <p class="info_text_response text-center" id="report_address_id" style="display:none"></p>
+            <p class="info_text_bold_sm text-center" id="show_state" style="display:none">Estado</p>
             <p class="info_text_response text-center"id="report_state_id"></p>
-            <p class="info_text_bold_sm text-center">Gravidade</p>
+            <p class="info_text_bold_sm text-center" id="show_gravity" style="display:none">Gravidade</p>
             <p class="info_text_response text-center"id="report_gravity_id"></p>
             <p class="info_text text-center"id="report_private_id"></p>
 
             <div class="col-lg-12 mx-lg-auto text-center">
-                <button id="show_more_button" style="margin-top:0" type="button" class="btn btn-primary-view">Ver Mais</button>
+                <button id="show_more_button" style="display:none;margin-top:0" type="button" class="btn btn-primary-view">Ver Mais</button>
             </div>
         </div>
     </div>
@@ -435,7 +388,7 @@
 </div>
 
 <script src="../js/RestApi.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAfHsLp6fKLK4YZ2WSoXO0KsM58Clspg8k"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDyB4FcTNeaLK_S-cHrV3EuxmwZGItbIRw"></script>
 <script src="../js/bootbox.min.js"></script>
 <script src="../js/jquery-3.3.1.min.js"></script>
 <script src="../js/bootstrap.bundle.js"></script>

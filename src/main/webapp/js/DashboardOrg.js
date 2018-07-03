@@ -5,20 +5,18 @@ var reportID;
 var feedCursor;
 var commentsCursor;
 var current_position = "map_variable";
-var infowindow = new google.maps.InfoWindow();
 var idReportCurr;
 var currentLoc ={
     center: {lat: 38.661148, lng: -9.203075},
     zoom: 18
 };
-var email_current;
 
 var emailsarr;
 var workersarr;
 
 getCurrentLocation();
 
-var URL_BASE = 'https://hardy-scarab-200218.appspot.com';
+var URL_BASE = 'https://mimetic-encoder-209111.appspot.com';
 
 google.maps.event.addDomListener(window, 'load', init());
 
@@ -41,6 +39,9 @@ function init() {
     document.getElementById("show_more_button").onclick = getShowMore;
     document.getElementById("close_window").onclick = closeWindow;
     document.getElementById("add_task").onclick = giveTask;
+    document.getElementById("remove_button").onclick = showButtonDelete;
+    document.getElementById("add_button").onclick = showButtonAdd;
+
     $("#email_select").change(function(){
         var email = $("#email_select").val();
         var index = emailsarr.indexOf(email);
@@ -62,6 +63,15 @@ function init() {
 
 function getShowMore(){
     hideShow("show_more_variable");
+}
+
+function showButtonDelete(){
+    document.getElementById("delete_button").style.display = "block";
+}
+
+function showButtonAdd(){
+    document.getElementById("delete_button").style.display = "block";
+    document.getElementById("delete_button").style.display = "block";
 }
 
 function searchLocation(){
@@ -356,6 +366,11 @@ function getInfo(idReport, i){
                     image.src = "data:image/jpg;base64," + data.thumbnail;
                 });
 
+                document.getElementById("show_title").style.display = "block";
+                document.getElementById("show_address").style.display = "block";
+                document.getElementById("show_state").style.display = "block";
+                document.getElementById("show_gravity").style.display = "block";
+                document.getElementById("show_more_button").style.display = "block";
 
                 if(reports[i].title !== ""){
                     document.getElementById('report_title_id').innerHTML= reports[i].title;
@@ -497,7 +512,7 @@ function getFirstWorkers(){
                             cell1.innerHTML = data[i].name;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
-                            cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
+                            cell4.outerHTML= "<button id='delete_button'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
 
                         }
 
@@ -562,7 +577,7 @@ function getNextWorkers(){
                             cell1.innerHTML = data[i].name;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
-                            cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
+                            cell4.outerHTML= "<button  id='delete_button'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
                         }
 
                     }else{
@@ -628,7 +643,7 @@ function getPreWorkers(){
                                 cell1.innerHTML = data[i].name;
                                 cell2.innerHTML = data[i].email;
                                 cell3.innerHTML = data[i].job;
-                                cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
+                                cell4.outerHTML= "<button  id='delete_button'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
                             }
 
                         }else{
@@ -698,7 +713,9 @@ function deleteWorker (row){
     fetch(restRequest('/api/org/deleteworker/' + email, 'DELETE', headers, body)).then(function(response) {
 
             if (response.status === 200 || response.status === 204) {
+                document.getElementById("delete_button").style.display = "block";
                 alert("Trabalhador apagado com sucesso.")
+
             }else{
                 alert("Falha ao apagar o utilizador.")
             }

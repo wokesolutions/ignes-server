@@ -6,7 +6,7 @@ var cursor_current_pending;
 var cursor_pre_pending;
 
 var current_position = "list_users_variable";
-var URL_BASE = 'https://hardy-scarab-200218.appspot.com';
+var URL_BASE = 'https://mimetic-encoder-209111.appspot.com';
 
 init();
 
