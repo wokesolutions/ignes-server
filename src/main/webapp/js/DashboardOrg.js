@@ -15,6 +15,7 @@ var currentLoc ={
 var emailsarr;
 var workersarr;
 var show = false;
+var show_view = false;
 
 getCurrentLocation();
 
@@ -42,6 +43,7 @@ function init() {
     document.getElementById("close_window").onclick = closeWindow;
     document.getElementById("add_task").onclick = giveTask;
     document.getElementById("remove_button").onclick = showButtonDelete;
+    document.getElementById("view_button").onclick = showButtonView;
 
 
     $("#email_select").change(function(){
@@ -76,7 +78,21 @@ function showButtonDelete(){
     }else {
         for(var i = 0; i<numWorkers; i++ )
             document.getElementById("delete_button_" + i ).style.display = "none";
-        show = true;
+        show = false;
+    }
+
+}
+
+function showButtonView(){
+
+    if(show_view === false){
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("show_button_" + i ).style.display = "block";
+        show_view = true;
+    }else {
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("show_button_" + i ).style.display = "none";
+        show_view = false;
     }
 
 }
@@ -516,10 +532,12 @@ function getFirstWorkers(){
                             var cell2 = row.insertCell(1);
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
                             cell1.innerHTML = data[i].name;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
                             cell4.outerHTML= "<button id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
+                            cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style'><p class='delete_style'>P</p></button>";
 
                         }
                         numWorkers= data.length;
@@ -582,10 +600,13 @@ function getNextWorkers(){
                             var cell2 = row.insertCell(1);
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
                             cell1.innerHTML = data[i].name;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
                             cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
+                            cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style'><a class='fa fa-search'></a></button>";
+
                         }
                         numWorkers= data.length;
                     }else{
@@ -648,10 +669,12 @@ function getPreWorkers(){
                                 var cell2 = row.insertCell(1);
                                 var cell3 = row.insertCell(2);
                                 var cell4 = row.insertCell(3);
+                                var cell5 = row.insertCell(4);
                                 cell1.innerHTML = data[i].name;
                                 cell2.innerHTML = data[i].email;
                                 cell3.innerHTML = data[i].job;
                                 cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
+                                cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style'><p class='delete_style'></p></button>";
                             }
                             numWorkers= data.length;
                         }else{
