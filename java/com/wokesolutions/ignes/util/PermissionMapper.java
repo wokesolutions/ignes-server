@@ -25,11 +25,19 @@ public class PermissionMapper {
 	private final static String TASK = "task";
 	private final static String REGISTER_WORKER = "registerworker";
 	private final static String REGISTER = "register";
+	private final static String CATEGORY = "category";
+	
+	public final static String FORBIDDEN = "f";
 
 	public static List<String> getPermissions(String url) { //TODO fix time
 		String req = url.substring(url.indexOf("/api/") + 5);
 
-		List<String> permissions = new ArrayList<String>(7);
+		List<String> permissions = new ArrayList<String>(8);
+		
+		if(req.contains(CATEGORY)) {
+			permissions.add(UserLevel.GUEST);
+			return permissions;
+		}
 
 		if(req.contains(CHANGE_PW)) {
 			permissions.add(UserLevel.LEVEL1);
@@ -84,7 +92,14 @@ public class PermissionMapper {
 		}
 
 		if(req.contains(GET_REPORT)) {
+			permissions.add(FORBIDDEN);
+			permissions.add(UserLevel.ORG);
+			permissions.add(UserLevel.WORKER);
 			permissions.add(UserLevel.GUEST);
+			permissions.add(UserLevel.LEVEL1);
+			permissions.add(UserLevel.LEVEL2);
+			permissions.add(UserLevel.LEVEL3);
+			permissions.add(UserLevel.ADMIN);
 			return permissions;
 		}
 

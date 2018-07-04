@@ -46,7 +46,7 @@ public class Storage {
 	
 	private static ImagesService imagesService = ImagesServiceFactory.getImagesService();
 	
-	public static boolean deleteImage(StoragePath path) {
+	public static boolean deleteImage(StoragePath path, boolean withTn) {
 		GcsFilename fileName = new GcsFilename(BUCKET, path.makePath());
 		
 		try {

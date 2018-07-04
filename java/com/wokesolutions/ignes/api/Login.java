@@ -92,7 +92,7 @@ public class Login {
 		try {
 			Entity user;
 			try {
-				user = datastore.get(userKey);
+				user = datastore.get(txn, userKey);
 			} catch (EntityNotFoundException e) {
 				LOG.warning(Message.FAILED_LOGIN + data.username);
 				txn.rollback();
@@ -118,7 +118,7 @@ public class Login {
 
 			Entity stats;
 			try {
-				stats = datastore.prepare(statsQuery).asSingleEntity();
+				stats = datastore.prepare(txn, statsQuery).asSingleEntity();
 			} catch(TooManyResultsException e2) {
 				LOG.info(Message.UNEXPECTED_ERROR);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
@@ -131,11 +131,8 @@ public class Login {
 			if(!hashedPWD.equals(DigestUtils.sha512Hex(data.password))) {
 				LOG.info(Message.WRONG_PASSWORD + data.username);
 
-				if(!stats.hasProperty(DSUtils.USERSTATS_LOGINSFAILED))
-					stats.setProperty(DSUtils.USERSTATS_LOGINSFAILED, 1L);
-				else
-					stats.setProperty(DSUtils.USERSTATS_LOGINSFAILED,
-							1L + (long) stats.getProperty(DSUtils.USERSTATS_LOGINSFAILED));
+				stats.setProperty(DSUtils.USERSTATS_LOGINSFAILED,
+						1L + (long) stats.getProperty(DSUtils.USERSTATS_LOGINSFAILED));
 
 				datastore.put(txn,stats);				
 				txn.commit();
@@ -178,7 +175,7 @@ public class Login {
 
 			if(existingDevice == null) {
 				String app = request.getAttribute(CustomHeader.DEVICE_APP_ATT).toString();
-				
+
 				existingDevice = new Entity(DSUtils.DEVICE, deviceid);
 				existingDevice.setUnindexedProperty(DSUtils.DEVICE_COUNT, 1L);
 				existingDevice.setProperty(DSUtils.DEVICE_USER, userKey);
@@ -209,6 +206,10 @@ public class Login {
 			newToken.setUnindexedProperty(DSUtils.TOKEN_DATE, date);
 			newToken.setProperty(DSUtils.TOKEN_DEVICE, deviceid);
 			newToken.setProperty(DSUtils.TOKEN_USER, userKey);
+			
+			stats.setProperty(DSUtils.USERSTATS_LOGINS,
+					(long) stats.getProperty(DSUtils.USERSTATS_LOGINS) + 1L);
+			stats.setProperty(DSUtils.USERSTATS_LASTIN, new Date());
 
 			LOG.info(data.username + Message.LOGGED_IN);
 			List<Entity> logs = Arrays.asList(log, stats, newToken);
@@ -257,7 +258,7 @@ public class Login {
 
 				response.header(CustomHeader.ACTIVATED, activated);
 			}
-			
+
 			txn.commit();
 			return response.build();	
 		} finally {

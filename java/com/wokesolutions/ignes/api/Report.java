@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -73,11 +74,18 @@ public class Report {
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 	private static final int BATCH_SIZE = 10;
+	
+	public static final String PORTUGAL = "Portugal";
 
 	public static final String OPEN = "open";
 	public static final String CLOSED = "closed";
 	public static final String STANDBY = "standby";
+	public static final String WIP = "wip";
+	
 	private static final String NOT_FOUND = "NOT_FOUND";
+	
+	public static final String LAT = "lat";
+	public static final String LNG = "lng";
 
 	private static final String OCORRENCIA_RAPIDA = "Ocorrência rápida - ";
 
@@ -146,13 +154,28 @@ public class Report {
 
 				Entity report = new Entity(DSUtils.REPORT, reportid);
 
-				report.setProperty(DSUtils.REPORT_LAT, data.lat);
-				report.setProperty(DSUtils.REPORT_LNG, data.lng);
+				if(data.lat != 0 && data.lng != 0) {
+					report.setProperty(DSUtils.REPORT_LAT, data.lat);
+					report.setProperty(DSUtils.REPORT_LNG, data.lng);
+					
+					report.setProperty(DSUtils.REPORT_POINTS, null);
+				} else {
+					double[] middle = ReportData.calcMiddle(data.points);
+					
+					report.setProperty(DSUtils.REPORT_LAT, middle[0]);
+					report.setProperty(DSUtils.REPORT_LNG, middle[1]);
+					
+					report.setProperty(DSUtils.REPORT_POINTS, data.points.toString());
+				}
+
+				SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+				sdf.setTimeZone(TimeZone.getTimeZone(PORTUGAL));
+				
 				report.setProperty(DSUtils.REPORT_CREATIONTIME, creationtime);
 				report.setProperty(DSUtils.REPORT_PRIVATE, data.isprivate);
-				report.setProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED,
-						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(creationtime));
+				report.setProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED, sdf.format(creationtime));
 				report.setProperty(DSUtils.REPORT_USER, userKey);
+				report.setProperty(DSUtils.REPORT_CATEGORY, data.category);
 
 				if(level.equals(UserLevel.LEVEL1))
 					report.setProperty(DSUtils.REPORT_STATUS, STANDBY);
@@ -201,7 +224,7 @@ public class Report {
 				if(data.description != null)
 					report.setProperty(DSUtils.REPORT_DESCRIPTION, data.description);
 				else
-					report.setProperty(DSUtils.REPORT_DESCRIPTION, "");
+					report.setProperty(DSUtils.REPORT_DESCRIPTION, null);
 
 				if(data.locality != null)
 					report.setProperty(DSUtils.REPORT_LOCALITY, data.locality);
@@ -235,6 +258,8 @@ public class Report {
 				LOG.info(Message.REPORT_CREATED + reportid);
 				datastore.put(txn, entities);
 				txn.commit();
+				
+				Category.addOrInc(data.category);
 
 				return Response.ok().build();
 			}
@@ -414,6 +439,8 @@ public class Report {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_GRAVITY, Integer.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CATEGORY, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_POINTS, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
@@ -497,8 +524,10 @@ public class Report {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_GRAVITY, Integer.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_POINTS, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CATEGORY, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, Boolean.class));
 
@@ -607,6 +636,13 @@ public class Report {
 			jsonReport.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
 			jsonReport.put(Prop.USERNAME,
 					((Key) report.getProperty(DSUtils.REPORT_USER)).getName());
+			
+			Object points = report.getProperty(DSUtils.REPORT_POINTS);
+			if(points != null) {
+				jsonReport.put(Prop.POINTS, new JSONArray(points.toString()));
+			}
+			
+			jsonReport.put(Prop.CATEGORY, report.getProperty(DSUtils.REPORT_CATEGORY));
 			jsonReport.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
 			jsonReport.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
 			jsonReport.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
@@ -795,9 +831,10 @@ public class Report {
 					return Response.status(Status.NOT_FOUND).build();
 				}
 
+				Key userK = KeyFactory.createKey(DSUtils.USER, username);
 				Entity user;
 				try {
-					user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
+					user = datastore.get(userK);
 				} catch(EntityNotFoundException e) {
 					LOG.info(Message.UNEXPECTED_ERROR);
 					return Response.status(Status.FORBIDDEN).build();
@@ -809,9 +846,10 @@ public class Report {
 
 				try {
 					if(userlevel.equals(UserLevel.WORKER)) {
+						Key workerK = KeyFactory.createKey(userK, DSUtils.WORKER, username);
 						Query taskQuery = new Query(DSUtils.TASK).setAncestor(reportE.getKey());
 						Filter workerFilter = new Query.FilterPredicate(DSUtils.TASK_WORKER,
-								FilterOperator.EQUAL, username);
+								FilterOperator.EQUAL, workerK);
 						taskQuery.setFilter(workerFilter);
 
 						Entity task;

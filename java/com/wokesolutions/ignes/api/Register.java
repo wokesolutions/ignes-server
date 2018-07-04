@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
@@ -102,8 +103,11 @@ public class Register {
 				user.setProperty(DSUtils.USER_EMAIL, registerData.email);
 				user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1.toString());
 				user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
-				user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED,
-						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+				sdf.setTimeZone(TimeZone.getTimeZone(Report.PORTUGAL));
+				
+				user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED, sdf.format(date));
 
 				code = Long.toString(System.currentTimeMillis()).substring(6, 13);
 
@@ -113,8 +117,13 @@ public class Register {
 				userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
 
 				Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
+				
+				Entity userstats = new Entity(DSUtils.USERSTATS, userKey);
+				userstats.setUnindexedProperty(DSUtils.USERSTATS_LOGINS, 0L);
+				userstats.setUnindexedProperty(DSUtils.USERSTATS_LOGINSFAILED, 0L);
+				userstats.setUnindexedProperty(DSUtils.USERSTATS_LOGOUTS, 0L);
 
-				List<Entity> list = Arrays.asList(user, useroptional, userPoints);
+				List<Entity> list = Arrays.asList(user, useroptional, userPoints, userstats);
 
 				datastore.put(txn, list);
 
@@ -163,20 +172,20 @@ public class Register {
 		}
 	}
 
-	private Response registerOrgRetry(OrgRegisterData registerData) {
-		LOG.info(Message.ATTEMPT_REGISTER_ORG + registerData.nif);
+	private Response registerOrgRetry(OrgRegisterData data) {
+		LOG.info(Message.ATTEMPT_REGISTER_ORG + data.nif);
 
 		Key orgKey;
 		try {
 			// If the entity does not exist an Exception is thrown. Otherwise,
-			orgKey = KeyFactory.createKey(DSUtils.USER, registerData.nif);
+			orgKey = KeyFactory.createKey(DSUtils.USER, data.nif);
 			datastore.get(orgKey);
 			LOG.info(Message.USER_ALREADY_EXISTS);
 			return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build(); 
 		} catch (EntityNotFoundException e) {
 			Filter filter =
 					new Query.FilterPredicate(DSUtils.USER_EMAIL,
-							FilterOperator.EQUAL, registerData.email);
+							FilterOperator.EQUAL, data.email);
 
 			Query emailQuery = new Query(DSUtils.USER).setFilter(filter);
 
@@ -198,30 +207,44 @@ public class Register {
 			Date date = new Date();
 
 			try {
-				Entity user = new Entity(DSUtils.USER, registerData.nif);
-				user.setProperty(DSUtils.USER_EMAIL, registerData.email);
+				Entity user = new Entity(DSUtils.USER, data.nif);
+				user.setProperty(DSUtils.USER_EMAIL, data.email);
 				user.setProperty(DSUtils.USER_PASSWORD,
-						DigestUtils.sha512Hex(registerData.password));
+						DigestUtils.sha512Hex(data.password));
 				user.setProperty(DSUtils.USER_ACTIVATION, Profile.NOT_ACTIVATED);
 				user.setProperty(DSUtils.USER_LEVEL, UserLevel.ORG);
 				user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
-				user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED,
-						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
+
+				SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+				sdf.setTimeZone(TimeZone.getTimeZone(Report.PORTUGAL));
+				
+				user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED, sdf.format(date));
 				
 				datastore.put(txn, user);
 
-				Entity org = new Entity(DSUtils.ORG, user.getKey());
-				org.setProperty(DSUtils.ORG_NAME, registerData.name);
-				org.setProperty(DSUtils.ORG_ADDRESS, registerData.address);
-				org.setProperty(DSUtils.ORG_LOCALITY, registerData.locality);
-				org.setUnindexedProperty(DSUtils.ORG_PHONE, registerData.phone);
-				org.setUnindexedProperty(DSUtils.ORG_ZIP, registerData.zip);
-				org.setProperty(DSUtils.ORG_SERVICES, registerData.services);
-				org.setProperty(DSUtils.ORG_PRIVATE, registerData.isprivate);
+				Entity org = new Entity(DSUtils.ORG, data.nif, user.getKey());
+				org.setProperty(DSUtils.ORG_NAME, data.name);
+				org.setProperty(DSUtils.ORG_ADDRESS, data.address);
+				org.setProperty(DSUtils.ORG_LOCALITY, data.locality);
+				org.setUnindexedProperty(DSUtils.ORG_PHONE, data.phone);
+				org.setUnindexedProperty(DSUtils.ORG_ZIP, data.zip);
+				org.setProperty(DSUtils.ORG_CATEGORIES, data.categories.toString());
+				org.setProperty(DSUtils.ORG_PRIVATE, data.isprivate);
+
+				Entity userstats = new Entity(DSUtils.USERSTATS, data.nif, user.getKey());
+				userstats.setUnindexedProperty(DSUtils.USERSTATS_LOGINS, 0L);
+				userstats.setUnindexedProperty(DSUtils.USERSTATS_LOGINSFAILED, 0L);
+				userstats.setUnindexedProperty(DSUtils.USERSTATS_LOGOUTS, 0L);
+				
+				datastore.put(txn, userstats);
 
 				datastore.put(txn, org);
 				txn.commit();
-				LOG.info(Message.ORG_REGISTERED + registerData.nif);
+				LOG.info(Message.ORG_REGISTERED + data.nif);
+				
+				for(int i = 0; i < data.categories.length(); i++)
+					Category.addOrInc(data.categories.getString(i));
+				
 				return Response.ok().build();
 			} finally {
 				if (txn.isActive() ) {

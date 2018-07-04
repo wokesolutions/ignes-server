@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -60,6 +61,8 @@ public class Org {
 	private static final Logger LOG = Logger.getLogger(Org.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	private static final int BATCH_SIZE = 10;
+	private static final int BATCH_SIZE_SMALL = 5;
+	private static final int BATCH_SIZE_BIG = 20;
 
 	@POST
 	@Path("/registerworker")
@@ -118,10 +121,10 @@ public class Org {
 				return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build();
 			}
 			
-			Key orgKey = KeyFactory.createKey(DSUtils.USER, org);
+			Key orgK = KeyFactory.createKey(DSUtils.USER, org);
 
 			try {
-				datastore.get(orgKey);
+				datastore.get(orgK);
 			} catch(EntityNotFoundException e) {
 				LOG.info(Message.UNEXPECTED_ERROR);
 				txn.rollback();
@@ -134,11 +137,11 @@ public class Org {
 			LOG.info(org);
 			Entity user = new Entity(DSUtils.USER, email);
 			Key userK = user.getKey();
-			Entity worker = new Entity(DSUtils.WORKER, userK);
+			Entity worker = new Entity(DSUtils.WORKER, email, userK);
 
 			String pw = WorkerRegisterData.generateCode(org, email);
 			String pwSha = DigestUtils.sha512Hex(pw);
-			worker.setProperty(DSUtils.WORKER_ORG, org);
+			worker.setProperty(DSUtils.WORKER_ORG, orgK);
 			worker.setProperty(DSUtils.WORKER_JOB, registerData.job);
 			worker.setProperty(DSUtils.WORKER_NAME, registerData.name);
 			worker.setUnindexedProperty(DSUtils.WORKER_CREATIONTIME, date);
@@ -146,7 +149,7 @@ public class Org {
 			String orgName;
 			Query orgQ;
 
-			orgQ = new Query(DSUtils.ORG).setAncestor(orgKey)
+			orgQ = new Query(DSUtils.ORG).setAncestor(orgK)
 					.addProjection(new PropertyProjection(DSUtils.ORG_NAME, String.class));
 			
 			Entity orgE;
@@ -173,7 +176,7 @@ public class Org {
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.WORKER);
 			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
 
-			Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
+			Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey().getName(), user.getKey());
 			userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
 
 			List<Entity> list = Arrays.asList(user, worker, userPoints);
@@ -399,10 +402,20 @@ public class Org {
 		}
 	}
 
-	private Response giveTaskRetry(TaskData data, String org) {
+	private Response giveTaskRetry(TaskData data, String orgnif) {
 		String report = data.report;
 		String email = data.email;
 		String indications = data.indications;
+		
+		Key userK = KeyFactory.createKey(DSUtils.USER, orgnif);
+		Key orgK = KeyFactory.createKey(userK, DSUtils.ORG, orgnif);
+		Entity org;
+		try {
+			org = datastore.get(orgK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Message.UNEXPECTED_ERROR);
+			return Response.status(Status.NOT_FOUND).build();
+		}
 
 		Entity reportE;
 
@@ -410,21 +423,17 @@ public class Org {
 				.setAncestor(KeyFactory.createKey(DSUtils.USER, email));
 		workerQuery.addProjection(new PropertyProjection(DSUtils.WORKER_ORG, String.class));
 
+		Key workerK = KeyFactory.createKey(userK, DSUtils.WORKER, email);
 		Entity worker;
 
 		try {
-			worker = datastore.prepare(workerQuery).asSingleEntity();
-		} catch(TooManyResultsException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-		}
-
-		if(worker == null) {
+			worker = datastore.get(workerK);
+		} catch(EntityNotFoundException e) {
 			LOG.info(Message.WORKER_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
-		if(!worker.getProperty(DSUtils.WORKER_ORG).toString().equals(org)) {
+		if(!worker.getProperty(DSUtils.WORKER_ORG).toString().equals(orgnif)) {
 			LOG.info(Message.WORKER_NOT_FOUND);
 			return Response.status(Status.FORBIDDEN).build();
 		}
@@ -449,7 +458,8 @@ public class Org {
 		}
 
 		Query query = new Query(DSUtils.TASK).setAncestor(KeyFactory.createKey(DSUtils.REPORT, report));
-		Filter filter = new Query.FilterPredicate(DSUtils.TASK_WORKER, FilterOperator.EQUAL, email);
+		Filter filter = new Query.FilterPredicate(DSUtils.TASK_WORKER,
+				FilterOperator.EQUAL, worker.getKey());
 		query.setFilter(filter);
 
 		try {
@@ -465,13 +475,16 @@ public class Org {
 		
 		Date date = new Date();
 
-		Entity task = new Entity(DSUtils.TASK, reportE.getKey());
+		Entity task = new Entity(DSUtils.TASK, reportE.getKey().getName(), reportE.getKey());
 
-		task.setProperty(DSUtils.TASK_WORKER, email);
+		task.setProperty(DSUtils.TASK_WORKER, worker.getKey());
 		task.setProperty(DSUtils.TASK_TIME, date);
-		task.setProperty(DSUtils.TASK_TIMEFORMATTED,
-				new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
-		task.setProperty(DSUtils.TASK_ORG, org);
+
+		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+		sdf.setTimeZone(TimeZone.getTimeZone(Report.PORTUGAL));
+		
+		task.setProperty(DSUtils.TASK_TIMEFORMATTED, sdf.format(date));
+		task.setProperty(DSUtils.TASK_ORG, org.getKey());
 
 		if(indications != null && !indications.equals(""))
 			task.setProperty(DSUtils.TASK_INDICATIONS, indications);
@@ -518,7 +531,7 @@ public class Org {
 				obj.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
 				obj.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
 				obj.put(Prop.PHONE, org.getProperty(DSUtils.ORG_PHONE));
-				obj.put(Prop.SERVICES, org.getProperty(DSUtils.ORG_SERVICES));
+				obj.put(Prop.SERVICES, org.getProperty(DSUtils.ORG_CATEGORIES));
 				obj.put(Prop.ZIP, org.getProperty(DSUtils.ORG_ZIP));
 				obj.put(Prop.LOCALITY, org.getProperty(DSUtils.ORG_LOCALITY));
 
@@ -536,18 +549,36 @@ public class Org {
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response allTasks(@Context HttpServletRequest request,
 			@QueryParam(ParamName.CURSOR) String cursor) {
-		String org = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		String nif = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		int retries = 5;
 		while(true) {
 			try {
+				Key userK = KeyFactory.createKey(DSUtils.USER, nif);
+				Query orgQ = new Query(DSUtils.ORG).setAncestor(userK).setKeysOnly();
+				Entity org;
+				try {
+					org = datastore.prepare(orgQ).asSingleEntity();
+					
+					if(org == null) {
+						LOG.info(Message.UNEXPECTED_ERROR);
+						return Response.status(Status.NOT_FOUND).build();
+					}
+				} catch(TooManyResultsException e) {
+					LOG.info(Message.UNEXPECTED_ERROR);
+					return Response.status(Status.NOT_FOUND).build();
+				}
+				
+				Key orgK = org.getKey();
+				
 				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 
 				if(cursor != null && !cursor.equals(""))
 					fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
 
 				Query query = new Query(DSUtils.TASK);
-				Filter filter = new Query.FilterPredicate(DSUtils.TASK_ORG, FilterOperator.EQUAL, org);
+				Filter filter = new Query.FilterPredicate(DSUtils.TASK_ORG, 
+						FilterOperator.EQUAL, orgK);
 
 				QueryResultList<Entity> list = datastore.prepare(query.setFilter(filter))
 						.asQueryResultList(fetchOptions);
@@ -576,7 +607,8 @@ public class Org {
 							report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
 					jsonReport.put(Prop.ISPRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
 					jsonReport.put(Prop.TASK, task.getParent().getName());
-					jsonReport.put(Prop.WORKER, task.getProperty(DSUtils.TASK_WORKER));
+					jsonReport.put(Prop.WORKER,
+							((Key) task.getProperty(DSUtils.TASK_WORKER)).getParent().getName());
 					jsonReport.put(Prop.INDICATIONS, task.getProperty(DSUtils.TASK_INDICATIONS));
 					jsonReport.put(Prop.TASK_TIME, task.getProperty(DSUtils.TASK_TIME));
 
@@ -675,13 +707,79 @@ public class Org {
 		Entity application = new Entity(DSUtils.APPLICATION);
 		application.setProperty(DSUtils.APPLICATION_BUGDET, data.bugdet);
 		application.setProperty(DSUtils.APPLICATION_TIME, date);
-		application.setProperty(DSUtils.APPLICATION_FORMATTEDTIME,
-				new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
+
+		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+		sdf.setTimeZone(TimeZone.getTimeZone(Report.PORTUGAL));
+		
+		application.setProperty(DSUtils.APPLICATION_FORMATTEDTIME, sdf.format(date));
 		application.setProperty(DSUtils.APPLICATION_INFO, data.info);
 		application.setProperty(DSUtils.APPLICATION_ORG, orgK);
 		application.setProperty(DSUtils.APPLICATION_REPORT, reportK);
 		
 		datastore.put(application);
 		return Response.ok().build();
+	}
+	
+	@GET
+	@Path("/reports")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response reports(@Context HttpServletRequest request,
+			@QueryParam(ParamName.CURSOR) String cursor) {
+		String nif = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		
+		int retries = 5;
+		while(true) {
+			try {
+				return reportsRetry(nif, cursor);
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+	
+	private Response reportsRetry(String nif, String cursor) {
+		Key userK = KeyFactory.createKey(DSUtils.USER, nif);
+		Key orgK = KeyFactory.createKey(userK, DSUtils.ORG, nif);
+		
+		Entity org;
+		try {
+			org = datastore.get(orgK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Message.UNEXPECTED_ERROR);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+		
+		boolean orgprivate = (boolean) org.getProperty(DSUtils.ORG_PRIVATE);
+		
+		JSONArray orgcats = new JSONArray(org.getProperty(DSUtils.ORG_CATEGORIES).toString());
+		List<String> cats = new ArrayList<String>();
+		for(int i = 0; i < orgcats.length(); i++)
+			cats.add(orgcats.getString(i));
+		
+		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE_BIG);
+		
+		if(cursor != null && !cursor.equals(""))
+			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
+		
+		Query reportQ = new Query(DSUtils.REPORT);
+		
+		if(!orgprivate) {
+			Filter privateF = new Query.FilterPredicate(DSUtils.REPORT_PRIVATE,
+					FilterOperator.EQUAL, false);
+			reportQ.setFilter(privateF);
+		}
+		
+		QueryResultList<Entity> reportList = datastore.prepare(reportQ).asQueryResultList(fetchOptions);
+		
+		JSONArray array = new JSONArray();
+		
+		for(Entity report : reportList) {
+			String cat = report.getProperty(DSUtils.REPORT_CATEGORY).toString();
+			if(cats.contains(cat));
+		}
+		
+		return null;
 	}
 }

@@ -53,8 +53,6 @@ public class Worker {
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	private static final int BATCH_SIZE = 10;
 
-	private static final String WIP = "WIP";
-
 	public Worker() {}
 
 	@POST
@@ -102,14 +100,14 @@ public class Worker {
 		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
 		try {
-			Entity reportStatusLog = new Entity(DSUtils.REPORTSTATUSLOG, reportE.getKey());
-			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_NEWSTATUS, WIP);
+			Entity reportStatusLog = new Entity(DSUtils.REPORTSTATUSLOG, reportE.getKey().getName(), reportE.getKey());
+			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_NEWSTATUS, Report.WIP);
 			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_OLDSTATUS,
 					reportE.getProperty(DSUtils.REPORT_STATUS));
 			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_TIME, new Date());
 			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_USER, workerE.getParent());
 
-			reportE.setProperty(DSUtils.REPORT_STATUS, WIP);
+			reportE.setProperty(DSUtils.REPORT_STATUS, Report.WIP);
 
 			List<Entity> list = Arrays.asList(reportE, reportStatusLog);
 
@@ -153,10 +151,20 @@ public class Worker {
 
 	private Response taskListRetry(String email, String cursor) {
 		LOG.info(Message.LISTING_TASKS);
-
+		
+		Key userK = KeyFactory.createKey(DSUtils.USER, email);
+		Key workerK = KeyFactory.createKey(userK, DSUtils.WORKER, userK.getName());
+		try {
+			datastore.get(workerK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Message.UNEXPECTED_ERROR);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+		
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 		Query query = new Query(DSUtils.TASK).setKeysOnly();
-		Filter filter = new Query.FilterPredicate(DSUtils.TASK_WORKER, FilterOperator.EQUAL, email);
+		Filter filter = new Query.FilterPredicate(DSUtils.TASK_WORKER,
+				FilterOperator.EQUAL, workerK);
 		query.setFilter(filter);
 
 		if(cursor != null && !cursor.equals(""))

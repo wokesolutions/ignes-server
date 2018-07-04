@@ -618,6 +618,8 @@ public class Profile {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CATEGORY, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_POINTS, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LOCALITY, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
@@ -639,6 +641,13 @@ public class Profile {
 			jsonReport.put(Prop.REPORT, report.getKey().getName());
 			jsonReport.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
 			jsonReport.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+
+			Object points = report.getProperty(DSUtils.REPORT_POINTS);
+			if(points != null) {
+				jsonReport.put(Prop.POINTS, new JSONArray(points.toString()));
+			}
+			
+			jsonReport.put(Prop.CATEGORY, report.getProperty(DSUtils.CATEGORY));
 			jsonReport.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
 			jsonReport.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
 			jsonReport.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));

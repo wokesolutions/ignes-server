@@ -12,7 +12,11 @@ public class ParamName {
 		public static final String RADIUS = "radius";
 		public static final String DISTRICT = "district";
 		public static final String LOCATION = "location";
+		
 		public static final String CURSOR = "cursor";
+		public static final String CURSOR1 = "cursor1";
+		public static final String CURSOR2 = "cursor2";
+		public static final String CURSOR3 = "cursor3";
 
 	// Path
 		public static final String REPORT = "report";

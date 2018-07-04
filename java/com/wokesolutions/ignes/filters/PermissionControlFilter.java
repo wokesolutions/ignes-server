@@ -62,30 +62,28 @@ public class PermissionControlFilter implements Filter {
 		String url = request.getRequestURL().toString();
 
 		LOG.info(url);
-
+		
 		List<String> permissions = PermissionMapper.getPermissions(url);
 
-		if(permissions.contains(UserLevel.GUEST)) {
+		if(permissions.get(0).equals(UserLevel.GUEST)) {
 			LOG.info(Message.GUEST_REQUEST);
 			chain.doFilter(req, resp);
 			return;
 		}
 
-		LOG.info(Message.NOT_GUEST_REQUEST);
-
-		Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
-
 		String token = ((HttpServletRequest) req).getHeader(CustomHeader.AUTHORIZATION);
-
-		if(token == null) {
-			changeResp(resp, Message.INVALID_TOKEN);
-			return;
-		}
 
 		String username;
 		try {
 			username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
 		} catch(Exception e) {
+			changeResp(resp, Message.INVALID_TOKEN);
+			return;
+		}
+
+		Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
+
+		if(token == null) {
 			changeResp(resp, Message.INVALID_TOKEN);
 			return;
 		}
@@ -100,6 +98,24 @@ public class PermissionControlFilter implements Filter {
 		}
 
 		String userlevel = user.getProperty(DSUtils.USER_LEVEL).toString();
+		
+		if(permissions.get(0).equals(PermissionMapper.FORBIDDEN))
+			for(int i = 1; i < permissions.size(); i++) {
+				String permission = permissions.get(i);
+				LOG.info(Integer.toString(i) + " " + permission);
+				if(permission.equals(UserLevel.GUEST)) {
+					LOG.info(Message.GUEST_REQUEST);
+					chain.doFilter(req, resp);
+					return;
+				}
+				
+				if(userlevel.equals(permission)) {
+					changeResp(resp, Message.INVALID_TOKEN);
+					return;
+				}
+			}
+
+		LOG.info(Message.NOT_GUEST_REQUEST);
 
 		try {
 			verifyWith(token, algorithm, username);

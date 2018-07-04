@@ -21,7 +21,7 @@ public class DSUtils {
 		public static final String REPORTVOTES = "ReportVotes";
 		public static final String USERVOTE = "UserVote";
 		public static final String SPAMMEDREPORT = "SpammedReport";
-		public static final String SKILL = "Skill";
+		public static final String CATEGORY = "Category";
 		public static final String TOKEN = "Token";
 		public static final String LEVELLOG = "LevelLog";
 		public static final String TASK = "Task";
@@ -124,7 +124,7 @@ public class DSUtils {
 		public static final String ORG_PHONE = "org_phone";
 		public static final String ORG_ZIP = "org_zip";
 		public static final String ORG_LOCALITY = "org_locality";
-		public static final String ORG_SERVICES = "org_services";
+		public static final String ORG_CATEGORIES = "org_categories";
 		public static final String ORG_PRIVATE = "org_private";
 		public static final String ORG_EMAIL = "org_email";
 		
@@ -168,10 +168,12 @@ public class DSUtils {
 		public static final String REPORT_TITLE = "report_title";
 		public static final String REPORT_LAT = "report_lat";
 		public static final String REPORT_LNG = "report_lng";
+		public static final String REPORT_POINTS = "report_points";
 		public static final String REPORT_ADDRESS = "report_address";
 		public static final String REPORT_DISTRICT = "report_district";
 		public static final String REPORT_LOCALITY = "report_locality";
 		public static final String REPORT_USER = "report_user";
+		public static final String REPORT_CATEGORY = "report_category";
 		public static final String REPORT_CREATIONTIME = "report_creationtime";
 		public static final String REPORT_CREATIONTIMEFORMATTED = "report_creationtimeformatted";
 		public static final String REPORT_GRAVITY = "report_gravity";
@@ -226,8 +228,9 @@ public class DSUtils {
 		public static final String REPORTCOMMENT_USER = "reportcomment_user";
 		public static final String REPORTCOMMENT_REPORT = "reportcomment_report";
 		
-	// Skill
-		public static final String SKILL_NUMBEROFPEOPLE = "skill_numberofpeople";
+	// Category
+		public static final String CATEGORY_NUM = "category_num";
+		public static final String CATEGORY_LIST = "category_list";
 		
 	// Token
 		public static final String TOKEN_STRING = "token_string";
