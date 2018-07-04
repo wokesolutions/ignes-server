@@ -61,7 +61,6 @@ public class Org {
 	private static final Logger LOG = Logger.getLogger(Org.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	private static final int BATCH_SIZE = 10;
-	private static final int BATCH_SIZE_SMALL = 5;
 	private static final int BATCH_SIZE_BIG = 20;
 
 	@POST
@@ -765,6 +764,21 @@ public class Org {
 		
 		Query reportQ = new Query(DSUtils.REPORT);
 		
+		JSONArray array = new JSONArray();
+		
+		reportQ.addProjection(new PropertyProjection(DSUtils.REPORT_TITLE, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_ADDRESS, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_USER, Key.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_GRAVITY, Integer.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_POINTS, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CATEGORY, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, Boolean.class));
+		
 		if(!orgprivate) {
 			Filter privateF = new Query.FilterPredicate(DSUtils.REPORT_PRIVATE,
 					FilterOperator.EQUAL, false);
@@ -773,13 +787,70 @@ public class Org {
 		
 		QueryResultList<Entity> reportList = datastore.prepare(reportQ).asQueryResultList(fetchOptions);
 		
-		JSONArray array = new JSONArray();
-		
 		for(Entity report : reportList) {
 			String cat = report.getProperty(DSUtils.REPORT_CATEGORY).toString();
-			if(cats.contains(cat));
+			if(cats.contains(cat))
+				addReportToArray(report, array);
 		}
 		
-		return null;
+		while(array.length() < 10) {
+			fetchOptions = FetchOptions.Builder
+					.withLimit(BATCH_SIZE_BIG).startCursor(reportList.getCursor());
+			
+			reportList = datastore.prepare(reportQ).asQueryResultList(fetchOptions);
+			
+			for(Entity report : reportList) {
+				String cat = report.getProperty(DSUtils.REPORT_CATEGORY).toString();
+				if(cats.contains(cat))
+					addReportToArray(report, array);
+			}
+		}
+		
+		return Response.ok(array.toString()).build();
+	}
+	
+	private void addReportToArray(Entity report, JSONArray array) {
+		JSONObject jsonReport = new JSONObject();
+
+		jsonReport.put(Prop.REPORT, report.getKey().getName());
+		jsonReport.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
+		jsonReport.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+		jsonReport.put(Prop.USERNAME,
+				((Key) report.getProperty(DSUtils.REPORT_USER)).getName());
+		
+		Object points = report.getProperty(DSUtils.REPORT_POINTS);
+		if(points != null) {
+			jsonReport.put(Prop.POINTS, new JSONArray(points.toString()));
+		}
+		
+		jsonReport.put(Prop.CATEGORY, report.getProperty(DSUtils.REPORT_CATEGORY));
+		jsonReport.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
+		jsonReport.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
+		jsonReport.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+		jsonReport.put(Prop.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
+		jsonReport.put(Prop.DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION));
+		jsonReport.put(Prop.CREATIONTIME,
+				report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
+		jsonReport.put(Prop.ISPRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
+
+		Report.appendVotesAndComments(jsonReport, report);
+		
+		String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
+
+		jsonReport.put(Prop.THUMBNAIL, tn);
+		
+		Key reportK = report.getKey();
+		Key applicationK = KeyFactory.createKey(reportK, DSUtils.APPLICATION, reportK.getName());
+		
+		Entity application;
+		try {
+			application = datastore.get(applicationK);
+			
+			jsonReport.put(Prop.BUDGET, application.getProperty(DSUtils.APPLICATION_BUGDET));
+			jsonReport.put(Prop.INFO, application.getProperty(DSUtils.APPLICATION_INFO));
+			jsonReport.put(Prop.APPLICATION_TIME, application.getProperty(DSUtils.APPLICATION_TIME));
+		} catch(EntityNotFoundException e) {}
+
+		array.put(jsonReport);
 	}
 }
