@@ -21,6 +21,7 @@ public class PermissionMapper {
 	private final static String ADMIN = "admin";
 	private final static String ORG_INFO = "org/info";
 	private final static String ORG = "org";
+	private final static String WORKER_TASKS = "worker/tasks";
 	private final static String WORKER = "worker";
 	private final static String TASK = "task";
 	private final static String REGISTER_WORKER = "registerworker";
@@ -169,6 +170,13 @@ public class PermissionMapper {
 		if(req.contains(ORG)) {
 			permissions.add(UserLevel.ADMIN);
 			permissions.add(UserLevel.ORG);
+			return permissions;
+		}
+		
+		if(req.contains(WORKER_TASKS)) {
+			permissions.add(UserLevel.WORKER);
+			permissions.add(UserLevel.ORG);
+			permissions.add(UserLevel.ADMIN);
 			return permissions;
 		}
 

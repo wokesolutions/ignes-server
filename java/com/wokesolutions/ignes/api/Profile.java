@@ -805,6 +805,14 @@ public class Profile {
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		}
 		
-		return null;
+		Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
+		if(!reportK.equals(userK)) {
+			LOG.info(Message.NOT_REPORTER);
+			return Response.status(Status.FORBIDDEN).build();
+		}
+		
+		Key orgK = KeyFactory.createKey(DSUtils.ORG, );
+		
+		Query applicationQ = new Query(DSUtils.APPLICATION).setAncestor(reportK);
 	}
 }
