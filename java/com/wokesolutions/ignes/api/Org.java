@@ -342,9 +342,12 @@ public class Org {
 
 		if(cursor != null && !cursor.equals(""))
 			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
+		
+		Key userK = KeyFactory.createKey(DSUtils.USER, org);
+		Key orgK = KeyFactory.createKey(userK, DSUtils.ORG, org);
 
 		Filter filter = new Query.FilterPredicate(DSUtils.WORKER_ORG,
-				FilterOperator.EQUAL, org);
+				FilterOperator.EQUAL, orgK);
 
 		query.setFilter(filter);
 
@@ -402,94 +405,51 @@ public class Org {
 	}
 
 	private Response giveTaskRetry(TaskData data, String orgnif) {
-		String report = data.report;
+		String reportid = data.report;
 		String email = data.email;
 		String indications = data.indications;
 		
 		Key userK = KeyFactory.createKey(DSUtils.USER, orgnif);
 		Key orgK = KeyFactory.createKey(userK, DSUtils.ORG, orgnif);
-		Entity org;
-		try {
-			org = datastore.get(orgK);
-		} catch(EntityNotFoundException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
-			return Response.status(Status.NOT_FOUND).build();
-		}
-
-		Entity reportE;
-
-		Query workerQuery = new Query(DSUtils.WORKER)
-				.setAncestor(KeyFactory.createKey(DSUtils.USER, email));
-		workerQuery.addProjection(new PropertyProjection(DSUtils.WORKER_ORG, String.class));
-
-		Key workerK = KeyFactory.createKey(userK, DSUtils.WORKER, email);
+		
+		Key workerUK = KeyFactory.createKey(DSUtils.USER, data.email);
+		Key workerK = KeyFactory.createKey(workerUK, DSUtils.WORKER, data.email);
+		
+		Key reportK = KeyFactory.createKey(DSUtils.REPORT, reportid);
+		Key orgtaskK = KeyFactory.createKey(reportK, DSUtils.ORGTASK, reportid);
+		
 		Entity worker;
-
 		try {
 			worker = datastore.get(workerK);
 		} catch(EntityNotFoundException e) {
 			LOG.info(Message.WORKER_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
-
-		if(!worker.getProperty(DSUtils.WORKER_ORG).toString().equals(orgnif)) {
+		
+		if(!worker.getProperty(DSUtils.WORKER_ORG).equals(orgK)) {
 			LOG.info(Message.WORKER_NOT_FOUND);
 			return Response.status(Status.FORBIDDEN).build();
 		}
-
+		
+		Entity orgtask;
 		try {
-			reportE = datastore.get(KeyFactory.createKey(DSUtils.REPORT, report));
-		} catch (EntityNotFoundException e) {
-			LOG.info(Message.REPORT_NOT_FOUND);
-			return Response.status(Status.NOT_FOUND).build();
-		}
-
-		try {
-			Entity user = datastore.get(KeyFactory.createKey(DSUtils.USER, email));
-			if(!user.getProperty(DSUtils.USER_LEVEL).equals(UserLevel.WORKER))
-				throw new UserNotWorkerException();
-		} catch (EntityNotFoundException e) {
-			LOG.info(Message.WORKER_NOT_FOUND);
-			return Response.status(Status.NOT_FOUND).build();
-		} catch(UserNotWorkerException e2) {
-			LOG.info(e2.getMessage());
-			return Response.status(Status.NOT_FOUND).build();
-		}
-
-		Query query = new Query(DSUtils.TASK).setAncestor(KeyFactory.createKey(DSUtils.REPORT, report));
-		Filter filter = new Query.FilterPredicate(DSUtils.TASK_WORKER,
-				FilterOperator.EQUAL, worker.getKey());
-		query.setFilter(filter);
-
-		try {
-			Entity existingTask = datastore.prepare(query).asSingleEntity();
-			if(existingTask != null) {
-				LOG.info(Message.DUPLICATED_TASK);
-				return Response.status(Status.EXPECTATION_FAILED).build();
-			}
-		} catch(TooManyResultsException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+			orgtask = datastore.get(orgtaskK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Message.TASK_NOT_FOUND);
+			return Response.status(Status.EXPECTATION_FAILED).build();
 		}
 		
-		Date date = new Date();
-
-		Entity task = new Entity(DSUtils.TASK, reportE.getKey().getName(), reportE.getKey());
-
-		task.setProperty(DSUtils.TASK_WORKER, worker.getKey());
-		task.setProperty(DSUtils.TASK_TIME, date);
-
-		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-		sdf.setTimeZone(TimeZone.getTimeZone(Report.PORTUGAL));
+		if(!orgtask.getProperty(DSUtils.ORGTASK_ORG).equals(orgK)) {
+			LOG.info(Message.TASK_NOT_FOUND);
+			return Response.status(Status.FORBIDDEN).build();
+		}
 		
-		task.setProperty(DSUtils.TASK_TIMEFORMATTED, sdf.format(date));
-		task.setProperty(DSUtils.TASK_ORG, org.getKey());
-
-		if(indications != null && !indications.equals(""))
-			task.setProperty(DSUtils.TASK_INDICATIONS, indications);
-
-		datastore.put(task);
-
+		Entity task = new Entity(DSUtils.TASK, reportK);
+		task.setProperty(DSUtils.TASK_WORKER, workerK);
+		
+		if(data.indications != null && !data.indications.equals(""))
+			task.setProperty(DSUtils.TASK_INDICATIONS, data.indications);
+		
 		return Response.ok().build();
 	}
 

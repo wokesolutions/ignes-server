@@ -13,6 +13,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.json.JSONArray;
+
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
@@ -228,7 +230,7 @@ public class Register {
 				org.setProperty(DSUtils.ORG_LOCALITY, data.locality);
 				org.setUnindexedProperty(DSUtils.ORG_PHONE, data.phone);
 				org.setUnindexedProperty(DSUtils.ORG_ZIP, data.zip);
-				org.setProperty(DSUtils.ORG_CATEGORIES, data.categories.toString());
+				org.setProperty(DSUtils.ORG_CATEGORIES, data.categories);
 				org.setProperty(DSUtils.ORG_PRIVATE, data.isprivate);
 
 				Entity userstats = new Entity(DSUtils.USERSTATS, data.nif, user.getKey());
@@ -242,8 +244,10 @@ public class Register {
 				txn.commit();
 				LOG.info(Message.ORG_REGISTERED + data.nif);
 				
-				for(int i = 0; i < data.categories.length(); i++)
-					Category.addOrInc(data.categories.getString(i));
+				JSONArray array = new JSONArray(data.categories);
+				
+				for(int i = 0; i < array.length(); i++)
+					Category.addOrInc(array.getString(i));
 				
 				return Response.ok().build();
 			} finally {

@@ -1,5 +1,6 @@
 package com.wokesolutions.ignes.api;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -254,11 +255,11 @@ public class Profile {
 
 		try {
 			sameUserOrAdmin(request, username);
-		} catch(NotSameNorAdminException e) {
+		} catch(Exception e) {
 			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
-		
+
 		Key userK = KeyFactory.createKey(DSUtils.USER, username);
 
 		Query query = new Query(DSUtils.USERVOTE);
@@ -328,7 +329,7 @@ public class Profile {
 	private Response activateAccountRetry(String code, String username, HttpServletRequest request) {
 		try {
 			sameUserOrAdmin(request, username);
-		} catch(NotSameNorAdminException e2) {
+		} catch(Exception e2) {
 			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
@@ -364,7 +365,7 @@ public class Profile {
 
 		try {
 			sameUserOrAdmin(request, username);
-		} catch(NotSameNorAdminException e2) {
+		} catch(Exception e2) {
 			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
@@ -504,15 +505,19 @@ public class Profile {
 	}
 
 	public static String sameUserOrAdmin(HttpServletRequest request, String username)
-			throws NotSameNorAdminException {
+			throws NotSameNorAdminException, EntityNotFoundException {
 
-		String requester = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
-		String level = request.getAttribute(CustomHeader.LEVEL_ATT).toString();
+		String requesterName = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
-		if(!level.equals(UserLevel.ADMIN) && !requester.equals(username))
+		Key requesterK = KeyFactory.createKey(DSUtils.USER, requesterName);
+
+		Entity requester = datastore.get(requesterK);
+		String level = requester.getProperty(DSUtils.USER_LEVEL).toString();
+
+		if(!level.equals(UserLevel.ADMIN) && !requesterName.equals(username))
 			throw new NotSameNorAdminException();
 
-		return requester;
+		return requesterName;
 	}
 
 	@POST
@@ -648,7 +653,7 @@ public class Profile {
 			if(points != null) {
 				jsonReport.put(Prop.POINTS, new JSONArray(points.toString()));
 			}
-			
+
 			jsonReport.put(Prop.CATEGORY, report.getProperty(DSUtils.CATEGORY));
 			jsonReport.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
 			jsonReport.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
@@ -701,7 +706,7 @@ public class Profile {
 		StoragePath pathImg = new StoragePath(folders, username);
 
 		LOG.info(Message.ATTEMPT_UPDATE_PROFILE);
-		
+
 		if(!Storage.saveImage(data.pic, pathImg,
 				data.width, data.height, data.orientation, false))
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
@@ -712,7 +717,7 @@ public class Profile {
 		try {
 			Entity optional = datastore.prepare(query).asSingleEntity();
 			LOG.info(optional.toString());
-			
+
 			optional.setProperty(DSUtils.USEROPTIONAL_PICPATH, pathImg.makePath());
 			LOG.info(optional.toString());
 
@@ -770,15 +775,15 @@ public class Profile {
 
 		return Response.ok(obj.toString()).build();
 	}
-	
+
 	@POST
 	@Path("/acceptapplication")
 	public Response accept(@Context HttpServletRequest request, AcceptData data) {
 		if(!data.isValid())
 			return Response.status(Status.BAD_REQUEST).build();
-		
+
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
-		
+
 		int retries = 5;
 		while(true) {
 			try {
@@ -793,11 +798,11 @@ public class Profile {
 			}
 		}
 	}
-	
+
 	public Response acceptRetry(String username, AcceptData data) {
 		Key userK = KeyFactory.createKey(DSUtils.USER, username);
 		Key reportK = KeyFactory.createKey(DSUtils.REPORT, data.report);
-		
+
 		Entity report;
 		try {
 			report = datastore.get(reportK);
@@ -805,42 +810,56 @@ public class Profile {
 			LOG.info(Message.REPORT_NOT_FOUND);
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		}
-		
+
 		Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
-		if(!reportK.equals(userK)) {
+		if(!reporterK.equals(userK)) {
 			LOG.info(Message.NOT_REPORTER);
 			return Response.status(Status.FORBIDDEN).build();
 		}
-		
+
 		Key orgUK = KeyFactory.createKey(DSUtils.USER, data.nif);
 		Key orgK = KeyFactory.createKey(orgUK, DSUtils.ORG, data.nif);
-		
+
 		LOG.info(orgK.toString());
-		
+
 		Query applicationQ = new Query(DSUtils.APPLICATION).setKeysOnly()
 				.setAncestor(reportK);
-		
+
 		List<Entity> applications = datastore.prepare(applicationQ)
 				.asList(FetchOptions.Builder.withDefaults());
-		
+
 		Iterator<Entity> it = applications.iterator();
 		Entity application = null;
+		List<Key> keys = new ArrayList<Key>(applications.size());
 		while(it.hasNext()) {
-			application = it.next();
-			Key key = (Key) application.getProperty(DSUtils.APPLICATION_ORG);
-			
+			Entity temp = it.next();
+			Key key = (Key) temp.getProperty(DSUtils.APPLICATION_ORG);
+			keys.add(key);
+
 			if(key.equals(orgK))
-				break;
-			
+				application = temp;
+
 			if(!it.hasNext() && !key.equals(orgK)) {
 				LOG.info(Message.APPLICATION_NOT_FOUND);
 				return Response.status(Status.NOT_FOUND).build();
 			}
 		}
-		
+
 		if(application == null)
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+
+		Transaction txn = datastore.beginTransaction();
+
+		Entity task = new Entity(reportK.getName(), DSUtils.ORGTASK, reportK);
+		task.setProperty(DSUtils.ORGTASK_ORG, orgK);
+		task.setProperty(DSUtils.ORGTASK_TIME, new Date());
+		task.setProperty(DSUtils.ORGTASK_USER, userK);
 		
-		return null;
+		datastore.put(txn, task);
+		
+		datastore.delete(txn, keys);
+		
+		txn.commit();
+		return Response.ok().build();
 	}
 }

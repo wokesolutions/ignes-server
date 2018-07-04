@@ -32,6 +32,7 @@ public class DSUtils {
 		public static final String DEVICE = "Device";
 		public static final String SKIPLOGIN = "SkipLogin";
 		public static final String APPLICATION = "Application";
+		public static final String ORGTASK = "OrgTask";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -287,4 +288,9 @@ public class DSUtils {
 		public static final String APPLICATION_FORMATTEDTIME = "application_formattedtime";
 		public static final String APPLICATION_BUGDET = "application_bugdet";
 		public static final String APPLICATION_INFO = "application_info";
+		
+	// OrgTask
+		public static final String ORGTASK_ORG = "orgtask_org";
+		public static final String ORGTASK_TIME = "orgtask_time";
+		public static final String ORGTASK_USER = "orgtask_user";
 }
