@@ -966,6 +966,12 @@ function giveTask(){
 
 function viewWorkers(row){
     email_worker = document.getElementById("user_table").rows[row].cells[1].innerHTML;
+    var name = document.getElementById("user_table").rows[row].cells[0].innerHTML;
+    var service = document.getElementById("user_table").rows[row].cells[2].innerHTML;
+
+    document.getElementById("worker_email_id").innerHTML = email_worker;
+    document.getElementById("worker_name").innerHTML = name;
+    document.getElementById("worker_services").innerHTML = service;
 
     hideShow("show_more_users_variable");
 
