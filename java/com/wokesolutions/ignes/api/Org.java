@@ -703,7 +703,7 @@ public class Org {
 		
 		Date date = new Date();
 		
-		Entity application = new Entity(DSUtils.APPLICATION);
+		Entity application = new Entity(DSUtils.APPLICATION, orgK);
 		application.setProperty(DSUtils.APPLICATION_BUGDET, data.bugdet);
 		application.setProperty(DSUtils.APPLICATION_TIME, date);
 
@@ -712,7 +712,6 @@ public class Org {
 		
 		application.setProperty(DSUtils.APPLICATION_FORMATTEDTIME, sdf.format(date));
 		application.setProperty(DSUtils.APPLICATION_INFO, data.info);
-		application.setProperty(DSUtils.APPLICATION_ORG, orgK);
 		application.setProperty(DSUtils.APPLICATION_REPORT, reportK);
 		
 		datastore.put(application);
@@ -787,6 +786,9 @@ public class Org {
 		
 		QueryResultList<Entity> reportList = datastore.prepare(reportQ).asQueryResultList(fetchOptions);
 		
+		if(reportList.isEmpty())
+			return Response.status(Status.NO_CONTENT).build();
+		
 		for(Entity report : reportList) {
 			String cat = report.getProperty(DSUtils.REPORT_CATEGORY).toString();
 			if(cats.contains(cat))
@@ -806,7 +808,9 @@ public class Org {
 			}
 		}
 		
-		return Response.ok(array.toString()).build();
+		cursor = reportList.getCursor().toWebSafeString();
+		
+		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 	}
 	
 	private void addReportToArray(Entity report, JSONArray array) {

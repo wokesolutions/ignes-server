@@ -40,6 +40,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.cloud.datastore.DatastoreException;
+import com.wokesolutions.ignes.data.AcceptData;
 import com.wokesolutions.ignes.data.PasswordData;
 import com.wokesolutions.ignes.data.ProfPicData;
 import com.wokesolutions.ignes.data.UserOptionalData;
@@ -767,5 +768,43 @@ public class Profile {
 		obj.put(Prop.PROFPIC, img);
 
 		return Response.ok(obj.toString()).build();
+	}
+	
+	@POST
+	@Path("/acceptapplication")
+	public Response accept(@Context HttpServletRequest request, AcceptData data) {
+		if(!data.isValid())
+			return Response.status(Status.BAD_REQUEST).build();
+		
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		
+		int retries = 5;
+		while(true) {
+			try {
+				return acceptRetry(username, data);
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
+	
+	public Response acceptRetry(String username, AcceptData data) {
+		Key userK = KeyFactory.createKey(DSUtils.USER, username);
+		Key reportK = KeyFactory.createKey(DSUtils.REPORT, data.report);
+		
+		Entity report;
+		try {
+			report = datastore.get(reportK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Message.REPORT_NOT_FOUND);
+			return Response.status(Status.EXPECTATION_FAILED).build();
+		}
+		
+		return null;
 	}
 }
