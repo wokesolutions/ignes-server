@@ -4,6 +4,8 @@ var reports;
 var reportID;
 var feedCursor;
 var commentsCursor;
+var tasksCursor;
+var email_worker;
 var current_position = "map_variable";
 var idReportCurr;
 var numWorkers;
@@ -19,7 +21,7 @@ var show_view = false;
 
 getCurrentLocation();
 
-var URL_BASE = 'https://mimetic-encoder-209111.appspot.com';
+var URL_BASE = 'https://main-dot-mimetic-encoder-209111.appspot.com';
 
 google.maps.event.addDomListener(window, 'load', init());
 
@@ -41,6 +43,7 @@ function init() {
     document.getElementById("refresh_workers").onclick = getFirstWorkers;
     document.getElementById("show_more_button").onclick = getShowMore;
     document.getElementById("close_window").onclick = closeWindow;
+    document.getElementById("close_window_worker").onclick = closeWindowWorker;
     document.getElementById("add_task").onclick = giveTask;
     document.getElementById("remove_button").onclick = showButtonDelete;
     document.getElementById("view_button").onclick = showButtonView;
@@ -155,7 +158,6 @@ function hideShow(element){
 
         document.getElementById("map_search").style.display = "none";
 
-
     }else if(current_position === "profile_variable"){
 
         document.getElementById("profile").style.display = "none";
@@ -172,6 +174,9 @@ function hideShow(element){
 
         document.getElementById("details_report").style.display = "none";
 
+    }else if(current_position === "show_more_users_variable"){
+
+        document.getElementById("profile_workers").style.display = "none";
     }
 
 
@@ -199,6 +204,9 @@ function hideShow(element){
         document.getElementById("details_report").style.display = "block";
         current_position = "show_more_variable";
 
+    }else if(element === "show_more_users_variable"){
+        document.getElementById("profile_workers").style.display = "block";
+        current_position = "show_more_users_variable";
     }
 
 }
@@ -478,6 +486,10 @@ function closeWindow(){
     hideShow("map_variable");
 }
 
+function closeWindowWorker(){
+    hideShow("users_variable");
+}
+
 function createWorker(){
     var name = document.getElementById("worker_username").value;
     var email = document.getElementById("worker_email").value;
@@ -551,7 +563,7 @@ function getFirstWorkers(){
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
                             cell4.outerHTML= "<button id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
-                            cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style'><a class='fa fa-search'></a></button>";
+                            cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='viewWorkers(this.parentNode.rowIndex)'><a class='fa fa-search'></a></button>";
 
                         }
                         numWorkers= data.length;
@@ -619,7 +631,7 @@ function getNextWorkers(){
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
                             cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
-                            cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style'><a class='fa fa-search'></a></button>";
+                            cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='viewWorkers(this.parentNode.rowIndex)'><a class='fa fa-search'></a></button>";
 
                         }
                         numWorkers= data.length;
@@ -688,7 +700,7 @@ function getPreWorkers(){
                                 cell2.innerHTML = data[i].email;
                                 cell3.innerHTML = data[i].job;
                                 cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
-                                cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style'><a class='fa fa-search'></a></button>";
+                                cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='viewWorkers(this.parentNode.rowIndex)'><a class='fa fa-search'></a></button>";
                             }
                             numWorkers= data.length;
                         }else{
@@ -951,4 +963,83 @@ function giveTask(){
     });;
 
 }
+
+function viewWorkers(row){
+    email_worker = document.getElementById("user_table").rows[row].cells[1].innerHTML;
+
+    hideShow("show_more_users_variable");
+
+    loadMoreTasks(email_worker, "");
+}
+
+var loadMoreTasks = function(email,cursor){
+
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+    fetch(restRequest("/api/worker/tasks/" + email + "?cursor=" + cursor, 'GET', headers, body)).then(function(response) {
+
+            if (response.status === 200 || response.status === 204) {
+                tasksCursor = response.headers.get("Cursor");
+                response.json().then(function(data) {
+                    console.log(data);
+                    var i;
+                    for(i = 0; i<data.length; i++){
+                        var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
+                            '<div class="row" >' +
+                            '<div class="col-lg-3 col-md-3 mx-auto">'+
+                            '<div class="row">'+
+                            '<div class="col-lg-6">'+
+                            '<i class="fa fa-tachometer"></i></div>'+
+                            '<div class="col-lg-6">'+
+                            '<p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"">'+data[i].gravity +
+                            '</p></div></div></div>'+
+                            '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
+                            '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
+                            '</div>' +
+                            '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].status+'</p></div>'+
+                            '</div>' +
+                            ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">'+
+                            '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].address + '</p>' +'</div>' +'</div><hr>'+
+                            '<div class="row"><div class="col-lg-6 text-center">' +'<img style="height:10rem;"id=' +i + '>' +
+                            '</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p class="text-center" style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].description+' </p>';
+
+                        if(data[i].indications === undefined || data[i].indications === "") {
+
+                            contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"></p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
+                                '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].username + '('+ data[i].phone +')' +'</p></div>' +
+                                '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
+                        }else {
+                            contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].indications + ' </p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
+                                '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].username + '('+ data[i].phone +')' +'</p></div>' +
+                                '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
+                        }
+
+                        $(".tasks_worker").append(contentString);
+
+                        var image = document.getElementById(i);
+                        image.src = "data:image/jpg;base64," + data[i].thumbnail;
+                    }
+
+                });
+            }
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+$('.tasks').scroll(function () {
+    var top = $('.tasks').scrollTop();
+    if (top >= $(".tasks_worker").height() - $(".tasks").height()) {
+        $('.two').append("bottom");
+        loadMoreComments(email_worker,tasksCursor);
+    }
+});
+
 
