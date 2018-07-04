@@ -172,9 +172,9 @@
         <div class="row" style="background: #f8f9fa ">
             <div class="col-lg-8 col-md-8 mx-auto">
                 <form name="sentMessage" id="signupForm">
-                        <label>Nome </label> <input type="text" class="form-control border" id="worker_username" placeholder="Nome" />
-                        <label>Email</label> <input type="email" class="form-control border" id="worker_email" placeholder="Email" />
-                        <label>Serviços</label> <input type="text" class="form-control border" id="worker_jobs" placeholder="Serviços" />
+                    <label>Nome </label> <input type="text" class="form-control border" id="worker_username" placeholder="Nome" />
+                    <label>Email</label> <input type="email" class="form-control border" id="worker_email" placeholder="Email" />
+                    <label>Serviços</label> <input type="text" class="form-control border" id="worker_jobs" placeholder="Serviços" />
                 </form>
             </div>
         </div>
@@ -389,7 +389,13 @@
 <!--Profile Workers-->
 <div id="profile_workers" style="display: none">
     <div class="row">
-        <div class="col-lg-4" style="background: #f8f9fa ">
+        <div class="col-lg-10"></div>
+        <div class="col-lg-2">
+            <button class="btn" id="close_window_worker" ><i class="fa fa-remove" style="color:#3e4e5a"></i></button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12" style="background: #f8f9fa ">
             <div class="row organization_style">
                 <div class=" col-md-12 col-lg-12 text-center">
                     <img src="../images/6.1.svg" height="200" width="142"/>
@@ -418,13 +424,9 @@
                 <div class=" col-md-2 col-lg-2 "></div>
             </div>
         </div>
-        <div class="col-lg-8">
-            <div class="row">
-                <div class="col-lg-10"></div>
-                <div class="col-lg-2">
-                    <button class="btn" id="close_window_worker" ><i class="fa fa-remove" style="color:#3e4e5a"></i></button>
-                </div>
-            </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
             <div class='tasks' style="margin-top:2rem; margin-left:5rem"><div class='tasks_worker'></div></div>
         </div>
     </div>
