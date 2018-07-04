@@ -120,7 +120,7 @@ public class PermissionControlFilter implements Filter {
 		try {
 			verifyWith(token, algorithm, username);
 		} catch (Exception e) {
-			changeResp(resp, Message.INVALID_TOKEN);
+			changeResp(resp, Message.INVALID_TOKEN_ITSELF);
 			return;
 		}
 		
@@ -154,8 +154,7 @@ public class PermissionControlFilter implements Filter {
 					tokenE.getProperty(DSUtils.TOKEN_DEVICE).equals(deviceid)) {
 
 				LOG.info(Message.PERMISSION_GRANTED);
-
-				req.setAttribute(CustomHeader.LEVEL_ATT, userlevel);
+				
 				req.setAttribute(CustomHeader.USERNAME_ATT, username);
 				chain.doFilter(req, resp);
 				return;

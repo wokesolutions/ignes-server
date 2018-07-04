@@ -40,6 +40,7 @@ public class Message {
 		public static final String NOTE_EMPTY = "Nota não pode ser vazia";
 		public static final String TASK_NOT_FOUND= "Tarefa não encontrada";
 		public static final String DUPLICATED_TASK = "Trabalhador já tem essa tarefa";
+		public static final String APPLICATION_NOT_FOUND = "Organização não se candidatou a essa tarefa";
 	
 	// Error General
 		public static final String WRONG_PASSWORD = "Password errada para o utilizador: ";
@@ -48,6 +49,7 @@ public class Message {
 		public static final String LOGIN_DATA_INVALID = "Não há campos suficientes para login";
 		public static final String BAD_FORMAT = "Má formatação";
 		public static final String INVALID_TOKEN = "Token inválido";
+		public static final String INVALID_TOKEN_ITSELF = "Token inválido em algoritmo";
 		public static final String TXN_ACTIVE = "Transição ativa";
 		public static final String FAILED_LOGIN = "Tentativa de entrar falhou para: ";
 		public static final String PROFILE_UPDATE_DATA_INVALID = "Não há campos suficientes para atualizar perfil";

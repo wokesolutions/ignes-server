@@ -2,6 +2,7 @@ package com.wokesolutions.ignes.api;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -811,8 +812,35 @@ public class Profile {
 			return Response.status(Status.FORBIDDEN).build();
 		}
 		
-		Key orgK = KeyFactory.createKey(DSUtils.ORG, );
+		Key orgUK = KeyFactory.createKey(DSUtils.USER, data.nif);
+		Key orgK = KeyFactory.createKey(orgUK, DSUtils.ORG, data.nif);
 		
-		Query applicationQ = new Query(DSUtils.APPLICATION).setAncestor(reportK);
+		LOG.info(orgK.toString());
+		
+		Query applicationQ = new Query(DSUtils.APPLICATION).setKeysOnly()
+				.setAncestor(reportK);
+		
+		List<Entity> applications = datastore.prepare(applicationQ)
+				.asList(FetchOptions.Builder.withDefaults());
+		
+		Iterator<Entity> it = applications.iterator();
+		Entity application = null;
+		while(it.hasNext()) {
+			application = it.next();
+			Key key = (Key) application.getProperty(DSUtils.APPLICATION_ORG);
+			
+			if(key.equals(orgK))
+				break;
+			
+			if(!it.hasNext() && !key.equals(orgK)) {
+				LOG.info(Message.APPLICATION_NOT_FOUND);
+				return Response.status(Status.NOT_FOUND).build();
+			}
+		}
+		
+		if(application == null)
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		
+		return null;
 	}
 }
