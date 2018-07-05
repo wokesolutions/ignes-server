@@ -45,7 +45,6 @@ import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.ApplicationData;
 import com.wokesolutions.ignes.data.TaskData;
 import com.wokesolutions.ignes.data.WorkerRegisterData;
-import com.wokesolutions.ignes.exceptions.UserNotWorkerException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
@@ -120,7 +119,8 @@ public class Org {
 				return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build();
 			}
 			
-			Key orgK = KeyFactory.createKey(DSUtils.USER, org);
+			Key orgUK = KeyFactory.createKey(DSUtils.USER, org);
+			Key orgK = KeyFactory.createKey(orgUK, DSUtils.ORG, org);
 
 			try {
 				datastore.get(orgK);
@@ -406,8 +406,6 @@ public class Org {
 
 	private Response giveTaskRetry(TaskData data, String orgnif) {
 		String reportid = data.report;
-		String email = data.email;
-		String indications = data.indications;
 		
 		Key userK = KeyFactory.createKey(DSUtils.USER, orgnif);
 		Key orgK = KeyFactory.createKey(userK, DSUtils.ORG, orgnif);
@@ -444,7 +442,7 @@ public class Org {
 			return Response.status(Status.FORBIDDEN).build();
 		}
 		
-		Entity task = new Entity(DSUtils.TASK, reportK);
+		Entity task = new Entity(DSUtils.TASK, orgtaskK);
 		task.setProperty(DSUtils.TASK_WORKER, workerK);
 		
 		if(data.indications != null && !data.indications.equals(""))
@@ -553,6 +551,10 @@ public class Org {
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 					}
 
+					Query workertaskQ = new Query(DSUtils.TASK).setAncestor(task.getKey());
+					List<Entity> workertasks = datastore.prepare(workertaskQ)
+							.asList(FetchOptions.Builder.withDefaults());
+
 					JSONObject jsonReport = new JSONObject();
 
 					jsonReport.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
@@ -570,6 +572,12 @@ public class Org {
 							((Key) task.getProperty(DSUtils.TASK_WORKER)).getParent().getName());
 					jsonReport.put(Prop.INDICATIONS, task.getProperty(DSUtils.TASK_INDICATIONS));
 					jsonReport.put(Prop.TASK_TIME, task.getProperty(DSUtils.TASK_TIME));
+					
+					String workers = "";
+					for(Entity taskW : workertasks)
+						workers += taskW.getProperty(DSUtils.TASK_WORKER).toString();
+					
+					jsonReport.put(Prop.WORKERS, workers);
 
 					String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
 					jsonReport.put(Prop.THUMBNAIL, tn);

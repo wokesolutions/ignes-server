@@ -47,4 +47,5 @@ public class Prop {
 	public static final String BUDGET = "budget";
 	public static final String INFO = "info";
 	public static final String APPLICATION_TIME = "applicationtime";
+	public static final String WORKERS = "workers";
 }
