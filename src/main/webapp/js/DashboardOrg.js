@@ -140,13 +140,13 @@ function getCurrentLocation() {
             var mapElement = document.getElementById('map');
             map = new google.maps.Map(mapElement, currentLoc);
 
-            getMarkers(15);
+            getMarkers();
         })
     }else {
         var mapElement = document.getElementById('map');
         map = new google.maps.Map(mapElement, currentLoc);
 
-        getMarkers(15);
+        getMarkers();
     }
 
     return currentLoc;
@@ -304,7 +304,7 @@ function getMarkersByLocation(zone, cursor){
         });
 }
 
-function getMarkers(radius, cursor){
+function getMarkers(cursor){
     if(cursor===undefined) cursor = "";
 
     var headers = new Headers();
@@ -314,8 +314,7 @@ function getMarkers(radius, cursor){
     headers.append('Device-App', localStorage.getItem('app'));
     headers.append('Device-Info', localStorage.getItem('browser'));
 
-    fetch(restRequest('/api/report/getwithinradius?' + "lat=" + currentLoc.center.lat + "&lng=" + currentLoc.center.lng +
-        "&radius=" + radius + "&cursor=" + cursor, 'GET', headers, body)).then(function(response) {
+    fetch(restRequest('/api/org/reports?cursor=' + cursor , 'GET', headers, body)).then(function(response) {
 
             if (response.status === 200) {
                 var newCursor = response.headers.get("Cursor");
