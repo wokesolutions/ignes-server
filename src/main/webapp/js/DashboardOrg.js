@@ -320,7 +320,7 @@ function getMarkers(cursor){
                 var newCursor = response.headers.get("Cursor");
                 response.json().then(function(data) {
                     reports = data;
-                    console.log(data);
+                    console.log("Markers  "+ data);
                     fillMap(reports, newCursor);
                 });
 
