@@ -376,11 +376,12 @@ function fillMap(reports, cursor, zone){
             }
         })(marker, i));
     }
-
+    console.log(cursor);
     if(cursor !== null){
+        console.log(zone);
         if(zone === null) {
             console.log(cursor);
-            getMarkers(5, cursor);
+            getMarkers(cursor);
         } else{
             getMarkersByLocation(zone, cursor);
         }
