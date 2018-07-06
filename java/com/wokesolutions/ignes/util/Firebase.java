@@ -13,7 +13,7 @@ import com.google.firebase.messaging.Message;
 
 public class Firebase {
 
-	private static final String PATH = "mimetic-encoder-209111-firebase-adminsdk-iiucd-6672c855f3.json";
+	private static final String PATH = "./credentials.json";
 	private static final String URL = "https://mimetic-encoder-209111.firebaseio.com";
 	
 	private static final String TITLE = "title";
