@@ -463,7 +463,6 @@ public class Admin {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_GRAVITY, Integer.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
-		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class));
 
 		QueryResultList<Entity> list = datastore.prepare(query).asQueryResultList(fetchOptions);
@@ -483,7 +482,6 @@ public class Admin {
 					((Key) report.getProperty(DSUtils.REPORT_USER)).getName());
 			rep.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
 			rep.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
-			rep.put(Prop.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
 			rep.put(Prop.CREATIONTIME,
 					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
 
