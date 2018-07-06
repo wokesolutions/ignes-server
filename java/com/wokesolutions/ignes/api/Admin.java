@@ -749,7 +749,7 @@ public class Admin {
 	// ---------------x--------------- SUBCLASS
 
 	@GET
-	@Path("/stats/orgreports/all")
+	@Path("/stats/org/applications")
 	public Response getOrgReports() {
 		int retries = 5;
 
@@ -761,6 +761,23 @@ public class Admin {
 				
 				Query orgQ = new Query(DSUtils.ORG).setKeysOnly();
 				List<Entity> orgs = datastore.prepare(orgQ).asList(fetchOptions);
+				
+				for(Entity org : orgs) {
+					JSONObject obj = new JSONObject();
+					
+					Filter applicationF = new Query.FilterPredicate(DSUtils.APPLICATIONLOG_ORG,
+							FilterOperator.EQUAL, org.getKey());
+					Query applicationQ = new Query(DSUtils.APPLICATIONLOG).setFilter(applicationF);
+					
+					int count = datastore.prepare(applicationQ)
+							.countEntities(FetchOptions.Builder.withDefaults());
+					
+					obj.put(Prop.NIF, count);
+					
+					array.put(obj);
+				}
+				
+				return Response.ok(array.toString()).build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Message.TOO_MANY_RETRIES);

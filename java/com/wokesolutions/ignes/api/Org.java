@@ -686,8 +686,19 @@ public class Org {
 		application.setProperty(DSUtils.APPLICATION_FORMATTEDTIME, sdf.format(date));
 		application.setProperty(DSUtils.APPLICATION_INFO, data.info);
 		application.setProperty(DSUtils.APPLICATION_REPORT, reportK);
+		
+		Entity applicationLog = new Entity(DSUtils.APPLICATIONLOG, reportK);
+		applicationLog.setProperty(DSUtils.APPLICATIONLOG_BUDGET, data.bugdet);
+		applicationLog.setProperty(DSUtils.APPLICATIONLOG_TIME, date);
+		applicationLog.setProperty(DSUtils.APPLICATIONLOG_INFO, data.info);
+		applicationLog.setProperty(DSUtils.APPLICATIONLOG_ORG, orgK);
+		
+		Transaction txn = datastore.beginTransaction();
+		
+		datastore.put(txn, applicationLog);
 
-		datastore.put(application);
+		datastore.put(txn, application);
+		txn.commit();
 		return Response.ok().build();
 	}
 
