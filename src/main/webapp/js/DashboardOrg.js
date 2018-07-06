@@ -74,7 +74,18 @@ function getShowMore(){
     hideShow("show_more_variable");
 }
 
-function getShowFeed(){
+function getShowFeed(task){
+    document.getElementById("report_address_feed").innerHTML = task.address;
+    document.getElementById("report_gravity_feed").innerHTML = task.gravity;
+    document.getElementById("report_user_feed").innerHTML = task.username;
+    document.getElementById("report_state_feed").innerHTML = task.status;
+    document.getElementById("report_title_feed").innerHTML = task.title;
+    document.getElementById("report_category_feed").innerHTML = task.category;
+    document.getElementById("report_creationtime_feed").innerHTML = task.creationtime;
+    document.getElementById("report_up_feed").innerHTML = task.downs;
+    document.getElementById("report_down_feed").innerHTML = task.ups;
+    var image = document.getElementById("thumb_feed");
+    image.src = "data:image/jpg;base64," + task.thumbnail;
     hideShow("show_feed_task_variable");
 }
 
@@ -493,7 +504,7 @@ function getInfo(idReport, i){
                 document.getElementById('report_address_id').innerHTML= reports[i].address;
                 document.getElementById('report_address_id_2').innerHTML= reports[i].address;
 
-                if(reports[i].description !== "")
+                if(reports[i].description !== "" || reports[i].description !== undefined )
                     document.getElementById('report_description_id').innerHTML= reports[i].description;
                 else
                     document.getElementById('report_description_id').innerHTML= "-";
@@ -553,7 +564,7 @@ function closeWindow(){
 }
 
 function closeWindowFeed(){
-    hideShow("profile");
+    hideShow("profile_variable");
 }
 
 function closeWindowWorker(){
@@ -813,7 +824,6 @@ function getProfile(){
                     document.getElementById("organization_zip").innerHTML = data.zip;
                     var show_service ="";
                     var service = JSON.parse(data.services);
-                    console.log(service);
                     for(var i = 0; i< service.length; i++) {
                         if (i !== service.length - 1)
                             show_service += service[i] + "/";
@@ -898,7 +908,7 @@ var loadMore = function () {
             '</div>' +
             '<div class="col-lg-6">' +
             '<div class="col-lg-12 mx-lg-auto text-center">' +
-            '<button style="margin-top:3rem" type="button" class="btn btn-primary-view" onclick="getShowFeed()">Ver Mais</button>' +
+            '<button style="margin-top:3rem" type="button" class="btn btn-primary-view" onclick="getShowFeed(tasks[i])">Ver Mais</button>' +
             '</div>' +
             '</div></div><hr style="margin-bottom: 0; margin-top:0">' +
             '<div class="row"><div class="col-lg-6 text-left"></div>' +
@@ -908,6 +918,7 @@ var loadMore = function () {
 
         var image = document.getElementById(i);
         image.src = "data:image/jpg;base64," + tasks[i].thumbnail;
+
         currentfeed += 10;
     }
 }
