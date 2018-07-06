@@ -33,6 +33,7 @@ public class DSUtils {
 		public static final String SKIPLOGIN = "SkipLogin";
 		public static final String APPLICATION = "Application";
 		public static final String ORGTASK = "OrgTask";
+		public static final String FOLLOW = "Follow";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -293,4 +294,7 @@ public class DSUtils {
 		public static final String ORGTASK_ORG = "orgtask_org";
 		public static final String ORGTASK_TIME = "orgtask_time";
 		public static final String ORGTASK_USER = "orgtask_user";
+		
+	// Follow
+		public static final String FOLLOW_LOCATION = "follow_location";
 }

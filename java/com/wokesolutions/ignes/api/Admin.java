@@ -129,7 +129,7 @@ public class Admin {
 
 			SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 			sdf.setTimeZone(TimeZone.getTimeZone(Report.PORTUGAL));
-			
+
 			user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED, sdf.format(date));
 
 			Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
@@ -254,7 +254,7 @@ public class Admin {
 				LOG.info(Message.USER_NOT_ADMIN);
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
-			
+
 			if(admin == null) {
 				txn.rollback();
 				LOG.info(Message.USER_NOT_ADMIN);
@@ -360,7 +360,7 @@ public class Admin {
 				}
 				us.put(Prop.POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
 			}
-			
+
 			array.put(us);
 		}
 
@@ -496,6 +496,42 @@ public class Admin {
 			return Response.ok(array.toString()).build();
 
 		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
+	}
+	
+	@POST
+	@Path("/confirmreport/{report}")
+	public Response confirmReport(@PathParam(ParamName.REPORT) String reportid) {
+		int retries = 5;
+
+		while(true) {
+			try {
+				Key reportK = KeyFactory.createKey(DSUtils.REPORT, reportid);
+				
+				Entity report;
+				try {
+					report = datastore.get(reportK);
+				} catch(EntityNotFoundException e) {
+					LOG.info(Message.REPORT_NOT_FOUND);
+					return Response.status(Status.NOT_FOUND).build();
+				}
+				
+				if(!report.getProperty(DSUtils.REPORT_STATUS).equals(Report.STANDBY)) {
+					LOG.info(Message.REPORT_STANDBY);
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+				
+				report.setProperty(DSUtils.REPORT_STATUS, Report.OPEN);
+				datastore.put(report);
+				
+				return Response.ok().build();
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+				retries--;
+			}
+		}
 	}
 
 	@POST
@@ -637,14 +673,14 @@ public class Admin {
 							adminLog.setProperty(DSUtils.ADMINLOG_TIME, new Date());
 
 							datastore.put(txn, adminLog);
-							
+
 							LinkedList<String> list = new LinkedList<String>();
 							list.add(Storage.IMG_FOLDER);
 							list.add(Storage.PROFILE_FOLDER);
 							StoragePath path = new StoragePath(list, username);
 							if(Storage.deleteImage(path, false))
-							
-							txn.commit();
+
+								txn.commit();
 							return Response.ok().build();
 						}
 					} finally {
@@ -708,5 +744,30 @@ public class Admin {
 		datastore.delete(txn, reportsK);
 		datastore.delete(txn, commentsK);
 		return true;
+	}
+
+	// ---------------x--------------- SUBCLASS
+
+	@GET
+	@Path("/stats/orgreports/all")
+	public Response getOrgReports() {
+		int retries = 5;
+
+		while(true) {
+			try {
+				JSONArray array = new JSONArray();
+				
+				FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
+				
+				Query orgQ = new Query(DSUtils.ORG).setKeysOnly();
+				List<Entity> orgs = datastore.prepare(orgQ).asList(fetchOptions);
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+				retries--;
+			}
+		}
 	}
 }

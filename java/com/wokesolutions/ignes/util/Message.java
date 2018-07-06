@@ -17,6 +17,7 @@ public class Message {
 		public static final String ORG_NOT_FOUND = "Organização não existe";
 		public static final String ORG_CODE_ALREADY_EXISTS = "Erro a gerar código. Tente de novo";
 		public static final String ORG_NOT_CONFIRMED = "Organização ainda não confirmada";
+		public static final String REPORT_STANDBY = "Ocorrência não está confirmada";
 	
 	// Error Report
 		public static final String DUPLICATE_REPORT = "Ocorrência já reportada";
@@ -104,6 +105,8 @@ public class Message {
 		public static final String REPORT_CLOSED = "Ocorrência fechada com sucesso";
 		public static final String REPORT_WIPED = "Ocorrência posta em trabalhos com sucesso";
 		public static final String TASK_ALREADY_ASSIGNED = "Ocorrência já está atribuída";
+		public static final String REPORT_IS_LATLNG = "Ocorrência é um ponto";
+		public static final String REPORT_IS_POINTS = "Ocorrência é um polígono";
 		
 	// Info Levels
 		public static final String TRYING_TO_CHANGE_LEVEL1 = "Tentando mudar para nível 1 o utilizador: ";

@@ -7,6 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.google.api.client.util.Base64;
+import com.wokesolutions.ignes.api.Category;
 import com.wokesolutions.ignes.api.Report;
 
 public class ReportData {
@@ -14,7 +15,7 @@ public class ReportData {
 	public String title;
 	public double lat;
 	public double lng;
-	public JSONArray points;
+	public String points;
 	public int gravity;
 	public String description;
 	public String city;
@@ -31,7 +32,7 @@ public class ReportData {
 	
 	public boolean isValid() {
 		return ((lat != 0 && lng != 0) || points != null) && img != null 
-				&& imgwidth != 0 && imgheight != 0 && category != null;
+				&& imgwidth != 0 && imgheight != 0 && Category.isEq(category);
 	}
 	
 	public static String generateId(String username, Date creationtime) {
@@ -61,5 +62,11 @@ public class ReportData {
 		middle[1] = lngsum / num;
 		
 		return middle;
+	}
+	
+	@Override
+	public String toString() {
+		return "lat -> " + lat + "\nlng -> " + lng + "\npoints -> " + points +
+				"\ncategory -> " + category;
 	}
 }

@@ -74,16 +74,16 @@ public class Report {
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 	private static final int BATCH_SIZE = 10;
-	
+
 	public static final String PORTUGAL = "Portugal";
 
 	public static final String OPEN = "open";
 	public static final String CLOSED = "closed";
 	public static final String STANDBY = "standby";
 	public static final String WIP = "wip";
-	
+
 	private static final String NOT_FOUND = "NOT_FOUND";
-	
+
 	public static final String LAT = "lat";
 	public static final String LNG = "lng";
 
@@ -101,8 +101,10 @@ public class Report {
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response createReport(ReportData data,
 			@Context HttpServletRequest request) {
-		if(!data.isValid())
+		if(!data.isValid()) {
+			LOG.info(data.toString());
 			return Response.status(Status.EXPECTATION_FAILED).build();
+		}
 		int retries = 5;
 		while(true) {
 			try {
@@ -122,11 +124,9 @@ public class Report {
 		Key reportKey = null;
 		Date creationtime = new Date();
 		String reportid = null;
-		Transaction txn = datastore.beginTransaction();
+		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
 		LOG.info(Message.ATTEMPT_CREATE_REPORT);
-
-		String level = request.getAttribute(CustomHeader.LEVEL_ATT).toString();
 
 		try {
 			username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
@@ -152,30 +152,49 @@ public class Report {
 
 				Key userKey = KeyFactory.createKey(DSUtils.USER, username);
 
-				Entity report = new Entity(DSUtils.REPORT, reportid);
+				Entity report = new Entity(reportKey);
 
-				if(data.lat != 0 && data.lng != 0) {
+				double[] middle = new double[2];
+
+				if(data.points == null) {
+					LOG.info(Message.REPORT_IS_LATLNG);
+
 					report.setProperty(DSUtils.REPORT_LAT, data.lat);
 					report.setProperty(DSUtils.REPORT_LNG, data.lng);
-					
+
 					report.setProperty(DSUtils.REPORT_POINTS, null);
 				} else {
-					double[] middle = ReportData.calcMiddle(data.points);
-					
+					LOG.info(Message.REPORT_IS_POINTS);
+
+					JSONArray points = new JSONArray(data.points);
+					LOG.info(points.toString());
+					middle = ReportData.calcMiddle(points);
+
 					report.setProperty(DSUtils.REPORT_LAT, middle[0]);
 					report.setProperty(DSUtils.REPORT_LNG, middle[1]);
-					
-					report.setProperty(DSUtils.REPORT_POINTS, data.points.toString());
+
+					report.setProperty(DSUtils.REPORT_POINTS, data.points);
 				}
 
 				SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 				sdf.setTimeZone(TimeZone.getTimeZone(PORTUGAL));
-				
+
 				report.setProperty(DSUtils.REPORT_CREATIONTIME, creationtime);
 				report.setProperty(DSUtils.REPORT_PRIVATE, data.isprivate);
 				report.setProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED, sdf.format(creationtime));
 				report.setProperty(DSUtils.REPORT_USER, userKey);
 				report.setProperty(DSUtils.REPORT_CATEGORY, data.category);
+
+				Entity user;
+				try {
+					user = datastore.get(userKey);
+				} catch(EntityNotFoundException e) {
+					LOG.info(Message.USER_NOT_FOUND);
+					txn.rollback();
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+
+				String level = user.getProperty(DSUtils.USER_LEVEL).toString();
 
 				if(level.equals(UserLevel.LEVEL1))
 					report.setProperty(DSUtils.REPORT_STATUS, STANDBY);
@@ -204,7 +223,6 @@ public class Report {
 
 					if(data.gravity == 5 && level.equals(UserLevel.LEVEL2))
 						report.setProperty(DSUtils.REPORT_STATUS, STANDBY);
-
 				} else {
 					int gravity = DEFAULT_GRAVITY;
 					if(points < LevelManager.LEVEL2_POINTS)
@@ -244,24 +262,29 @@ public class Report {
 				report.setProperty(DSUtils.REPORT_IMGPATH, pathImg.makePath());
 				report.setProperty(DSUtils.REPORT_THUMBNAILPATH, pathImg.makeTnPath());
 
-				Entity reportVotes = new Entity(DSUtils.REPORTVOTES, reportKey);
+				Entity reportVotes = new Entity(DSUtils.REPORTVOTES, reportid, report.getKey());
 				reportVotes.setProperty(DSUtils.REPORTVOTES_UP, 0L);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_DOWN, 0L);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_DOWN, 0L);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_SPAM, 0L);
 				reportVotes.setProperty(DSUtils.REPORTVOTES_RELEVANCE, 0);
 
-				report.setPropertiesFrom(makeCoordProps(data.lat, data.lng));
+				if(data.points == null)
+					report.setPropertiesFrom(makeCoordProps(data.lat, data.lng));
+				else
+					report.setPropertiesFrom(makeCoordProps(middle[0], middle[1]));
 
 				List<Entity> entities = Arrays.asList(report, reportVotes);
 
 				LOG.info(Message.REPORT_CREATED + reportid);
 				datastore.put(txn, entities);
 				txn.commit();
-				
-				Category.addOrInc(data.category);
 
 				return Response.ok().build();
+			} catch(Exception e) {
+				LOG.info(e.toString());
+				LOG.info(e.getMessage());
+				return null;
 			}
 		} finally {
 			if(txn.isActive()) {
@@ -636,12 +659,12 @@ public class Report {
 			jsonReport.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
 			jsonReport.put(Prop.USERNAME,
 					((Key) report.getProperty(DSUtils.REPORT_USER)).getName());
-			
+
 			Object points = report.getProperty(DSUtils.REPORT_POINTS);
 			if(points != null) {
-				jsonReport.put(Prop.POINTS, new JSONArray(points.toString()));
+				jsonReport.put(Prop.POINTS, points);
 			}
-			
+
 			jsonReport.put(Prop.CATEGORY, report.getProperty(DSUtils.REPORT_CATEGORY));
 			jsonReport.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
 			jsonReport.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));

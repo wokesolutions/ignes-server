@@ -177,6 +177,12 @@ public class Register {
 	private Response registerOrgRetry(OrgRegisterData data) {
 		LOG.info(Message.ATTEMPT_REGISTER_ORG + data.nif);
 
+		JSONArray array = new JSONArray(data.categories);
+		
+		for(int i = 0; i < array.length(); i++)
+			if(Category.isEq(array.getString(i)))
+				return Response.status(Status.BAD_REQUEST).build();
+
 		Key orgKey;
 		try {
 			// If the entity does not exist an Exception is thrown. Otherwise,
@@ -243,11 +249,6 @@ public class Register {
 				datastore.put(txn, org);
 				txn.commit();
 				LOG.info(Message.ORG_REGISTERED + data.nif);
-				
-				JSONArray array = new JSONArray(data.categories);
-				
-				for(int i = 0; i < array.length(); i++)
-					Category.addOrInc(array.getString(i));
 				
 				return Response.ok().build();
 			} finally {

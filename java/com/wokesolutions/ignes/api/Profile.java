@@ -862,4 +862,60 @@ public class Profile {
 		txn.commit();
 		return Response.ok().build();
 	}
+	
+	@POST
+	@Path("/addfollow/{location}")
+	public Response addFollow(@Context HttpServletRequest request,
+			@PathParam(ParamName.LOCATION) String location) {
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		
+		int retries = 5;
+		while(true) {
+			try {
+				Key userK = KeyFactory.createKey(DSUtils.USER, username);
+				Entity follow = new Entity(DSUtils.FOLLOW, userK);
+				follow.setProperty(DSUtils.FOLLOW_LOCATION, location);
+				datastore.put(follow);
+				return Response.ok().build();
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
+	
+	@GET
+	@Path("/follows")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response follows(@Context HttpServletRequest request) {
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		
+		int retries = 5;
+		while(true) {
+			try {
+				Key userK = KeyFactory.createKey(DSUtils.USER, username);
+				
+				Query followQ = new Query(DSUtils.FOLLOW).setAncestor(userK);
+				List<Entity> list = datastore.prepare(followQ)
+						.asList(FetchOptions.Builder.withDefaults());
+				
+				JSONArray array = new JSONArray();
+				for(Entity location : list)
+					array.put(location.getProperty(DSUtils.FOLLOW_LOCATION));
+				
+				return Response.ok(array.toString()).build();
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
 }
