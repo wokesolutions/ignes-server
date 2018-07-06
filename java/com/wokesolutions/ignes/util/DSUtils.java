@@ -34,6 +34,7 @@ public class DSUtils {
 		public static final String APPLICATION = "Application";
 		public static final String ORGTASK = "OrgTask";
 		public static final String FOLLOW = "Follow";
+		public static final String APPLICATIONLOG = "ApplicationLog";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -297,4 +298,10 @@ public class DSUtils {
 		
 	// Follow
 		public static final String FOLLOW_LOCATION = "follow_location";
+		
+	// ApplicationLog
+		public static final String APPLICATIONLOG_ORG = "applicationlog_org";
+		public static final String APPLICATIONLOG_TIME = "applicationlog_time";
+		public static final String APPLICATIONLOG_BUDGET = "applicationlog_budget";
+		public static final String APPLICATIONLOG_INFO = "applicationlog_info";
 }
