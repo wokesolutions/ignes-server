@@ -393,6 +393,12 @@ function fillMap(reports, cursor){
                 icon: marker_color
             });
         } else{
+            marker = new google.maps.Marker({
+                position: new google.maps.LatLng(lat, lng),
+                map: map,
+                icon: marker_color
+            });
+
             marker = new google.maps.Polygon({
                 paths: reports[i].points,
                 strokeColor: '#FF0000',
