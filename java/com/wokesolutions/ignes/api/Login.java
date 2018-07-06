@@ -1,9 +1,12 @@
 package com.wokesolutions.ignes.api;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,12 +36,14 @@ import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.DatastoreException;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import com.wokesolutions.ignes.data.LoginData;
 import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.UserLevel;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
+import com.wokesolutions.ignes.util.Firebase;
 import com.wokesolutions.ignes.util.JWTUtils;
 
 @Path("/login")
@@ -206,7 +211,7 @@ public class Login {
 			newToken.setUnindexedProperty(DSUtils.TOKEN_DATE, date);
 			newToken.setProperty(DSUtils.TOKEN_DEVICE, deviceid);
 			newToken.setProperty(DSUtils.TOKEN_USER, userKey);
-			
+
 			stats.setProperty(DSUtils.USERSTATS_LOGINS,
 					(long) stats.getProperty(DSUtils.USERSTATS_LOGINS) + 1L);
 			stats.setProperty(DSUtils.USERSTATS_LASTIN, new Date());
@@ -260,6 +265,19 @@ public class Login {
 			}
 
 			txn.commit();
+
+			Map<String, String> body = new HashMap<>();
+			body.put("body", "ISTO E O CORPO");
+
+			try {
+				Firebase.init();
+				Firebase.sendMessageToDevice("OLA MIGO", body, data.firebasetoken);
+			} catch (FirebaseMessagingException e) {
+				LOG.info("iugigi");
+			} catch (IOException e) {
+				LOG.info("iugigi");
+			}
+
 			return response.build();	
 		} finally {
 			if (txn.isActive()) {

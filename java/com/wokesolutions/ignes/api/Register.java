@@ -3,9 +3,7 @@ package com.wokesolutions.ignes.api;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 
@@ -36,7 +34,6 @@ import com.wokesolutions.ignes.data.UserRegisterData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
-import com.wokesolutions.ignes.util.Firebase;
 import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.UserLevel;
 
@@ -108,7 +105,6 @@ public class Register {
 				user.setProperty(DSUtils.USER_EMAIL, data.email);
 				user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1.toString());
 				user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
-				user.setUnindexedProperty(DSUtils.USER_FBTOKEN, data.firebasetoken);
 				
 				SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 				sdf.setTimeZone(TimeZone.getTimeZone(Report.PORTUGAL));
@@ -135,11 +131,6 @@ public class Register {
 
 				LOG.info(Log.USER_REGISTERED + data.username);
 				txn.commit();
-				
-				Map<String, String> body = new HashMap<>();
-				body.put("body", "ISTO E O CORPO");
-				
-				Firebase.sendMessageToDevice("OLA MIGO", body, data.firebasetoken);
 
 				return Response.ok().build();
 			}

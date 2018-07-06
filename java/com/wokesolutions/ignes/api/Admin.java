@@ -751,7 +751,7 @@ public class Admin {
 
 	@GET
 	@Path("/stats/org/applications")
-	public Response getOrgReports() {
+	public Response statsOrgApplications() {
 		int retries = 5;
 
 		while(true) {
@@ -760,10 +760,12 @@ public class Admin {
 				JSONArray arraytitle = new JSONArray();
 				arraytitle.put(ORGNAME);
 				arraytitle.put(COUNT);
+				array.put(arraytitle);
 				
 				FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
 				
-				Query orgQ = new Query(DSUtils.ORG).setKeysOnly();
+				Query orgQ = new Query(DSUtils.ORG)
+						.addProjection(new PropertyProjection(DSUtils.ORG_NAME, String.class));
 				List<Entity> orgs = datastore.prepare(orgQ).asList(fetchOptions);
 				
 				for(Entity org : orgs) {
@@ -776,7 +778,9 @@ public class Admin {
 					int count = datastore.prepare(applicationQ)
 							.countEntities(FetchOptions.Builder.withDefaults());
 					
-					arrayinner.put(org.getKey().getName() + " - " + org.getProperty(DSUtils.ORG_NAME));
+					arrayinner.put(org.getKey().getName() + " - " +
+							org.getProperty(DSUtils.ORG_NAME).toString());
+					
 					arrayinner.put(count);
 					
 					array.put(arrayinner);

@@ -14,7 +14,6 @@ public class OrgRegisterData {
 	public boolean isprivate;
 	public String categories;
 	public String password;
-	public String firebasetoken;
 
 	public OrgRegisterData() {}
 
@@ -27,7 +26,6 @@ public class OrgRegisterData {
 				&& !name.equals("") && !email.equals("") && email.contains("@")
 				&& !password.equals("") && !address.equals("") && !locality.equals("")
 				&& !zip.equals("") && array.length() > 0 && !phone.equals("")
-				&& array.length() <= 3 && firebasetoken != null
-						&& !firebasetoken.equals("");
+				&& array.length() <= 3;
 	}
 }
