@@ -3,6 +3,7 @@ package com.wokesolutions.ignes.api;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -98,8 +99,11 @@ public class Task {
 		noteE.setUnindexedProperty(DSUtils.NOTE_TEXT, note);
 		noteE.setProperty(DSUtils.NOTE_WORKER, worker);
 		noteE.setProperty(DSUtils.NOTE_TIME, time);
-		noteE.setProperty(DSUtils.NOTE_TIMEFORMATTED,
-				new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(time));
+
+		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+		sdf.setTimeZone(TimeZone.getTimeZone(Report.PORTUGAL));
+		
+		noteE.setProperty(DSUtils.NOTE_TIMEFORMATTED, sdf.format(time));
 		
 		datastore.put(noteE);
 

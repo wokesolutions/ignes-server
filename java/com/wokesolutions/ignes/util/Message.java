@@ -17,6 +17,7 @@ public class Message {
 		public static final String ORG_NOT_FOUND = "Organização não existe";
 		public static final String ORG_CODE_ALREADY_EXISTS = "Erro a gerar código. Tente de novo";
 		public static final String ORG_NOT_CONFIRMED = "Organização ainda não confirmada";
+		public static final String REPORT_STANDBY = "Ocorrência não está confirmada";
 	
 	// Error Report
 		public static final String DUPLICATE_REPORT = "Ocorrência já reportada";
@@ -26,6 +27,7 @@ public class Message {
 		public static final String TOO_MANY_REPORTS = "Header contém demasiados reports";
 		public static final String NO_REPORTS_FOUND = "Não foram encontradas ocorrências";
 		public static final String VOTED_REPORT_ERROR = "Ocorrência votada com erro: ";
+		public static final String REPORT_IS_PRIVATE = "Ocorrência é privada";
 	
 	// Error Admin
 		public static final String MOTER_NOT_ADMIN = "Utilizador a fazer alterações não é administrador";
@@ -39,6 +41,7 @@ public class Message {
 		public static final String NOTE_EMPTY = "Nota não pode ser vazia";
 		public static final String TASK_NOT_FOUND= "Tarefa não encontrada";
 		public static final String DUPLICATED_TASK = "Trabalhador já tem essa tarefa";
+		public static final String APPLICATION_NOT_FOUND = "Organização não se candidatou a essa tarefa";
 	
 	// Error General
 		public static final String WRONG_PASSWORD = "Password errada para o utilizador: ";
@@ -47,6 +50,7 @@ public class Message {
 		public static final String LOGIN_DATA_INVALID = "Não há campos suficientes para login";
 		public static final String BAD_FORMAT = "Má formatação";
 		public static final String INVALID_TOKEN = "Token inválido";
+		public static final String INVALID_TOKEN_ITSELF = "Token inválido em algoritmo";
 		public static final String TXN_ACTIVE = "Transição ativa";
 		public static final String FAILED_LOGIN = "Tentativa de entrar falhou para: ";
 		public static final String PROFILE_UPDATE_DATA_INVALID = "Não há campos suficientes para atualizar perfil";
@@ -100,6 +104,9 @@ public class Message {
 		public static final String SEARCHING_IN_COORDS = "Procurando nas seguintes coords: ";
 		public static final String REPORT_CLOSED = "Ocorrência fechada com sucesso";
 		public static final String REPORT_WIPED = "Ocorrência posta em trabalhos com sucesso";
+		public static final String TASK_ALREADY_ASSIGNED = "Ocorrência já está atribuída";
+		public static final String REPORT_IS_LATLNG = "Ocorrência é um ponto";
+		public static final String REPORT_IS_POINTS = "Ocorrência é um polígono";
 		
 	// Info Levels
 		public static final String TRYING_TO_CHANGE_LEVEL1 = "Tentando mudar para nível 1 o utilizador: ";

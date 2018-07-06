@@ -43,4 +43,9 @@ public class Prop {
 	public static final String TASK_TIME = "tasktime";
 	public static final String NOTE = "note";
 	public static final String COMMENTS = "comments";
+	public static final String CATEGORY = "category";
+	public static final String BUDGET = "budget";
+	public static final String INFO = "info";
+	public static final String APPLICATION_TIME = "applicationtime";
+	public static final String WORKERS = "workers";
 }

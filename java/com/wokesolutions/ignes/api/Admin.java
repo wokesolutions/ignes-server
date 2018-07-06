@@ -4,7 +4,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -48,6 +50,8 @@ import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Prop;
+import com.wokesolutions.ignes.util.Storage;
+import com.wokesolutions.ignes.util.Storage.StoragePath;
 import com.wokesolutions.ignes.util.Message;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.UserLevel;
@@ -122,8 +126,11 @@ public class Admin {
 			user.setProperty(DSUtils.USER_EMAIL, registerData.email);
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.ADMIN);
 			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
-			user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED,
-					new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
+
+			SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+			sdf.setTimeZone(TimeZone.getTimeZone(Report.PORTUGAL));
+
+			user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED, sdf.format(date));
 
 			Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
 
@@ -247,7 +254,7 @@ public class Admin {
 				LOG.info(Message.USER_NOT_ADMIN);
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
-			
+
 			if(admin == null) {
 				txn.rollback();
 				LOG.info(Message.USER_NOT_ADMIN);
@@ -353,7 +360,7 @@ public class Admin {
 				}
 				us.put(Prop.POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
 			}
-			
+
 			array.put(us);
 		}
 
@@ -490,6 +497,42 @@ public class Admin {
 
 		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 	}
+	
+	@POST
+	@Path("/confirmreport/{report}")
+	public Response confirmReport(@PathParam(ParamName.REPORT) String reportid) {
+		int retries = 5;
+
+		while(true) {
+			try {
+				Key reportK = KeyFactory.createKey(DSUtils.REPORT, reportid);
+				
+				Entity report;
+				try {
+					report = datastore.get(reportK);
+				} catch(EntityNotFoundException e) {
+					LOG.info(Message.REPORT_NOT_FOUND);
+					return Response.status(Status.NOT_FOUND).build();
+				}
+				
+				if(!report.getProperty(DSUtils.REPORT_STATUS).equals(Report.STANDBY)) {
+					LOG.info(Message.REPORT_STANDBY);
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+				
+				report.setProperty(DSUtils.REPORT_STATUS, Report.OPEN);
+				datastore.put(report);
+				
+				return Response.ok().build();
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+				retries--;
+			}
+		}
+	}
 
 	@POST
 	@Path("/confirmorg/{nif}")
@@ -504,14 +547,12 @@ public class Admin {
 				try {
 					Entity orgE = datastore.get(orgkey);
 
-					Entity userE = datastore.get(orgE.getParent());
-
 					orgE.setProperty(DSUtils.USER_ACTIVATION, Profile.ACTIVATED);
 
 					datastore.put(orgE);
 
 					Email.sendOrgConfirmedMessage(
-							userE.getProperty(DSUtils.USER_EMAIL).toString());
+							orgE.getProperty(DSUtils.USER_EMAIL).toString());
 
 					return Response.ok().build();
 				} catch (EntityNotFoundException e) {
@@ -575,10 +616,10 @@ public class Admin {
 					obj.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
 					obj.put(Prop.ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS));
 					obj.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
-					obj.put(Prop.ISFIRESTATION, org.getProperty(DSUtils.ORG_ISFIRESTATION));
+					obj.put(Prop.ISFIRESTATION, org.getProperty(DSUtils.ORG_PRIVATE));
 					obj.put(Prop.LOCALITY, org.getProperty(DSUtils.ORG_LOCALITY));
 					obj.put(Prop.PHONE, org.getProperty(DSUtils.ORG_PHONE));
-					obj.put(Prop.SERVICES, org.getProperty(DSUtils.ORG_SERVICES));
+					obj.put(Prop.SERVICES, org.getProperty(DSUtils.ORG_CATEGORIES));
 					obj.put(Prop.ZIP, org.getProperty(DSUtils.ORG_ZIP));
 					obj.put(Prop.CREATIONTIME,
 							user.getProperty(DSUtils.USER_CREATIONTIMEFORMATTED));
@@ -632,7 +673,14 @@ public class Admin {
 							adminLog.setProperty(DSUtils.ADMINLOG_TIME, new Date());
 
 							datastore.put(txn, adminLog);
-							txn.commit();
+
+							LinkedList<String> list = new LinkedList<String>();
+							list.add(Storage.IMG_FOLDER);
+							list.add(Storage.PROFILE_FOLDER);
+							StoragePath path = new StoragePath(list, username);
+							if(Storage.deleteImage(path, false))
+
+								txn.commit();
 							return Response.ok().build();
 						}
 					} finally {
@@ -696,5 +744,30 @@ public class Admin {
 		datastore.delete(txn, reportsK);
 		datastore.delete(txn, commentsK);
 		return true;
+	}
+
+	// ---------------x--------------- SUBCLASS
+
+	@GET
+	@Path("/stats/orgreports/all")
+	public Response getOrgReports() {
+		int retries = 5;
+
+		while(true) {
+			try {
+				JSONArray array = new JSONArray();
+				
+				FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
+				
+				Query orgQ = new Query(DSUtils.ORG).setKeysOnly();
+				List<Entity> orgs = datastore.prepare(orgQ).asList(fetchOptions);
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+				retries--;
+			}
+		}
 	}
 }

@@ -6,7 +6,7 @@ import net.sargue.mailgun.Mail;
 public class Email {
 
 	private static final String DOMAIN = "mg.wokesolutionsignes.com";
-	private static final String EMAIL = "wokesolutions@gmail.com";
+	private static final String EMAIL = "wokesolutionsignes@gmail.com";
 
 	private static final String CONFIRM_SUBJECT = "Código de confirmação de conta Ignes";
 	private static final String CONFIRM_TEXT =

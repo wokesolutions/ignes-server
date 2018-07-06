@@ -1,7 +1,9 @@
 package com.wokesolutions.ignes.api;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,7 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.cloud.datastore.DatastoreException;
+import com.wokesolutions.ignes.data.AcceptData;
 import com.wokesolutions.ignes.data.PasswordData;
 import com.wokesolutions.ignes.data.ProfPicData;
 import com.wokesolutions.ignes.data.UserOptionalData;
@@ -252,14 +255,16 @@ public class Profile {
 
 		try {
 			sameUserOrAdmin(request, username);
-		} catch(NotSameNorAdminException e) {
+		} catch(Exception e) {
 			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
+		Key userK = KeyFactory.createKey(DSUtils.USER, username);
+
 		Query query = new Query(DSUtils.USERVOTE);
 		Filter filter = new Query.FilterPredicate(DSUtils.USERVOTE_USER,
-				FilterOperator.EQUAL, username);
+				FilterOperator.EQUAL, userK);
 		query.setFilter(filter);
 
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(20);
@@ -278,7 +283,7 @@ public class Profile {
 			voteJson.put(Prop.VOTE, props.get(DSUtils.USERVOTE_TYPE));
 
 			if(props.containsKey(DSUtils.USERVOTE_REPORT))
-				voteJson.put(Prop.REPORT, props.get(DSUtils.USERVOTE_REPORT));
+				voteJson.put(Prop.REPORT, ((Key) props.get(DSUtils.USERVOTE_REPORT)).getName());
 			else if(props.containsKey(DSUtils.USERVOTE_EVENT))
 				voteJson.put(Prop.EVENT, props.get(DSUtils.USERVOTE_EVENT));
 			else if(props.containsKey(DSUtils.USERVOTE_COMMENT))
@@ -324,7 +329,7 @@ public class Profile {
 	private Response activateAccountRetry(String code, String username, HttpServletRequest request) {
 		try {
 			sameUserOrAdmin(request, username);
-		} catch(NotSameNorAdminException e2) {
+		} catch(Exception e2) {
 			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
@@ -360,7 +365,7 @@ public class Profile {
 
 		try {
 			sameUserOrAdmin(request, username);
-		} catch(NotSameNorAdminException e2) {
+		} catch(Exception e2) {
 			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
@@ -500,15 +505,19 @@ public class Profile {
 	}
 
 	public static String sameUserOrAdmin(HttpServletRequest request, String username)
-			throws NotSameNorAdminException {
+			throws NotSameNorAdminException, EntityNotFoundException {
 
-		String requester = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
-		String level = request.getAttribute(CustomHeader.LEVEL_ATT).toString();
+		String requesterName = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
-		if(!level.equals(UserLevel.ADMIN) && !requester.equals(username))
+		Key requesterK = KeyFactory.createKey(DSUtils.USER, requesterName);
+
+		Entity requester = datastore.get(requesterK);
+		String level = requester.getProperty(DSUtils.USER_LEVEL).toString();
+
+		if(!level.equals(UserLevel.ADMIN) && !requesterName.equals(username))
 			throw new NotSameNorAdminException();
 
-		return requester;
+		return requesterName;
 	}
 
 	@POST
@@ -616,10 +625,11 @@ public class Profile {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CATEGORY, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_POINTS, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LOCALITY, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
-		.addProjection(new PropertyProjection(DSUtils.REPORT_THUMBNAILPATH, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, Boolean.class));
 
 		QueryResultList<Entity> reports = datastore.prepare(reportQuery)
@@ -638,6 +648,13 @@ public class Profile {
 			jsonReport.put(Prop.REPORT, report.getKey().getName());
 			jsonReport.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
 			jsonReport.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+
+			Object points = report.getProperty(DSUtils.REPORT_POINTS);
+			if(points != null) {
+				jsonReport.put(Prop.POINTS, new JSONArray(points.toString()));
+			}
+
+			jsonReport.put(Prop.CATEGORY, report.getProperty(DSUtils.CATEGORY));
 			jsonReport.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
 			jsonReport.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
 			jsonReport.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
@@ -646,10 +663,6 @@ public class Profile {
 			jsonReport.put(Prop.CREATIONTIME,
 					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
 			jsonReport.put(Prop.ISPRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
-
-			String tn = Storage.getImage(report.getProperty(DSUtils.REPORT_THUMBNAILPATH).toString());
-
-			jsonReport.put(Prop.THUMBNAIL, tn);
 
 			Report.appendVotesAndComments(jsonReport, report);
 
@@ -693,19 +706,18 @@ public class Profile {
 		StoragePath pathImg = new StoragePath(folders, username);
 
 		LOG.info(Message.ATTEMPT_UPDATE_PROFILE);
-		
-		if(!Storage.saveImage(data.pic, Storage.BUCKET, pathImg,
+
+		if(!Storage.saveImage(data.pic, pathImg,
 				data.width, data.height, data.orientation, false))
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
 
 		Query query = new Query(DSUtils.USEROPTIONAL)
-				.setAncestor(KeyFactory.createKey(DSUtils.USER, username))
-				.setKeysOnly();
+				.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
 
 		try {
 			Entity optional = datastore.prepare(query).asSingleEntity();
 			LOG.info(optional.toString());
-			
+
 			optional.setProperty(DSUtils.USEROPTIONAL_PICPATH, pathImg.makePath());
 			LOG.info(optional.toString());
 
@@ -762,5 +774,148 @@ public class Profile {
 		obj.put(Prop.PROFPIC, img);
 
 		return Response.ok(obj.toString()).build();
+	}
+
+	@POST
+	@Path("/acceptapplication")
+	public Response accept(@Context HttpServletRequest request, AcceptData data) {
+		if(!data.isValid())
+			return Response.status(Status.BAD_REQUEST).build();
+
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+
+		int retries = 5;
+		while(true) {
+			try {
+				return acceptRetry(username, data);
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
+
+	public Response acceptRetry(String username, AcceptData data) {
+		Key userK = KeyFactory.createKey(DSUtils.USER, username);
+		Key reportK = KeyFactory.createKey(DSUtils.REPORT, data.report);
+
+		Entity report;
+		try {
+			report = datastore.get(reportK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Message.REPORT_NOT_FOUND);
+			return Response.status(Status.EXPECTATION_FAILED).build();
+		}
+
+		Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
+		if(!reporterK.equals(userK)) {
+			LOG.info(Message.NOT_REPORTER);
+			return Response.status(Status.FORBIDDEN).build();
+		}
+
+		Key orgUK = KeyFactory.createKey(DSUtils.USER, data.nif);
+		Key orgK = KeyFactory.createKey(orgUK, DSUtils.ORG, data.nif);
+
+		LOG.info(orgK.toString());
+
+		Query applicationQ = new Query(DSUtils.APPLICATION).setKeysOnly()
+				.setAncestor(reportK);
+
+		List<Entity> applications = datastore.prepare(applicationQ)
+				.asList(FetchOptions.Builder.withDefaults());
+
+		Iterator<Entity> it = applications.iterator();
+		Entity application = null;
+		List<Key> keys = new ArrayList<Key>(applications.size());
+		while(it.hasNext()) {
+			Entity temp = it.next();
+			Key key = (Key) temp.getProperty(DSUtils.APPLICATION_ORG);
+			keys.add(key);
+
+			if(key.equals(orgK))
+				application = temp;
+
+			if(!it.hasNext() && !key.equals(orgK)) {
+				LOG.info(Message.APPLICATION_NOT_FOUND);
+				return Response.status(Status.NOT_FOUND).build();
+			}
+		}
+
+		if(application == null)
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+
+		Transaction txn = datastore.beginTransaction();
+
+		Entity task = new Entity(reportK.getName(), DSUtils.ORGTASK, reportK);
+		task.setProperty(DSUtils.ORGTASK_ORG, orgK);
+		task.setProperty(DSUtils.ORGTASK_TIME, new Date());
+		task.setProperty(DSUtils.ORGTASK_USER, userK);
+		
+		datastore.put(txn, task);
+		
+		datastore.delete(txn, keys);
+		
+		txn.commit();
+		return Response.ok().build();
+	}
+	
+	@POST
+	@Path("/addfollow/{location}")
+	public Response addFollow(@Context HttpServletRequest request,
+			@PathParam(ParamName.LOCATION) String location) {
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		
+		int retries = 5;
+		while(true) {
+			try {
+				Key userK = KeyFactory.createKey(DSUtils.USER, username);
+				Entity follow = new Entity(DSUtils.FOLLOW, userK);
+				follow.setProperty(DSUtils.FOLLOW_LOCATION, location);
+				datastore.put(follow);
+				return Response.ok().build();
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
+	
+	@GET
+	@Path("/follows")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response follows(@Context HttpServletRequest request) {
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		
+		int retries = 5;
+		while(true) {
+			try {
+				Key userK = KeyFactory.createKey(DSUtils.USER, username);
+				
+				Query followQ = new Query(DSUtils.FOLLOW).setAncestor(userK);
+				List<Entity> list = datastore.prepare(followQ)
+						.asList(FetchOptions.Builder.withDefaults());
+				
+				JSONArray array = new JSONArray();
+				for(Entity location : list)
+					array.put(location.getProperty(DSUtils.FOLLOW_LOCATION));
+				
+				return Response.ok(array.toString()).build();
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Message.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
 	}
 }

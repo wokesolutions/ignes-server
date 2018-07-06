@@ -37,15 +37,28 @@ public class Storage {
 
 	private final static int BUFFER_SIZE = 1024 * 1024;
 
-	private final static GcsService gcsService = GcsServiceFactory.createGcsService(new RetryParams.Builder()
+	private final static GcsService gcsService = GcsServiceFactory
+			.createGcsService(new RetryParams.Builder()
 			.initialRetryDelayMillis(10)
 			.retryMaxAttempts(10)
 			.totalRetryPeriodMillis(15000)
 			.build());
 	
 	private static ImagesService imagesService = ImagesServiceFactory.getImagesService();
+	
+	public static boolean deleteImage(StoragePath path, boolean withTn) {
+		GcsFilename fileName = new GcsFilename(BUCKET, path.makePath());
+		
+		try {
+			gcsService.delete(fileName);
+		} catch (IOException e) {
+			return false;
+		}
+		
+		return true;
+	}
 
-	public static boolean saveImage(String img, String bucket, StoragePath path,
+	public static boolean saveImage(String img, StoragePath path,
 			int width, int height, int orientation, boolean withTn) {
 		byte[] bytes = Base64.decode(img);
 		Image image = ImagesServiceFactory.makeImage(bytes);
@@ -53,7 +66,7 @@ public class Storage {
 		Transform rotate = ImagesServiceFactory.makeRotate(orientation);
 		Image rotatedImage = imagesService.applyTransform(rotate, image);
 		
-		GcsFilename fileName = new GcsFilename(bucket, path.makePath());
+		GcsFilename fileName = new GcsFilename(BUCKET, path.makePath());
 		GcsFileOptions options = new GcsFileOptions.Builder()
                 .mimeType("image/jpg")
                 .acl("public-read")
@@ -75,7 +88,7 @@ public class Storage {
 		Transform resize = ImagesServiceFactory.makeResize(IMAGE_WIDTH, newHeight);
 		Image resizedImage = imagesService.applyTransform(resize, rotatedImage);
 		
-		GcsFilename fileNameTn = new GcsFilename(bucket, path.makeTnPath());
+		GcsFilename fileNameTn = new GcsFilename(BUCKET, path.makeTnPath());
 		GcsFileOptions optionsTn = new GcsFileOptions.Builder()
                 .mimeType("image/jpg")
                 .acl("public-read")

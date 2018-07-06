@@ -53,8 +53,6 @@ public class Worker {
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	private static final int BATCH_SIZE = 10;
 
-	private static final String WIP = "WIP";
-
 	public Worker() {}
 
 	@POST
@@ -62,7 +60,7 @@ public class Worker {
 	public Response wipReport(@PathParam(ParamName.REPORT) String report,
 			@Context HttpServletRequest request) {
 		int retries = 5;
-		
+
 		String worker = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		while(true) {
@@ -90,7 +88,7 @@ public class Worker {
 
 		Key userKey = KeyFactory.createKey(DSUtils.USER, worker);
 		Query query = new Query(DSUtils.WORKER).setAncestor(userKey);
-		
+
 		Entity workerE;
 		try {
 			workerE = datastore.prepare(query).asSingleEntity();
@@ -98,18 +96,18 @@ public class Worker {
 			LOG.info(Message.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
-		
+
 		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
 		try {
-			Entity reportStatusLog = new Entity(DSUtils.REPORTSTATUSLOG, reportE.getKey());
-			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_NEWSTATUS, WIP);
+			Entity reportStatusLog = new Entity(DSUtils.REPORTSTATUSLOG, reportE.getKey().getName(), reportE.getKey());
+			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_NEWSTATUS, Report.WIP);
 			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_OLDSTATUS,
 					reportE.getProperty(DSUtils.REPORT_STATUS));
 			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_TIME, new Date());
 			reportStatusLog.setProperty(DSUtils.REPORTSTATUSLOG_USER, workerE.getParent());
 
-			reportE.setProperty(DSUtils.REPORT_STATUS, WIP);
+			reportE.setProperty(DSUtils.REPORT_STATUS, Report.WIP);
 
 			List<Entity> list = Arrays.asList(reportE, reportStatusLog);
 
@@ -134,7 +132,7 @@ public class Worker {
 
 		try {
 			sameUserOrAdmin(request, email);
-		} catch (NotSameNorAdminException e1) {
+		} catch (Exception e1) {
 			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
@@ -154,9 +152,19 @@ public class Worker {
 	private Response taskListRetry(String email, String cursor) {
 		LOG.info(Message.LISTING_TASKS);
 
+		Key userK = KeyFactory.createKey(DSUtils.USER, email);
+		Key workerK = KeyFactory.createKey(userK, DSUtils.WORKER, userK.getName());
+		try {
+			datastore.get(workerK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Message.UNEXPECTED_ERROR);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 		Query query = new Query(DSUtils.TASK).setKeysOnly();
-		Filter filter = new Query.FilterPredicate(DSUtils.TASK_WORKER, FilterOperator.EQUAL, email);
+		Filter filter = new Query.FilterPredicate(DSUtils.TASK_WORKER,
+				FilterOperator.EQUAL, workerK);
 		query.setFilter(filter);
 
 		if(cursor != null && !cursor.equals(""))
@@ -219,7 +227,7 @@ public class Worker {
 			if(optional.hasProperty(DSUtils.USEROPTIONAL_PHONE))
 				jsonReport.put(Prop.PHONE,
 						optional.getProperty(DSUtils.USEROPTIONAL_PHONE));
-			
+
 			array.put(jsonReport);
 		}
 
@@ -234,12 +242,33 @@ public class Worker {
 	}
 
 	public static String sameUserOrAdmin(HttpServletRequest request, String username)
-			throws NotSameNorAdminException {
+			throws NotSameNorAdminException, EntityNotFoundException {
 
 		String requester = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
-		String level = request.getAttribute(CustomHeader.LEVEL_ATT).toString();
 
-		if(!level.equals(UserLevel.ADMIN) && !requester.equals(username))
+		Key requesterK = KeyFactory.createKey(DSUtils.USER, requester);
+
+		Entity requesterE;
+		try {
+			requesterE = datastore.get(requesterK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Message.UNEXPECTED_ERROR);
+			throw e;
+		}
+
+		String level = requesterE.getProperty(DSUtils.USER_LEVEL).toString();
+
+		if(level.equals(UserLevel.ORG)) {
+			Key orgK = KeyFactory.createKey(requesterK,  DSUtils.ORG, requester);
+
+			Key userK = KeyFactory.createKey(DSUtils.USER, username);
+			Key workerK = KeyFactory.createKey(userK,  DSUtils.WORKER, username);
+			
+			Entity worker = datastore.get(workerK);
+			if(!((Key) worker.getProperty(DSUtils.WORKER_ORG)).equals(orgK))
+				throw new NotSameNorAdminException();
+			
+		} else if(!level.equals(UserLevel.ADMIN) && !requester.equals(username))
 			throw new NotSameNorAdminException();
 
 		return requester;

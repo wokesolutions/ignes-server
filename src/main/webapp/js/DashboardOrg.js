@@ -3,11 +3,18 @@ var geocoder = new google.maps.Geocoder();
 var reports;
 var reportID;
 var commentsCursor;
+<<<<<<< HEAD
 var currentfeed = 10;
 var email_worker;
 var current_position = "map_variable";
 var idReportCurr;
 var tasks = [];
+=======
+var tasksCursor;
+var email_worker;
+var current_position = "map_variable";
+var idReportCurr;
+>>>>>>> d18aebb300c06b361f89c15a0bd51d7614faafa0
 var numWorkers;
 var currentLoc ={
     center: {lat: 38.661148, lng: -9.203075},
@@ -16,6 +23,8 @@ var currentLoc ={
 
 var emailsarr;
 var workersarr;
+var show = false;
+var show_view = false;
 
 var show = false;
 var show_view = false;
@@ -44,11 +53,19 @@ function init() {
     document.getElementById("refresh_workers").onclick = getFirstWorkers;
     document.getElementById("show_more_button").onclick = getShowMore;
     document.getElementById("close_window").onclick = closeWindow;
+    document.getElementById("close_window_worker").onclick = closeWindowWorker;
     document.getElementById("add_task").onclick = giveTask;
+<<<<<<< HEAD
     document.getElementById("close_window_worker").onclick = closeWindowWorker;
     document.getElementById("remove_button").onclick = showButtonDelete;
     document.getElementById("view_button").onclick = showButtonView;
 
+=======
+    document.getElementById("remove_button").onclick = showButtonDelete;
+    document.getElementById("view_button").onclick = showButtonView;
+
+
+>>>>>>> d18aebb300c06b361f89c15a0bd51d7614faafa0
     $("#email_select").change(function(){
         var email = $("#email_select").val();
         var index = emailsarr.indexOf(email);
@@ -112,6 +129,46 @@ function getShowMore(){
     hideShow("show_more_variable");
 }
 
+function showButtonDelete(){
+
+    if( document.getElementById("show_button_0" ).style.display === "block") {
+        for (var i = 0; i < numWorkers; i++)
+            document.getElementById("show_button_" + i).style.display = "none";
+        show_view = false;
+    }
+
+    if(show === false){
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("delete_button_" + i ).style.display = "block";
+        show = true;
+    }else {
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("delete_button_" + i ).style.display = "none";
+        show = false;
+    }
+
+}
+
+function showButtonView(){
+
+    if( document.getElementById("delete_button_0" ).style.display === "block"){
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("delete_button_" + i ).style.display = "none";
+        show = false;
+    }
+
+    if(show_view === false){
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("show_button_" + i ).style.display = "block";
+        show_view = true;
+    }else {
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("show_button_" + i ).style.display = "none";
+        show_view = false;
+    }
+
+}
+
 function searchLocation(){
     var address = document.getElementById('location').value;
     geocoder.geocode( { 'address': address}, function(results, status) {
@@ -155,7 +212,6 @@ function hideShow(element){
     if(current_position === "map_variable"){
 
         document.getElementById("map_search").style.display = "none";
-
 
     }else if(current_position === "profile_variable"){
 
@@ -270,6 +326,42 @@ function logOut(){
 
 }
 
+<<<<<<< HEAD
+=======
+function getMarkersByLocation(zone, cursor){
+    if(cursor===undefined) cursor = "";
+
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/report/getinlocation?' + "location=" + zone + "&cursor=" + cursor,'GET', headers, body)).then(function(response) {
+
+            if (response.status === 200) {
+                var newCursor = response.headers.get("Cursor");
+                response.json().then(function(data) {
+                    reports = data;
+                    fillMap(reports, newCursor, zone);
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+                return;
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+>>>>>>> d18aebb300c06b361f89c15a0bd51d7614faafa0
 function getMarkers(cursor){
     if(cursor===undefined) cursor = "";
 
@@ -415,10 +507,20 @@ function fillMap(reports, cursor){
             }
         })(marker, i));
     }
-
+    console.log(cursor);
     if(cursor !== null){
+<<<<<<< HEAD
         console.log(cursor);
         getMarkers(cursor);
+=======
+        console.log(zone);
+        if(zone === null) {
+            console.log(cursor);
+            getMarkers(cursor);
+        } else{
+            getMarkersByLocation(zone, cursor);
+        }
+>>>>>>> d18aebb300c06b361f89c15a0bd51d7614faafa0
     }
 }
 
@@ -443,6 +545,11 @@ function getInfo(idReport, i){
                     image.src = "data:image/jpg;base64," + data.thumbnail;
                 });
 
+                document.getElementById("show_title").style.display = "block";
+                document.getElementById("show_address").style.display = "block";
+                document.getElementById("show_state").style.display = "block";
+                document.getElementById("show_gravity").style.display = "block";
+                document.getElementById("show_more_button").style.display = "block";
 
                 if(reports[i].title !== ""){
                     document.getElementById('report_title_id').innerHTML= reports[i].title;
@@ -513,6 +620,10 @@ function showCreateWorker(){
 
 function closeWindow(){
     hideShow("map_variable");
+}
+
+function closeWindowWorker(){
+    hideShow("users_variable");
 }
 
 function createWorker(){
@@ -796,6 +907,7 @@ function deleteWorker (row){
 
             if (response.status === 200 || response.status === 204) {
                 alert("Trabalhador apagado com sucesso.")
+
             }else{
                 alert("Falha ao apagar o utilizador.")
             }
@@ -868,7 +980,10 @@ var loadMoreComments = function(idReport,cursor){
                     console.log(data);
                     var i;
                     for(i = 0; i<data.length; i++){
-                        $(".inner_comment").append("<p>" + data[i].username + data[i].text + "</p>");
+                        $(".inner_comment").append(
+                            '<div class="row"><div class="col-lg-6 text-left">'+
+                            '<p style="font-family:Quicksand Bold; color:#AD363B; margin-right:1rem; font-size:15px;">'+  data[i].username +'</p></div>' +
+                            '<div class="col-lg-6 text-left">'+ '<p style="font-family:Quicksand; font-size:15px;">' + data[i].text + '</p></div></div>');
                     }
 
                 });
@@ -1043,4 +1158,10 @@ $('.tasks').scroll(function () {
         $('.two').append("bottom");
         loadMoreComments(email_worker,tasksCursor);
     }
+<<<<<<< HEAD
 });
+=======
+});
+
+
+>>>>>>> d18aebb300c06b361f89c15a0bd51d7614faafa0

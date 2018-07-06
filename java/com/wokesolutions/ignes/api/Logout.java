@@ -63,23 +63,26 @@ public class Logout {
 
 	private Response logoutUserEverywhereRetry(String username,
 			HttpServletRequest request, HttpHeaders headers) {
-		Query query = new Query(DSUtils.TOKEN)
-				.setAncestor(KeyFactory.createKey(DSUtils.USER, username))
+
+		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
+
+		Key userK = KeyFactory.createKey(DSUtils.USER, username);
+
+		Filter tokenF = new Query.FilterPredicate(DSUtils.TOKEN_USER,
+				FilterOperator.EQUAL, userK);
+		Query tokenQ = new Query(DSUtils.TOKEN).setFilter(tokenF)
 				.setKeysOnly();
 
-		List<Entity> tokens = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
+		List<Entity> tokenlist = datastore.prepare(txn, tokenQ)
+				.asList(FetchOptions.Builder.withDefaults());
+		List<Key> tokens = new ArrayList<Key>(tokenlist.size());
 
-		if(tokens.isEmpty()) {
-			LOG.info(Message.NO_TOKENS_FOUND);
-			return Response.status(Status.EXPECTATION_FAILED).build();
-		}
+		for(Entity token : tokenlist)
+			tokens.add(token.getKey());
 
-		List<Key> keys = new ArrayList<Key>(tokens.size());
+		datastore.delete(txn, tokens);
 
-		for(Entity token : tokens)
-			keys.add(token.getKey());
-
-		datastore.delete(keys);
+		txn.commit();
 
 		return Response.ok().build();
 	}
@@ -147,7 +150,7 @@ public class Logout {
 			}
 
 			try {
-				datastore.get(userKey);
+				datastore.get(txn, userKey);
 			} catch(EntityNotFoundException e) {
 				txn.rollback();
 				LOG.info(Message.UNEXPECTED_ERROR);
@@ -187,11 +190,9 @@ public class Logout {
 			log.setProperty(DSUtils.USERLOG_COUNTRY, request.getHeader("X-AppEngine-Country"));
 			log.setProperty(DSUtils.USERLOG_TIME, new Date());
 			log.setProperty(DSUtils.USERLOG_DEVICE, deviceid);
-			if(stats.hasProperty(DSUtils.USERSTATS_LOGOUTS))
-				stats.setProperty(DSUtils.USERSTATS_LOGOUTS,
-						1L + (long) stats.getProperty(DSUtils.USERSTATS_LOGOUTS));
-			else
-				stats.setProperty(DSUtils.USERSTATS_LOGINSFAILED, 1L);
+
+			stats.setProperty(DSUtils.USERSTATS_LOGOUTS,
+					1L + (long) stats.getProperty(DSUtils.USERSTATS_LOGOUTS));
 
 			List<Entity> list = Arrays.asList(stats, log);
 			datastore.put(txn, list);

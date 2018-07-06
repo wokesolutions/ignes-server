@@ -12,7 +12,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
-@Priority(3)
+@Priority(1)
 public class AdditionalResponseHeadersFilter implements Filter {
 	public static final Logger LOG = Logger.getLogger(AdditionalResponseHeadersFilter.class.getName());
 	
