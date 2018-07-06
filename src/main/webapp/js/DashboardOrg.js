@@ -43,7 +43,9 @@ function init() {
     document.getElementById("previous_list").onclick = getPreWorkers;
     document.getElementById("refresh_workers").onclick = getFirstWorkers;
     document.getElementById("show_more_button").onclick = getShowMore;
+    document.getElementById("show_feed_button").onclick = getShowFeed;
     document.getElementById("close_window").onclick = closeWindow;
+    document.getElementById("close_window_feed").onclick = closeWindowFeed;
     document.getElementById("close_window_worker").onclick = closeWindowWorker;
     document.getElementById("add_task").onclick = giveTask;
     document.getElementById("remove_button").onclick = showButtonDelete;
@@ -71,6 +73,10 @@ function init() {
 
 function getShowMore(){
     hideShow("show_more_variable");
+}
+
+function getShowFeed(){
+    hideShow("show_feed_task_variable");
 }
 
 function showButtonDelete(){
@@ -176,6 +182,11 @@ function hideShow(element){
     }else if(current_position === "show_more_users_variable"){
 
         document.getElementById("profile_workers").style.display = "none";
+
+    }else if(current_position === "show_feed_task_variable"){
+
+        document.getElementById("details_feed").style.display = "none";
+
     }
 
 
@@ -206,6 +217,12 @@ function hideShow(element){
     }else if(element === "show_more_users_variable"){
         document.getElementById("profile_workers").style.display = "block";
         current_position = "show_more_users_variable";
+
+    }else if( element == "show_feed_task_variable"){
+
+        document.getElementById("details_feed").style.display = "block";
+        current_position = "show_feed_task_variable";
+
     }
 
 }
@@ -536,6 +553,10 @@ function closeWindow(){
     hideShow("map_variable");
 }
 
+function closeWindowFeed(){
+    hideShow("profile");
+}
+
 function closeWindowWorker(){
     hideShow("users_variable");
 }
@@ -853,7 +874,7 @@ var loadMore = function () {
             '<div class="col-lg-3 col-md-3 mx-auto">' +
             '<div class="row">' +
             '<div class="col-lg-1">' +
-            '<p class="text-center"style="font-family:Quicksand Bold; font-size:15px; color:#AD363B"">' + tasks[i].gravity +
+            '<p class="text-center"style="margin-top:3px; margin-left:1rem;font-family:Quicksand Bold; font-size:15px; color:#AD363B"">' + tasks[i].gravity +
             '</div>' +
             '<div class="col-lg-1">' +
             '<i class="fa fa-tachometer" style="color: #AD363B"></i>' +
@@ -865,17 +886,20 @@ var loadMore = function () {
             '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
             '</div>' +
 
-            '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">' + tasks[i].status + '</p></div>' +
+            '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].status + '</p></div>' +
             '</div>' +
             ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">' +
             '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].address + '</p>' + '</div>' + '</div><hr>' +
+            '<div class="row"><div class="col-lg-12 text-center">' +
+            '<p style="font-family:Quicksand Bold; font-size: 15px; color:#AD363B">'+tasks[i].title+'</p>'+
+            '</div></div>'+
             '<div class="row">' +
             '<div class="col-lg-6 text-center">' +
-            '<img style="height:10rem;"id=' + i + '>' +
+            '<img style="height:10rem; margin-bottom:1rem"id=' + i + '>' +
             '</div>' +
             '<div class="col-lg-6">' +
             '<div class="col-lg-12 mx-lg-auto text-center">' +
-            '<button id="show_feed_button" style="margin-left:7rem; display:none;margin-top:0" type="button" class="btn btn-primary-view">Ver Mais</button>' +
+            '<button id="show_feed_button" style="margin-top:3rem" type="button" class="btn btn-primary-view">Ver Mais</button>' +
             '</div>' +
             '</div></div><hr style="margin-bottom: 0; margin-top:0">' +
             '<div class="row"><div class="col-lg-6 text-left"></div>' +
