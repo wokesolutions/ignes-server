@@ -273,9 +273,11 @@ public class Login {
 				Firebase.init();
 				Firebase.sendMessageToDevice("OLA MIGO", body, data.firebasetoken);
 			} catch (FirebaseMessagingException e) {
-				LOG.info("iugigi");
+				LOG.info(e.getMessage());
+				LOG.info(e.toString());
 			} catch (IOException e) {
-				LOG.info("iugigi");
+				LOG.info(e.getMessage());
+				LOG.info(e.toString());
 			}
 
 			return response.build();	
