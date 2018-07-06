@@ -314,10 +314,13 @@ function fillMap(reports, cursor){
         var marker_color;
         var tasktime = reports[i].tasktime;
         var gravity = reports[i].gravity;
+        var color;
 
         if(gravity === 1) {
-            if(status === "standby")
+            color = '#5dcb21';
+            if(status === "standby") {
                 marker_color = "../marcadores/g1-standby.png";
+            }
             else if(status === "closed")
                 marker_color = "../marcadores/g1-closed-mine.png";
             else if(tasktime !== null || tasktime !== undefined){
@@ -330,6 +333,7 @@ function fillMap(reports, cursor){
                 marker_color = "../marcadores/g1-open.png";
         }
         else if(gravity === 2) {
+            color = '#b9ff2a';
             if(status === "standby")
                 marker_color = "../marcadores/g2-standby.png";
             else if(status === "closed")
@@ -344,6 +348,7 @@ function fillMap(reports, cursor){
                 marker_color = "../marcadores/g2-open.png";
         }
         else if(gravity === 3) {
+            color = '#ffcc31';
             if(status === "standby")
                 marker_color = "../marcadores/g3-standby.png";
             else if(status === "closed")
@@ -358,6 +363,7 @@ function fillMap(reports, cursor){
                 marker_color = "../marcadores/g3-open.png";
         }
         else if(gravity === 4) {
+            color = '#ff7c20';
             if(status === "standby")
                 marker_color = "../marcadores/g4-standby.png";
             else if(status === "closed")
@@ -372,6 +378,7 @@ function fillMap(reports, cursor){
                 marker_color = "../marcadores/g4-open.png";
         }
         else if(gravity === 5) {
+            color = '#bc0f0f';
             if(status === "standby")
                 marker_color = "../marcadores/g5-standby.png";
             else if(status === "closed")
@@ -397,20 +404,22 @@ function fillMap(reports, cursor){
         } else{
             marker = new google.maps.Polygon({
                 paths: reports[i].points,
-                strokeColor: '#FF0000',
+                strokeColor: color,
                 strokeOpacity: 0.8,
                 strokeWeight: 2,
-                fillColor: '#FF0000',
+                fillColor: color,
                 fillOpacity: 0.35
             });
             marker.setMap(map);
+
             marker = new google.maps.Marker({
                 position: new google.maps.LatLng(lat, lng),
                 map: map,
                 icon: marker_color
             });
-
         }
+
+
         google.maps.event.addListener(marker, 'click', (function(marker, i) {
 
             return function() {
@@ -424,7 +433,9 @@ function fillMap(reports, cursor){
     if(cursor !== null){
         console.log(cursor);
         getMarkers(cursor);
-    }else loadMore();
+    }else{
+        loadMore();
+    }
 }
 
 function getInfo(idReport, i){
@@ -780,7 +791,15 @@ function getProfile(){
                     document.getElementById("organization_addresses").innerHTML = data.address;
                     document.getElementById("organization_locality").innerHTML = data.locality;
                     document.getElementById("organization_zip").innerHTML = data.zip;
-                    document.getElementById("organization_service").innerHTML = data.services;
+                    var show_service ="";
+                    var service = JSON.parse(data.services);
+                    console.log(service);
+                    for(var i = 0; i< service.length; i++) {
+                        if (i !== service.length - 1)
+                            show_service += service[i] + "/";
+                        else  show_service += service[i];
+                    }
+                    document.getElementById("organization_service").innerHTML = show_service;
                 });
 
             }else{
@@ -831,7 +850,12 @@ var loadMore = function () {
         var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
             '<div class="row" >' +
             '<div class="col-lg-3 col-md-3 mx-auto">'+
-            '</div>'+
+            '<div class="row">'+
+            '<div class="col-lg-6">'+
+            '<i class="fa fa-tachometer"></i></div>'+
+            '<div class="col-lg-6">'+
+            '<p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"">'+tasks[i].gravity +
+            '</p></div></div></div>'+
             '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
             '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
             '</div>' +

@@ -941,15 +941,19 @@ function drawChart(){
     fetch(restRequest("/api/admin/stats/org/applications",'GET', headers, body)).then(function(response) {
 
             if (response.status === 200 || response.status === 204) {
-                var data = google.visualization.arrayToDataTable(data);
+                response.json().then(function(data){
+                    console.log(data);
+                    var dados = google.visualization.arrayToDataTable(data);
 
-                var options = {
-                    title: 'My Daily Activities'
-                };
+                    var options = {
+                        title: 'My Daily Activities'
+                    };
 
-                var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+                    var chart = new google.visualization.PieChart(document.getElementById('piechart'));
 
-                chart.draw(data, options);
+                    chart.draw(dados, options);
+                });
+
             }else{
                 alert("Falha ao apagar utilizador.")
             }
