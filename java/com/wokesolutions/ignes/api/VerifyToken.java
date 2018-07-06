@@ -20,7 +20,7 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.UserLevel;
 
 @Path("/verifytoken")
@@ -47,7 +47,7 @@ public class VerifyToken {
 		try {
 			datastore.get(deviceK);
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		}
 		
@@ -58,7 +58,7 @@ public class VerifyToken {
 		try {
 			user = datastore.get(userK);
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.USER_NOT_FOUND);
+			LOG.info(Log.USER_NOT_FOUND);
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		}
 		

@@ -4,7 +4,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 
@@ -42,13 +44,15 @@ import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.DatastoreException;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import com.wokesolutions.ignes.data.ApplicationData;
 import com.wokesolutions.ignes.data.TaskData;
 import com.wokesolutions.ignes.data.WorkerRegisterData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Firebase;
+import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.Storage;
@@ -68,7 +72,7 @@ public class Org {
 	public Response registerWorker(WorkerRegisterData registerData,
 			@Context HttpServletRequest request) {
 		if(!registerData.isValid()) {
-			LOG.info(Message.REGISTER_DATA_INVALID);
+			LOG.info(Log.REGISTER_DATA_INVALID);
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 
@@ -90,7 +94,7 @@ public class Org {
 	}
 
 	private Response registerWorkerRetry(WorkerRegisterData registerData, String org) {
-		LOG.info(Message.ATTEMPT_REGISTER_WORKER + registerData.name);
+		LOG.info(Log.ATTEMPT_REGISTER_WORKER + registerData.name);
 
 		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
@@ -108,15 +112,15 @@ public class Org {
 			try {
 				userResult = datastore.prepare(userQuery).asSingleEntity();
 			} catch(TooManyResultsException e) {
-				LOG.info(Message.UNEXPECTED_ERROR);
+				LOG.info(Log.UNEXPECTED_ERROR);
 				txn.rollback();
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
 			if(userResult != null) {
-				LOG.info(Message.USER_ALREADY_EXISTS);
+				LOG.info(Log.USER_ALREADY_EXISTS);
 				txn.rollback();
-				return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build();
+				return Response.status(Status.CONFLICT).entity(Log.USER_ALREADY_EXISTS).build();
 			}
 
 			Key orgUK = KeyFactory.createKey(DSUtils.USER, org);
@@ -125,7 +129,7 @@ public class Org {
 			try {
 				datastore.get(orgK);
 			} catch(EntityNotFoundException e) {
-				LOG.info(Message.UNEXPECTED_ERROR);
+				LOG.info(Log.UNEXPECTED_ERROR);
 				txn.rollback();
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
@@ -156,14 +160,14 @@ public class Org {
 				orgE = datastore.prepare(orgQ).asSingleEntity();
 
 				if(orgE == null) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					LOG.info(Log.UNEXPECTED_ERROR);
 					txn.rollback();
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 
 				orgName = orgE.getProperty(DSUtils.ORG_NAME).toString();
 			} catch(TooManyResultsException e) {
-				LOG.info(Message.UNEXPECTED_ERROR);
+				LOG.info(Log.UNEXPECTED_ERROR);
 				txn.rollback();
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
@@ -185,11 +189,11 @@ public class Org {
 
 			datastore.put(txn, list);
 			txn.commit();
-			LOG.info(Message.WORKER_REGISTERED + registerData.email);
+			LOG.info(Log.WORKER_REGISTERED + registerData.email);
 			return Response.ok().build();
 		} finally {
 			if(txn.isActive()) {
-				LOG.info(Message.TXN_ACTIVE);
+				LOG.info(Log.TXN_ACTIVE);
 				txn.rollback();
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
@@ -239,13 +243,13 @@ public class Org {
 				worker = datastore.prepare(query).asSingleEntity();
 			} catch(TooManyResultsException e) {
 				txn.rollback();
-				LOG.info(Message.WORKER_NOT_FOUND);
+				LOG.info(Log.WORKER_NOT_FOUND);
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
 			if(worker == null) {
 				txn.rollback();
-				LOG.info(Message.WORKER_NOT_FOUND);
+				LOG.info(Log.WORKER_NOT_FOUND);
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
@@ -300,7 +304,7 @@ public class Org {
 
 			datastore.put(txn, deletedWorker);
 
-			LOG.info(Message.DELETED_WORKER + email);
+			LOG.info(Log.DELETED_WORKER + email);
 			txn.commit();
 			return Response.ok().build();
 
@@ -309,7 +313,7 @@ public class Org {
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		} finally {
 			if(txn.isActive()) {
-				LOG.info(Message.TXN_ACTIVE);
+				LOG.info(Log.TXN_ACTIVE);
 				txn.rollback();
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
@@ -423,12 +427,12 @@ public class Org {
 		try {
 			worker = datastore.get(workerK);
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.WORKER_NOT_FOUND);
+			LOG.info(Log.WORKER_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
 		if(!worker.getProperty(DSUtils.WORKER_ORG).equals(orgK)) {
-			LOG.info(Message.WORKER_NOT_FOUND);
+			LOG.info(Log.WORKER_NOT_FOUND);
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
@@ -436,12 +440,12 @@ public class Org {
 		try {
 			orgtask = datastore.get(orgtaskK);
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.TASK_NOT_FOUND);
+			LOG.info(Log.TASK_NOT_FOUND);
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		}
 
 		if(!orgtask.getProperty(DSUtils.ORGTASK_ORG).equals(orgK)) {
-			LOG.info(Message.TASK_NOT_FOUND);
+			LOG.info(Log.TASK_NOT_FOUND);
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
@@ -467,7 +471,7 @@ public class Org {
 				try {
 					user = datastore.get(KeyFactory.createKey(DSUtils.USER, nif));
 				} catch(EntityNotFoundException e) {
-					LOG.info(Message.ORG_NOT_FOUND);
+					LOG.info(Log.ORG_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
 
@@ -477,11 +481,11 @@ public class Org {
 					org = datastore.prepare(orgQ).asSingleEntity();
 
 					if(org == null) {
-						LOG.info(Message.ORG_NOT_FOUND);
+						LOG.info(Log.ORG_NOT_FOUND);
 						return Response.status(Status.NOT_FOUND).build();
 					}
 				} catch (TooManyResultsException e) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					LOG.info(Log.UNEXPECTED_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 
@@ -521,11 +525,11 @@ public class Org {
 					org = datastore.prepare(orgQ).asSingleEntity();
 
 					if(org == null) {
-						LOG.info(Message.UNEXPECTED_ERROR);
+						LOG.info(Log.UNEXPECTED_ERROR);
 						return Response.status(Status.NOT_FOUND).build();
 					}
 				} catch(TooManyResultsException e) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					LOG.info(Log.UNEXPECTED_ERROR);
 					return Response.status(Status.NOT_FOUND).build();
 				}
 
@@ -550,7 +554,7 @@ public class Org {
 					try {
 						report = datastore.get(task.getParent());
 					} catch (EntityNotFoundException e) {
-						LOG.info(Message.UNEXPECTED_ERROR);
+						LOG.info(Log.UNEXPECTED_ERROR);
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 					}
 
@@ -628,17 +632,16 @@ public class Org {
 		try {
 			report = datastore.get(reportK);
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.REPORT_NOT_FOUND);
+			LOG.info(Log.REPORT_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
 		
 		if(report.getProperty(DSUtils.REPORT_STATUS).equals(Report.STANDBY)) {
-			LOG.info(Message.REPORT_STANDBY);
+			LOG.info(Log.REPORT_STANDBY);
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
 		Key userK = KeyFactory.createKey(DSUtils.USER, orgnif);
-
 		Key orgK = KeyFactory.createKey(userK, DSUtils.ORG, orgnif);
 
 		Filter taskF = new Query.FilterPredicate(DSUtils.ORGTASK_ORG,
@@ -650,11 +653,11 @@ public class Org {
 			task = datastore.prepare(taskQ).asSingleEntity();
 
 			if(task != null) {
-				LOG.info(Message.TASK_ALREADY_ASSIGNED);
+				LOG.info(Log.TASK_ALREADY_ASSIGNED);
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 		} catch(TooManyResultsException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 		
@@ -662,7 +665,7 @@ public class Org {
 		try {
 			org = datastore.get(orgK);
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.ORG_NOT_FOUND);
+			LOG.info(Log.ORG_NOT_FOUND);
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		}
 
@@ -670,7 +673,7 @@ public class Org {
 		boolean reportprivate = (boolean) report.getProperty(DSUtils.REPORT_PRIVATE);
 
 		if(!orgprivate && reportprivate) {
-			LOG.info(Message.REPORT_IS_PRIVATE);
+			LOG.info(Log.REPORT_IS_PRIVATE);
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
@@ -696,9 +699,30 @@ public class Org {
 		Transaction txn = datastore.beginTransaction();
 		
 		datastore.put(txn, applicationLog);
-
 		datastore.put(txn, application);
 		txn.commit();
+		
+		Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
+		Entity reporter;
+		try {
+			reporter = datastore.get(reporterK);
+			
+			String token = reporter.getProperty(DSUtils.USER_FBTOKEN).toString();
+			
+			Map<String, String> body = new HashMap<>();
+			body.put(Prop.NIF, orgnif);
+			body.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME).toString());
+			body.put(Prop.ADDRESS, org.getProperty(DSUtils.ORG_ADDRESS).toString());
+			body.put(Prop.PHONE, org.getProperty(DSUtils.ORG_PHONE).toString());
+			body.put(Prop.EMAIL, org.getProperty(DSUtils.ORG_EMAIL).toString());
+			
+			Firebase.sendMessageToDevice(Firebase.ORG_APPLIED_TITLE, body, token);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Log.UNEXPECTED_ERROR);
+		} catch (FirebaseMessagingException e) {
+			LOG.info(Log.UNEXPECTED_ERROR);
+		}
+		
 		return Response.ok().build();
 	}
 
@@ -729,7 +753,7 @@ public class Org {
 		try {
 			org = datastore.get(orgK);
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
@@ -757,6 +781,7 @@ public class Org {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_POINTS, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_STATUS, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_THUMBNAILPATH, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_DESCRIPTION, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CATEGORY, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class));

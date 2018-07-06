@@ -34,7 +34,7 @@ import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.LoginData;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.UserLevel;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
@@ -58,12 +58,12 @@ public class Login {
 			@Context HttpServletRequest request,
 			@Context HttpHeaders headers) {
 		if(!data.isValid())
-			return Response.status(Status.FORBIDDEN).entity(Message.LOGIN_DATA_INVALID).build();
+			return Response.status(Status.FORBIDDEN).entity(Log.LOGIN_DATA_INVALID).build();
 
 		try {
 			datastore.get(KeyFactory.createKey(DSUtils.USER, data.username));
 		} catch (EntityNotFoundException e1) {
-			LOG.info(Message.USER_NOT_FOUND);
+			LOG.info(Log.USER_NOT_FOUND);
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
@@ -73,7 +73,7 @@ public class Login {
 				return loginRetry(data, request);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 
@@ -84,7 +84,7 @@ public class Login {
 
 
 	private Response loginRetry(LoginData data, final HttpServletRequest request) {
-		LOG.info(Message.ATTEMPT_LOGIN + data.username);
+		LOG.info(Log.ATTEMPT_LOGIN + data.username);
 
 		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
@@ -94,7 +94,7 @@ public class Login {
 			try {
 				user = datastore.get(txn, userKey);
 			} catch (EntityNotFoundException e) {
-				LOG.warning(Message.FAILED_LOGIN + data.username);
+				LOG.warning(Log.FAILED_LOGIN + data.username);
 				txn.rollback();
 				return Response.status(Status.FORBIDDEN).build();
 			}
@@ -104,7 +104,7 @@ public class Login {
 			if(level.equals(UserLevel.ORG)) {
 				String activation = user.getProperty(DSUtils.USER_ACTIVATION).toString();
 				if(!activation.equals(Profile.ACTIVATED)) {
-					LOG.info(Message.ORG_NOT_CONFIRMED);
+					LOG.info(Log.ORG_NOT_CONFIRMED);
 					txn.rollback();
 					return Response.status(Status.FORBIDDEN).build();
 				}
@@ -120,7 +120,7 @@ public class Login {
 			try {
 				stats = datastore.prepare(txn, statsQuery).asSingleEntity();
 			} catch(TooManyResultsException e2) {
-				LOG.info(Message.UNEXPECTED_ERROR);
+				LOG.info(Log.UNEXPECTED_ERROR);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
@@ -129,7 +129,7 @@ public class Login {
 
 			String hashedPWD = (String) user.getProperty(DSUtils.USER_PASSWORD);
 			if(!hashedPWD.equals(DigestUtils.sha512Hex(data.password))) {
-				LOG.info(Message.WRONG_PASSWORD + data.username);
+				LOG.info(Log.WRONG_PASSWORD + data.username);
 
 				stats.setProperty(DSUtils.USERSTATS_LOGINSFAILED,
 						1L + (long) stats.getProperty(DSUtils.USERSTATS_LOGINSFAILED));
@@ -211,7 +211,7 @@ public class Login {
 					(long) stats.getProperty(DSUtils.USERSTATS_LOGINS) + 1L);
 			stats.setProperty(DSUtils.USERSTATS_LASTIN, new Date());
 
-			LOG.info(data.username + Message.LOGGED_IN);
+			LOG.info(data.username + Log.LOGGED_IN);
 			List<Entity> logs = Arrays.asList(log, stats, newToken);
 			datastore.put(txn, logs);
 
@@ -235,13 +235,13 @@ public class Login {
 				try {
 					org = datastore.prepare(orgQ).asSingleEntity();
 				} catch(TooManyResultsException e) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					LOG.info(Log.UNEXPECTED_ERROR);
 					txn.rollback();
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 
 				if(org == null) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					LOG.info(Log.UNEXPECTED_ERROR);
 					txn.rollback();
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
@@ -264,7 +264,7 @@ public class Login {
 		} finally {
 			if (txn.isActive()) {
 				txn.rollback();
-				LOG.info(Message.TXN_ACTIVE);
+				LOG.info(Log.TXN_ACTIVE);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 		}

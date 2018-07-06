@@ -35,7 +35,7 @@ import com.google.appengine.api.datastore.QueryResultList;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Prop;
 
@@ -55,10 +55,10 @@ public class Task {
 	public Response addNote(String note, @PathParam(ParamName.TASK) String task,
 			@Context HttpServletRequest request) {
 		if(note == null || note.equals("")) {
-			LOG.info(Message.NOTE_EMPTY);
+			LOG.info(Log.NOTE_EMPTY);
 			return Response.status(Status.BAD_REQUEST).build();
 		} else if(note.length() > 400) {
-			LOG.info(Message.NOTE_TOO_LONG);
+			LOG.info(Log.NOTE_TOO_LONG);
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 
@@ -70,7 +70,7 @@ public class Task {
 				return addNoteRetry(note, task, worker);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -88,7 +88,7 @@ public class Task {
 		try {
 			datastore.prepare(query).asSingleEntity();
 		} catch(TooManyResultsException e) {
-			LOG.info(Message.TASK_NOT_FOUND);
+			LOG.info(Log.TASK_NOT_FOUND);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
@@ -125,7 +125,7 @@ public class Task {
 				return getNotesRetry(taskid, cursor);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -147,7 +147,7 @@ public class Task {
 		} catch(TooManyResultsException e) {}
 		
 		if(task.isEmpty()) {
-			LOG.info(Message.TASK_NOT_FOUND);
+			LOG.info(Log.TASK_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
 		

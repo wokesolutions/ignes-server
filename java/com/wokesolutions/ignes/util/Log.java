@@ -1,6 +1,6 @@
 package com.wokesolutions.ignes.util;
 
-public class Message {
+public class Log {
 
 	// Error User
 		public static final String USER_ALREADY_EXISTS = "Este username já está a ser usado por outro utilizador";

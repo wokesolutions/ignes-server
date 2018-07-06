@@ -41,7 +41,7 @@ import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.exceptions.NotSameNorAdminException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.UserLevel;
@@ -68,7 +68,7 @@ public class Worker {
 				return wipReportRetry(report, worker);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -82,7 +82,7 @@ public class Worker {
 		try {
 			reportE = datastore.get(KeyFactory.createKey(DSUtils.REPORT, report));
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.REPORT_NOT_FOUND);
+			LOG.info(Log.REPORT_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
@@ -93,7 +93,7 @@ public class Worker {
 		try {
 			workerE = datastore.prepare(query).asSingleEntity();
 		} catch(TooManyResultsException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
@@ -112,12 +112,12 @@ public class Worker {
 			List<Entity> list = Arrays.asList(reportE, reportStatusLog);
 
 			datastore.put(txn, list);
-			LOG.info(Message.REPORT_WIPED);
+			LOG.info(Log.REPORT_WIPED);
 			txn.commit();
 			return Response.ok().build();
 		} finally {
 			if(txn.isActive()) {
-				LOG.info(Message.TXN_ACTIVE);
+				LOG.info(Log.TXN_ACTIVE);
 				txn.rollback();
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
@@ -133,7 +133,7 @@ public class Worker {
 		try {
 			sameUserOrAdmin(request, email);
 		} catch (Exception e1) {
-			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
+			LOG.info(Log.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
@@ -150,14 +150,14 @@ public class Worker {
 	}
 
 	private Response taskListRetry(String email, String cursor) {
-		LOG.info(Message.LISTING_TASKS);
+		LOG.info(Log.LISTING_TASKS);
 
 		Key userK = KeyFactory.createKey(DSUtils.USER, email);
 		Key workerK = KeyFactory.createKey(userK, DSUtils.WORKER, userK.getName());
 		try {
 			datastore.get(workerK);
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
@@ -210,7 +210,7 @@ public class Worker {
 			try {
 				userKey = datastore.get(((Key) report.getProperty(DSUtils.REPORT_USER)));
 			} catch (EntityNotFoundException e) {
-				LOG.info(Message.UNEXPECTED_ERROR);
+				LOG.info(Log.UNEXPECTED_ERROR);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
@@ -220,7 +220,7 @@ public class Worker {
 			try {
 				optional = datastore.prepare(queryoptional).asSingleEntity();
 			} catch(TooManyResultsException e) {
-				LOG.info(Message.UNEXPECTED_ERROR);
+				LOG.info(Log.UNEXPECTED_ERROR);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
@@ -252,7 +252,7 @@ public class Worker {
 		try {
 			requesterE = datastore.get(requesterK);
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			throw e;
 		}
 

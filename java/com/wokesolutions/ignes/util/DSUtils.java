@@ -56,6 +56,7 @@ public class DSUtils {
 		public static final String USER_CREATIONTIME = "user_creationtime";
 		public static final String USER_ACTIVATION = "user_activation";
 		public static final String USER_CREATIONTIMEFORMATTED = "user_creationtimeformatted";
+		public static final String USER_FBTOKEN = "user_fbtoken";
 
 	// UserOptional
 		public static final String USEROPTIONAL_NAME = "useroptional_name";

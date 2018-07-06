@@ -32,7 +32,7 @@ import com.wokesolutions.ignes.api.Profile;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.JWTUtils;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.PermissionMapper;
 import com.wokesolutions.ignes.util.Secrets;
 import com.wokesolutions.ignes.util.UserLevel;
@@ -50,10 +50,10 @@ public class PermissionControlFilter implements Filter {
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
 			throws IOException, ServletException {
 
-		LOG.info(this.getClass().getSimpleName() + Message.FILTER_VERIFYING);
+		LOG.info(this.getClass().getSimpleName() + Log.FILTER_VERIFYING);
 
 		if(!(req instanceof HttpServletRequest)) {
-			changeResp(resp, Message.NOT_HTTP_REQUEST);
+			changeResp(resp, Log.NOT_HTTP_REQUEST);
 			return;
 		}
 
@@ -66,7 +66,7 @@ public class PermissionControlFilter implements Filter {
 		List<String> permissions = PermissionMapper.getPermissions(url);
 
 		if(permissions.get(0).equals(UserLevel.GUEST)) {
-			LOG.info(Message.GUEST_REQUEST);
+			LOG.info(Log.GUEST_REQUEST);
 			chain.doFilter(req, resp);
 			return;
 		}
@@ -77,14 +77,14 @@ public class PermissionControlFilter implements Filter {
 		try {
 			username = JWT.decode(token).getClaim(JWTUtils.USERNAME).asString();
 		} catch(Exception e) {
-			changeResp(resp, Message.INVALID_TOKEN);
+			changeResp(resp, Log.INVALID_TOKEN);
 			return;
 		}
 
 		Algorithm algorithm = Algorithm.HMAC256(Secrets.JWTSECRET);
 
 		if(token == null) {
-			changeResp(resp, Message.INVALID_TOKEN);
+			changeResp(resp, Log.INVALID_TOKEN);
 			return;
 		}
 
@@ -93,7 +93,7 @@ public class PermissionControlFilter implements Filter {
 		try {
 			user = datastore.get(userKey);
 		} catch (EntityNotFoundException e) {
-			changeResp(resp, Message.USER_NOT_FOUND);
+			changeResp(resp, Log.USER_NOT_FOUND);
 			return;
 		}
 
@@ -104,35 +104,35 @@ public class PermissionControlFilter implements Filter {
 				String permission = permissions.get(i);
 				LOG.info(Integer.toString(i) + " " + permission);
 				if(permission.equals(UserLevel.GUEST)) {
-					LOG.info(Message.GUEST_REQUEST);
+					LOG.info(Log.GUEST_REQUEST);
 					chain.doFilter(req, resp);
 					return;
 				}
 				
 				if(userlevel.equals(permission)) {
-					changeResp(resp, Message.INVALID_TOKEN);
+					changeResp(resp, Log.INVALID_TOKEN);
 					return;
 				}
 			}
 
-		LOG.info(Message.NOT_GUEST_REQUEST);
+		LOG.info(Log.NOT_GUEST_REQUEST);
 
 		try {
 			verifyWith(token, algorithm, username);
 		} catch (Exception e) {
-			changeResp(resp, Message.INVALID_TOKEN_ITSELF);
+			changeResp(resp, Log.INVALID_TOKEN_ITSELF);
 			return;
 		}
 		
 		if(!permissions.contains(userlevel)) {
-			changeResp(resp, Message.INVALID_TOKEN);
+			changeResp(resp, Log.INVALID_TOKEN);
 			return;
 		}
 
 		if(userlevel.equals(UserLevel.ORG))
 			if(!user.getProperty(DSUtils.USER_ACTIVATION)
 					.toString().equals(Profile.ACTIVATED)) {
-				changeResp(resp, Message.ORG_NOT_CONFIRMED);
+				changeResp(resp, Log.ORG_NOT_CONFIRMED);
 				return;
 			}
 
@@ -153,7 +153,7 @@ public class PermissionControlFilter implements Filter {
 			if(tokenE.getProperty(DSUtils.TOKEN_STRING).equals(token) &&
 					tokenE.getProperty(DSUtils.TOKEN_DEVICE).equals(deviceid)) {
 
-				LOG.info(Message.PERMISSION_GRANTED);
+				LOG.info(Log.PERMISSION_GRANTED);
 				
 				req.setAttribute(CustomHeader.USERNAME_ATT, username);
 				chain.doFilter(req, resp);
@@ -161,7 +161,7 @@ public class PermissionControlFilter implements Filter {
 			}
 		}
 
-		changeResp(resp, Message.INVALID_TOKEN);
+		changeResp(resp, Log.INVALID_TOKEN);
 		return;
 	}
 

@@ -61,7 +61,7 @@ import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Haversine;
 import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.ReportVotes;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.Storage.StoragePath;
@@ -111,7 +111,7 @@ public class Report {
 				return createReportRetry(data, request);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -126,27 +126,27 @@ public class Report {
 		String reportid = null;
 		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 
-		LOG.info(Message.ATTEMPT_CREATE_REPORT);
+		LOG.info(Log.ATTEMPT_CREATE_REPORT);
 
 		try {
 			username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 			reportid = ReportData.generateId(username, creationtime);
 
-			LOG.info(Message.ATTEMPT_CREATE_REPORT + reportid);
+			LOG.info(Log.ATTEMPT_CREATE_REPORT + reportid);
 			reportKey = KeyFactory.createKey(DSUtils.REPORT, reportid);
 			datastore.get(reportKey);
 			txn.rollback();
-			return Response.status(Status.CONFLICT).entity(Message.DUPLICATE_REPORT).build();
+			return Response.status(Status.CONFLICT).entity(Log.DUPLICATE_REPORT).build();
 		} catch(EntityNotFoundException e1) {
 			try {
 				reportKey = KeyFactory.createKey(DSUtils.REPORT, reportid);
 				datastore.get(reportKey);
 				txn.rollback();
-				return Response.status(Status.CONFLICT).entity(Message.DUPLICATE_REPORT).build();
+				return Response.status(Status.CONFLICT).entity(Log.DUPLICATE_REPORT).build();
 			} catch(EntityNotFoundException e2) {
 				if(username == null || reportKey == null) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					LOG.info(Log.UNEXPECTED_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 
@@ -157,14 +157,14 @@ public class Report {
 				double[] middle = new double[2];
 
 				if(data.points == null) {
-					LOG.info(Message.REPORT_IS_LATLNG);
+					LOG.info(Log.REPORT_IS_LATLNG);
 
 					report.setProperty(DSUtils.REPORT_LAT, data.lat);
 					report.setProperty(DSUtils.REPORT_LNG, data.lng);
 
 					report.setProperty(DSUtils.REPORT_POINTS, null);
 				} else {
-					LOG.info(Message.REPORT_IS_POINTS);
+					LOG.info(Log.REPORT_IS_POINTS);
 
 					JSONArray points = new JSONArray(data.points);
 					LOG.info(points.toString());
@@ -189,7 +189,7 @@ public class Report {
 				try {
 					user = datastore.get(userKey);
 				} catch(EntityNotFoundException e) {
-					LOG.info(Message.USER_NOT_FOUND);
+					LOG.info(Log.USER_NOT_FOUND);
 					txn.rollback();
 					return Response.status(Status.EXPECTATION_FAILED).build();
 				}
@@ -213,7 +213,7 @@ public class Report {
 
 					points = Integer.parseInt(pointsE.getProperty(DSUtils.USERPOINTS_POINTS).toString());
 				} catch(TooManyResultsException e3) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					LOG.info(Log.UNEXPECTED_ERROR);
 					txn.rollback();
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
@@ -255,7 +255,7 @@ public class Report {
 				StoragePath pathImg = new StoragePath(folders, reportid);
 				if(!Storage.saveImage(data.img, pathImg,
 						data.imgwidth, data.imgheight, data.imgorientation, true)) {
-					LOG.info(Message.STORAGE_ERROR);
+					LOG.info(Log.STORAGE_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 
@@ -276,7 +276,7 @@ public class Report {
 
 				List<Entity> entities = Arrays.asList(report, reportVotes);
 
-				LOG.info(Message.REPORT_CREATED + reportid);
+				LOG.info(Log.REPORT_CREATED + reportid);
 				datastore.put(txn, entities);
 				txn.commit();
 
@@ -288,7 +288,7 @@ public class Report {
 			}
 		} finally {
 			if(txn.isActive()) {
-				LOG.info(Message.TXN_ACTIVE);
+				LOG.info(Log.TXN_ACTIVE);
 				txn.rollback();
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
@@ -378,7 +378,7 @@ public class Report {
 		try {
 			rep = datastore.get(KeyFactory.createKey(DSUtils.REPORT, report));
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.REPORT_NOT_FOUND);
+			LOG.info(Log.REPORT_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
@@ -389,7 +389,7 @@ public class Report {
 
 			LOG.info(tn);
 		} catch(Exception e) {
-			LOG.info(Message.REPORT_NOT_FOUND);
+			LOG.info(Log.REPORT_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
@@ -420,7 +420,7 @@ public class Report {
 
 	private Response getReportsWithinRadiusRetry(double lat, double lng,
 			double radius, String cursor) {
-		LOG.info(Message.ATTEMPT_GIVE_ALL_REPORTS);
+		LOG.info(Log.ATTEMPT_GIVE_ALL_REPORTS);
 
 		int precision = Haversine.getPrecision(lat, lng, radius);
 
@@ -452,7 +452,7 @@ public class Report {
 		Query reportQuery = new Query(DSUtils.REPORT)
 				.setFilter(filter);
 
-		LOG.info(Message.SEARCHING_IN_COORDS + pPropLat + " - " + latValue +
+		LOG.info(Log.SEARCHING_IN_COORDS + pPropLat + " - " + latValue +
 				" | " + pPropLng + " - " + lngValue);
 
 		reportQuery
@@ -482,7 +482,7 @@ public class Report {
 			try {
 				jsonReports = buildJsonReports(reports, false);
 			} catch(DatastoreException e) {
-				LOG.info(Message.REPORT_NOT_FOUND);
+				LOG.info(Log.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
@@ -506,7 +506,7 @@ public class Report {
 		String cacheKey = encodeCacheKey(true, location, cursor);
 
 		if(cache.contains(cacheKey)) {
-			LOG.info(Message.USING_CACHE);
+			LOG.info(Log.USING_CACHE);
 
 			String cacheKeyNum = cacheKey + "#";
 			if(cache.increment(cacheKeyNum, 1L) == null)
@@ -528,7 +528,7 @@ public class Report {
 	}
 
 	private Response getReportsInLocationRetry(String location, String cursor, String cacheKey) {
-		LOG.info(Message.ATTEMPT_GIVE_ALL_REPORTS);
+		LOG.info(Log.ATTEMPT_GIVE_ALL_REPORTS);
 
 		Filter localityFilter =
 				new Query.FilterPredicate(DSUtils.REPORT_LOCALITY,
@@ -565,7 +565,7 @@ public class Report {
 			try {
 				jsonReports = buildJsonReports(reports, false);
 			} catch(InternalServerErrorException e) {
-				LOG.info(Message.REPORT_NOT_FOUND);
+				LOG.info(Log.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
@@ -596,7 +596,7 @@ public class Report {
 		String header = headers.getHeaderString(CustomHeader.REPORTS);
 
 		if(header == null || header.equals("") || header.contains(",")) {
-			LOG.info(Message.NO_REPORTS_IN_HEADER);
+			LOG.info(Log.NO_REPORTS_IN_HEADER);
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 
@@ -614,7 +614,7 @@ public class Report {
 	private Response getThumbnailsRetry(String header) {
 		List<String> ids = decodeReportsHeader(header);
 		if(ids.size() > 10) {
-			LOG.info(Message.TOO_MANY_REPORTS);
+			LOG.info(Log.TOO_MANY_REPORTS);
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 
@@ -626,7 +626,7 @@ public class Report {
 			try {
 				report = datastore.get(KeyFactory.createKey(DSUtils.REPORT, id));
 			} catch (EntityNotFoundException e) {
-				LOG.info(Message.REPORT_NOT_FOUND + " - " + id);
+				LOG.info(Log.REPORT_NOT_FOUND + " - " + id);
 
 				thumbnails.put(id, NOT_FOUND);
 
@@ -707,7 +707,7 @@ public class Report {
 		try {
 			votes = datastore.prepare(votesQuery).asSingleEntity();
 		} catch(TooManyResultsException e) {
-			LOG.info(Message.TOO_MANY_RESULTS);
+			LOG.info(Log.TOO_MANY_RESULTS);
 			throw new InternalServerErrorException();
 		}
 
@@ -829,7 +829,7 @@ public class Report {
 				txn.commit();
 			} catch(Exception e) {
 				txn.rollback();
-				LOG.info(Message.UNEXPECTED_ERROR + " " + rep.getKey().getName());
+				LOG.info(Log.UNEXPECTED_ERROR + " " + rep.getKey().getName());
 			}
 		}
 
@@ -850,7 +850,7 @@ public class Report {
 				try {
 					reportE = datastore.get(KeyFactory.createKey(DSUtils.REPORT, report));
 				} catch(EntityNotFoundException e) {
-					LOG.info(Message.REPORT_NOT_FOUND);
+					LOG.info(Log.REPORT_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
 
@@ -859,7 +859,7 @@ public class Report {
 				try {
 					user = datastore.get(userK);
 				} catch(EntityNotFoundException e) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					LOG.info(Log.UNEXPECTED_ERROR);
 					return Response.status(Status.FORBIDDEN).build();
 				}
 
@@ -879,13 +879,13 @@ public class Report {
 						try {
 							task = datastore.prepare(taskQuery).asSingleEntity();
 						} catch(TooManyResultsException e) {
-							LOG.info(Message.UNEXPECTED_ERROR);
+							LOG.info(Log.UNEXPECTED_ERROR);
 							txn.rollback();
 							return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 						}
 
 						if(task == null) {
-							LOG.info(Message.WORKER_NOT_ALLOWED);
+							LOG.info(Log.WORKER_NOT_ALLOWED);
 							txn.rollback();
 							return Response.status(Status.FORBIDDEN).build();
 						}
@@ -894,7 +894,7 @@ public class Report {
 						Key reporter = (Key) reportE.getProperty(DSUtils.REPORT_USER);
 						if(!reporter.equals(user.getKey())) {
 							txn.rollback();
-							LOG.info(Message.NOT_REPORTER);
+							LOG.info(Log.NOT_REPORTER);
 							return Response.status(Status.FORBIDDEN).build();
 						}
 					}
@@ -912,12 +912,12 @@ public class Report {
 					reportE.setProperty(DSUtils.REPORT_CLOSETIME, date);
 
 					datastore.put(txn, Arrays.asList(reportStatusLog, reportE));
-					LOG.info(Message.REPORT_CLOSED);
+					LOG.info(Log.REPORT_CLOSED);
 					txn.commit();
 					return Response.ok().build();
 				} finally {
 					if(txn.isActive()) {
-						LOG.info(Message.TXN_ACTIVE);
+						LOG.info(Log.TXN_ACTIVE);
 						txn.rollback();
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 					}
@@ -947,7 +947,7 @@ public class Report {
 				try {
 					ReportVotes.vote(ReportVotes.UP, report, username);
 				} catch (VoteException e) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					LOG.info(Log.UNEXPECTED_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 			} catch(DatastoreException e) {
@@ -973,7 +973,7 @@ public class Report {
 				try {
 					ReportVotes.vote(ReportVotes.DOWN, report, username);
 				} catch (VoteException e) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					LOG.info(Log.UNEXPECTED_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 			} catch(DatastoreException e) {
@@ -999,7 +999,7 @@ public class Report {
 				try {
 					ReportVotes.vote(ReportVotes.SPAM, report, username);
 				} catch (VoteException e) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					LOG.info(Log.UNEXPECTED_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 			} catch(DatastoreException e) {
@@ -1057,7 +1057,7 @@ public class Report {
 				.put(DSUtils.REPORTVOTES_DOWN, numDownvotes)
 				.put(DSUtils.REPORTVOTES_SPAM, numSpamvotes);
 
-		LOG.info(Message.VOTED_REPORT);
+		LOG.info(Log.VOTED_REPORT);
 		return Response.ok(voteNums).build();
 	}
 
@@ -1082,7 +1082,7 @@ public class Report {
 					try {
 						ReportVotes.vote(vote, reportid, username);
 					} catch (VoteException e) {
-						LOG.info(Message.UNEXPECTED_ERROR + " " + reportid);
+						LOG.info(Log.UNEXPECTED_ERROR + " " + reportid);
 						continue;
 					}
 				}
@@ -1113,7 +1113,7 @@ public class Report {
 				try {
 					datastore.get(KeyFactory.createKey(DSUtils.REPORT, report));
 				} catch (EntityNotFoundException e) {
-					LOG.info(Message.REPORT_NOT_FOUND);
+					LOG.info(Log.REPORT_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
 
@@ -1149,7 +1149,7 @@ public class Report {
 				try {
 					datastore.get(KeyFactory.createKey(DSUtils.REPORT, report));
 				} catch (EntityNotFoundException e1) {
-					LOG.info(Message.REPORT_NOT_FOUND);
+					LOG.info(Log.REPORT_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
 
@@ -1194,11 +1194,11 @@ public class Report {
 						userOE = datastore.prepare(query2).asSingleEntity();
 
 						if(userOE == null) {
-							LOG.info(Message.UNEXPECTED_ERROR + " " + comment.toString() + " " + username);
+							LOG.info(Log.UNEXPECTED_ERROR + " " + comment.toString() + " " + username);
 							continue;
 						}
 					} catch (TooManyResultsException e) {
-						LOG.info(Message.UNEXPECTED_ERROR + " " + comment.toString() + " " + username);
+						LOG.info(Log.UNEXPECTED_ERROR + " " + comment.toString() + " " + username);
 						continue;
 					}
 

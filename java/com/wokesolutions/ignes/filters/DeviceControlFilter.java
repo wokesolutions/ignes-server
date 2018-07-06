@@ -25,7 +25,7 @@ import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Log;
 
 @Priority(4)
 public class DeviceControlFilter implements Filter {
@@ -63,7 +63,7 @@ public class DeviceControlFilter implements Filter {
 		try {
 			user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
 		} catch(EntityNotFoundException e) {
-			changeResp(response, Message.USER_NOT_FOUND);
+			changeResp(response, Log.USER_NOT_FOUND);
 			return;
 		}
 		

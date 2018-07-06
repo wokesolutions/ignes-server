@@ -47,7 +47,7 @@ public class ReportVotes {
 		try {
 			user = datastore.get(userK);
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			throw new VoteException();
 		}
 
@@ -57,7 +57,7 @@ public class ReportVotes {
 		try {
 			report = datastore.get(reportK);
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			throw new VoteException();
 		}
 
@@ -80,7 +80,7 @@ public class ReportVotes {
 			else
 				hasvote = true;
 		} catch(TooManyResultsException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			throw new VoteException();
 		}
 
@@ -140,7 +140,7 @@ public class ReportVotes {
 			throw e;
 		} finally {
 			if(txn.isActive()) {
-				LOG.info(Message.TXN_ACTIVE);
+				LOG.info(Log.TXN_ACTIVE);
 				txn.rollback();
 			}
 		}

@@ -52,7 +52,7 @@ import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.Storage.StoragePath;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.UserLevel;
 
@@ -70,7 +70,7 @@ public class Admin {
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response registerAdmin(UserRegisterData registerData) {
 		if(!registerData.isValid())
-			return Response.status(Status.BAD_REQUEST).entity(Message.REGISTER_DATA_INVALID).build();
+			return Response.status(Status.BAD_REQUEST).entity(Log.REGISTER_DATA_INVALID).build();
 
 		int retries = 5;
 
@@ -79,7 +79,7 @@ public class Admin {
 				return registerAdminRetry(registerData);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -88,7 +88,7 @@ public class Admin {
 	}
 
 	private Response registerAdminRetry(UserRegisterData registerData) {
-		LOG.info(Message.ATTEMPT_REGISTER_ADMIN + registerData);
+		LOG.info(Log.ATTEMPT_REGISTER_ADMIN + registerData);
 
 		Transaction txn = datastore.beginTransaction();
 		try {
@@ -96,7 +96,7 @@ public class Admin {
 			Key userKey = KeyFactory.createKey(DSUtils.USER, registerData.username);
 			datastore.get(userKey);
 			txn.rollback();
-			return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build(); 
+			return Response.status(Status.CONFLICT).entity(Log.USER_ALREADY_EXISTS).build(); 
 		} catch (EntityNotFoundException e) {
 
 			Filter filter =
@@ -114,7 +114,7 @@ public class Admin {
 			}
 
 			if(existingUser != null)
-				return Response.status(Status.CONFLICT).entity(Message.EMAIL_ALREADY_IN_USE).build();
+				return Response.status(Status.CONFLICT).entity(Log.EMAIL_ALREADY_IN_USE).build();
 
 			Date date = new Date();
 			Entity user = new Entity(DSUtils.USER, registerData.username);
@@ -140,7 +140,7 @@ public class Admin {
 			List<Entity> list = Arrays.asList(user, admin, useroptional, userPoints);
 
 			datastore.put(txn, list);
-			LOG.info(Message.ADMIN_REGISTERED + registerData);
+			LOG.info(Log.ADMIN_REGISTERED + registerData);
 			txn.commit();
 			return Response.ok().build();
 		} finally {
@@ -165,7 +165,7 @@ public class Admin {
 				return promoteToAdminRetry(username, request);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -174,7 +174,7 @@ public class Admin {
 	}
 
 	private Response promoteToAdminRetry(String username, HttpServletRequest request) {
-		LOG.info(Message.ATTEMPT_PROMOTE_TO_ADMIN + username);
+		LOG.info(Log.ATTEMPT_PROMOTE_TO_ADMIN + username);
 
 		TransactionOptions options = TransactionOptions.Builder.withXG(true);
 		Transaction txn = datastore.beginTransaction(options);
@@ -203,12 +203,12 @@ public class Admin {
 			List<Entity> list = Arrays.asList(admin, adminLog, user);
 
 			datastore.put(txn, list);
-			LOG.info(Message.ADMIN_PROMOTED + username);
+			LOG.info(Log.ADMIN_PROMOTED + username);
 			txn.commit();
 			return Response.ok().build();
 		} catch (EntityNotFoundException e) {
 			txn.rollback();
-			return Response.status(Status.EXPECTATION_FAILED).entity(Message.USER_NOT_FOUND).build();
+			return Response.status(Status.EXPECTATION_FAILED).entity(Log.USER_NOT_FOUND).build();
 		} finally {
 			if(txn.isActive()) {
 				txn.rollback();
@@ -229,7 +229,7 @@ public class Admin {
 				return demoteFromAdminRetry(username, request);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -238,7 +238,7 @@ public class Admin {
 	}
 
 	private Response demoteFromAdminRetry(String username, HttpServletRequest request) {
-		LOG.info(Message.ATTEMPT_DEMOTE_FROM_ADMIN + username);
+		LOG.info(Log.ATTEMPT_DEMOTE_FROM_ADMIN + username);
 
 		TransactionOptions options = TransactionOptions.Builder.withXG(true);
 		Transaction txn = datastore.beginTransaction(options);
@@ -251,13 +251,13 @@ public class Admin {
 				admin = datastore.prepare(adminQuery).asSingleEntity();
 			} catch(TooManyResultsException e) {
 				txn.rollback();
-				LOG.info(Message.USER_NOT_ADMIN);
+				LOG.info(Log.USER_NOT_ADMIN);
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
 			if(admin == null) {
 				txn.rollback();
-				LOG.info(Message.USER_NOT_ADMIN);
+				LOG.info(Log.USER_NOT_ADMIN);
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
@@ -278,17 +278,17 @@ public class Admin {
 			List<Entity> list = Arrays.asList(adminLog, user);
 
 			datastore.put(txn, list);
-			LOG.info(Message.ADMIN_DEMOTED + username);
+			LOG.info(Log.ADMIN_DEMOTED + username);
 			txn.commit();
 			return Response.ok().build();
 		} catch (EntityNotFoundException e) {
 			txn.rollback();
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		} finally {
 			if(txn.isActive()) {
 				txn.rollback();
-				LOG.info(Message.TXN_ACTIVE);
+				LOG.info(Log.TXN_ACTIVE);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 		}
@@ -305,7 +305,7 @@ public class Admin {
 				return getAllUsersRetry(cursor);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -355,7 +355,7 @@ public class Admin {
 				}
 
 				if(points == null) {
-					LOG.info(Message.UNEXPECTED_ERROR + user.getKey().getName());
+					LOG.info(Log.UNEXPECTED_ERROR + user.getKey().getName());
 					return Response.status(Status.EXPECTATION_FAILED).build();
 				}
 				us.put(Prop.POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
@@ -383,7 +383,7 @@ public class Admin {
 				return getAllAdminsRetry(cursor);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -438,7 +438,7 @@ public class Admin {
 				return getAllStandbysRetry(cursor);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -511,12 +511,12 @@ public class Admin {
 				try {
 					report = datastore.get(reportK);
 				} catch(EntityNotFoundException e) {
-					LOG.info(Message.REPORT_NOT_FOUND);
+					LOG.info(Log.REPORT_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
 				
 				if(!report.getProperty(DSUtils.REPORT_STATUS).equals(Report.STANDBY)) {
-					LOG.info(Message.REPORT_STANDBY);
+					LOG.info(Log.REPORT_STANDBY);
 					return Response.status(Status.EXPECTATION_FAILED).build();
 				}
 				
@@ -526,7 +526,7 @@ public class Admin {
 				return Response.ok().build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -556,12 +556,12 @@ public class Admin {
 
 					return Response.ok().build();
 				} catch (EntityNotFoundException e) {
-					LOG.info(Message.ORG_NOT_FOUND);
+					LOG.info(Log.ORG_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -607,7 +607,7 @@ public class Admin {
 					try {
 						org = datastore.prepare(orgQuery).asSingleEntity();
 					} catch(TooManyResultsException e) {
-						LOG.info(Message.UNEXPECTED_ERROR);
+						LOG.info(Log.UNEXPECTED_ERROR);
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 					}
 
@@ -635,7 +635,7 @@ public class Admin {
 				return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -654,7 +654,7 @@ public class Admin {
 				try {
 					user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
 				} catch(EntityNotFoundException e) {
-					LOG.info(Message.USER_NOT_FOUND);
+					LOG.info(Log.USER_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
 
@@ -694,7 +694,7 @@ public class Admin {
 				}
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;
@@ -709,12 +709,12 @@ public class Admin {
 		try {
 			stat = datastore.prepare(statQ).asSingleEntity();
 		} catch(TooManyResultsException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			return false;
 		}
 
 		if(stat == null) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			return false;
 		}
 
@@ -780,7 +780,7 @@ public class Admin {
 				return Response.ok(array.toString()).build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 				retries--;

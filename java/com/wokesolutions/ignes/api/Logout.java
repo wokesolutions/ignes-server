@@ -30,7 +30,7 @@ import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Log;
 
 @Path("/logout")
 public class Logout {
@@ -108,7 +108,7 @@ public class Logout {
 				datastore.get(KeyFactory.createKey(DSUtils.ORG, username));
 				isOrg = true;
 			} catch (EntityNotFoundException e) {
-				LOG.info(Message.USER_NOT_FOUND);
+				LOG.info(Log.USER_NOT_FOUND);
 				return Response.status(Status.FORBIDDEN).build();
 			}
 		}
@@ -129,7 +129,7 @@ public class Logout {
 		Transaction txn = datastore.beginTransaction
 				(TransactionOptions.Builder.withXG(true));
 		try {
-			LOG.info(Message.LOGGING_OUT + username);
+			LOG.info(Log.LOGGING_OUT + username);
 
 			Key userKey = KeyFactory.createKey(DSUtils.USER, username);
 
@@ -138,14 +138,14 @@ public class Logout {
 			try {
 				stats = datastore.prepare(statsQuery).asSingleEntity();
 			} catch(TooManyResultsException e2) {
-				LOG.info(Message.UNEXPECTED_ERROR);
+				LOG.info(Log.UNEXPECTED_ERROR);
 				txn.rollback();
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
 			if(stats == null) {
 				txn.rollback();
-				LOG.info(Message.UNEXPECTED_ERROR);
+				LOG.info(Log.UNEXPECTED_ERROR);
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
@@ -153,7 +153,7 @@ public class Logout {
 				datastore.get(txn, userKey);
 			} catch(EntityNotFoundException e) {
 				txn.rollback();
-				LOG.info(Message.UNEXPECTED_ERROR);
+				LOG.info(Log.UNEXPECTED_ERROR);
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
@@ -172,7 +172,7 @@ public class Logout {
 			try {
 				tokenE = datastore.prepare(query).asSingleEntity();
 			} catch(TooManyResultsException e2) {
-				LOG.info(Message.UNEXPECTED_ERROR);
+				LOG.info(Log.UNEXPECTED_ERROR);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
@@ -202,7 +202,7 @@ public class Logout {
 		} finally {
 			if(txn.isActive()) {
 				txn.rollback();
-				LOG.info(Message.TXN_ACTIVE);
+				LOG.info(Log.TXN_ACTIVE);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 		}

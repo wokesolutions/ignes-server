@@ -50,7 +50,7 @@ import com.wokesolutions.ignes.exceptions.NotSameNorAdminException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Prop;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.UserLevel;
@@ -74,9 +74,9 @@ public class Profile {
 			UserOptionalData data,
 			@Context HttpServletRequest request) {
 		if(!data.isValid() || username == null || username.equals("")) {
-			LOG.info(Message.PROFILE_UPDATE_DATA_INVALID);
+			LOG.info(Log.PROFILE_UPDATE_DATA_INVALID);
 			return Response.status(Status.BAD_REQUEST)
-					.entity(Message.PROFILE_UPDATE_DATA_INVALID).build();
+					.entity(Log.PROFILE_UPDATE_DATA_INVALID).build();
 		}
 
 		int retries = 5;
@@ -85,7 +85,7 @@ public class Profile {
 				return updateProfileRetry(username, data, request);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 
@@ -95,7 +95,7 @@ public class Profile {
 	}
 
 	private Response updateProfileRetry(String username, UserOptionalData data, HttpServletRequest request) {
-		LOG.info(Message.ATTEMPT_UPDATE_PROFILE + username);
+		LOG.info(Log.ATTEMPT_UPDATE_PROFILE + username);
 
 		Transaction txn = datastore.beginTransaction();
 		try {
@@ -108,7 +108,7 @@ public class Profile {
 				requester = sameUserOrAdmin(request, username);
 			} catch(NotSameNorAdminException e2) {
 				txn.rollback();
-				LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
+				LOG.info(Log.REQUESTER_IS_NOT_USER_OR_ADMIN);
 				return Response.status(Status.FORBIDDEN).build();
 			}
 
@@ -121,14 +121,14 @@ public class Profile {
 			try {
 				useroptional = datastore.prepare(useroptionalQuery).asSingleEntity();
 			} catch(TooManyResultsException e3) {
-				LOG.info(Message.UNEXPECTED_ERROR);
+				LOG.info(Log.UNEXPECTED_ERROR);
 				txn.rollback();
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
 			if(useroptional == null) {
 				txn.rollback();
-				LOG.info(Message.NO_OPTIONAL_USER_ENTITY_FOUND);
+				LOG.info(Log.NO_OPTIONAL_USER_ENTITY_FOUND);
 				return Response.status(Status.EXPECTATION_FAILED).build();
 			}
 
@@ -141,16 +141,16 @@ public class Profile {
 			List<Entity> list = Arrays.asList(useroptional, useroptionallog);
 
 			datastore.put(txn, list);
-			LOG.info(Message.PROFILE_UPDATED);
+			LOG.info(Log.PROFILE_UPDATED);
 			txn.commit();
 			return Response.ok().build();
 
 		} catch(EntityNotFoundException e) {
 			txn.rollback();
-			return Response.status(Status.EXPECTATION_FAILED).entity(Message.USER_NOT_FOUND).build();
+			return Response.status(Status.EXPECTATION_FAILED).entity(Log.USER_NOT_FOUND).build();
 		} finally {
 			if(txn.isActive()) {
-				LOG.info(Message.TXN_ACTIVE);
+				LOG.info(Log.TXN_ACTIVE);
 				txn.rollback();
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
@@ -230,7 +230,7 @@ public class Profile {
 			@Context HttpServletRequest request,
 			@Context HttpHeaders headers, @QueryParam(ParamName.CURSOR) String cursor) {
 		if(username == null || username.equals(""))
-			return Response.status(Status.BAD_REQUEST).entity(Message.PROFILE_UPDATE_DATA_INVALID).build();
+			return Response.status(Status.BAD_REQUEST).entity(Log.PROFILE_UPDATE_DATA_INVALID).build();
 
 		int retries = 5;
 
@@ -239,7 +239,7 @@ public class Profile {
 				return getVotesRetry(username, request, headers, cursor);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 
@@ -251,12 +251,12 @@ public class Profile {
 	private Response getVotesRetry(String username,
 			HttpServletRequest request, HttpHeaders headers, String cursor) {
 
-		LOG.info(Message.GIVING_VOTES + username);
+		LOG.info(Log.GIVING_VOTES + username);
 
 		try {
 			sameUserOrAdmin(request, username);
 		} catch(Exception e) {
-			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
+			LOG.info(Log.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
@@ -289,7 +289,7 @@ public class Profile {
 			else if(props.containsKey(DSUtils.USERVOTE_COMMENT))
 				voteJson.put(Prop.COMMENT, props.get(DSUtils.USERVOTE_COMMENT));
 			else {
-				LOG.info(Message.UNEXPECTED_ERROR + " " + vote.getKey().getId());
+				LOG.info(Log.UNEXPECTED_ERROR + " " + vote.getKey().getId());
 				continue;
 			}
 
@@ -317,7 +317,7 @@ public class Profile {
 				return activateAccountRetry(code, username, request);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 
@@ -330,7 +330,7 @@ public class Profile {
 		try {
 			sameUserOrAdmin(request, username);
 		} catch(Exception e2) {
-			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
+			LOG.info(Log.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
@@ -341,7 +341,7 @@ public class Profile {
 		try {
 			user = datastore.get(userkey);
 		} catch (EntityNotFoundException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
@@ -366,7 +366,7 @@ public class Profile {
 		try {
 			sameUserOrAdmin(request, username);
 		} catch(Exception e2) {
-			LOG.info(Message.REQUESTER_IS_NOT_USER_OR_ADMIN);
+			LOG.info(Log.REQUESTER_IS_NOT_USER_OR_ADMIN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
@@ -375,7 +375,7 @@ public class Profile {
 				return isActivatedRetry(username);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 
@@ -390,7 +390,7 @@ public class Profile {
 		try {
 			entUser = datastore.get(KeyFactory.createKey(DSUtils.USER, user));
 		} catch (EntityNotFoundException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
@@ -411,7 +411,7 @@ public class Profile {
 				return getUserProfileRetry(username);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 
@@ -426,7 +426,7 @@ public class Profile {
 		try {
 			user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.USER_NOT_FOUND);
+			LOG.info(Log.USER_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
@@ -442,7 +442,7 @@ public class Profile {
 		try {
 			optionals = datastore.prepare(query).asSingleEntity();
 		} catch(TooManyResultsException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
@@ -478,7 +478,7 @@ public class Profile {
 		try {
 			points = datastore.prepare(query2).asSingleEntity();
 		} catch(TooManyResultsException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
@@ -534,7 +534,7 @@ public class Profile {
 				try {
 					user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
 				} catch(EntityNotFoundException e) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					LOG.info(Log.UNEXPECTED_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 
@@ -545,7 +545,7 @@ public class Profile {
 					String oldPw = DigestUtils.sha512Hex(data.oldpassword);
 
 					if(!user.getProperty(DSUtils.USER_PASSWORD).toString().equals(oldPw)) {
-						LOG.info(Message.WRONG_PASSWORD + oldPw);
+						LOG.info(Log.WRONG_PASSWORD + oldPw);
 						txn.rollback();
 						return Response.status(Status.FORBIDDEN).build();
 					}
@@ -563,11 +563,11 @@ public class Profile {
 					datastore.put(txn, list);
 
 					txn.commit();
-					LOG.info(Message.PASSWORD_CHANGED + username);
+					LOG.info(Log.PASSWORD_CHANGED + username);
 					return Response.ok().build();
 				} finally {
 					if(txn.isActive()) {
-						LOG.info(Message.TXN_ACTIVE);
+						LOG.info(Log.TXN_ACTIVE);
 						txn.rollback();
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 					}
@@ -575,7 +575,7 @@ public class Profile {
 
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 
@@ -596,7 +596,7 @@ public class Profile {
 				return getAllReportsRetry(username, cursor);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 
@@ -636,7 +636,7 @@ public class Profile {
 				.asQueryResultList(fetchOptions);
 
 		if(reports.isEmpty()) {
-			LOG.info(Message.NO_REPORTS_FOUND);
+			LOG.info(Log.NO_REPORTS_FOUND);
 			return Response.status(Status.NO_CONTENT).build();
 		}
 
@@ -690,7 +690,7 @@ public class Profile {
 				return changeProfPicRetry(data, username);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 
@@ -705,11 +705,11 @@ public class Profile {
 		folders.add(Storage.PROFILE_FOLDER);
 		StoragePath pathImg = new StoragePath(folders, username);
 
-		LOG.info(Message.ATTEMPT_UPDATE_PROFILE);
+		LOG.info(Log.ATTEMPT_UPDATE_PROFILE);
 
 		if(!Storage.saveImage(data.pic, pathImg,
 				data.width, data.height, data.orientation, false))
-			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Message.STORAGE_ERROR).build();
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Log.STORAGE_ERROR).build();
 
 		Query query = new Query(DSUtils.USEROPTIONAL)
 				.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
@@ -723,7 +723,7 @@ public class Profile {
 
 			datastore.put(optional);
 		} catch(TooManyResultsException e) {
-			LOG.info(Message.UNEXPECTED_ERROR);
+			LOG.info(Log.UNEXPECTED_ERROR);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 
@@ -740,7 +740,7 @@ public class Profile {
 				return getProfPicRetry(username);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 
@@ -757,14 +757,14 @@ public class Profile {
 		try {
 			optional = datastore.get(KeyFactory.createKey(DSUtils.USEROPTIONAL_PICPATH, username));
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.USER_NOT_FOUND);
+			LOG.info(Log.USER_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
 		path = optional.getProperty(DSUtils.USEROPTIONAL_PICPATH).toString();
 
 		if(path == null) {
-			LOG.info(Message.USER_HAS_NO_IMAGE);
+			LOG.info(Log.USER_HAS_NO_IMAGE);
 			return Response.status(Status.NO_CONTENT).build();
 		}
 
@@ -790,7 +790,7 @@ public class Profile {
 				return acceptRetry(username, data);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 
@@ -807,13 +807,13 @@ public class Profile {
 		try {
 			report = datastore.get(reportK);
 		} catch(EntityNotFoundException e) {
-			LOG.info(Message.REPORT_NOT_FOUND);
+			LOG.info(Log.REPORT_NOT_FOUND);
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		}
 
 		Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
 		if(!reporterK.equals(userK)) {
-			LOG.info(Message.NOT_REPORTER);
+			LOG.info(Log.NOT_REPORTER);
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
@@ -840,7 +840,7 @@ public class Profile {
 				application = temp;
 
 			if(!it.hasNext() && !key.equals(orgK)) {
-				LOG.info(Message.APPLICATION_NOT_FOUND);
+				LOG.info(Log.APPLICATION_NOT_FOUND);
 				return Response.status(Status.NOT_FOUND).build();
 			}
 		}
@@ -879,7 +879,7 @@ public class Profile {
 				return Response.ok().build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 
@@ -910,7 +910,7 @@ public class Profile {
 				return Response.ok(array.toString()).build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
-					LOG.warning(Message.TOO_MANY_RETRIES);
+					LOG.warning(Log.TOO_MANY_RETRIES);
 					return Response.status(Status.REQUEST_TIMEOUT).build();
 				}
 

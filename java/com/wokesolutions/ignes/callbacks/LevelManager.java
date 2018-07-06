@@ -5,7 +5,7 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Transaction;
 import com.wokesolutions.ignes.util.DSUtils;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.UserLevel;
 
 import java.util.Date;
@@ -19,7 +19,7 @@ public class LevelManager {
 	public final static int LEVEL3_POINTS = 6;
 
 	public static void changeLevel(Entity points, Entity reporter, Transaction txn) {
-		LOG.info(Message.LEVEL_MANAGER_CHECKING);
+		LOG.info(Log.LEVEL_MANAGER_CHECKING);
 
 		long pointsval = (long) points.getProperty(DSUtils.USERPOINTS_POINTS);
 

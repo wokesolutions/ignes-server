@@ -3,7 +3,9 @@ package com.wokesolutions.ignes.api;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 
@@ -34,7 +36,8 @@ import com.wokesolutions.ignes.data.UserRegisterData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Firebase;
+import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.UserLevel;
 
 @Path("/register")
@@ -51,7 +54,7 @@ public class Register {
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response registerUser(UserRegisterData registerData) {
 		if(!registerData.isValid())
-			return Response.status(Status.BAD_REQUEST).entity(Message.REGISTER_DATA_INVALID).build();
+			return Response.status(Status.BAD_REQUEST).entity(Log.REGISTER_DATA_INVALID).build();
 
 		int retries = 5;
 		while(true) {
@@ -65,20 +68,20 @@ public class Register {
 		}
 	}
 
-	private Response registerUserRetry(UserRegisterData registerData) {
-		LOG.info(Message.ATTEMPT_REGISTER_USER + registerData.username);
+	private Response registerUserRetry(UserRegisterData data) {
+		LOG.info(Log.ATTEMPT_REGISTER_USER + data.username);
 		String code = null;
 		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 		try {
 			// If the entity does not exist an Exception is thrown. Otherwise,
-			Key userKey = KeyFactory.createKey(DSUtils.USER, registerData.username);
+			Key userKey = KeyFactory.createKey(DSUtils.USER, data.username);
 
 			try {
 				datastore.get(userKey);
 			} catch(EntityNotFoundException e2) {
 				Filter filter =
 						new Query.FilterPredicate(DSUtils.USER_EMAIL,
-								FilterOperator.EQUAL, registerData.email);
+								FilterOperator.EQUAL, data.email);
 				
 				Query emailQuery = new Query(DSUtils.USER).setFilter(filter);
 
@@ -87,24 +90,25 @@ public class Register {
 				try {
 					existingUser = datastore.prepare(emailQuery).asSingleEntity();
 				} catch(TooManyResultsException e1) {
-					LOG.info(Message.UNEXPECTED_ERROR);
+					LOG.info(Log.UNEXPECTED_ERROR);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 
 				if(existingUser != null) {
 					txn.rollback();
-					LOG.info(Message.EMAIL_ALREADY_IN_USE);
-					return Response.status(Status.CONFLICT).entity(Message.EMAIL_ALREADY_IN_USE).build();
+					LOG.info(Log.EMAIL_ALREADY_IN_USE);
+					return Response.status(Status.CONFLICT).entity(Log.EMAIL_ALREADY_IN_USE).build();
 				}
 				
 				Date date = new Date();
 
-				Entity user = new Entity(DSUtils.USER, registerData.username);
+				Entity user = new Entity(DSUtils.USER, data.username);
 				userKey = user.getKey();
-				user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(registerData.password));
-				user.setProperty(DSUtils.USER_EMAIL, registerData.email);
+				user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(data.password));
+				user.setProperty(DSUtils.USER_EMAIL, data.email);
 				user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1.toString());
 				user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
+				user.setUnindexedProperty(DSUtils.USER_FBTOKEN, data.firebasetoken);
 				
 				SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 				sdf.setTimeZone(TimeZone.getTimeZone(Report.PORTUGAL));
@@ -129,25 +133,30 @@ public class Register {
 
 				datastore.put(txn, list);
 
-				LOG.info(Message.USER_REGISTERED + registerData.username);
+				LOG.info(Log.USER_REGISTERED + data.username);
 				txn.commit();
+				
+				Map<String, String> body = new HashMap<>();
+				body.put("body", "ISTO E O CORPO");
+				
+				Firebase.sendMessageToDevice("OLA MIGO", body, data.firebasetoken);
 
 				return Response.ok().build();
 			}
 
 			txn.rollback();
-			return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build(); 
+			return Response.status(Status.CONFLICT).entity(Log.USER_ALREADY_EXISTS).build(); 
 		} catch(Exception e) {
 			LOG.info(e.getMessage());
 			LOG.info(e.toString());
 			return null;
 		} finally {
 			if(code != null)
-				Email.sendConfirmMessage(registerData.email, code);
+				Email.sendConfirmMessage(data.email, code);
 			
 			if (txn.isActive() ) {
 				txn.rollback();
-				LOG.info(Message.TXN_ACTIVE);
+				LOG.info(Log.TXN_ACTIVE);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 		}
@@ -158,8 +167,8 @@ public class Register {
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response registerOrg(OrgRegisterData registerData) {
 		if(!registerData.isValid()) {
-			LOG.info(Message.REGISTER_DATA_INVALID);
-			return Response.status(Status.BAD_REQUEST).entity(Message.REGISTER_DATA_INVALID).build();
+			LOG.info(Log.REGISTER_DATA_INVALID);
+			return Response.status(Status.BAD_REQUEST).entity(Log.REGISTER_DATA_INVALID).build();
 		}
 
 		int retries = 5;
@@ -175,7 +184,7 @@ public class Register {
 	}
 
 	private Response registerOrgRetry(OrgRegisterData data) {
-		LOG.info(Message.ATTEMPT_REGISTER_ORG + data.nif);
+		LOG.info(Log.ATTEMPT_REGISTER_ORG + data.nif);
 
 		JSONArray array = new JSONArray(data.categories);
 		
@@ -188,8 +197,8 @@ public class Register {
 			// If the entity does not exist an Exception is thrown. Otherwise,
 			orgKey = KeyFactory.createKey(DSUtils.USER, data.nif);
 			datastore.get(orgKey);
-			LOG.info(Message.USER_ALREADY_EXISTS);
-			return Response.status(Status.CONFLICT).entity(Message.USER_ALREADY_EXISTS).build(); 
+			LOG.info(Log.USER_ALREADY_EXISTS);
+			return Response.status(Status.CONFLICT).entity(Log.USER_ALREADY_EXISTS).build(); 
 		} catch (EntityNotFoundException e) {
 			Filter filter =
 					new Query.FilterPredicate(DSUtils.USER_EMAIL,
@@ -206,8 +215,8 @@ public class Register {
 			}
 
 			if(existingOrg != null) {
-				LOG.info(Message.EMAIL_ALREADY_IN_USE);
-				return Response.status(Status.CONFLICT).entity(Message.EMAIL_ALREADY_IN_USE).build();
+				LOG.info(Log.EMAIL_ALREADY_IN_USE);
+				return Response.status(Status.CONFLICT).entity(Log.EMAIL_ALREADY_IN_USE).build();
 			}
 
 			Transaction txn = datastore.beginTransaction();
@@ -248,13 +257,13 @@ public class Register {
 
 				datastore.put(txn, org);
 				txn.commit();
-				LOG.info(Message.ORG_REGISTERED + data.nif);
+				LOG.info(Log.ORG_REGISTERED + data.nif);
 				
 				return Response.ok().build();
 			} finally {
 				if (txn.isActive() ) {
 					txn.rollback();
-					LOG.info(Message.TXN_ACTIVE);
+					LOG.info(Log.TXN_ACTIVE);
 					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 				}
 			}

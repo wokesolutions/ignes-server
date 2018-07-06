@@ -18,7 +18,7 @@ import com.google.appengine.api.memcache.Expiration;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.wokesolutions.ignes.util.CustomHeader;
-import com.wokesolutions.ignes.util.Message;
+import com.wokesolutions.ignes.util.Log;
 
 @Priority(2)
 public class RequestControlFilter implements Filter {
@@ -35,10 +35,10 @@ public class RequestControlFilter implements Filter {
 	public void doFilter(ServletRequest req, ServletResponse resp,  
 			FilterChain chain) throws IOException, ServletException {
 
-		LOG.info(this.getClass().getSimpleName() + Message.FILTER_VERIFYING);
+		LOG.info(this.getClass().getSimpleName() + Log.FILTER_VERIFYING);
 
 		if(!(req instanceof HttpServletRequest)) {
-			changeResp(resp, Message.NOT_HTTP_REQUEST);
+			changeResp(resp, Log.NOT_HTTP_REQUEST);
 			return;
 		}
 
@@ -49,7 +49,7 @@ public class RequestControlFilter implements Filter {
 		String deviceinfo = newreq.getHeader(CustomHeader.DEVICE_INFO);
 
 		if(deviceid == null || deviceapp == null || deviceinfo == null) {
-			changeResp(resp, Message.MISSING_DEVICE_HEADER);
+			changeResp(resp, Log.MISSING_DEVICE_HEADER);
 			return;
 		}
 
@@ -73,7 +73,7 @@ public class RequestControlFilter implements Filter {
 			cache.increment(deviceid, 1L);
 
 		if((long) cache.get(deviceid) > 50L) {
-			changeResp(resp, Message.TOO_MANY_REQUESTS);
+			changeResp(resp, Log.TOO_MANY_REQUESTS);
 			return;
 		}
 
@@ -83,7 +83,7 @@ public class RequestControlFilter implements Filter {
 			cache.increment(id, 1L);
 
 		if((long) cache.get(id) > 10L) {
-			changeResp(resp, Message.TOO_MANY_REQUESTS);
+			changeResp(resp, Log.TOO_MANY_REQUESTS);
 			return;
 		}
 		
@@ -93,7 +93,7 @@ public class RequestControlFilter implements Filter {
 		
 		LOG.info(deviceid);
 		
-		LOG.info(Message.REQUEST_IS_GOOD);
+		LOG.info(Log.REQUEST_IS_GOOD);
 		chain.doFilter(req, resp);
 	}
 

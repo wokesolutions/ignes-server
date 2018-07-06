@@ -225,6 +225,22 @@
         <property name="report_title" direction="asc"/>
     </datastore-index>
     
+    <datastore-index kind="Report" ancestor="false" source="manual">
+        <property name="report_private" direction="asc"/>
+        <property name="report_address" direction="asc"/>
+        <property name="report_category" direction="asc"/>
+        <property name="report_creationtimeformatted" direction="asc"/>
+        <property name="report_description" direction="asc"/>
+        <property name="report_gravity" direction="asc"/>
+        <property name="report_lat" direction="asc"/>
+        <property name="report_lng" direction="asc"/>
+        <property name="report_points" direction="asc"/>
+        <property name="report_status" direction="asc"/>
+        <property name="report_thumbnailpath" direction="asc"/>
+        <property name="report_title" direction="asc"/>
+        <property name="report_user" direction="asc"/>
+    </datastore-index>
+    
     <datastore-index kind="Worker" ancestor="false" source="manual">
         <property name="worker_org" direction="desc"/>
     	<property name="worker_name" direction="asc"/>
