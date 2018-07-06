@@ -1,7 +1,7 @@
 package com.wokesolutions.ignes.util;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 import com.google.auth.oauth2.GoogleCredentials;
@@ -21,10 +21,11 @@ public class Firebase {
 	public static final String ORG_APPLIED_TITLE = "Nova candidatura de organização";
 
 	public static void init() throws IOException {
-		FileInputStream serviceAccount = new FileInputStream(PATH);
+		InputStream resourceStream = Thread.currentThread().getContextClassLoader()
+			    .getResourceAsStream(PATH);
 
 		FirebaseOptions options = new FirebaseOptions.Builder()
-		    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+		    .setCredentials(GoogleCredentials.fromStream(resourceStream))
 		    .setDatabaseUrl(URL)
 		    .build();
 

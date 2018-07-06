@@ -33,6 +33,10 @@
 		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>
 
+	<resource-files>
+		<include path="/**.json"/>
+	</resource-files>
+
 	<!-- Filters -->
 
 	<filter>
@@ -69,7 +73,7 @@
 		<filter-name>PermissionControlFilter</filter-name>
 		<filter-class>com.wokesolutions.ignes.filters.PermissionControlFilter</filter-class>
 	</filter>
-	
+
 	<filter-mapping>
 		<filter-name>PermissionControlFilter</filter-name>
 		<url-pattern>/api/*</url-pattern>
