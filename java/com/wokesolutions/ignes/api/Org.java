@@ -454,6 +454,8 @@ public class Org {
 
 		if(data.indications != null && !data.indications.equals(""))
 			task.setProperty(DSUtils.TASK_INDICATIONS, data.indications);
+		
+		task.setProperty(DSUtils.TASK_TIME, new Date());
 
 		return Response.ok().build();
 	}

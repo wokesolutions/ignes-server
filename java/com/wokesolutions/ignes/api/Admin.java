@@ -747,6 +747,9 @@ public class Admin {
 	}
 
 	// ---------------x--------------- SUBCLASS
+	
+	private static final String ORGNAME = "Organização";
+	private static final String COUNT = "Número de candidaturas";
 
 	@GET
 	@Path("/stats/org/applications")
@@ -756,6 +759,9 @@ public class Admin {
 		while(true) {
 			try {
 				JSONArray array = new JSONArray();
+				JSONArray arraytitle = new JSONArray();
+				arraytitle.put(ORGNAME);
+				arraytitle.put(COUNT);
 				
 				FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
 				
@@ -763,7 +769,7 @@ public class Admin {
 				List<Entity> orgs = datastore.prepare(orgQ).asList(fetchOptions);
 				
 				for(Entity org : orgs) {
-					JSONObject obj = new JSONObject();
+					JSONArray arrayinner = new JSONArray();
 					
 					Filter applicationF = new Query.FilterPredicate(DSUtils.APPLICATIONLOG_ORG,
 							FilterOperator.EQUAL, org.getKey());
@@ -772,9 +778,10 @@ public class Admin {
 					int count = datastore.prepare(applicationQ)
 							.countEntities(FetchOptions.Builder.withDefaults());
 					
-					obj.put(Prop.NIF, count);
+					arrayinner.put(org.getKey().getName() + " - " + org.getProperty(DSUtils.ORG_NAME));
+					arrayinner.put(count);
 					
-					array.put(obj);
+					array.put(arrayinner);
 				}
 				
 				return Response.ok(array.toString()).build();
