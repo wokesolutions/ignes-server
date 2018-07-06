@@ -3,18 +3,11 @@ var geocoder = new google.maps.Geocoder();
 var reports;
 var reportID;
 var commentsCursor;
-<<<<<<< HEAD
 var currentfeed = 10;
 var email_worker;
 var current_position = "map_variable";
 var idReportCurr;
 var tasks = [];
-=======
-var tasksCursor;
-var email_worker;
-var current_position = "map_variable";
-var idReportCurr;
->>>>>>> d18aebb300c06b361f89c15a0bd51d7614faafa0
 var numWorkers;
 var currentLoc ={
     center: {lat: 38.661148, lng: -9.203075},
@@ -55,17 +48,11 @@ function init() {
     document.getElementById("close_window").onclick = closeWindow;
     document.getElementById("close_window_worker").onclick = closeWindowWorker;
     document.getElementById("add_task").onclick = giveTask;
-<<<<<<< HEAD
     document.getElementById("close_window_worker").onclick = closeWindowWorker;
     document.getElementById("remove_button").onclick = showButtonDelete;
     document.getElementById("view_button").onclick = showButtonView;
 
-=======
-    document.getElementById("remove_button").onclick = showButtonDelete;
-    document.getElementById("view_button").onclick = showButtonView;
 
-
->>>>>>> d18aebb300c06b361f89c15a0bd51d7614faafa0
     $("#email_select").change(function(){
         var email = $("#email_select").val();
         var index = emailsarr.indexOf(email);
@@ -326,42 +313,6 @@ function logOut(){
 
 }
 
-<<<<<<< HEAD
-=======
-function getMarkersByLocation(zone, cursor){
-    if(cursor===undefined) cursor = "";
-
-    var headers = new Headers();
-    var body = "";
-    headers.append('Authorization', localStorage.getItem('token'));
-    headers.append('Device-Id', localStorage.getItem('fingerprint'));
-    headers.append('Device-App', localStorage.getItem('app'));
-    headers.append('Device-Info', localStorage.getItem('browser'));
-
-
-    fetch(restRequest('/api/report/getinlocation?' + "location=" + zone + "&cursor=" + cursor,'GET', headers, body)).then(function(response) {
-
-            if (response.status === 200) {
-                var newCursor = response.headers.get("Cursor");
-                response.json().then(function(data) {
-                    reports = data;
-                    fillMap(reports, newCursor, zone);
-                });
-
-            }else{
-                console.log("Tratar do Forbidden");
-                return;
-            }
-
-
-        }
-    )
-        .catch(function(err) {
-            console.log('Fetch Error', err);
-        });
-}
-
->>>>>>> d18aebb300c06b361f89c15a0bd51d7614faafa0
 function getMarkers(cursor){
     if(cursor===undefined) cursor = "";
 
@@ -509,18 +460,8 @@ function fillMap(reports, cursor){
     }
     console.log(cursor);
     if(cursor !== null){
-<<<<<<< HEAD
         console.log(cursor);
         getMarkers(cursor);
-=======
-        console.log(zone);
-        if(zone === null) {
-            console.log(cursor);
-            getMarkers(cursor);
-        } else{
-            getMarkersByLocation(zone, cursor);
-        }
->>>>>>> d18aebb300c06b361f89c15a0bd51d7614faafa0
     }
 }
 
@@ -1158,10 +1099,5 @@ $('.tasks').scroll(function () {
         $('.two').append("bottom");
         loadMoreComments(email_worker,tasksCursor);
     }
-<<<<<<< HEAD
-});
-=======
 });
 
-
->>>>>>> d18aebb300c06b361f89c15a0bd51d7614faafa0
