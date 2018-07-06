@@ -11,8 +11,8 @@ var current_position = "map_variable";
 var idReportCurr;
 var numWorkers;
 var currentLoc ={
-		center: {lat: 38.661148, lng: -9.203075},
-		zoom: 18
+    center: {lat: 38.661148, lng: -9.203075},
+    zoom: 18
 };
 
 var emailsarr;
@@ -29,1061 +29,1066 @@ google.maps.event.addDomListener(window, 'load', init());
 
 function init() {
 
-	verifyIsLoggedIn();
-	getAvailableWorker("");
+    verifyIsLoggedIn();
+    getAvailableWorker("");
 
-	document.getElementById("search_location").onclick = searchLocation;
-	document.getElementById('map_button').onclick = showMap;
-	document.getElementById("profile_button").onclick = showProfile;
-	document.getElementById("user_table_button").onclick = showWorkers;
-	document.getElementById("create_button").onclick = showCreateWorker;
-	document.getElementById("report_occurrence").onclick = createWorker;
-	document.getElementById("logout_button").onclick = logOut;
-	document.getElementById("next_list").onclick = getNextWorkers;
-	document.getElementById("previous_list").onclick = getPreWorkers;
-	document.getElementById("refresh_workers").onclick = getFirstWorkers;
-	document.getElementById("show_more_button").onclick = getShowMore;
-	document.getElementById("close_window").onclick = closeWindow;
-	document.getElementById("close_window_worker").onclick = closeWindowWorker;
-	document.getElementById("add_task").onclick = giveTask;
-	document.getElementById("remove_button").onclick = showButtonDelete;
-	document.getElementById("view_button").onclick = showButtonView;
+    document.getElementById("search_location").onclick = searchLocation;
+    document.getElementById('map_button').onclick = showMap;
+    document.getElementById("profile_button").onclick = showProfile;
+    document.getElementById("user_table_button").onclick = showWorkers;
+    document.getElementById("create_button").onclick = showCreateWorker;
+    document.getElementById("report_occurrence").onclick = createWorker;
+    document.getElementById("logout_button").onclick = logOut;
+    document.getElementById("next_list").onclick = getNextWorkers;
+    document.getElementById("previous_list").onclick = getPreWorkers;
+    document.getElementById("refresh_workers").onclick = getFirstWorkers;
+    document.getElementById("show_more_button").onclick = getShowMore;
+    document.getElementById("close_window").onclick = closeWindow;
+    document.getElementById("close_window_worker").onclick = closeWindowWorker;
+    document.getElementById("add_task").onclick = giveTask;
+    document.getElementById("remove_button").onclick = showButtonDelete;
+    document.getElementById("view_button").onclick = showButtonView;
 
 
-	$("#email_select").change(function(){
-		var email = $("#email_select").val();
-		var index = emailsarr.indexOf(email);
-		var worker = workersarr[index];
+    $("#email_select").change(function(){
+        var email = $("#email_select").val();
+        var index = emailsarr.indexOf(email);
+        var worker = workersarr[index];
 
-		var name = worker.name;
+        var name = worker.name;
 
-		$("#name_worker").html(name);
-		$("#email_task").html(email);
-	});
+        $("#name_worker").html(name);
+        $("#email_task").html(email);
+    });
 
-	emailsarr = [];
-	workersarr = [];
+    emailsarr = [];
+    workersarr = [];
 
-	getFirstWorkers();
+    getFirstWorkers();
 
 
 }
 
 function getShowMore(){
-	hideShow("show_more_variable");
+    hideShow("show_more_variable");
 }
 
 function showButtonDelete(){
 
-	if( document.getElementById("show_button_0" ).style.display === "block") {
-		for (var i = 0; i < numWorkers; i++)
-			document.getElementById("show_button_" + i).style.display = "none";
-		show_view = false;
-	}
+    if( document.getElementById("show_button_0" ).style.display === "block") {
+        for (var i = 0; i < numWorkers; i++)
+            document.getElementById("show_button_" + i).style.display = "none";
+        show_view = false;
+    }
 
-	if(show === false){
-		for(var i = 0; i<numWorkers; i++ )
-			document.getElementById("delete_button_" + i ).style.display = "block";
-		show = true;
-	}else {
-		for(var i = 0; i<numWorkers; i++ )
-			document.getElementById("delete_button_" + i ).style.display = "none";
-		show = false;
-	}
+    if(show === false){
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("delete_button_" + i ).style.display = "block";
+        show = true;
+    }else {
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("delete_button_" + i ).style.display = "none";
+        show = false;
+    }
 
 }
 
 function showButtonView(){
 
-	if( document.getElementById("delete_button_0" ).style.display === "block"){
-		for(var i = 0; i<numWorkers; i++ )
-			document.getElementById("delete_button_" + i ).style.display = "none";
-		show = false;
-	}
+    if( document.getElementById("delete_button_0" ).style.display === "block"){
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("delete_button_" + i ).style.display = "none";
+        show = false;
+    }
 
-	if(show_view === false){
-		for(var i = 0; i<numWorkers; i++ )
-			document.getElementById("show_button_" + i ).style.display = "block";
-		show_view = true;
-	}else {
-		for(var i = 0; i<numWorkers; i++ )
-			document.getElementById("show_button_" + i ).style.display = "none";
-		show_view = false;
-	}
+    if(show_view === false){
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("show_button_" + i ).style.display = "block";
+        show_view = true;
+    }else {
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("show_button_" + i ).style.display = "none";
+        show_view = false;
+    }
 
 }
 
 function searchLocation(){
-	var address = document.getElementById('location').value;
-	geocoder.geocode( { 'address': address}, function(results, status) {
-		if (status == 'OK') {
-			map.setCenter(results[0].geometry.location);
-			map.setZoom(15);
-		} else {
-			alert('A morada inserida não existe.');
-		}
-	});
+    var address = document.getElementById('location').value;
+    geocoder.geocode( { 'address': address}, function(results, status) {
+        if (status == 'OK') {
+            map.setCenter(results[0].geometry.location);
+            map.setZoom(15);
+        } else {
+            alert('A morada inserida não existe.');
+        }
+    });
 }
 
 function getCurrentLocation() {
 
-	if(navigator.geolocation) {
-		navigator.geolocation.getCurrentPosition(function (position) {
-			console.log(currentLoc);
-			currentLoc = {
-					center: {lat: position.coords.latitude, lng: position.coords.longitude},
-					zoom: 15
-			};
-			console.log(currentLoc);
+    if(navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+            console.log(currentLoc);
+            currentLoc = {
+                center: {lat: position.coords.latitude, lng: position.coords.longitude},
+                zoom: 15
+            };
+            console.log(currentLoc);
 
-			var mapElement = document.getElementById('map');
-			map = new google.maps.Map(mapElement, currentLoc);
+            var mapElement = document.getElementById('map');
+            map = new google.maps.Map(mapElement, currentLoc);
 
-			getMarkers();
-		})
-	}else {
-		var mapElement = document.getElementById('map');
-		map = new google.maps.Map(mapElement, currentLoc);
+            getMarkers();
+        })
+    }else {
+        var mapElement = document.getElementById('map');
+        map = new google.maps.Map(mapElement, currentLoc);
 
-		getMarkers();
-	}
+        getMarkers();
+    }
 
-	return currentLoc;
+    return currentLoc;
 }
 
 function hideShow(element){
 
-	if(current_position === "map_variable"){
+    if(current_position === "map_variable"){
 
-		document.getElementById("map_search").style.display = "none";
+        document.getElementById("map_search").style.display = "none";
 
-	}else if(current_position === "profile_variable"){
+    }else if(current_position === "profile_variable"){
 
-		document.getElementById("profile").style.display = "none";
+        document.getElementById("profile").style.display = "none";
 
-	}else if(current_position === "users_variable"){
+    }else if(current_position === "users_variable"){
 
-		document.getElementById("list_users").style.display = "none";
+        document.getElementById("list_users").style.display = "none";
 
-	}else if(current_position === "create_variable"){
+    }else if(current_position === "create_variable"){
 
-		document.getElementById("create_worker").style.display = "none";
+        document.getElementById("create_worker").style.display = "none";
 
-	}else if(current_position === "show_more_variable"){
+    }else if(current_position === "show_more_variable"){
 
-		document.getElementById("details_report").style.display = "none";
+        document.getElementById("details_report").style.display = "none";
 
-	}else if(current_position === "show_more_users_variable"){
+    }else if(current_position === "show_more_users_variable"){
 
-		document.getElementById("profile_workers").style.display = "none";
-	}
+        document.getElementById("profile_workers").style.display = "none";
+    }
 
 
-	if(element === "map_variable"){
+    if(element === "map_variable"){
 
-		document.getElementById("map_search").style.display = "block";
-		current_position = "map_variable";
+        document.getElementById("map_search").style.display = "block";
+        current_position = "map_variable";
 
-	}else if(element === "profile_variable"){
+    }else if(element === "profile_variable"){
 
-		document.getElementById("profile").style.display = "block";
-		current_position = "profile_variable";
+        document.getElementById("profile").style.display = "block";
+        current_position = "profile_variable";
 
-	}else if(element === "users_variable"){
+    }else if(element === "users_variable"){
 
-		document.getElementById("list_users").style.display = "block";
-		current_position = "users_variable";
+        document.getElementById("list_users").style.display = "block";
+        current_position = "users_variable";
 
-	}else if(element === "create_variable"){
+    }else if(element === "create_variable"){
 
-		document.getElementById("create_worker").style.display = "block";
-		current_position = "create_variable";
+        document.getElementById("create_worker").style.display = "block";
+        current_position = "create_variable";
 
-	}else if(element === "show_more_variable"){
-		document.getElementById("details_report").style.display = "block";
-		current_position = "show_more_variable";
+    }else if(element === "show_more_variable"){
+        document.getElementById("details_report").style.display = "block";
+        current_position = "show_more_variable";
 
-	}else if(element === "show_more_users_variable"){
-		document.getElementById("profile_workers").style.display = "block";
-		current_position = "show_more_users_variable";
-	}
+    }else if(element === "show_more_users_variable"){
+        document.getElementById("profile_workers").style.display = "block";
+        current_position = "show_more_users_variable";
+    }
 
 }
 
 function verifyIsLoggedIn(){
-	console.log(localStorage.getItem('token'));
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    console.log(localStorage.getItem('token'));
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/verifytoken','GET', headers, body)).then(function(response) {
+    fetch(restRequest('/api/verifytoken','GET', headers, body)).then(function(response) {
 
-		if (response.status !== 200) {
+            if (response.status !== 200) {
 
-			window.location.href = "../index.html";
+                window.location.href = "../index.html";
 
-		}
+            }
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 
 
 
 }
 
 function logOut(){
-	console.log(localStorage.getItem('token'));
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    console.log(localStorage.getItem('token'));
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/logout','POST', headers, body)).then(function(response) {
+    fetch(restRequest('/api/logout','POST', headers, body)).then(function(response) {
 
-		if (response.status === 200) {
-			localStorage.removeItem('token');
-			localStorage.removeItem('ignes_username');
-			window.location.href = "../index.html";
+            if (response.status === 200) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('ignes_username');
+                window.location.href = "../index.html";
 
-		}else{
-			console.log("Tratar do Forbidden")
-		}
+            }else{
+                console.log("Tratar do Forbidden")
+            }
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 
 
 
 }
 
 function getMarkers(cursor){
-	if(cursor===undefined) cursor = "";
+    if(cursor===undefined) cursor = "";
 
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
-	fetch(restRequest('/api/org/reports?cursor=' + cursor , 'GET', headers, body)).then(function(response) {
+    fetch(restRequest('/api/org/reports?cursor=' + cursor , 'GET', headers, body)).then(function(response) {
 
-		if (response.status === 200) {
-			var newCursor = response.headers.get("Cursor");
-			response.json().then(function(data) {
-				reports = data;
-				console.log("Markers  "+ data);
-				fillMap(reports, newCursor);
-			});
+            if (response.status === 200) {
+                var newCursor = response.headers.get("Cursor");
+                response.json().then(function(data) {
+                    reports = data;
+                    console.log("Markers  "+ data);
+                    fillMap(reports, newCursor);
+                });
 
-		}else{
-			console.log("Tratar do Forbidden");
-			return;
-		}
+            }else{
+                console.log("Tratar do Forbidden");
+                return;
+            }
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 
 }
 
 function fillMap(reports, cursor){
-	var i, marker ;
-	for(i = 0; i<reports.length; i++){
-		var lat = reports[i].lat;
-		var lng = reports[i].lng;
-		var status = reports[i].status;
-		var budget = reports[i].budget;
-		var marker_color;
-		var tasktime = reports[i].tasktime;
-		var gravity = reports[i].gravity;
-		var color;
+    var i, marker ;
+    for(i = 0; i<reports.length; i++){
+        var lat = reports[i].lat;
+        var lng = reports[i].lng;
+        var status = reports[i].status;
+        var budget = reports[i].budget;
+        var marker_color;
+        var tasktime = reports[i].tasktime;
+        var gravity = reports[i].gravity;
+        var color;
 
-		if(gravity === 1) {
-			color = '#5dcb21';
-			if(status === "standby") {
-				marker_color = "../marcadores/g1-standby.png";
-			}
-			else if(status === "closed")
-				marker_color = "../marcadores/g1-closed-mine.png";
-			else if(tasktime !== null || tasktime !== undefined){
-				tasks.push(reports[i]);
-				marker_color = "../marcadores/g1-accepted-mine.png";
-			}
-			else if(budget !== null || budget !== undefined)
-				marker_color = "../marcadores/g1-applied-mine.png";
-			else
-				marker_color = "../marcadores/g1-open.png";
-		}
-		else if(gravity === 2) {
-			color = '#b9ff2a';
-			if(status === "standby")
-				marker_color = "../marcadores/g2-standby.png";
-			else if(status === "closed")
-				marker_color = "../marcadores/g2-closed-mine.png";
-			else if(tasktime !== null || tasktime !== undefined){
-				tasks.push(reports[i]);
-				marker_color = "../marcadores/g2-accepted-mine.png";
-			}
-			else if(budget !== null || budget !== undefined)
-				marker_color = "../marcadores/g2-applied-mine.png";
-			else
-				marker_color = "../marcadores/g2-open.png";
-		}
-		else if(gravity === 3) {
-			color = '#ffcc31';
-			if(status === "standby")
-				marker_color = "../marcadores/g3-standby.png";
-			else if(status === "closed")
-				marker_color = "../marcadores/g3-closed-mine.png";
-			else if(tasktime !== null || tasktime !== undefined){
-				tasks.push(reports[i]);
-				marker_color = "../marcadores/g3-accepted-mine.png";
-			}
-			else if(budget !== null || budget !== undefined)
-				marker_color = "../marcadores/g3-applied-mine.png";
-			else
-				marker_color = "../marcadores/g3-open.png";
-		}
-		else if(gravity === 4) {
-			color = '#ff7c20';
-			if(status === "standby")
-				marker_color = "../marcadores/g4-standby.png";
-			else if(status === "closed")
-				marker_color = "../marcadores/g4-closed-mine.png";
-			else if(tasktime !== null || tasktime !== undefined){
-				tasks.push(reports[i]);
-				marker_color = "../marcadores/g4-accepted-mine.png";
-			}
-			else if(budget !== null || budget !== undefined)
-				marker_color = "../marcadores/g4-applied-mine.png";
-			else
-				marker_color = "../marcadores/g4-open.png";
-		}
-		else if(gravity === 5) {
-			color = '#bc0f0f';
-			if(status === "standby")
-				marker_color = "../marcadores/g5-standby.png";
-			else if(status === "closed")
-				marker_color = "../marcadores/g5-closed-mine.png";
-			else if(tasktime !== null || tasktime !== undefined){
-				tasks.push(reports[i]);
-				marker_color = "../marcadores/g5-accepted-mine.png";
-			}
-			else if(budget !== null || budget !== undefined)
-				marker_color = "../marcadores/g5-applied-mine.png";
-			else
-				marker_color = "../marcadores/g5-open.png";
-		}
-		else{
-			console.log("Não existe gravidade neste reporte");
-		}
-		if(reports[i].points === null || reports[i].points === undefined) {
-			marker = new google.maps.Marker({
-				position: new google.maps.LatLng(lat, lng),
-				map: map,
-				icon: marker_color
-			});
-		} else{
-			marker = new google.maps.Polygon({
-				paths: reports[i].points,
-				strokeColor: color,
-				strokeOpacity: 0.8,
-				strokeWeight: 2,
-				fillColor: color,
-				fillOpacity: 0.35
-			});
-			marker.setMap(map);
+        if(gravity === 1) {
+            color = '#5dcb21';
+            if(status === "standby") {
+                marker_color = "../marcadores/g1-standby.png";
+            }
+            else if(status === "closed")
+                marker_color = "../marcadores/g1-closed-mine.png";
+            else if(tasktime !== null || tasktime !== undefined){
+                tasks.push(reports[i]);
+                marker_color = "../marcadores/g1-accepted-mine.png";
+            }
+            else if(budget !== null || budget !== undefined)
+                marker_color = "../marcadores/g1-applied-mine.png";
+            else
+                marker_color = "../marcadores/g1-open.png";
+        }
+        else if(gravity === 2) {
+            color = '#b9ff2a';
+            if(status === "standby")
+                marker_color = "../marcadores/g2-standby.png";
+            else if(status === "closed")
+                marker_color = "../marcadores/g2-closed-mine.png";
+            else if(tasktime !== null || tasktime !== undefined){
+                tasks.push(reports[i]);
+                marker_color = "../marcadores/g2-accepted-mine.png";
+            }
+            else if(budget !== null || budget !== undefined)
+                marker_color = "../marcadores/g2-applied-mine.png";
+            else
+                marker_color = "../marcadores/g2-open.png";
+        }
+        else if(gravity === 3) {
+            color = '#ffcc31';
+            if(status === "standby")
+                marker_color = "../marcadores/g3-standby.png";
+            else if(status === "closed")
+                marker_color = "../marcadores/g3-closed-mine.png";
+            else if(tasktime !== null || tasktime !== undefined){
+                tasks.push(reports[i]);
+                marker_color = "../marcadores/g3-accepted-mine.png";
+            }
+            else if(budget !== null || budget !== undefined)
+                marker_color = "../marcadores/g3-applied-mine.png";
+            else
+                marker_color = "../marcadores/g3-open.png";
+        }
+        else if(gravity === 4) {
+            color = '#ff7c20';
+            if(status === "standby")
+                marker_color = "../marcadores/g4-standby.png";
+            else if(status === "closed")
+                marker_color = "../marcadores/g4-closed-mine.png";
+            else if(tasktime !== null || tasktime !== undefined){
+                tasks.push(reports[i]);
+                marker_color = "../marcadores/g4-accepted-mine.png";
+            }
+            else if(budget !== null || budget !== undefined)
+                marker_color = "../marcadores/g4-applied-mine.png";
+            else
+                marker_color = "../marcadores/g4-open.png";
+        }
+        else if(gravity === 5) {
+            color = '#bc0f0f';
+            if(status === "standby")
+                marker_color = "../marcadores/g5-standby.png";
+            else if(status === "closed")
+                marker_color = "../marcadores/g5-closed-mine.png";
+            else if(tasktime !== null || tasktime !== undefined){
+                tasks.push(reports[i]);
+                marker_color = "../marcadores/g5-accepted-mine.png";
+            }
+            else if(budget !== null || budget !== undefined)
+                marker_color = "../marcadores/g5-applied-mine.png";
+            else
+                marker_color = "../marcadores/g5-open.png";
+        }
+        else{
+            console.log("Não existe gravidade neste reporte");
+        }
+        if(reports[i].points === null || reports[i].points === undefined) {
+            marker = new google.maps.Marker({
+                position: new google.maps.LatLng(lat, lng),
+                map: map,
+                icon: marker_color
+            });
+        } else{
+            marker = new google.maps.Polygon({
+                paths: reports[i].points,
+                strokeColor: color,
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: color,
+                fillOpacity: 0.35
+            });
+            marker.setMap(map);
 
-			marker = new google.maps.Marker({
-				position: new google.maps.LatLng(lat, lng),
-				map: map,
-				icon: marker_color
-			});
-		}
+            marker = new google.maps.Marker({
+                position: new google.maps.LatLng(lat, lng),
+                map: map,
+                icon: marker_color
+            });
+        }
 
 
-		google.maps.event.addListener(marker, 'click', (function(marker, i) {
+        google.maps.event.addListener(marker, 'click', (function(marker, i) {
 
-			return function() {
-				reportID = reports[i].report;
-				getInfo(reportID, i);
+            return function() {
+                reportID = reports[i].report;
+                getInfo(reportID, i);
 
-			}
-		})(marker, i));
-	}
+            }
+        })(marker, i));
+    }
 
-	if(cursor !== null){
-		console.log(cursor);
-		getMarkers(cursor);
-	}else{
-		loadMore();
-	}
+    if(cursor !== null){
+        console.log(cursor);
+        getMarkers(cursor);
+    }else{
+        loadMore();
+    }
 }
 
 function getInfo(idReport, i){
-	idReportCurr = idReport;
+    idReportCurr = idReport;
 
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
-	fetch(restRequest('/api/report/thumbnail/' + idReport, 'GET', headers, body)).then(function(response) {
+    fetch(restRequest('/api/report/thumbnail/' + idReport, 'GET', headers, body)).then(function(response) {
 
-		if (response.status === 200) {
+            if (response.status === 200) {
 
-			response.json().then(function(data) {
-				var image = document.getElementById("thumb_report");
-				image.src = "data:image/jpg;base64," + data.thumbnail;
-				var image = document.getElementById("thumb_report_2");
-				image.src = "data:image/jpg;base64," + data.thumbnail;
-			});
+                response.json().then(function(data) {
+                    var image = document.getElementById("thumb_report");
+                    image.src = "data:image/jpg;base64," + data.thumbnail;
+                    var image = document.getElementById("thumb_report_2");
+                    image.src = "data:image/jpg;base64," + data.thumbnail;
+                });
 
-			document.getElementById("show_title").style.display = "block";
-			document.getElementById("show_address").style.display = "block";
-			document.getElementById("show_state").style.display = "block";
-			document.getElementById("show_gravity").style.display = "block";
-			document.getElementById("show_more_button").style.display = "block";
+                document.getElementById("show_title").style.display = "block";
+                document.getElementById("show_address").style.display = "block";
+                document.getElementById("show_state").style.display = "block";
+                document.getElementById("show_gravity").style.display = "block";
+                document.getElementById("show_more_button").style.display = "block";
 
-			if(reports[i].title !== ""){
-				document.getElementById('report_title_id').innerHTML= reports[i].title;
-				document.getElementById('report_title_id_2').innerHTML= reports[i].title;
-			}
-			else {
-				document.getElementById('report_title_id').innerHTML = "-";
-				document.getElementById('report_title_id_2').innerHTML = "-";
-			}
+                if(reports[i].title !== ""){
+                    document.getElementById('report_title_id').innerHTML= reports[i].title;
+                    document.getElementById('report_title_id_2').innerHTML= reports[i].title;
+                }
+                else {
+                    document.getElementById('report_title_id').innerHTML = "-";
+                    document.getElementById('report_title_id_2').innerHTML = "-";
+                }
 
-			document.getElementById('report_address_id').innerHTML= reports[i].address;
-			document.getElementById('report_address_id_2').innerHTML= reports[i].address;
+                document.getElementById('report_address_id').innerHTML= reports[i].address;
+                document.getElementById('report_address_id_2').innerHTML= reports[i].address;
 
-			if(reports[i].description !== "")
-				document.getElementById('report_description_id').innerHTML= reports[i].description;
-			else
-				document.getElementById('report_description_id').innerHTML= "-";
+                if(reports[i].description !== "")
+                    document.getElementById('report_description_id').innerHTML= reports[i].description;
+                else
+                    document.getElementById('report_description_id').innerHTML= "-";
 
-			document.getElementById('report_state_id').innerHTML= reports[i].status;
-			document.getElementById('report_state_id_2').innerHTML= reports[i].status;
-			document.getElementById('report_gravity_id').innerHTML= reports[i].gravity;
-			document.getElementById('report_gravity_id_2').innerHTML= reports[i].gravity;
+                document.getElementById('report_state_id').innerHTML= reports[i].status;
+                document.getElementById('report_state_id_2').innerHTML= reports[i].status;
+                document.getElementById('report_gravity_id').innerHTML= reports[i].gravity;
+                document.getElementById('report_gravity_id_2').innerHTML= reports[i].gravity;
 
-			if(reports[i].private === true)
-				document.getElementById('report_private_id').innerHTML= "Privado";
-			else
-				document.getElementById('report_private_id').innerHTML= "Público";
+                if(reports[i].private === true)
+                    document.getElementById('report_private_id').innerHTML= "Privado";
+                else
+                    document.getElementById('report_private_id').innerHTML= "Público";
 
-			document.getElementById('report_comments_id').innerHTML= reports[i].comments;
-			document.getElementById('report_user_id').innerHTML= reports[i].username;
-			document.getElementById('report_creationtime_id').innerHTML= reports[i].creationtime;
-			document.getElementById('report_up_id').innerHTML= reports[i].ups;
-			document.getElementById('report_down_id').innerHTML= reports[i].downs;
+                document.getElementById('report_comments_id').innerHTML= reports[i].comments;
+                document.getElementById('report_user_id').innerHTML= reports[i].username;
+                document.getElementById('report_creationtime_id').innerHTML= reports[i].creationtime;
+                document.getElementById('report_up_id').innerHTML= reports[i].ups;
+                document.getElementById('report_down_id').innerHTML= reports[i].downs;
 
-			loadMoreComments(idReport ,"");
+                loadMoreComments(idReport ,"");
 
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+            }else{
+                console.log("Tratar do Forbidden");
+            }
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 
 }
 
 function showMap(){
-	hideShow('map_variable');
+    hideShow('map_variable');
 }
 
 function showProfile() {
-	getProfile();
-	hideShow('profile_variable');
+    getProfile();
+    hideShow('profile_variable');
 
 }
 
 function showWorkers(){
-	hideShow('users_variable');
+    hideShow('users_variable');
 }
 
 function showCreateWorker(){
-	hideShow('create_variable');
-	document.getElementById("org_name").innerHTML = localStorage.getItem('ignes_org_name');
+    hideShow('create_variable');
+    document.getElementById("org_name").innerHTML = localStorage.getItem('ignes_org_name');
 }
 
 function closeWindow(){
-	hideShow("map_variable");
+    hideShow("map_variable");
 }
 
 function closeWindowWorker(){
-	hideShow("users_variable");
+    hideShow("users_variable");
 }
 
 function createWorker(){
-	var name = document.getElementById("worker_username").value;
-	var email = document.getElementById("worker_email").value;
-	var job = document.getElementById("worker_jobs").value;
-	var headers = new Headers();
-	var body = {name:name,email:email,job:job};
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var name = document.getElementById("worker_username").value;
+    var email = document.getElementById("worker_email").value;
+    var job = document.getElementById("worker_jobs").value;
+    var headers = new Headers();
+    var body = {name:name,email:email,job:job};
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
-	fetch(restRequest('/api/org/registerworker', 'POST', headers, JSON.stringify(body))).then(function(response) {
+    fetch(restRequest('/api/org/registerworker', 'POST', headers, JSON.stringify(body))).then(function(response) {
 
-		if (response.status === 200) {
-			alert("Trabalhador registado com sucesso.")
-			getFirstWorkers();
-			showWorkers();
-		}else{
-			alert("Utilizador já existe ou falta informação em algum campo")
-		}
+            if (response.status === 200) {
+                alert("Trabalhador registado com sucesso.")
+                getFirstWorkers();
+                showWorkers();
+            }else{
+                alert("Utilizador já existe ou falta informação em algum campo")
+            }
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 function getFirstWorkers(){
-	var body = "";
-	var headers = new Headers();
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
-	fetch(restRequest('/api/org/listworkers?cursor=', 'GET', headers, body)).then(function(response) {
-		var table = document.getElementById("user_table");
+    fetch(restRequest('/api/org/listworkers?cursor=', 'GET', headers, body)).then(function(response) {
+            var table = document.getElementById("user_table");
 
-		if (response.status === 200) {
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
-			if(response.headers.get("Cursor") !== null) {
-				console.log("Existe cursor");
-				cursor_pre_workers = "";
-				cursor_current_workers = "";
-				cursor_next_workers = response.headers.get("Cursor");
-				if(document.getElementById("next_list").style.display === "none")
-					document.getElementById("next_list").style.display = "block";
-				if(document.getElementById("previous_list").style.display === "block")
-					document.getElementById("previous_list").style.display = "none";
-			} else{
-				if(document.getElementById("next_list").style.display === "block")
-					document.getElementById("next_list").style.display = "none";
-				if(document.getElementById("previous_list").style.display === "block")
-					document.getElementById("previous_list").style.display = "none";
-			}
-			response.json().then(function(data) {
-				console.log(JSON.stringify(data));
-				if(data != null){
-					var i;
-					for(i = 0; i < data.length; i++){
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						cell1.innerHTML = data[i].name;
-						cell2.innerHTML = data[i].email;
-						cell3.innerHTML = data[i].job;
-						cell4.outerHTML= "<button id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
-						cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='viewWorkers(this.parentNode.rowIndex)'><a class='fa fa-search'></a></button>";
+            if (response.status === 200) {
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+                if(response.headers.get("Cursor") !== null) {
+                    console.log("Existe cursor");
+                    cursor_pre_workers = "";
+                    cursor_current_workers = "";
+                    cursor_next_workers = response.headers.get("Cursor");
+                    if(document.getElementById("next_list").style.display === "none")
+                        document.getElementById("next_list").style.display = "block";
+                    if(document.getElementById("previous_list").style.display === "block")
+                        document.getElementById("previous_list").style.display = "none";
+                } else{
+                    if(document.getElementById("next_list").style.display === "block")
+                        document.getElementById("next_list").style.display = "none";
+                    if(document.getElementById("previous_list").style.display === "block")
+                        document.getElementById("previous_list").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            cell1.innerHTML = data[i].name;
+                            cell2.innerHTML = data[i].email;
+                            cell3.innerHTML = data[i].job;
+                            cell4.outerHTML= "<button id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
+                            cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='viewWorkers(this.parentNode.rowIndex)'><a class='fa fa-search'></a></button>";
 
-					}
-					numWorkers= data.length;
-				}else{
-					alert("Esta empresa ainda não tem trabalhadores associados.")
-				}
-			});
+                        }
+                        numWorkers= data.length;
+                    }else{
+                        alert("Esta empresa ainda não tem trabalhadores associados.")
+                    }
+                });
 
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+            }else{
+                console.log("Tratar do Forbidden");
+            }
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 
 }
 
 function getNextWorkers(){
-	var body = "";
-	var headers = new Headers();
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
-	fetch(restRequest('/api/org/listworkers?cursor=' + cursor_next_workers, 'GET', headers, body)).then(function(response) {
-		var table = document.getElementById("user_table");
+    fetch(restRequest('/api/org/listworkers?cursor=' + cursor_next_workers, 'GET', headers, body)).then(function(response) {
+            var table = document.getElementById("user_table");
 
-		if (response.status === 200) {
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
-			if(document.getElementById("previous_list").style.display === "none")
-				document.getElementById("previous_list").style.display = "block";
-			if(response.headers.get("Cursor") !== null) {
+            if (response.status === 200) {
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+                if(document.getElementById("previous_list").style.display === "none")
+                    document.getElementById("previous_list").style.display = "block";
+                if(response.headers.get("Cursor") !== null) {
 
-				cursor_pre_workers = cursor_current_workers;
-				cursor_current_workers = cursor_next_workers;
-				cursor_next_workers = response.headers.get("Cursor");
+                    cursor_pre_workers = cursor_current_workers;
+                    cursor_current_workers = cursor_next_workers;
+                    cursor_next_workers = response.headers.get("Cursor");
 
-				if(document.getElementById("next_list").style.display === "none")
-					document.getElementById("next_list").style.display = "block";
+                    if(document.getElementById("next_list").style.display === "none")
+                        document.getElementById("next_list").style.display = "block";
 
-			} else{
-				if(document.getElementById("next_list").style.display === "block")
-					document.getElementById("next_list").style.display = "none";
-			}
-			response.json().then(function(data) {
-				console.log(JSON.stringify(data));
-				if(data != null){
-					var i;
+                } else{
+                    if(document.getElementById("next_list").style.display === "block")
+                        document.getElementById("next_list").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
 
-					for(i = 0; i < data.length; i++){
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						cell1.innerHTML = data[i].name;
-						cell2.innerHTML = data[i].email;
-						cell3.innerHTML = data[i].job;
-						cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
-						cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='viewWorkers(this.parentNode.rowIndex)'><a class='fa fa-search'></a></button>";
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            cell1.innerHTML = data[i].name;
+                            cell2.innerHTML = data[i].email;
+                            cell3.innerHTML = data[i].job;
+                            cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
+                            cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='viewWorkers(this.parentNode.rowIndex)'><a class='fa fa-search'></a></button>";
 
-					}
-					numWorkers= data.length;
-				}else{
-					alert("Esta empresa ainda não tem trabalhadores associados.")
-				}
-			});
+                        }
+                        numWorkers= data.length;
+                    }else{
+                        alert("Esta empresa ainda não tem trabalhadores associados.")
+                    }
+                });
 
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+            }else{
+                console.log("Tratar do Forbidden");
+            }
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 
 }
 
 function getPreWorkers(){
-	if(cursor_pre_workers === "") getFirstWorkers();
-	else{
-		var body = "";
-		var headers = new Headers();
-		headers.append('Authorization', localStorage.getItem('token'));
-		headers.append('Device-Id', localStorage.getItem('fingerprint'));
-		headers.append('Device-App', localStorage.getItem('app'));
-		headers.append('Device-Info', localStorage.getItem('browser'));
+    if(cursor_pre_workers === "") getFirstWorkers();
+    else{
+        var body = "";
+        var headers = new Headers();
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
 
-		fetch(restRequest('/api/org/listworkers?cursor=' + cursor_pre_workers, 'GET', headers, body)).then(function(response) {
-			var table = document.getElementById("user_table");
+        fetch(restRequest('/api/org/listworkers?cursor=' + cursor_pre_workers, 'GET', headers, body)).then(function(response) {
+                var table = document.getElementById("user_table");
 
-			if (response.status === 200) {
-				if(table.rows.length > 1) {
-					table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-				}
-				if(document.getElementById("previous_list").style.display === "none")
-					document.getElementById("previous_list").style.display = "block";
-				if(response.headers.get("Cursor") !== null) {
+                if (response.status === 200) {
+                    if(table.rows.length > 1) {
+                        table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                    }
+                    if(document.getElementById("previous_list").style.display === "none")
+                        document.getElementById("previous_list").style.display = "block";
+                    if(response.headers.get("Cursor") !== null) {
 
-					cursor_next_workers = cursor_current_workers;
-					cursor_current_workers = cursor_pre_workers;
-					cursor_pre_workers = response.headers.get("Cursor");
+                        cursor_next_workers = cursor_current_workers;
+                        cursor_current_workers = cursor_pre_workers;
+                        cursor_pre_workers = response.headers.get("Cursor");
 
-					if(document.getElementById("next_list").style.display === "none")
-						document.getElementById("next_list").style.display = "block";
+                        if(document.getElementById("next_list").style.display === "none")
+                            document.getElementById("next_list").style.display = "block";
 
-				} else{
-					if(document.getElementById("next_list").style.display === "block")
-						document.getElementById("next_list").style.display = "none";
-				}
-				response.json().then(function(data) {
-					console.log(JSON.stringify(data));
-					if(data != null){
-						var i;
-						for(i = 0; i < data.length; i++){
-							var row = table.insertRow(-1);
-							var cell1 = row.insertCell(0);
-							var cell2 = row.insertCell(1);
-							var cell3 = row.insertCell(2);
-							var cell4 = row.insertCell(3);
-							var cell5 = row.insertCell(4);
-							cell1.innerHTML = data[i].name;
-							cell2.innerHTML = data[i].email;
-							cell3.innerHTML = data[i].job;
-							cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
-							cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='viewWorkers(this.parentNode.rowIndex)'><a class='fa fa-search'></a></button>";
-						}
-						numWorkers= data.length;
-					}else{
-						alert("Esta empresa ainda não tem trabalhadores associados.")
-					}
-				});
+                    } else{
+                        if(document.getElementById("next_list").style.display === "block")
+                            document.getElementById("next_list").style.display = "none";
+                    }
+                    response.json().then(function(data) {
+                        console.log(JSON.stringify(data));
+                        if(data != null){
+                            var i;
+                            for(i = 0; i < data.length; i++){
+                                var row = table.insertRow(-1);
+                                var cell1 = row.insertCell(0);
+                                var cell2 = row.insertCell(1);
+                                var cell3 = row.insertCell(2);
+                                var cell4 = row.insertCell(3);
+                                var cell5 = row.insertCell(4);
+                                cell1.innerHTML = data[i].name;
+                                cell2.innerHTML = data[i].email;
+                                cell3.innerHTML = data[i].job;
+                                cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
+                                cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='viewWorkers(this.parentNode.rowIndex)'><a class='fa fa-search'></a></button>";
+                            }
+                            numWorkers= data.length;
+                        }else{
+                            alert("Esta empresa ainda não tem trabalhadores associados.")
+                        }
+                    });
 
-			}else{
-				console.log("Tratar do Forbidden");
-			}
+                }else{
+                    console.log("Tratar do Forbidden");
+                }
 
 
-		}
-		)
-		.catch(function(err) {
-			console.log('Fetch Error', err);
-		});
+            }
+        )
+            .catch(function(err) {
+                console.log('Fetch Error', err);
+            });
 
-	}
+    }
 }
 
 function getProfile(){
-	var body = "";
-	var headers = new Headers();
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
-	fetch(restRequest('/api/org/info/' + localStorage.getItem('ignes_org_nif'), 'GET', headers, body)).then(function(response) {
+    fetch(restRequest('/api/org/info/' + localStorage.getItem('ignes_org_nif'), 'GET', headers, body)).then(function(response) {
 
-		if (response.status === 200) {
-			response.json().then(function(data) {
+            if (response.status === 200) {
+                response.json().then(function(data) {
 
-				document.getElementById("organization_name").innerHTML = localStorage.getItem('ignes_org_name');
-				document.getElementById("organization_nif").innerHTML = data.nif;
-				document.getElementById("organization_email").innerHTML = data.email;
-				document.getElementById("organization_addresses").innerHTML = data.address;
-				document.getElementById("organization_locality").innerHTML = data.locality;
-				document.getElementById("organization_zip").innerHTML = data.zip;
-				var show_service ="";
-				var service = JSON.parse(data.services);
-				console.log(service);
-				for(var i = 0; i< service.length; i++) {
-					if (i !== service.length - 1)
-						show_service += service[i] + "/";
-					else  show_service += service[i];
-				}
-				document.getElementById("organization_service").innerHTML = show_service;
-			});
+                    document.getElementById("organization_name").innerHTML = localStorage.getItem('ignes_org_name');
+                    document.getElementById("organization_nif").innerHTML = data.nif;
+                    document.getElementById("organization_email").innerHTML = data.email;
+                    document.getElementById("organization_addresses").innerHTML = data.address;
+                    document.getElementById("organization_locality").innerHTML = data.locality;
+                    document.getElementById("organization_zip").innerHTML = data.zip;
+                    var show_service ="";
+                    var service = JSON.parse(data.services);
+                    console.log(service);
+                    for(var i = 0; i< service.length; i++) {
+                        if (i !== service.length - 1)
+                            show_service += service[i] + "/";
+                        else  show_service += service[i];
+                    }
+                    document.getElementById("organization_service").innerHTML = show_service;
+                });
 
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+            }else{
+                console.log("Tratar do Forbidden");
+            }
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 
 }
 
 function deleteWorker (row){
-	var email = document.getElementById("user_table").rows[row].cells[1].innerHTML;
+    var email = document.getElementById("user_table").rows[row].cells[1].innerHTML;
 
-	var body = "";
-	var headers = new Headers();
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
-	fetch(restRequest('/api/org/deleteworker/' + email, 'DELETE', headers, body)).then(function(response) {
+    fetch(restRequest('/api/org/deleteworker/' + email, 'DELETE', headers, body)).then(function(response) {
 
-		if (response.status === 200 || response.status === 204) {
-			alert("Trabalhador apagado com sucesso.")
+            if (response.status === 200 || response.status === 204) {
+                alert("Trabalhador apagado com sucesso.")
 
-		}else{
-			alert("Falha ao apagar o utilizador.")
-		}
+            }else{
+                alert("Falha ao apagar o utilizador.")
+            }
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 var loadMore = function () {
-	console.log(tasks);
-	var i;
-	for(i = currentfeed-10; i<currentfeed; i++){
-		if(tasks[i] === null || tasks[i] === undefined)
-			break;
-		var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
-		'<div class="row" >' +
-		'<div class="col-lg-3 col-md-3 mx-auto">'+
-		'<div class="row">'+
-		'<div class="col-lg-1">'+
-		'<p class="text-center"style="font-family:Quicksand Bold; font-size:15px; color:#AD363B"">'+tasks[i].gravity +
-		'<div class="col-lg-1">'+
-		'<i class="fa fa-tachometer" style="color: #AD363B"></i></div>'+
-		'<div class="col-lg-10"></div>'+
-		'</p></div></div></div>'+
-		'<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
-		'<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
-		'</div>' +
-		'<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ tasks[i].status+'</p></div>'+
-		'</div>' +
-		' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">'+
-		'<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].address + '</p>' +'</div>' +'</div><hr>'+
-		'<div class="row">' +
-		'<div class="col-lg-6 text-center">' +
-		'<img style="height:10rem;"id=' +i + '>' +
-		'</div>' +
-		'<div class="col-lg-6">' +
-		'<div class="col-lg-12 mx-lg-auto text-center">' +
-		'<button id="show_feed_button" style="margin-left:7rem; display:none;margin-top:0" type="button" class="btn btn-primary-view">Ver Mais</button>' +
-		'</div>'+
-		'</div></div><hr style="margin-bottom: 0; margin-top:0">' +
-		'<div class="row"><div class="col-lg-6 text-left"></div>' +
-		'<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].creationtime + ' </p></div></div>';
-	}
-	$(".inner").append(contentString);
+    console.log(tasks);
+    var i;
+    for(i = currentfeed-10; i<currentfeed; i++) {
+        if (tasks[i] === null || tasks[i] === undefined)
+            break;
+        var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
+            '<div class="row" >' +
 
-	var image = document.getElementById(i);
-	image.src = "data:image/jpg;base64," + tasks[i].thumbnail;
-	currentfeed+=10;
+            '<div class="col-lg-3 col-md-3 mx-auto">' +
+            '<div class="row">' +
+            '<div class="col-lg-1">' +
+            '<p class="text-center"style="font-family:Quicksand Bold; font-size:15px; color:#AD363B"">' + tasks[i].gravity +
+            '</div>' +
+            '<div class="col-lg-1">' +
+            '<i class="fa fa-tachometer" style="color: #AD363B"></i>' +
+            '</div>' +
+            '<div class="col-lg-10"></div>' +
+            '</div></div>' +
+
+            '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
+            '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
+            '</div>' +
+
+            '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">' + tasks[i].status + '</p></div>' +
+            '</div>' +
+            ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">' +
+            '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].address + '</p>' + '</div>' + '</div><hr>' +
+            '<div class="row">' +
+            '<div class="col-lg-6 text-center">' +
+            '<img style="height:10rem;"id=' + i + '>' +
+            '</div>' +
+            '<div class="col-lg-6">' +
+            '<div class="col-lg-12 mx-lg-auto text-center">' +
+            '<button id="show_feed_button" style="margin-left:7rem; display:none;margin-top:0" type="button" class="btn btn-primary-view">Ver Mais</button>' +
+            '</div>' +
+            '</div></div><hr style="margin-bottom: 0; margin-top:0">' +
+            '<div class="row"><div class="col-lg-6 text-left"></div>' +
+            '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].creationtime + ' </p></div></div>';
+
+        $(".inner").append(contentString);
+
+        var image = document.getElementById(i);
+        image.src = "data:image/jpg;base64," + tasks[i].thumbnail;
+        currentfeed += 10;
+    }
 }
-
 $('.on').scroll(function () {
-	var top = $('.on').scrollTop();
-	$('.two').html("top: "+top+" diff: "+($(".inner").height() - $(".on").height()));
-	if (top >= $(".inner").height() - $(".on").height()) {
-		$('.two').append(" bottom");
-		loadMore();
-	}
+    var top = $('.on').scrollTop();
+    $('.two').html("top: "+top+" diff: "+($(".inner").height() - $(".on").height()));
+    if (top >= $(".inner").height() - $(".on").height()) {
+        $('.two').append(" bottom");
+        loadMore();
+    }
 });
 
 var loadMoreComments = function(idReport,cursor){
-	var body = "";
-	var headers = new Headers();
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
-	fetch(restRequest("/api/report/comment/get/" + idReport + "?cursor=" + cursor, 'GET', headers, body)).then(function(response) {
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+    fetch(restRequest("/api/report/comment/get/" + idReport + "?cursor=" + cursor, 'GET', headers, body)).then(function(response) {
 
-		if (response.status === 200 || response.status === 204) {
-			commentsCursor = response.headers.get("Cursor");
-			response.json().then(function(data) {
-				console.log(data);
-				var i;
-				for(i = 0; i<data.length; i++){
-					$(".inner_comment").append(
-							'<div class="row"><div class="col-lg-6 text-left">'+
-							'<p style="font-family:Quicksand Bold; color:#AD363B; margin-right:1rem; font-size:15px;">'+  data[i].username +'</p></div>' +
-							'<div class="col-lg-6 text-left">'+ '<p style="font-family:Quicksand; font-size:15px;">' + data[i].text + '</p></div></div>');
-				}
+            if (response.status === 200 || response.status === 204) {
+                commentsCursor = response.headers.get("Cursor");
+                response.json().then(function(data) {
+                    console.log(data);
+                    var i;
+                    for(i = 0; i<data.length; i++){
+                        $(".inner_comment").append(
+                            '<div class="row"><div class="col-lg-6 text-left">'+
+                            '<p style="font-family:Quicksand Bold; color:#AD363B; margin-right:1rem; font-size:15px;">'+  data[i].username +'</p></div>' +
+                            '<div class="col-lg-6 text-left">'+ '<p style="font-family:Quicksand; font-size:15px;">' + data[i].text + '</p></div></div>');
+                    }
 
-			});
-		}
+                });
+            }
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 $('.comments').scroll(function () {
-	var top = $('.comments').scrollTop();
-	$('.two').html("top: "+top+" diff: "+($(".inner_comment").height() - $(".comments").height()));
-	if (top >= $(".inner_comment").height() - $(".comments").height()) {
-		$('.two').append("bottom");
-		loadMoreComments(reportID,commentsCursor);
-	}
+    var top = $('.comments').scrollTop();
+    $('.two').html("top: "+top+" diff: "+($(".inner_comment").height() - $(".comments").height()));
+    if (top >= $(".inner_comment").height() - $(".comments").height()) {
+        $('.two').append("bottom");
+        loadMoreComments(reportID,commentsCursor);
+    }
 });
 
 function getAvailableWorker(cursor){
-	if(cursor !== null) {
-		var body = "";
-		var headers = new Headers();
-		headers.append('Authorization', localStorage.getItem('token'));
-		headers.append('Device-Id', localStorage.getItem('fingerprint'));
-		headers.append('Device-App', localStorage.getItem('app'));
-		headers.append('Device-Info', localStorage.getItem('browser'));
-		fetch(restRequest('/api/org/listworkers?cursor=' + cursor, 'GET', headers, body)).then(function(response) {
+    if(cursor !== null) {
+        var body = "";
+        var headers = new Headers();
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
+        fetch(restRequest('/api/org/listworkers?cursor=' + cursor, 'GET', headers, body)).then(function(response) {
 
-			if (response.status === 200) {
-				var newCursor = response.headers.get("Cursor");
-				response.json().then(function(data) {
-					console.log(JSON.stringify(data));
-					if(data !== null){
-						var i;
-						console.log(data.length);
-						for(i = 0; i < data.length; i++){
+                if (response.status === 200) {
+                    var newCursor = response.headers.get("Cursor");
+                    response.json().then(function(data) {
+                        console.log(JSON.stringify(data));
+                        if(data !== null){
+                            var i;
+                            console.log(data.length);
+                            for(i = 0; i < data.length; i++){
 
-							var email = data[i].email;
-
-
-							$(".dropdown-m").append("<option class='pointer-finger'" +
-									"style='font-family:Quicksand border: 1px rgba(144,148,156,0.51) solid' value=" + email + ">" + email + "</option>");
-							//console.log($('email_select').child().last().val());
-
-							emailsarr.push(email);
-							workersarr.push(data[i]);
-						}
-
-					}else{
-						alert("Esta empresa ainda não tem trabalhadores associados.")
-					}
-				});
-				if(newCursor !== null) {
-					getAvailableWorker(newCursor);
-				}
-
-			}else{
-				console.log("Tratar do Forbidden");
-			}
+                                var email = data[i].email;
 
 
-		}
-		)
-		.catch(function(err) {
-			console.log('Fetch Error', err);
-		});
-	}
+                                $(".dropdown-m").append("<option class='pointer-finger'" +
+                                    "style='font-family:Quicksand border: 1px rgba(144,148,156,0.51) solid' value=" + email + ">" + email + "</option>");
+                                //console.log($('email_select').child().last().val());
+
+                                emailsarr.push(email);
+                                workersarr.push(data[i]);
+                            }
+
+                        }else{
+                            alert("Esta empresa ainda não tem trabalhadores associados.")
+                        }
+                    });
+                    if(newCursor !== null) {
+                        getAvailableWorker(newCursor);
+                    }
+
+                }else{
+                    console.log("Tratar do Forbidden");
+                }
+
+
+            }
+        )
+            .catch(function(err) {
+                console.log('Fetch Error', err);
+            });
+    }
 }
 
 function giveTask(){
-	console.log($("#input_ind").val());
-	var body = {
-			email: JSON.parse($("#email_select").val()).email,
-			report: idReportCurr,
-			indications: $("#input_ind").val()
-	};
-	var headers = new Headers();
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
-	fetch(restRequest('/api/org/givetask', 'POST', headers, JSON.stringify(body))).then(function() {
-		alert("Tarefa atribuida com sucesso");
-	}).catch(function(err) {
-		console.log('Fetch Error', err);
-	});;
+    console.log($("#input_ind").val());
+    var body = {
+        email: JSON.parse($("#email_select").val()).email,
+        report: idReportCurr,
+        indications: $("#input_ind").val()
+    };
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+    fetch(restRequest('/api/org/givetask', 'POST', headers, JSON.stringify(body))).then(function() {
+        alert("Tarefa atribuida com sucesso");
+    }).catch(function(err) {
+        console.log('Fetch Error', err);
+    });;
 
 }
 
 function viewWorkers(row){
-	email_worker = document.getElementById("user_table").rows[row].cells[1].innerHTML;
-	var name = document.getElementById("user_table").rows[row].cells[0].innerHTML;
-	var service = document.getElementById("user_table").rows[row].cells[2].innerHTML;
+    email_worker = document.getElementById("user_table").rows[row].cells[1].innerHTML;
+    var name = document.getElementById("user_table").rows[row].cells[0].innerHTML;
+    var service = document.getElementById("user_table").rows[row].cells[2].innerHTML;
 
-	document.getElementById("worker_email_id").innerHTML = email_worker;
-	document.getElementById("worker_name").innerHTML = name;
-	document.getElementById("worker_services").innerHTML = service;
+    document.getElementById("worker_email_id").innerHTML = email_worker;
+    document.getElementById("worker_name").innerHTML = name;
+    document.getElementById("worker_services").innerHTML = service;
 
-	hideShow("show_more_users_variable");
+    hideShow("show_more_users_variable");
 
-	loadMoreTasks(email_worker, "");
+    loadMoreTasks(email_worker, "");
 }
 
 var loadMoreTasks = function(email,cursor){
 
-	var body = "";
-	var headers = new Headers();
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
-	fetch(restRequest("/api/worker/tasks/" + email + "?cursor=" + cursor, 'GET', headers, body)).then(function(response) {
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+    fetch(restRequest("/api/worker/tasks/" + email + "?cursor=" + cursor, 'GET', headers, body)).then(function(response) {
 
-		if (response.status === 200 || response.status === 204) {
-			tasksCursor = response.headers.get("Cursor");
-			response.json().then(function(data) {
-				console.log(data);
-				var i;
-				for(i = 0; i<data.length; i++){
-					var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
-					'<div class="row" >' +
-					'<div class="col-lg-3 col-md-3 mx-auto">'+
-					'<div class="row">'+
-					'<div class="col-lg-6">'+
-					'<i class="fa fa-tachometer"></i></div>'+
-					'<div class="col-lg-6">'+
-					'<p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"">'+data[i].gravity +
-					'</p></div></div></div>'+
-					'<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
-					'<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
-					'</div>' +
-					'<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].status+'</p></div>'+
-					'</div>' +
-					' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">'+
-					'<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].address + '</p>' +'</div>' +'</div><hr>'+
-					'<div class="row"><div class="col-lg-6 text-center">' +'<img style="height:10rem;"id=' +i + '>' +
-					'</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p class="text-center" style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].description+' </p>';
+            if (response.status === 200 || response.status === 204) {
+                tasksCursor = response.headers.get("Cursor");
+                response.json().then(function(data) {
+                    console.log(data);
+                    var i;
+                    for(i = 0; i<data.length; i++){
+                        var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
+                            '<div class="row" >' +
+                            '<div class="col-lg-3 col-md-3 mx-auto">'+
+                            '<div class="row">'+
+                            '<div class="col-lg-6">'+
+                            '<i class="fa fa-tachometer"></i></div>'+
+                            '<div class="col-lg-6">'+
+                            '<p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"">'+data[i].gravity +
+                            '</p></div></div></div>'+
+                            '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
+                            '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
+                            '</div>' +
+                            '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].status+'</p></div>'+
+                            '</div>' +
+                            ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">'+
+                            '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].address + '</p>' +'</div>' +'</div><hr>'+
+                            '<div class="row"><div class="col-lg-6 text-center">' +'<img style="height:10rem;"id=' +i + '>' +
+                            '</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p class="text-center" style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].description+' </p>';
 
-					if(data[i].indications === undefined || data[i].indications === "") {
+                        if(data[i].indications === undefined || data[i].indications === "") {
 
-						contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"></p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
-						'<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].username + '('+ data[i].phone +')' +'</p></div>' +
-						'<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
-					}else {
-						contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].indications + ' </p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
-						'<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].username + '('+ data[i].phone +')' +'</p></div>' +
-						'<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
-					}
+                            contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"></p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
+                                '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].username + '('+ data[i].phone +')' +'</p></div>' +
+                                '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
+                        }else {
+                            contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].indications + ' </p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
+                                '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].username + '('+ data[i].phone +')' +'</p></div>' +
+                                '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
+                        }
 
-					$(".tasks_worker").append(contentString);
+                        $(".tasks_worker").append(contentString);
 
-					var image = document.getElementById(i);
-					image.src = "data:image/jpg;base64," + data[i].thumbnail;
-				}
+                        var image = document.getElementById(i);
+                        image.src = "data:image/jpg;base64," + data[i].thumbnail;
+                    }
 
-			});
-		}
+                });
+            }
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 $('.tasks').scroll(function () {
-	var top = $('.tasks').scrollTop();
-	if (top >= $(".tasks_worker").height() - $(".tasks").height()) {
-		$('.two').append("bottom");
-		loadMoreComments(email_worker,tasksCursor);
-	}
+    var top = $('.tasks').scrollTop();
+    if (top >= $(".tasks_worker").height() - $(".tasks").height()) {
+        $('.two').append("bottom");
+        loadMoreComments(email_worker,tasksCursor);
+    }
 });
 
 

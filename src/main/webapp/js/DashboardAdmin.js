@@ -943,6 +943,7 @@ function drawChart(){
             if (response.status === 200 || response.status === 204) {
                 response.json().then(function(data){
                     console.log(data);
+                    data[1][1] = 10;
                     var dados = google.visualization.arrayToDataTable(data);
 
                     var options = {
