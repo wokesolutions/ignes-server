@@ -43,7 +43,6 @@ function init() {
     document.getElementById("previous_list").onclick = getPreWorkers;
     document.getElementById("refresh_workers").onclick = getFirstWorkers;
     document.getElementById("show_more_button").onclick = getShowMore;
-    document.getElementById("show_feed_button").onclick = getShowFeed;
     document.getElementById("close_window").onclick = closeWindow;
     document.getElementById("close_window_feed").onclick = closeWindowFeed;
     document.getElementById("close_window_worker").onclick = closeWindowWorker;
@@ -899,7 +898,7 @@ var loadMore = function () {
             '</div>' +
             '<div class="col-lg-6">' +
             '<div class="col-lg-12 mx-lg-auto text-center">' +
-            '<button id="show_feed_button" style="margin-top:3rem" type="button" class="btn btn-primary-view">Ver Mais</button>' +
+            '<button style="margin-top:3rem" type="button" class="btn btn-primary-view" onclick="getShowFeed()">Ver Mais</button>' +
             '</div>' +
             '</div></div><hr style="margin-bottom: 0; margin-top:0">' +
             '<div class="row"><div class="col-lg-6 text-left"></div>' +
