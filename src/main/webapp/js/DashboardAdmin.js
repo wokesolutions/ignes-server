@@ -4,6 +4,9 @@ var cursor_current;
 var cursor_next_pending;
 var cursor_current_pending;
 var cursor_pre_pending;
+var cursor_next_pendingrep;
+var cursor_current_pendingrep;
+var cursor_pre_pendingrep;
 
 var current_position = "list_users_variable";
 var URL_BASE = 'https://main-dot-mimetic-encoder-209111.appspot.com';
@@ -12,10 +15,15 @@ init();
 
 function init() {
 
+
     verifyIsLoggedIn();
+
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
 
     getFirstUsers();
     getPendingFirst();
+    getPendingReportsFirst();
 
     document.getElementById("logout_button").onclick = logOut;
     document.getElementById("next_list").onclick = getNextUsers;
@@ -26,6 +34,10 @@ function init() {
     document.getElementById("refresh_orgs_pending").onclick = getPendingFirst;
     document.getElementById("list_pending_button").onclick = showPending;
     document.getElementById("list_users_button").onclick = showUsers;
+    document.getElementById("remove_button").onclick = showDeleteButton;
+    document.getElementById("next_report_pending").onclick = getPendingReportsNext;
+    document.getElementById("previous_reports_pending").onclick = getPendingReportsPre;
+    document.getElementById("refresh_reports_pending").onclick = getPendingReportsFirst;
 
 }
 
@@ -171,6 +183,7 @@ function getFirstUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
                             cell1.innerHTML = data[i].username;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
@@ -384,7 +397,7 @@ function getPendingNext(){
 
                 if(response.headers.get("Cursor") !== null) {
 
-                    cursor_pre_pending = cursor_current;
+                    cursor_pre_pending = cursor_current_pending;
                     cursor_current_pending = cursor_next_pending;
                     cursor_next_pending = response.headers.get("Cursor");
 
@@ -441,7 +454,7 @@ function getPendingNext(){
 }
 
 function getPendingPre(){
-    if(cursor_pre_workers === "") getPendingFirst();
+    if(cursor_pre_pending === "") getPendingFirst();
 
     var headers = new Headers();
     var body = "";
@@ -465,7 +478,7 @@ function getPendingPre(){
                 if (response.headers.get("Cursor") !== null) {
 
                     cursor_next_pending= cursor_current_pending;
-                    cursor_current_pending = cursor_pre;
+                    cursor_current_pending = cursor_pre_pending;
                     cursor_pre_pending = response.headers.get("Cursor");
 
                     if (document.getElementById("next_list_pending").style.display === "none")
@@ -624,3 +637,326 @@ function activateOrg(row){
         });
 }
 
+function deleteUser(row){
+    var table = document.getElementById("user_table");
+    var username = table.rows[row].cells[0].innerHTML;
+
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/deleteuser/' + username,'DELETE', headers, body)).then(function(response) {
+
+            if (response.status === 200 || response.status === 204) {
+                alert("Utilizador apagado com sucesso.")
+            }else{
+                alert("Falha ao apagar utilizador.")
+            }
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+
+}
+
+function getPendingReportsNext(){
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/standbyreports?cursor=' + cursor_next_pending,'GET', headers, body)).then(function(response) {
+            var table = document.getElementById("reports_pending_table");
+
+            if (response.status === 200) {
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+
+                if(document.getElementById("previous_reports_pending").style.display === "none")
+                    document.getElementById("previous_reports_pending").style.display = "block";
+
+                if(response.headers.get("Cursor") !== null) {
+
+                    cursor_pre_pendingrep = cursor_current_pendingrep;
+                    cursor_current_pendingrep = cursor_next_pendingrep;
+                    cursor_next_pendingrep = response.headers.get("Cursor");
+
+                    if(document.getElementById("next_reports_pending").style.display === "none")
+                        document.getElementById("next_reports_pending").style.display = "block";
+
+                } else{
+                    if(document.getElementById("next_reports_pending").style.display === "block")
+                        document.getElementById("next_reports_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            var cell10 = row.insertCell(9);
+                            cell1.innerHTML = data[i].nif;
+                            cell2.innerHTML = data[i].name;
+                            cell3.innerHTML = data[i].email;
+                            cell4.innerHTML = data[i].address;
+                            cell5.innerHTML = data[i].locality;
+                            cell6.innerHTML = data[i].phone;
+                            cell7.innerHTML = data[i].services;
+                            cell8.innerHTML = data[i].creationtime;
+                            cell9.innerHTML = data[i].isfirestation;
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+function getPendingReportsPre(){
+    if(cursor_pre_pendingrep === "") getPendingReportsFirst();
+
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/standbyreports?cursor=' + cursor_pre_pending,'GET', headers, body)).then(function(response) {
+            var table = document.getElementById("orgs_pending_table");
+
+            if (response.status === 200) {
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+
+                if (document.getElementById("previous_reports_pending").style.display === "none")
+                    document.getElementById("previous_reports_pending").style.display = "block";
+
+                if (response.headers.get("Cursor") !== null) {
+
+                    cursor_next_pendingrep = cursor_current_pendingrep;
+                    cursor_current_pendingrep = cursor_pre_pendingrep;
+                    cursor_pre_pendingrep = response.headers.get("Cursor");
+
+                    if (document.getElementById("next_reports_pending").style.display === "none")
+                        document.getElementById("next_reports_pending").style.display = "block";
+
+                } else {
+                    if (document.getElementById("next_reports_pending").style.display === "block")
+                        document.getElementById("next_reports_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            var cell10 = row.insertCell(9);
+                            cell1.innerHTML = data[i].nif;
+                            cell2.innerHTML = data[i].name;
+                            cell3.innerHTML = data[i].email;
+                            cell4.innerHTML = data[i].address;
+                            cell5.innerHTML = data[i].locality;
+                            cell6.innerHTML = data[i].phone;
+                            cell7.innerHTML = data[i].services;
+                            cell8.innerHTML = data[i].creationtime;
+                            cell9.innerHTML = data[i].isfirestation;
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+function getPendingReportsFirst(){
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/standbyreports?cursor=','GET', headers, body)).then(function(response) {
+            var table = document.getElementById("reports_pending_table");
+
+            if (response.status === 200) {
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+                if(response.headers.get("Cursor") !== null) {
+
+                    cursor_pre_pendingrep = "";
+                    cursor_current_pendingrep = "";
+                    cursor_next_pendingrep = response.headers.get("Cursor");
+
+                    if(document.getElementById("next_reports_pending").style.display === "none")
+                        document.getElementById("next_reports_pending").style.display = "block";
+                    if(document.getElementById("previous_reports_pending").style.display === "block")
+                        document.getElementById("previous_reports_pending").style.display = "none";
+                } else{
+                    if(document.getElementById("next_reports_pending").style.display === "block")
+                        document.getElementById("next_reports_pending").style.display = "none";
+                    if(document.getElementById("previous_reports_pending").style.display === "block")
+                        document.getElementById("previous_reports_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            var cell10 = row.insertCell(9);
+                            cell1.innerHTML = data[i].report;
+                            cell2.innerHTML = data[i].title;
+                            cell3.innerHTML = data[i].address;
+                            cell4.innerHTML = data[i].gravity;
+                            cell5.innerHTML = data[i].username;
+                            cell6.innerHTML = data[i].lat;
+                            cell7.innerHTML = data[i].lng;
+                            cell8.innerHTML = data[i].status;
+                            cell9.innerHTML = data[i].creationtime;
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateReport(this.parentNode.rowIndex)'></button>";
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+function activateReport(row){
+    var table = document.getElementById("reports_pending_table");
+    var report = table.rows[row].cells[0].innerHTML;
+
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/confirmreport/' + report,'POST', headers, body)).then(function(response) {
+
+            if (response.status === 200 || response.status === 204) {
+                alert("Utilizador apagado com sucesso.")
+            }else{
+                alert("Falha ao apagar utilizador.")
+            }
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+
+}
+
+function drawChart(){
+
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest("/api/admin/stats/org/applications",'GET', headers, body)).then(function(response) {
+
+            if (response.status === 200 || response.status === 204) {
+                var data = google.visualization.arrayToDataTable(data);
+
+                var options = {
+                    title: 'My Daily Activities'
+                };
+
+                var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+                chart.draw(data, options);
+            }else{
+                alert("Falha ao apagar utilizador.")
+            }
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
