@@ -2,23 +2,27 @@ var map = null;
 var geocoder = new google.maps.Geocoder();
 var reports;
 var reportID;
-var feedCursor;
 var commentsCursor;
+var currentfeed = 10;
+var email_worker;
 var current_position = "map_variable";
-var infowindow = new google.maps.InfoWindow();
 var idReportCurr;
+var tasks = [];
+var numWorkers;
 var currentLoc ={
     center: {lat: 38.661148, lng: -9.203075},
     zoom: 18
 };
-var email_current;
 
 var emailsarr;
 var workersarr;
 
+var show = false;
+var show_view = false;
+
 getCurrentLocation();
 
-var URL_BASE = 'https://hardy-scarab-200218.appspot.com';
+var URL_BASE = 'https://main-dot-mimetic-encoder-209111.appspot.com';
 
 google.maps.event.addDomListener(window, 'load', init());
 
@@ -41,6 +45,10 @@ function init() {
     document.getElementById("show_more_button").onclick = getShowMore;
     document.getElementById("close_window").onclick = closeWindow;
     document.getElementById("add_task").onclick = giveTask;
+    document.getElementById("close_window_worker").onclick = closeWindowWorker;
+    document.getElementById("remove_button").onclick = showButtonDelete;
+    document.getElementById("view_button").onclick = showButtonView;
+
     $("#email_select").change(function(){
         var email = $("#email_select").val();
         var index = emailsarr.indexOf(email);
@@ -56,7 +64,47 @@ function init() {
     workersarr = [];
 
     getFirstWorkers();
+    loadMore();
 
+}
+
+function showButtonDelete(){
+
+    if( document.getElementById("show_button_0" ).style.display === "block") {
+        for (var i = 0; i < numWorkers; i++)
+            document.getElementById("show_button_" + i).style.display = "none";
+        show_view = false;
+    }
+
+    if(show === false){
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("delete_button_" + i ).style.display = "block";
+        show = true;
+    }else {
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("delete_button_" + i ).style.display = "none";
+        show = false;
+    }
+
+}
+
+function showButtonView(){
+
+    if( document.getElementById("delete_button_0" ).style.display === "block"){
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("delete_button_" + i ).style.display = "none";
+        show = false;
+    }
+
+    if(show_view === false){
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("show_button_" + i ).style.display = "block";
+        show_view = true;
+    }else {
+        for(var i = 0; i<numWorkers; i++ )
+            document.getElementById("show_button_" + i ).style.display = "none";
+        show_view = false;
+    }
 
 }
 
@@ -74,8 +122,6 @@ function searchLocation(){
             alert('A morada inserida não existe.');
         }
     });
-
-    getMarkersByLocation(address);
 }
 
 function getCurrentLocation() {
@@ -92,13 +138,13 @@ function getCurrentLocation() {
             var mapElement = document.getElementById('map');
             map = new google.maps.Map(mapElement, currentLoc);
 
-            getMarkers(15);
+            getMarkers();
         })
     }else {
         var mapElement = document.getElementById('map');
         map = new google.maps.Map(mapElement, currentLoc);
 
-        getMarkers(15);
+        getMarkers();
     }
 
     return currentLoc;
@@ -127,6 +173,9 @@ function hideShow(element){
 
         document.getElementById("details_report").style.display = "none";
 
+    }else if(current_position === "show_more_users_variable"){
+
+        document.getElementById("profile_workers").style.display = "none";
     }
 
 
@@ -154,6 +203,9 @@ function hideShow(element){
         document.getElementById("details_report").style.display = "block";
         current_position = "show_more_variable";
 
+    }else if(element === "show_more_users_variable"){
+        document.getElementById("profile_workers").style.display = "block";
+        current_position = "show_more_users_variable";
     }
 
 }
@@ -218,7 +270,7 @@ function logOut(){
 
 }
 
-function getMarkersByLocation(zone, cursor){
+function getMarkers(cursor){
     if(cursor===undefined) cursor = "";
 
     var headers = new Headers();
@@ -228,47 +280,13 @@ function getMarkersByLocation(zone, cursor){
     headers.append('Device-App', localStorage.getItem('app'));
     headers.append('Device-Info', localStorage.getItem('browser'));
 
-
-    fetch(restRequest('/api/report/getinlocation?' + "location=" + zone + "&cursor=" + cursor,'GET', headers, body)).then(function(response) {
-
-            if (response.status === 200) {
-                var newCursor = response.headers.get("Cursor");
-                response.json().then(function(data) {
-                    reports = data;
-                    fillMap(reports, newCursor, zone);
-                });
-
-            }else{
-                console.log("Tratar do Forbidden");
-                return;
-            }
-
-
-        }
-    )
-        .catch(function(err) {
-            console.log('Fetch Error', err);
-        });
-}
-
-function getMarkers(radius, cursor){
-    if(cursor===undefined) cursor = "";
-
-    var headers = new Headers();
-    var body = "";
-    headers.append('Authorization', localStorage.getItem('token'));
-    headers.append('Device-Id', localStorage.getItem('fingerprint'));
-    headers.append('Device-App', localStorage.getItem('app'));
-    headers.append('Device-Info', localStorage.getItem('browser'));
-
-    fetch(restRequest('/api/report/getwithinradius?' + "lat=" + currentLoc.center.lat + "&lng=" + currentLoc.center.lng +
-        "&radius=" + radius + "&cursor=" + cursor, 'GET', headers, body)).then(function(response) {
+    fetch(restRequest('/api/org/reports?cursor=' + cursor , 'GET', headers, body)).then(function(response) {
 
             if (response.status === 200) {
                 var newCursor = response.headers.get("Cursor");
                 response.json().then(function(data) {
                     reports = data;
-                    console.log(data);
+                    console.log("Markers  "+ data);
                     fillMap(reports, newCursor);
                 });
 
@@ -283,36 +301,109 @@ function getMarkers(radius, cursor){
         .catch(function(err) {
             console.log('Fetch Error', err);
         });
-
 }
 
-function fillMap(reports, cursor, zone){
+function fillMap(reports, cursor){
     var i, marker ;
     for(i = 0; i<reports.length; i++){
         var lat = reports[i].lat;
         var lng = reports[i].lng;
+        var status = reports[i].status;
+        var budget = reports[i].budget;
         var marker_color;
+        var tasktime = reports[i].tasktime;
         var gravity = reports[i].gravity;
 
-        if(gravity === 1)
-            marker_color = "http://maps.google.com/mapfiles/ms/icons/green-dot.png";
-        else if(gravity === 2)
-            marker_color = "http://maps.google.com/mapfiles/ms/icons/ltblue-dot.png";
-        else if(gravity === 3)
-            marker_color = "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png";
-        else if(gravity === 4)
-            marker_color = "http://maps.google.com/mapfiles/ms/icons/orange-dot.png";
-        else if(gravity === 5)
-            marker_color = "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
+        if(gravity === 1) {
+            if(status === "standby")
+                marker_color = "../marcadores/g1-standby.png";
+            else if(status === "closed")
+                marker_color = "../marcadores/g1-closed-mine.png";
+            else if(tasktime !== null || tasktime !== undefined){
+                tasks.push(reports[i]);
+                marker_color = "../marcadores/g1-accepted-mine.png";
+            }
+            else if(budget !== null || budget !== undefined)
+                marker_color = "../marcadores/g1-applied-mine.png";
+            else
+                marker_color = "../marcadores/g1-open.png";
+        }
+        else if(gravity === 2) {
+            if(status === "standby")
+                marker_color = "../marcadores/g2-standby.png";
+            else if(status === "closed")
+                marker_color = "../marcadores/g2-closed-mine.png";
+            else if(tasktime !== null || tasktime !== undefined){
+                tasks.push(reports[i]);
+                marker_color = "../marcadores/g2-accepted-mine.png";
+            }
+            else if(budget !== null || budget !== undefined)
+                marker_color = "../marcadores/g2-applied-mine.png";
+            else
+                marker_color = "../marcadores/g2-open.png";
+        }
+        else if(gravity === 3) {
+            if(status === "standby")
+                marker_color = "../marcadores/g3-standby.png";
+            else if(status === "closed")
+                marker_color = "../marcadores/g3-closed-mine.png";
+            else if(tasktime !== null || tasktime !== undefined){
+                tasks.push(reports[i]);
+                marker_color = "../marcadores/g3-accepted-mine.png";
+            }
+            else if(budget !== null || budget !== undefined)
+                marker_color = "../marcadores/g3-applied-mine.png";
+            else
+                marker_color = "../marcadores/g3-open.png";
+        }
+        else if(gravity === 4) {
+            if(status === "standby")
+                marker_color = "../marcadores/g4-standby.png";
+            else if(status === "closed")
+                marker_color = "../marcadores/g4-closed-mine.png";
+            else if(tasktime !== null || tasktime !== undefined){
+                tasks.push(reports[i]);
+                marker_color = "../marcadores/g4-accepted-mine.png";
+            }
+            else if(budget !== null || budget !== undefined)
+                marker_color = "../marcadores/g4-applied-mine.png";
+            else
+                marker_color = "../marcadores/g4-open.png";
+        }
+        else if(gravity === 5) {
+            if(status === "standby")
+                marker_color = "../marcadores/g5-standby.png";
+            else if(status === "closed")
+                marker_color = "../marcadores/g5-closed-mine.png";
+            else if(tasktime !== null || tasktime !== undefined){
+                tasks.push(reports[i]);
+                marker_color = "../marcadores/g5-accepted-mine.png";
+            }
+            else if(budget !== null || budget !== undefined)
+                marker_color = "../marcadores/g5-applied-mine.png";
+            else
+                marker_color = "../marcadores/g5-open.png";
+        }
         else{
             console.log("Não existe gravidade neste reporte");
         }
-
-        marker = new google.maps.Marker({
-            position: new google.maps.LatLng(lat, lng),
-            map: map,
-            icon: marker_color
-        });
+        if(reports[i].points === null || reports[i].points === undefined) {
+            marker = new google.maps.Marker({
+                position: new google.maps.LatLng(lat, lng),
+                map: map,
+                icon: marker_color
+            });
+        } else{
+            marker = new google.maps.Polygon({
+                paths: reports[i].points,
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#FF0000',
+                fillOpacity: 0.35
+            });
+            marker.setMap(map);
+        }
 
 
         google.maps.event.addListener(marker, 'click', (function(marker, i) {
@@ -326,12 +417,8 @@ function fillMap(reports, cursor, zone){
     }
 
     if(cursor !== null){
-        if(zone === null) {
-            console.log(cursor);
-            getMarkers(5, cursor);
-        } else{
-            getMarkersByLocation(zone, cursor);
-        }
+        console.log(cursor);
+        getMarkers(cursor);
     }
 }
 
@@ -443,6 +530,8 @@ function createWorker(){
 
             if (response.status === 200) {
                 alert("Trabalhador registado com sucesso.")
+                getFirstWorkers();
+                showWorkers();
             }else{
                 alert("Utilizador já existe ou falta informação em algum campo")
             }
@@ -494,13 +583,15 @@ function getFirstWorkers(){
                             var cell2 = row.insertCell(1);
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
                             cell1.innerHTML = data[i].name;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
-                            cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
+                            cell4.outerHTML= "<button id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
+                            cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='viewWorkers(this.parentNode.rowIndex)'><a class='fa fa-search'></a></button>";
 
                         }
-
+                        numWorkers= data.length;
                     }else{
                         alert("Esta empresa ainda não tem trabalhadores associados.")
                     }
@@ -553,18 +644,22 @@ function getNextWorkers(){
                     console.log(JSON.stringify(data));
                     if(data != null){
                         var i;
+
                         for(i = 0; i < data.length; i++){
                             var row = table.insertRow(-1);
                             var cell1 = row.insertCell(0);
                             var cell2 = row.insertCell(1);
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
                             cell1.innerHTML = data[i].name;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].job;
-                            cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
-                        }
+                            cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
+                            cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='viewWorkers(this.parentNode.rowIndex)'><a class='fa fa-search'></a></button>";
 
+                        }
+                        numWorkers= data.length;
                     }else{
                         alert("Esta empresa ainda não tem trabalhadores associados.")
                     }
@@ -625,12 +720,14 @@ function getPreWorkers(){
                                 var cell2 = row.insertCell(1);
                                 var cell3 = row.insertCell(2);
                                 var cell4 = row.insertCell(3);
+                                var cell5 = row.insertCell(4);
                                 cell1.innerHTML = data[i].name;
                                 cell2.innerHTML = data[i].email;
                                 cell3.innerHTML = data[i].job;
-                                cell4.outerHTML= "<button type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><p class='delete_style'>X</p></button>";
+                                cell4.outerHTML= "<button  id='delete_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='deleteWorker(this.parentNode.rowIndex)'><a class='fa fa-trash-o'></a></button>";
+                                cell5.outerHTML= "<button id='show_button_"+ i +"'style='display:none' type='submit' class='btn-circle btn-primary-style' onclick='viewWorkers(this.parentNode.rowIndex)'><a class='fa fa-search'></a></button>";
                             }
-
+                            numWorkers= data.length;
                         }else{
                             alert("Esta empresa ainda não tem trabalhadores associados.")
                         }
@@ -710,62 +807,40 @@ function deleteWorker (row){
         });
 }
 
-var loadMore = function (cursor) {
+var loadMore = function () {
+    var i;
+    for(i = 0; i<currentfeed; i++){
+        if(tasks[i] === null)
+            break;
+        var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
+            '<div class="row" >' +
+            '<div class="col-lg-3 col-md-3 mx-auto">'+
+            '</div>'+
+            '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
+            '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
+            '</div>' +
+            '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ tasks[i].status+'</p></div>'+
+            '</div>' +
+            ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">'+
+            '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].address + '</p>' +'</div>' +'</div><hr>'+
+            '<div class="row"><div class="col-lg-6 text-center">' +'<img style="height:10rem;"id=' +i + '>' +
+            '</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p class="text-center" style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ tasks[i].description+' </p>';
 
-    if(cursor!==null){
-        var body = "";
-        var headers = new Headers();
-        headers.append('Authorization', localStorage.getItem('token'));
-        headers.append('Device-Id', localStorage.getItem('fingerprint'));
-        headers.append('Device-App', localStorage.getItem('app'));
-        headers.append('Device-Info', localStorage.getItem('browser'));
-        fetch(restRequest('/api/org/alltasks?cursor=' + cursor, 'GET', headers, body)).then(function(response) {
+        if(tasks[i].indications === undefined || tasks[i].indications === "") {
 
-                if (response.status === 200 || response.status === 204) {
-                    feedCursor = response.headers.get("Cursor");
-                    response.json().then(function(data) {
-                        console.log(data);
-                        var i;
-                        for(i = 0; i<data.length; i++){
+            contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"></p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
+                '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + tasks[i].worker + '</p></div>' +
+                '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].creationtime + ' </p></div></div>';
+        }else {
+            contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">' + tasks[i].indications + ' </p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
+                '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + tasks[i].worker + '</p></div>' +
+                '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].creationtime + ' </p></div></div>';
+        }
+        $(".inner").append(contentString);
 
-                            var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
-                                '<div class="row" >' +
-                                '<div class="col-lg-3 col-md-3 mx-auto">'+
-                                '</div>'+
-                                '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
-                                '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
-                                '</div>' +
-                                '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].status+'</p></div>'+
-                                '</div>' +
-                                ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">'+
-                                '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].address + '</p>' +'</div>' +'</div><hr>'+
-                                '<div class="row"><div class="col-lg-6 text-center">' +'<img style="height:10rem;"id=' +i + '>' +
-                                '</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p class="text-center" style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].description+' </p>';
-
-                            if(data[i].indications === undefined || data[i].indications === "") {
-
-                                contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"></p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
-                                    '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].worker + '</p></div>' +
-                                    '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
-                            }else {
-                                contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].indications + ' </p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
-                                    '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].worker + '</p></div>' +
-                                    '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
-                            }
-                            $(".inner").append(contentString);
-
-                            var image = document.getElementById(i);
-                            image.src = "data:image/jpg;base64," + data[i].thumbnail;
-
-                        }
-                    });
-                }
-
-            }
-        )
-            .catch(function(err) {
-                console.log('Fetch Error', err);
-            });
+        var image = document.getElementById(i);
+        image.src = "data:image/jpg;base64," + tasks[i].thumbnail;
+        currentfeed+=10;
     }
 }
 
@@ -774,11 +849,9 @@ $('.on').scroll(function () {
     $('.two').html("top: "+top+" diff: "+($(".inner").height() - $(".on").height()));
     if (top >= $(".inner").height() - $(".on").height()) {
         $('.two').append(" bottom");
-        loadMore(feedCursor);
+        loadMore();
     }
 });
-
-loadMore("");
 
 var loadMoreComments = function(idReport,cursor){
     var body = "";
@@ -871,7 +944,7 @@ function getAvailableWorker(cursor){
 function giveTask(){
     console.log($("#input_ind").val());
     var body = {
-        email: JSON.parse($("#email_select").val()).email,
+        email: $("#email_select").val(),
         report: idReportCurr,
         indications: $("#input_ind").val()
     };
@@ -888,3 +961,86 @@ function giveTask(){
 
 }
 
+function viewWorkers(row){
+    email_worker = document.getElementById("user_table").rows[row].cells[1].innerHTML;
+    var name = document.getElementById("user_table").rows[row].cells[0].innerHTML;
+    var service = document.getElementById("user_table").rows[row].cells[2].innerHTML;
+
+    document.getElementById("worker_email_id").innerHTML = email_worker;
+    document.getElementById("worker_name").innerHTML = name;
+    document.getElementById("worker_services").innerHTML = service;
+
+    hideShow("show_more_users_variable");
+
+    loadMoreTasks(email_worker, "");
+}
+
+var loadMoreTasks = function(email,cursor){
+
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+    fetch(restRequest("/api/worker/tasks/" + email + "?cursor=" + cursor, 'GET', headers, body)).then(function(response) {
+
+            if (response.status === 200 || response.status === 204) {
+                tasksCursor = response.headers.get("Cursor");
+                response.json().then(function(data) {
+                    console.log(data);
+                    var i;
+                    for(i = 0; i<data.length; i++){
+                        var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
+                            '<div class="row" >' +
+                            '<div class="col-lg-3 col-md-3 mx-auto">'+
+                            '<div class="row">'+
+                            '<div class="col-lg-6">'+
+                            '<i class="fa fa-tachometer"></i></div>'+
+                            '<div class="col-lg-6">'+
+                            '<p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"">'+data[i].gravity +
+                            '</p></div></div></div>'+
+                            '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
+                            '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
+                            '</div>' +
+                            '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].status+'</p></div>'+
+                            '</div>' +
+                            ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">'+
+                            '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].address + '</p>' +'</div>' +'</div><hr>'+
+                            '<div class="row"><div class="col-lg-6 text-center">' +'<img style="height:10rem;"id=' +i + '>' +
+                            '</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p class="text-center" style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].description+' </p>';
+
+                        if(data[i].indications === undefined || data[i].indications === "") {
+
+                            contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"></p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
+                                '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].username + '('+ data[i].phone +')' +'</p></div>' +
+                                '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
+                        }else {
+                            contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].indications + ' </p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
+                                '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].username + '('+ data[i].phone +')' +'</p></div>' +
+                                '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
+                        }
+
+                        $(".tasks_worker").append(contentString);
+
+                        var image = document.getElementById(i);
+                        image.src = "data:image/jpg;base64," + data[i].thumbnail;
+                    }
+
+                });
+            }
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+$('.tasks').scroll(function () {
+    var top = $('.tasks').scrollTop();
+    if (top >= $(".tasks_worker").height() - $(".tasks").height()) {
+        $('.two').append("bottom");
+        loadMoreComments(email_worker,tasksCursor);
+    }
+});

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <meta charset="UTF-8">
     <title>Ignes</title>
     <link href="../css/bootstrap.min.css" rel="stylesheet">
@@ -65,6 +66,17 @@
         </div>
         <div class=" col-md-10 col-lg-10 text-center"></div>
     </div>
+    <div class="row">
+        <div class="col-lg-4 text-center" style="margin-top: 3rem">
+            <button  id ="create_button" type="button" class="btn btn-lg btn-block-style"><a class="fa fa-edit"> </a> Registar utilizador</button>
+        </div>
+        <div class="col-lg-4 text-center" style="margin-top: 3rem">
+            <button id="remove_button"type="button" class="btn btn-lg btn-block-style"><a class="fa fa-trash-o" style="margin-right:.5rem;"></a>Remover utilizador</button>
+        </div>
+        <div class="col-lg-4 text-center" style="margin-top: 3rem">
+            <button id="view_button" type="button" class="btn btn-lg btn-block-style"><a class="fa fa-search" style="margin-right:.5rem;"></a>Ver utilizador</button>
+        </div>
+    </div>
     <div class="container">
         <div class="table-responsive">
             <table class=" table table-hover table-style text-center" id="orgs_pending_table">
@@ -94,8 +106,56 @@
     </div>
 </div>
 
+<!--Tabela das ocorrências em standby-->
+<div id="list_pending_reports"style="display: none">
+    <div class="row">
+
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button class="btn btn-default btn-style" id="refresh_reports_pending"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
+        </div>
+        <div class=" col-md-10 col-lg-10 text-center"></div>
+    </div>
+    <div class="row">
+
+        <div class="col-lg-4 text-center" style="margin-top: 3rem">
+            <button id="remove_report"type="button" class="btn btn-lg btn-block-style"><a class="fa fa-trash-o" style="margin-right:.5rem;"></a>Remover utilizador</button>
+        </div>
+
+    </div>
+    <div class="container">
+        <div class="table-responsive">
+            <table class=" table table-hover table-style text-center" id="reports_pending_table">
+                <tr>
+                    <th class="th-style">Id</th>
+                    <th class="th-style">Nome</th>
+                    <th class="th-style">Morada</th>
+                    <th class="th-style">Gravidade</th>
+                    <th class="th-style">Criador</th>
+                    <th class="th-style">Latitude</th>
+                    <th class="th-style">Longitude</th>
+                    <th class="th-style">Estado</th>
+                    <th class="th-style">Data de criação</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-8 col-lg-8 text-center"></div>
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button style="display: none" class="btn btn-default" id="previous_reports_pending"><i class="fa fa-toggle-left size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center">
+            <button style="display: none" class="btn btn-default" id="next_reports_pending"><i class="fa fa-toggle-right size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center"></div>
+    </div>
+</div>
+
+<!--PIECHART-->
+<div id="piechart" style="width: 900px; height: 500px;"></div>
+
 <script src="../js/RestApi.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAfHsLp6fKLK4YZ2WSoXO0KsM58Clspg8k"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDyB4FcTNeaLK_S-cHrV3EuxmwZGItbIRw"></script>
 <script src="../js/DashboardAdmin.js"></script>
 </body>
 </html>
