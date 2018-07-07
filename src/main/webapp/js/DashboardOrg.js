@@ -447,11 +447,11 @@ function fillMap(reports, cursor){
         google.maps.event.addListener(marker, 'click', (function(marker, i) {
 
             return function() {
-                else if(status === "closed")
+                if(status === "closed")
                     to_show = 4;
                 else if(status === "standby")
                     to_show = 0;
-                if(tasktime !== null && tasktime !== undefined)
+                else if(tasktime !== null && tasktime !== undefined)
                     to_show = 1;
                 else if(budget !== null && budget !== undefined)
                     to_show = 3;
