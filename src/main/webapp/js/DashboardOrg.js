@@ -877,9 +877,8 @@ var loadMore = function () {
         console.log(i);
         if (tasks[i] === null || tasks[i] === undefined)
             break;
-        var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
+        var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;">' +
             '<div class="row" >' +
-
             '<div class="col-lg-3 col-md-3 mx-auto">' +
             '<div class="row">' +
             '<div class="col-lg-1">' +
@@ -908,7 +907,7 @@ var loadMore = function () {
             '</div>' +
             '<div class="col-lg-6">' +
             '<div class="col-lg-12 mx-lg-auto text-center">' +
-            '<button style="margin-top:3rem" type="button" class="btn btn-primary-view" id="on_click_'+i+'">Ver Mais</button>' +
+            '<button style="margin-top:3rem" type="button" class="btn btn-primary-view" id="on_click_'+i+'" value=i>Ver Mais</button>' +
             '</div>' +
             '</div></div><hr style="margin-bottom: 0; margin-top:0">' +
             '<div class="row"><div class="col-lg-6 text-left"></div>' +
@@ -916,7 +915,7 @@ var loadMore = function () {
 
         $(".inner").append(contentString);
         document.getElementById("on_click_"+i).onclick = function(){
-            var variable = i;
+            var variable = document.getElementById("on_click_"+i).value;
             getShowFeed(variable);
         }
         var image = document.getElementById(i);
