@@ -74,7 +74,7 @@ function getShowMore(){
     hideShow("show_more_variable");
 }
 
-function getShowFeed(){
+function getShowFeed(variable){
     document.getElementById("report_address_feed").innerHTML = tasks[variable].address;
     document.getElementById("report_gravity_feed").innerHTML = tasks[variable].gravity;
     document.getElementById("report_user_feed").innerHTML = tasks[variable].username;
@@ -914,14 +914,15 @@ var loadMore = function () {
             '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].creationtime + ' </p></div></div>';
 
         $(".inner").append(contentString);
-        document.getElementById("on_click_"+i).onclick = function(){
-            variable = document.getElementById("on_click_"+i).value;
-            getShowFeed();
-        }
         var image = document.getElementById(i);
         image.src = "data:image/jpg;base64," + tasks[i].thumbnail;
 
         currentfeed += 10;
+    }
+    for(var j = currentfeed-10; j<currentfeed; j++) {
+        document.getElementById("on_click_" + j).onclick = function () {
+            getShowFeed(j);
+        }
     }
 }
 $('.on').scroll(function () {
