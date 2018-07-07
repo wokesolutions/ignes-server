@@ -44,7 +44,6 @@ function init() {
     document.getElementById("refresh_workers").onclick = getFirstWorkers;
     document.getElementById("show_more_button").onclick = getShowMore;
     document.getElementById("close_window").onclick = closeWindow;
-    document.getElementById("close_window_feed").onclick = closeWindowFeed;
     document.getElementById("close_window_worker").onclick = closeWindowWorker;
     document.getElementById("add_task").onclick = giveTask;
     document.getElementById("remove_button").onclick = showButtonDelete;
@@ -72,21 +71,6 @@ function init() {
 
 function getShowMore(){
     hideShow("show_more_variable");
-}
-
-function getShowFeed(variable){
-    document.getElementById("report_address_feed").innerHTML = tasks[variable].address;
-    document.getElementById("report_gravity_feed").innerHTML = tasks[variable].gravity;
-    document.getElementById("report_user_feed").innerHTML = tasks[variable].username;
-    document.getElementById("report_state_feed").innerHTML = tasks[variable].status;
-    document.getElementById("report_title_feed").innerHTML = tasks[variable].title;
-    document.getElementById("report_category_feed").innerHTML = tasks[variable].category;
-    document.getElementById("report_creationtime_feed").innerHTML = tasks[variable].creationtime;
-    document.getElementById("report_up_feed").innerHTML = tasks[variable].downs;
-    document.getElementById("report_down_feed").innerHTML = tasks[variable].ups;
-    var image = document.getElementById("thumb_feed");
-    image.src = "data:image/jpg;base64," + tasks[variable].thumbnail;
-    hideShow("show_feed_task_variable");
 }
 
 function showButtonDelete(){
@@ -193,10 +177,6 @@ function hideShow(element){
 
         document.getElementById("profile_workers").style.display = "none";
 
-    }else if(current_position === "show_feed_task_variable"){
-
-        document.getElementById("details_feed").style.display = "none";
-
     }
 
 
@@ -227,11 +207,6 @@ function hideShow(element){
     }else if(element === "show_more_users_variable"){
         document.getElementById("profile_workers").style.display = "block";
         current_position = "show_more_users_variable";
-
-    }else if( element == "show_feed_task_variable"){
-
-        document.getElementById("details_feed").style.display = "block";
-        current_position = "show_feed_task_variable";
 
     }
 
@@ -561,10 +536,6 @@ function showCreateWorker(){
 
 function closeWindow(){
     hideShow("map_variable");
-}
-
-function closeWindowFeed(){
-    hideShow("profile_variable");
 }
 
 function closeWindowWorker(){
@@ -930,11 +901,12 @@ var loadMore = function () {
                 '<div class="col-lg-12 mx-lg-auto text-center">' +
                     '<div class="col-lg-4 mx-lg-auto text-right">'+
                     '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" ></p>' +
-                    '</div>'+
-                    '<div class="col-lg-8 mx-lg-auto text-left">' +
-                    '<p class="info_text_response text-center" >'+tasks[i].description+'</p>' +
-                    '</div>'+
-                '</div>' +
+                    '</div><div class="col-lg-8 mx-lg-auto text-left">';
+
+              if(tasks[i].description !== undefined)
+                contentString=+'<p class="info_text_response text-center" >'+tasks[i].description+'</p>';
+
+               contentString += '</div></div>' +
                 '</div>' +
                 '<div class="row">'+
                 '<div class="col-lg-12 mx-lg-auto text-center">' +
