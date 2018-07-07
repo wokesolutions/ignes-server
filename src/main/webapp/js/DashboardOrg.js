@@ -922,14 +922,27 @@ var loadMore = function () {
                 '<div class="col-lg-4 col-md-4 text-left"></div>' +
             '</div>' +
             '<div class="col-lg-12 text-center">' +
-            '<img style="height:10rem; margin-bottom:1rem"id=' + i + '>' +
+                '<img style="height:10rem; margin-bottom:1rem"id=' + i + '>' +
             '</div>' +
             '</div>' +
             '<div class="col-lg-6">' +
+                '<div class="row">'+
                 '<div class="col-lg-12 mx-lg-auto text-center">' +
-
+                    '<div class="col-lg-4 mx-lg-auto text-right">'+
+                    '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" ></p>' +
+                    '</div>'+
+                    '<div class="col-lg-8 mx-lg-auto text-left">' +
+                    '<p class="info_text_response text-center" >'+tasks[i].description+'</p>' +
+                    '</div>'+
                 '</div>' +
-            '</div></div><hr style="margin-bottom: 0; margin-top:0">' +
+                '</div>' +
+                '<div class="row">'+
+                '<div class="col-lg-12 mx-lg-auto text-center">' +
+                '<div class="workers"><div class="workers_task"></div></div>'+
+                '</div>' +
+                '</div>' +
+            '</div>' +
+            '</div><hr style="margin-bottom: 0; margin-top:0">' +
 
             '<div class="row">' +
             '<div class="col-lg-6 text-left"></div>' +
