@@ -889,36 +889,37 @@ var loadMore = function () {
             '</div>' +
             '<div class="col-lg-10"></div>' +
             '</div></div>' +
-
             '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
             '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
             '</div>' +
-
             '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].status + '</p></div>' +
             '</div>' +
             ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">' +
             '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].address + '</p>' + '</div>' + '</div><hr>' +
-            '<div class="row"><div class="col-lg-12 text-center">' +
-            '<p style="font-family:Quicksand Bold; font-size: 15px; color:#AD363B">'+tasks[i].title+'</p>'+
-            '</div></div>'+
+
+            '<div class="row">' +
+            '<div class="col-lg-12 text-center">' +
+                '<p style="font-family:Quicksand Bold; font-size: 15px; color:#AD363B">'+tasks[i].title+'</p>'+
+            '</div>' +
+            '</div>'+
 
             '<div class="row">' +
             '<div class="col-lg-6 text-center">' +
-            '<div class="row" >' +
-            '<div class="col-lg-8 col-md-8 text-right ">' +
                 '<div class="row" >' +
-                '<div class="col-lg-6 col-md-6  ">' +
-                    '<img class="img_user" src="../images/avatar.png" height="20" width="20"/>' +
-                '</div>' +
-                '<div class="col-lg-4 col-md-4 text-left ">' +
-                    '<p class="info_text_response" style="margin-top:1rem; font-family: Quicksand Bold">'+ tasks[i].username+'</p>' +
-                '</div>' +
-                '<div class="col-lg-2 col-md-2 text-left">' +
-                    '<p class="info_text_response text-center" style="margin-top:1rem;">'+tasks[i].category+'</p>' +
-                '</div>' +
-                '</div>' +
-                '</div>' +
-            '<div class="col-lg-4 col-md-4 text-left"></div>' +
+                '<div class="col-lg-8 col-md-8 text-right ">' +
+                    '<div class="row" >' +
+                        '<div class="col-lg-4 col-md-4  ">' +
+                            '<img class="img_user" src="../images/avatar.png" height="20" width="20"/>' +
+                        '</div>' +
+                        '<div class="col-lg-6 col-md-6 text-left ">' +
+                            '<p class="info_text_response" style="font-family: Quicksand Bold">'+ tasks[i].username+'</p>' +
+                        '</div>' +
+                        '<div class="col-lg-2 col-md-2 text-left">' +
+                            '<p class="info_text_response text-center" style="margin-left:1.5rem">'+tasks[i].category+'</p>' +
+                        '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '<div class="col-lg-4 col-md-4 text-left"></div>' +
             '</div>' +
             '<div class="col-lg-12 text-center">' +
             '<img style="height:10rem; margin-bottom:1rem"id=' + i + '>' +
@@ -929,29 +930,14 @@ var loadMore = function () {
 
                 '</div>' +
             '</div></div><hr style="margin-bottom: 0; margin-top:0">' +
-            '<div class="row"><div class="col-lg-6 text-left">' +
-            '<div class="col-lg-6 col-md-6">' +
+
             '<div class="row">' +
-            '<div class="col-lg-6 col-md-6">' +
-            ' <i class="fa fa-thumbs-up" style="font-size:2rem"></i>' +
-            '</div>' +
-            '<div class="col-lg-6 col-md-6 text-left">' +
-            '<p class="info_text_response"style="margin-top: 5px">'+tasks[i].ups+'</p>' +
+            '<div class="col-lg-6 text-left"></div>' +
+            '<div class="col-lg-6 text-right">' +
+                '<p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].creationtime + ' </p>' +
             '</div>' +
             '</div>' +
-            '</div>' +
-            '<div class="col-lg-6 col-md-6">' +
-            '<div class="row">' +
-            '<div class="col-lg-6 col-md-6">' +
-            '<i class="fa fa-thumbs-down" style="font-size:2rem"></i>' +
-            '</div>' +
-            '<div class="col-lg-6 col-md-6 text-left">' +
-            '<p class="info_text_response" style="margin-top: 5px">'+ tasks[i].downs+'</p>' +
-            '</div>' +
-            '</div>' +
-            '</div>'+
-            '</div>'+
-            '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].creationtime + ' </p></div></div>';
+            '</div>';
 
         $(".inner").append(contentString);
         var image = document.getElementById(i);
