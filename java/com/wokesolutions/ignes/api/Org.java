@@ -4,9 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 
@@ -44,14 +42,12 @@ import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.DatastoreException;
-import com.google.firebase.messaging.FirebaseMessagingException;
 import com.wokesolutions.ignes.data.ApplicationData;
 import com.wokesolutions.ignes.data.TaskData;
 import com.wokesolutions.ignes.data.WorkerRegisterData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
-import com.wokesolutions.ignes.util.Firebase;
 import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Prop;
@@ -179,10 +175,12 @@ public class Org {
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.WORKER);
 			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
 
-			Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey().getName(), user.getKey());
-			userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
-
-			List<Entity> list = Arrays.asList(user, worker, userPoints);
+			Entity userStats = new Entity(DSUtils.USERSTATS, email, userK);
+			userStats.setProperty(DSUtils.USERSTATS_LOGINS, 0L);
+			userStats.setProperty(DSUtils.USERSTATS_LOGINSFAILED, 0L);
+			userStats.setProperty(DSUtils.USERSTATS_LOGOUTS, 0L);
+			
+			List<Entity> list = Arrays.asList(user, worker, userStats);
 
 			Email.sendWorkerRegisterMessage(email, pw,
 					orgE.getProperty(DSUtils.ORG_NAME).toString());
@@ -648,8 +646,19 @@ public class Org {
 
 		Filter taskF = new Query.FilterPredicate(DSUtils.ORGTASK_ORG,
 				FilterOperator.EQUAL, orgK);
+
+		Filter applicationF = new Query.FilterPredicate(DSUtils.APPLICATION_REPORT,
+				FilterOperator.EQUAL, reportK);
+		Query applicationQ = new Query(DSUtils.APPLICATION)
+				.setAncestor(orgK).setFilter(applicationF);
 		
-		Query taskQ = new Query(DSUtils.ORGTASK).setAncestor(reportK).setFilter(taskF);
+		int count = datastore.prepare(applicationQ).countEntities(FetchOptions.Builder.withDefaults());
+		if(count > 0) {
+			LOG.info(Log.DUPLICATED_TASK);
+			return Response.status(Status.CONFLICT).build();
+		}
+		
+		Query taskQ = new Query(DSUtils.ORGTASK).setAncestor(orgK).setFilter(taskF);
 		Entity task;
 		try {
 			task = datastore.prepare(taskQ).asSingleEntity();
@@ -681,8 +690,8 @@ public class Org {
 
 		Date date = new Date();
 
-		Entity application = new Entity(DSUtils.APPLICATION, orgK);
-		application.setProperty(DSUtils.APPLICATION_BUGDET, data.bugdet);
+		Entity application = new Entity(DSUtils.APPLICATION, report.getKey().getName(), orgK);
+		application.setProperty(DSUtils.APPLICATION_BUDGET, data.budget);
 		application.setProperty(DSUtils.APPLICATION_TIME, date);
 
 		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
@@ -692,8 +701,8 @@ public class Org {
 		application.setProperty(DSUtils.APPLICATION_INFO, data.info);
 		application.setProperty(DSUtils.APPLICATION_REPORT, reportK);
 		
-		Entity applicationLog = new Entity(DSUtils.APPLICATIONLOG, reportK);
-		applicationLog.setProperty(DSUtils.APPLICATIONLOG_BUDGET, data.bugdet);
+		Entity applicationLog = new Entity(DSUtils.APPLICATIONLOG, report.getKey().getName(), orgK);
+		applicationLog.setProperty(DSUtils.APPLICATIONLOG_BUDGET, data.budget);
 		applicationLog.setProperty(DSUtils.APPLICATIONLOG_TIME, date);
 		applicationLog.setProperty(DSUtils.APPLICATIONLOG_INFO, data.info);
 		applicationLog.setProperty(DSUtils.APPLICATIONLOG_ORG, orgK);
@@ -704,6 +713,7 @@ public class Org {
 		datastore.put(txn, application);
 		txn.commit();
 		
+		/*
 		Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
 		Entity reporter;
 		try {
@@ -724,6 +734,7 @@ public class Org {
 		} catch (FirebaseMessagingException e) {
 			LOG.info(Log.UNEXPECTED_ERROR);
 		}
+		*/
 		
 		return Response.ok().build();
 	}
@@ -765,6 +776,8 @@ public class Org {
 		List<String> cats = new ArrayList<String>();
 		for(int i = 0; i < orgcats.length(); i++)
 			cats.add(orgcats.getString(i));
+		
+		LOG.info(orgcats.toString());
 
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE_BIG);
 
@@ -802,6 +815,7 @@ public class Org {
 			return Response.status(Status.NO_CONTENT).build();
 
 		for(Entity report : reportList) {
+			LOG.info(report.toString());
 			String cat = report.getProperty(DSUtils.REPORT_CATEGORY).toString();
 			if(cats.contains(cat))
 				addReportToArray(report, array, orgK);
@@ -863,14 +877,14 @@ public class Org {
 		jsonReport.put(Prop.THUMBNAIL, tn);
 
 		Key reportK = report.getKey();
-		Key applicationK = KeyFactory.createKey(reportK, DSUtils.APPLICATION, reportK.getName());
+		Key applicationK = KeyFactory.createKey(orgK, DSUtils.APPLICATION, orgK.getName());
 		Key taskK = KeyFactory.createKey(reportK, DSUtils.ORGTASK, reportK.getName());
 
 		Entity application;
 		try {
 			application = datastore.get(applicationK);
 
-			jsonReport.put(Prop.BUDGET, application.getProperty(DSUtils.APPLICATION_BUGDET));
+			jsonReport.put(Prop.BUDGET, application.getProperty(DSUtils.APPLICATION_BUDGET));
 			jsonReport.put(Prop.INFO, application.getProperty(DSUtils.APPLICATION_INFO));
 			jsonReport.put(Prop.APPLICATION_TIME, application.getProperty(DSUtils.APPLICATION_TIME));
 		} catch(EntityNotFoundException e) {

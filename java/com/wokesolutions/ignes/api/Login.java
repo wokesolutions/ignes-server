@@ -1,12 +1,9 @@
 package com.wokesolutions.ignes.api;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,14 +33,12 @@ import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.DatastoreException;
-import com.google.firebase.messaging.FirebaseMessagingException;
 import com.wokesolutions.ignes.data.LoginData;
 import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.UserLevel;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
-import com.wokesolutions.ignes.util.Firebase;
 import com.wokesolutions.ignes.util.JWTUtils;
 
 @Path("/login")
@@ -103,7 +98,7 @@ public class Login {
 				txn.rollback();
 				return Response.status(Status.FORBIDDEN).build();
 			}
-
+			
 			String level = user.getProperty(DSUtils.USER_LEVEL).toString();
 
 			if(level.equals(UserLevel.ORG)) {
@@ -119,18 +114,16 @@ public class Login {
 
 			Date date = new Date();
 
-			Query statsQuery = new Query(DSUtils.USERSTATS).setAncestor(userKey);
+			Key statsK = KeyFactory.createKey(userKey, DSUtils.USERSTATS, data.username);
 
 			Entity stats;
 			try {
-				stats = datastore.prepare(txn, statsQuery).asSingleEntity();
-			} catch(TooManyResultsException e2) {
+				stats = datastore.get(statsK);
+			} catch(EntityNotFoundException e2) {
 				LOG.info(Log.UNEXPECTED_ERROR);
+				txn.rollback();
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
-
-			if(stats == null)
-				stats = new Entity(DSUtils.USERSTATS, user.getKey());
 
 			String hashedPWD = (String) user.getProperty(DSUtils.USER_PASSWORD);
 			if(!hashedPWD.equals(DigestUtils.sha512Hex(data.password))) {
@@ -211,7 +204,7 @@ public class Login {
 			newToken.setUnindexedProperty(DSUtils.TOKEN_DATE, date);
 			newToken.setProperty(DSUtils.TOKEN_DEVICE, deviceid);
 			newToken.setProperty(DSUtils.TOKEN_USER, userKey);
-
+			
 			stats.setProperty(DSUtils.USERSTATS_LOGINS,
 					(long) stats.getProperty(DSUtils.USERSTATS_LOGINS) + 1L);
 			stats.setProperty(DSUtils.USERSTATS_LASTIN, new Date());
@@ -265,21 +258,6 @@ public class Login {
 			}
 
 			txn.commit();
-
-			Map<String, String> body = new HashMap<>();
-			body.put("body", "ISTO E O CORPO");
-
-			try {
-				Firebase.init();
-				Firebase.sendMessageToDevice("OLA MIGO", body, data.firebasetoken);
-			} catch (FirebaseMessagingException e) {
-				LOG.info(e.getMessage());
-				LOG.info(e.toString());
-			} catch (IOException e) {
-				LOG.info(e.getMessage());
-				LOG.info(e.toString());
-			}
-
 			return response.build();	
 		} finally {
 			if (txn.isActive()) {

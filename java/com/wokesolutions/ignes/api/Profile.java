@@ -777,98 +777,11 @@ public class Profile {
 	}
 
 	@POST
-	@Path("/acceptapplication")
-	public Response accept(@Context HttpServletRequest request, AcceptData data) {
-		if(!data.isValid())
-			return Response.status(Status.BAD_REQUEST).build();
-
-		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
-
-		int retries = 5;
-		while(true) {
-			try {
-				return acceptRetry(username, data);
-			} catch(DatastoreException e) {
-				if(retries == 0) {
-					LOG.warning(Log.TOO_MANY_RETRIES);
-					return Response.status(Status.REQUEST_TIMEOUT).build();
-				}
-
-				retries--;
-			}
-		}
-	}
-
-	public Response acceptRetry(String username, AcceptData data) {
-		Key userK = KeyFactory.createKey(DSUtils.USER, username);
-		Key reportK = KeyFactory.createKey(DSUtils.REPORT, data.report);
-
-		Entity report;
-		try {
-			report = datastore.get(reportK);
-		} catch(EntityNotFoundException e) {
-			LOG.info(Log.REPORT_NOT_FOUND);
-			return Response.status(Status.EXPECTATION_FAILED).build();
-		}
-
-		Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
-		if(!reporterK.equals(userK)) {
-			LOG.info(Log.NOT_REPORTER);
-			return Response.status(Status.FORBIDDEN).build();
-		}
-
-		Key orgUK = KeyFactory.createKey(DSUtils.USER, data.nif);
-		Key orgK = KeyFactory.createKey(orgUK, DSUtils.ORG, data.nif);
-
-		LOG.info(orgK.toString());
-
-		Query applicationQ = new Query(DSUtils.APPLICATION).setKeysOnly()
-				.setAncestor(reportK);
-
-		List<Entity> applications = datastore.prepare(applicationQ)
-				.asList(FetchOptions.Builder.withDefaults());
-
-		Iterator<Entity> it = applications.iterator();
-		Entity application = null;
-		List<Key> keys = new ArrayList<Key>(applications.size());
-		while(it.hasNext()) {
-			Entity temp = it.next();
-			Key key = (Key) temp.getProperty(DSUtils.APPLICATION_ORG);
-			keys.add(key);
-
-			if(key.equals(orgK))
-				application = temp;
-
-			if(!it.hasNext() && !key.equals(orgK)) {
-				LOG.info(Log.APPLICATION_NOT_FOUND);
-				return Response.status(Status.NOT_FOUND).build();
-			}
-		}
-
-		if(application == null)
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-
-		Transaction txn = datastore.beginTransaction();
-
-		Entity task = new Entity(reportK.getName(), DSUtils.ORGTASK, reportK);
-		task.setProperty(DSUtils.ORGTASK_ORG, orgK);
-		task.setProperty(DSUtils.ORGTASK_TIME, new Date());
-		task.setProperty(DSUtils.ORGTASK_USER, userK);
-		
-		datastore.put(txn, task);
-		
-		datastore.delete(txn, keys);
-		
-		txn.commit();
-		return Response.ok().build();
-	}
-	
-	@POST
 	@Path("/addfollow/{location}")
 	public Response addFollow(@Context HttpServletRequest request,
 			@PathParam(ParamName.LOCATION) String location) {
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
-		
+
 		int retries = 5;
 		while(true) {
 			try {
@@ -887,25 +800,99 @@ public class Profile {
 			}
 		}
 	}
-	
+
 	@GET
 	@Path("/follows")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response follows(@Context HttpServletRequest request) {
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
-		
+
 		int retries = 5;
 		while(true) {
 			try {
 				Key userK = KeyFactory.createKey(DSUtils.USER, username);
-				
+
 				Query followQ = new Query(DSUtils.FOLLOW).setAncestor(userK);
 				List<Entity> list = datastore.prepare(followQ)
 						.asList(FetchOptions.Builder.withDefaults());
-				
+
 				JSONArray array = new JSONArray();
 				for(Entity location : list)
 					array.put(location.getProperty(DSUtils.FOLLOW_LOCATION));
+
+				return Response.ok(array.toString()).build();
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Log.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
+
+	@GET
+	@Path("/getapplications/{report}")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response applications(@Context HttpServletRequest request,
+			@PathParam(ParamName.REPORT) String report) {
+		int retries = 5;
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+
+		while(true) {
+			try {
+				Key reportK = KeyFactory.createKey(DSUtils.REPORT, report);
+				Entity reportE;
+				try {
+					reportE = datastore.get(reportK);
+				} catch(EntityNotFoundException e) {
+					LOG.info(Log.REPORT_NOT_FOUND);
+					return Response.status(Status.NOT_FOUND).build();
+				}
+
+				Key userK = KeyFactory.createKey(DSUtils.USER, username);
+				if(!reportE.getProperty(DSUtils.REPORT_USER).equals(userK)) {
+					LOG.info(Log.REPORT_IS_PRIVATE);
+					return Response.status(Status.FORBIDDEN).build();
+				}
+
+				Filter applicationF = new Query.FilterPredicate(DSUtils.APPLICATION_REPORT,
+						FilterOperator.EQUAL, reportK);
+				Query applicationQ = new Query(DSUtils.APPLICATION).setFilter(applicationF);
+				List<Entity> applications = datastore.prepare(applicationQ)
+						.asList(FetchOptions.Builder.withDefaults());
+
+				JSONArray array = new JSONArray();
+
+				for(Entity application : applications) {
+					JSONObject obj = new JSONObject();
+
+					Entity org;
+					try {
+						org = datastore.get(application.getParent());
+					} catch(EntityNotFoundException e) {
+						LOG.info(Log.UNEXPECTED_ERROR);
+						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+					}
+					
+					Entity user;
+					try {
+						user = datastore.get(org.getParent());
+					} catch(EntityNotFoundException e) {
+						LOG.info(Log.USER_NOT_FOUND);
+						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+					}
+
+					obj.put(Prop.NIF, org.getKey().getName());
+					obj.put(Prop.BUDGET, application.getProperty(DSUtils.APPLICATION_BUDGET));
+					obj.put(Prop.PHONE, org.getProperty(DSUtils.ORG_PHONE));
+					obj.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
+					obj.put(Prop.INFO, application.getProperty(DSUtils.APPLICATION_INFO));
+					obj.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
+					
+					array.put(obj);
+				}
 				
 				return Response.ok(array.toString()).build();
 			} catch(DatastoreException e) {

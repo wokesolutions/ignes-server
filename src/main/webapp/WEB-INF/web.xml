@@ -33,10 +33,6 @@
 		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>
 
-	<resource-files>
-		<include path="/**.json"/>
-	</resource-files>
-
 	<!-- Filters -->
 
 	<filter>

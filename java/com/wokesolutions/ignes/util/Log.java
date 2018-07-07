@@ -61,6 +61,7 @@ public class Log {
 		public static final String UNEXPECTED_ERROR = "Erro inesperado";
 		public static final String INVALID_EMAIL = "Email inválido";
 		public static final String INVALID_USERNAME = "Nome de utilizador inválido";
+		public static final String FORBIDDEN = "Não tem permissão";
 		
 	// Error Requests
 		public static final String TOO_MANY_REQUESTS = "Demasiados pedidos do mesmo IP";

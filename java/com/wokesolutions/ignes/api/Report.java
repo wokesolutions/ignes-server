@@ -54,6 +54,7 @@ import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.callbacks.LevelManager;
+import com.wokesolutions.ignes.data.AcceptData;
 import com.wokesolutions.ignes.data.ReportData;
 import com.wokesolutions.ignes.exceptions.VoteException;
 import com.wokesolutions.ignes.util.CustomHeader;
@@ -928,6 +929,94 @@ public class Report {
 				retries--;
 			}
 		}
+	}
+	
+	@POST
+	@Path("/acceptapplication")
+	public Response accept(@Context HttpServletRequest request, AcceptData data) {
+		if(!data.isValid())
+			return Response.status(Status.BAD_REQUEST).build();
+
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+
+		int retries = 5;
+		while(true) {
+			try {
+				return acceptRetry(username, data);
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Log.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
+
+	public Response acceptRetry(String username, AcceptData data) {
+		Key userK = KeyFactory.createKey(DSUtils.USER, username);
+		Key reportK = KeyFactory.createKey(DSUtils.REPORT, data.report);
+
+		Entity report;
+		try {
+			report = datastore.get(reportK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Log.REPORT_NOT_FOUND);
+			return Response.status(Status.EXPECTATION_FAILED).build();
+		}
+		
+		Entity user;
+		try {
+			user = datastore.get(userK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Log.UNEXPECTED_ERROR);
+			return Response.status(Status.EXPECTATION_FAILED).build();
+		}
+		
+		boolean isprivate = (boolean) report.getProperty(DSUtils.REPORT_PRIVATE);
+		String userlevel = user.getProperty(DSUtils.USER_LEVEL).toString();
+		
+		/*
+		if(userlevel.equals(UserLevel.ADMIN) && isprivate
+				|| !userlevel.equals(UserLevel.ADMIN) && !isprivate) {
+			LOG.info(Log.FORBIDDEN);
+			return Response.status(Status.FORBIDDEN).build();
+		}
+		*/
+
+		Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
+		if(!reporterK.equals(userK)) {
+			LOG.info(Log.NOT_REPORTER);
+			return Response.status(Status.FORBIDDEN).build();
+		}
+
+		Key orgUK = KeyFactory.createKey(DSUtils.USER, data.nif);
+		Key orgK = KeyFactory.createKey(orgUK, DSUtils.ORG, data.nif);
+
+		LOG.info(orgK.toString());
+
+		Filter applicationF = new Query.FilterPredicate(DSUtils.APPLICATION_REPORT,
+				FilterOperator.EQUAL, reportK);
+		Query applicationQ = new Query(DSUtils.APPLICATION).setKeysOnly().setFilter(applicationF);
+
+		List<Entity> applications = datastore.prepare(applicationQ)
+				.asList(FetchOptions.Builder.withDefaults());
+
+		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
+		
+		for(Entity application : applications)
+			datastore.delete(txn, application.getKey());
+
+		Entity task = new Entity(DSUtils.ORGTASK, reportK.getName(), reportK);
+		task.setProperty(DSUtils.ORGTASK_ORG, orgK);
+		task.setProperty(DSUtils.ORGTASK_TIME, new Date());
+		task.setProperty(DSUtils.ORGTASK_USER, userK);
+
+		datastore.put(txn, task);
+
+		txn.commit();
+		return Response.ok().build();
 	}
 
 	// ---------------x--------------- SUBCLASS

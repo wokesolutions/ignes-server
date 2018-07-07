@@ -136,6 +136,11 @@ public class Admin {
 
 			Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
 			userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
+			
+			Entity userStats = new Entity(DSUtils.USERSTATS, userKey);
+			userStats.setUnindexedProperty(DSUtils.USERSTATS_LOGINS, 0L);
+			userStats.setUnindexedProperty(DSUtils.USERSTATS_LOGINSFAILED, 0L);
+			userStats.setUnindexedProperty(DSUtils.USERSTATS_LOGOUTS, 0L);
 
 			List<Entity> list = Arrays.asList(user, admin, useroptional, userPoints);
 
@@ -343,21 +348,18 @@ public class Admin {
 			us.put(Prop.LEVEL, level);
 			us.put(Prop.CREATIONTIME, user.getProperty(DSUtils.USER_CREATIONTIMEFORMATTED));
 
-			if(!level.equals(UserLevel.ORG)) {
-				Query queryPoints = new Query(DSUtils.USERPOINTS).setAncestor(user.getKey());
+			if(!level.equals(UserLevel.ORG) && !level.equals(UserLevel.WORKER)) {
+				Key pointsK = KeyFactory.createKey(user.getKey(), DSUtils.USERPOINTS, user.getKey().getName());
 
 				Entity points;
 
 				try {
-					points = datastore.prepare(queryPoints).asSingleEntity();
-				} catch(TooManyResultsException e) {
-					continue;
-				}
-
-				if(points == null) {
+					points = datastore.get(pointsK);
+				} catch(EntityNotFoundException e) {
 					LOG.info(Log.UNEXPECTED_ERROR + user.getKey().getName());
 					return Response.status(Status.EXPECTATION_FAILED).build();
 				}
+
 				us.put(Prop.POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
 			}
 
@@ -463,7 +465,8 @@ public class Admin {
 		.addProjection(new PropertyProjection(DSUtils.REPORT_GRAVITY, Integer.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
-		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class));
+		.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class))
+		.addProjection(new PropertyProjection(DSUtils.REPORT_PRIVATE, Boolean.class));
 
 		QueryResultList<Entity> list = datastore.prepare(query).asQueryResultList(fetchOptions);
 
@@ -498,8 +501,14 @@ public class Admin {
 	
 	@POST
 	@Path("/confirmreport/{report}")
-	public Response confirmReport(@PathParam(ParamName.REPORT) String reportid) {
+	public Response confirmReport(@PathParam(ParamName.REPORT) String reportid,
+			@Context HttpServletRequest request) {
 		int retries = 5;
+		
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		
+		Key userK = KeyFactory.createKey(DSUtils.USER, username);
+		Key adminK = KeyFactory.createKey(userK, DSUtils.ADMIN, username);
 
 		while(true) {
 			try {
@@ -519,7 +528,19 @@ public class Admin {
 				}
 				
 				report.setProperty(DSUtils.REPORT_STATUS, Report.OPEN);
-				datastore.put(report);
+				
+				Entity statuslog = new Entity(DSUtils.REPORTSTATUSLOG, report.getKey());
+				statuslog.setProperty(DSUtils.REPORTSTATUSLOG_NEWSTATUS, Report.OPEN);
+				statuslog.setProperty(DSUtils.REPORTSTATUSLOG_OLDSTATUS, Report.STANDBY);
+				statuslog.setProperty(DSUtils.REPORTSTATUSLOG_TIME, new Date());
+				statuslog.setProperty(DSUtils.REPORTSTATUSLOG_USER, adminK);
+				
+				Transaction txn = datastore.beginTransaction();
+				
+				datastore.put(txn, report);
+				datastore.put(txn, statuslog);
+				
+				txn.commit();
 				
 				return Response.ok().build();
 			} catch(DatastoreException e) {
@@ -742,6 +763,78 @@ public class Admin {
 		datastore.delete(txn, reportsK);
 		datastore.delete(txn, commentsK);
 		return true;
+	}
+	
+	@GET
+	@Path("/publicreports")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response getPublicReps(@QueryParam(ParamName.CURSOR) String cursor) {
+		int retries = 5;
+		while(true) {
+			try {
+				Filter reportF = new Query.FilterPredicate(DSUtils.REPORT_PRIVATE,
+						FilterOperator.EQUAL, false);
+				Query reportQ = new Query(DSUtils.REPORT).setFilter(reportF);
+				
+
+				reportQ.addProjection(new PropertyProjection(DSUtils.REPORT_TITLE, String.class))
+				.addProjection(new PropertyProjection(DSUtils.REPORT_ADDRESS, String.class))
+				.addProjection(new PropertyProjection(DSUtils.REPORT_USER, Key.class))
+				.addProjection(new PropertyProjection(DSUtils.REPORT_GRAVITY, Integer.class))
+				.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
+				.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
+				.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class));
+				
+				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
+				
+				if(cursor != null && !cursor.equals(""))
+					fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
+				
+				QueryResultList<Entity> reports = datastore.prepare(reportQ)
+						.asQueryResultList(fetchOptions);
+				
+				if(reports.isEmpty())
+					return Response.status(Status.NO_CONTENT).build();
+
+				JSONArray array = new JSONArray();
+
+				for(Entity report : reports) {
+					JSONObject rep = new JSONObject();
+					rep.put(Prop.REPORT, report.getKey().getName());
+					rep.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
+					rep.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
+					rep.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+					rep.put(Prop.USERNAME,
+							((Key) report.getProperty(DSUtils.REPORT_USER)).getName());
+
+					Object points = report.getProperty(DSUtils.REPORT_POINTS);
+					if(points != null) {
+						rep.put(Prop.POINTS, points);
+					}
+					
+					rep.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
+					rep.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
+					rep.put(Prop.CREATIONTIME,
+							report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
+
+					array.put(rep);
+				}
+
+				cursor = reports.getCursor().toWebSafeString();
+
+				if(array.length() < BATCH_SIZE)
+					return Response.ok(array.toString()).build();
+
+				return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
+				
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Log.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+				retries--;
+			}
+		}
 	}
 
 	// ---------------x--------------- SUBCLASS

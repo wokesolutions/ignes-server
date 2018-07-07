@@ -289,7 +289,7 @@ public class DSUtils {
 		public static final String APPLICATION_REPORT = "application_report";
 		public static final String APPLICATION_TIME = "application_time";
 		public static final String APPLICATION_FORMATTEDTIME = "application_formattedtime";
-		public static final String APPLICATION_BUGDET = "application_bugdet";
+		public static final String APPLICATION_BUDGET = "application_bugdet";
 		public static final String APPLICATION_INFO = "application_info";
 		
 	// OrgTask

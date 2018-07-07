@@ -120,7 +120,7 @@ public class Register {
 
 				Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
 				
-				Entity userstats = new Entity(DSUtils.USERSTATS, userKey);
+				Entity userstats = new Entity(DSUtils.USERSTATS, data.username, userKey);
 				userstats.setUnindexedProperty(DSUtils.USERSTATS_LOGINS, 0L);
 				userstats.setUnindexedProperty(DSUtils.USERSTATS_LOGINSFAILED, 0L);
 				userstats.setUnindexedProperty(DSUtils.USERSTATS_LOGOUTS, 0L);
@@ -137,10 +137,6 @@ public class Register {
 
 			txn.rollback();
 			return Response.status(Status.CONFLICT).entity(Log.USER_ALREADY_EXISTS).build(); 
-		} catch(Exception e) {
-			LOG.info(e.getMessage());
-			LOG.info(e.toString());
-			return null;
 		} finally {
 			if(code != null)
 				Email.sendConfirmMessage(data.email, code);
@@ -180,7 +176,7 @@ public class Register {
 		JSONArray array = new JSONArray(data.categories);
 		
 		for(int i = 0; i < array.length(); i++)
-			if(Category.isEq(array.getString(i)))
+			if(!Category.isEq(array.getString(i)))
 				return Response.status(Status.BAD_REQUEST).build();
 
 		Key orgKey;
