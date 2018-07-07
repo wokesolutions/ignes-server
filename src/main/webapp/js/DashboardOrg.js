@@ -341,11 +341,11 @@ function fillMap(reports, cursor){
             }
             else if(status === "closed")
                 marker_color = "../marcadores/g1-closed-mine.png";
-            else if(tasktime !== null || tasktime !== undefined){
+            else if(tasktime !== null && tasktime !== undefined){
                 tasks.push(reports[i]);
                 marker_color = "../marcadores/g1-accepted-mine.png";
             }
-            else if(budget !== null || budget !== undefined)
+            else if(budget !== null && budget !== undefined)
                 marker_color = "../marcadores/g1-applied-mine.png";
             else
                 marker_color = "../marcadores/g1-open.png";
@@ -356,11 +356,11 @@ function fillMap(reports, cursor){
                 marker_color = "../marcadores/g2-standby.png";
             else if(status === "closed")
                 marker_color = "../marcadores/g2-closed-mine.png";
-            else if(tasktime !== null || tasktime !== undefined){
+            else if(tasktime !== null && tasktime !== undefined){
                 tasks.push(reports[i]);
                 marker_color = "../marcadores/g2-accepted-mine.png";
             }
-            else if(budget !== null || budget !== undefined)
+            else if(budget !== null && budget !== undefined)
                 marker_color = "../marcadores/g2-applied-mine.png";
             else
                 marker_color = "../marcadores/g2-open.png";
@@ -371,11 +371,11 @@ function fillMap(reports, cursor){
                 marker_color = "../marcadores/g3-standby.png";
             else if(status === "closed")
                 marker_color = "../marcadores/g3-closed-mine.png";
-            else if(tasktime !== null || tasktime !== undefined){
+            else if(tasktime !== null && tasktime !== undefined){
                 tasks.push(reports[i]);
                 marker_color = "../marcadores/g3-accepted-mine.png";
             }
-            else if(budget !== null || budget !== undefined)
+            else if(budget !== null && budget !== undefined)
                 marker_color = "../marcadores/g3-applied-mine.png";
             else
                 marker_color = "../marcadores/g3-open.png";
@@ -386,11 +386,11 @@ function fillMap(reports, cursor){
                 marker_color = "../marcadores/g4-standby.png";
             else if(status === "closed")
                 marker_color = "../marcadores/g4-closed-mine.png";
-            else if(tasktime !== null || tasktime !== undefined){
+            else if(tasktime !== null && tasktime !== undefined){
                 tasks.push(reports[i]);
                 marker_color = "../marcadores/g4-accepted-mine.png";
             }
-            else if(budget !== null || budget !== undefined)
+            else if(budget !== null && budget !== undefined)
                 marker_color = "../marcadores/g4-applied-mine.png";
             else
                 marker_color = "../marcadores/g4-open.png";
@@ -401,11 +401,11 @@ function fillMap(reports, cursor){
                 marker_color = "../marcadores/g5-standby.png";
             else if(status === "closed")
                 marker_color = "../marcadores/g5-closed-mine.png";
-            else if(tasktime !== null || tasktime !== undefined){
+            else if(tasktime !== null && tasktime !== undefined){
                 tasks.push(reports[i]);
                 marker_color = "../marcadores/g5-accepted-mine.png";
             }
-            else if(budget !== null || budget !== undefined)
+            else if(budget !== null && budget !== undefined)
                 marker_color = "../marcadores/g5-applied-mine.png";
             else
                 marker_color = "../marcadores/g5-open.png";
@@ -441,9 +441,9 @@ function fillMap(reports, cursor){
         google.maps.event.addListener(marker, 'click', (function(marker, i) {
 
             return function() {
-                if(tasktime !== null || tasktime !== undefined)
+                if(tasktime !== null && tasktime !== undefined)
                     to_show = 1;
-                else if(budget !== null || budget !== undefined)
+                else if(budget !== null && budget !== undefined)
                     to_show = 3;
                 else if(status === "closed")
                     to_show = 4;
