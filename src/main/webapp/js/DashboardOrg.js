@@ -188,7 +188,6 @@ function hideShow(element){
 
     }
 
-
     if(element === "map_variable"){
 
         document.getElementById("map_search").style.display = "block";
@@ -349,7 +348,7 @@ function fillMap(reports, cursor){
                 marker_color = "../marcadores/g1-accepted-mine.png";
             }
             else if(budget !== null && budget !== undefined)
-                marker_color = "../marcadores/g1-applied-mine.png";
+                marker_color = "../marcadores/g1-pending-mine.png";
             else
                 marker_color = "../marcadores/g1-open.png";
         }
@@ -364,7 +363,7 @@ function fillMap(reports, cursor){
                 marker_color = "../marcadores/g2-accepted-mine.png";
             }
             else if(budget !== null && budget !== undefined)
-                marker_color = "../marcadores/g2-applied-mine.png";
+                marker_color = "../marcadores/g2-pending-mine.png";
             else
                 marker_color = "../marcadores/g2-open.png";
         }
@@ -379,7 +378,7 @@ function fillMap(reports, cursor){
                 marker_color = "../marcadores/g3-accepted-mine.png";
             }
             else if(budget !== null && budget !== undefined)
-                marker_color = "../marcadores/g3-applied-mine.png";
+                marker_color = "../marcadores/g3-pending-mine.png";
             else
                 marker_color = "../marcadores/g3-open.png";
         }
@@ -394,7 +393,7 @@ function fillMap(reports, cursor){
                 marker_color = "../marcadores/g4-accepted-mine.png";
             }
             else if(budget !== null && budget !== undefined)
-                marker_color = "../marcadores/g4-applied-mine.png";
+                marker_color = "../marcadores/g4-pending-mine.png";
             else
                 marker_color = "../marcadores/g4-open.png";
         }
@@ -409,7 +408,7 @@ function fillMap(reports, cursor){
                 marker_color = "../marcadores/g5-accepted-mine.png";
             }
             else if(budget !== null && budget !== undefined)
-                marker_color = "../marcadores/g5-applied-mine.png";
+                marker_color = "../marcadores/g5-pending-mine.png";
             else
                 marker_color = "../marcadores/g5-open.png";
         }
@@ -885,7 +884,7 @@ function sendApplication(){
     headers.append('Device-Id', localStorage.getItem('fingerprint'));
     headers.append('Device-App', localStorage.getItem('app'));
     headers.append('Device-Info', localStorage.getItem('browser'));
-    fetch(restRequest('/api/org/apply/' + idReportCurr, 'POST', headers, JSON.stringify(body))).then(function() {
+    fetch(restRequest('/api/org/apply/' + idReportCurr, 'POST', headers, JSON.stringify(body))).then(function(response) {
         if(response.status === 200)
             alert("Candidatura enviada com sucesso");
         else
