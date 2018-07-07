@@ -210,14 +210,17 @@ function hideShow(element){
         current_position = "create_variable";
 
     }else if(element === "show_more_variable"){
+
         if(to_show === 1)
             document.getElementById("open_button").style.display = "block";
-        else if(to_show===2)
+        else if(to_show === 2)
             document.getElementById("candidate_button").style.display = "block";
-        else if(to_show===3)
+        else if(to_show === 3)
             document.getElementById("wait_button").style.display = "block";
-        else if(to_show===4)
+        else if(to_show === 4)
             document.getElementById("closed_button").style.display = "block";
+
+        document.getElementById("details_report").style.display = "block";
         current_position = "show_more_variable";
 
     }else if(element === "show_more_users_variable"){
