@@ -15,6 +15,7 @@ var currentLoc ={
     zoom: 18
 };
 
+var to_show;
 var emailsarr;
 var workersarr;
 var variable;
@@ -46,6 +47,7 @@ function init() {
     document.getElementById("close_window").onclick = closeWindow;
     document.getElementById("close_window_worker").onclick = closeWindowWorker;
     document.getElementById("add_task").onclick = giveTask;
+    document.getElementById("send_application").onclick = sendApplication;
     document.getElementById("remove_button").onclick = showButtonDelete;
     document.getElementById("view_button").onclick = showButtonView;
 
@@ -170,7 +172,14 @@ function hideShow(element){
         document.getElementById("create_worker").style.display = "none";
 
     }else if(current_position === "show_more_variable"){
-
+        if(document.getElementById("open_button").style.display = "block")
+            document.getElementById("open_button").style.display = "none";
+        else if(document.getElementById("candidate_button").style.display = "block")
+            document.getElementById("candidate_button").style.display = "none";
+        else if(document.getElementById("wait_button").style.display = "block")
+            document.getElementById("wait_button").style.display = "none";
+        else if(document.getElementById("closed_button").style.display = "block")
+            document.getElementById("closed_button").style.display = "none";
         document.getElementById("details_report").style.display = "none";
 
     }else if(current_position === "show_more_users_variable"){
@@ -201,7 +210,14 @@ function hideShow(element){
         current_position = "create_variable";
 
     }else if(element === "show_more_variable"){
-        document.getElementById("details_report").style.display = "block";
+        if(to_show === 1)
+            document.getElementById("open_button").style.display = "block";
+        else if(to_show===2)
+            document.getElementById("candidate_button").style.display = "block";
+        else if(to_show===3)
+            document.getElementById("wait_button").style.display = "block";
+        else if(to_show===4)
+            document.getElementById("closed_button").style.display = "block";
         current_position = "show_more_variable";
 
     }else if(element === "show_more_users_variable"){
@@ -317,7 +333,7 @@ function fillMap(reports, cursor){
         var tasktime = reports[i].tasktime;
         var gravity = reports[i].gravity;
         var color;
-
+        console.log(reports[i]);
         if(gravity === 1) {
             color = '#5dcb21';
             if(status === "standby") {
@@ -425,6 +441,17 @@ function fillMap(reports, cursor){
         google.maps.event.addListener(marker, 'click', (function(marker, i) {
 
             return function() {
+                if(tasktime !== null || tasktime !== undefined)
+                    to_show = 1;
+                else if(budget !== null || budget !== undefined)
+                    to_show = 3;
+                else if(status === "closed")
+                    to_show = 4;
+                else if(status === "standby")
+                    to_show = 0;
+                else
+                    to_show= 2;
+
                 reportID = reports[i].report;
                 getInfo(reportID, i);
 
@@ -842,6 +869,29 @@ function deleteWorker (row){
         });
 }
 
+function sendApplication(){
+    var info = document.getElementById("info_application").value;
+    var budget = document.getElementById("budget_application").value;
+
+    var body = {
+        info: info,
+        budget: budget
+    };
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+    fetch(restRequest('/api/org/apply/' + idReportCurr, 'POST', headers, JSON.stringify(body))).then(function() {
+        if(response.status === 200)
+            alert("Candidatura enviada com sucesso");
+        else
+            alert("Candidatura falhou ao enviar")
+    }).catch(function(err) {
+        console.log('Fetch Error', err);
+    });;
+}
+
 var loadMore = function () {
     var i;
     for(i = currentfeed-10; i<currentfeed; i++) {
@@ -870,56 +920,56 @@ var loadMore = function () {
 
             '<div class="row">' +
             '<div class="col-lg-12 text-center">' +
-                '<p style="font-family:Quicksand Bold; font-size: 15px; color:#AD363B">'+tasks[i].title+'</p>'+
+            '<p style="font-family:Quicksand Bold; font-size: 15px; color:#AD363B">'+tasks[i].title+'</p>'+
             '</div>' +
             '</div>'+
 
             '<div class="row">' +
             '<div class="col-lg-6 text-center">' +
-                '<div class="row" >' +
-                '<div class="col-lg-8 col-md-8 text-right ">' +
-                    '<div class="row" >' +
-                        '<div class="col-lg-4 col-md-4  ">' +
-                            '<img class="img_user" src="../images/avatar.png" height="20" width="20"/>' +
-                        '</div>' +
-                        '<div class="col-lg-6 col-md-6 text-left ">' +
-                            '<p class="info_text_response" style="font-family: Quicksand Bold">'+ tasks[i].username+'</p>' +
-                        '</div>' +
-                        '<div class="col-lg-2 col-md-2 text-left">' +
-                            '<p class="info_text_response text-center" style="margin-left:1.5rem">'+tasks[i].category+'</p>' +
-                        '</div>' +
-                        '</div>' +
-                    '</div>' +
-                '<div class="col-lg-4 col-md-4 text-left"></div>' +
+            '<div class="row" >' +
+            '<div class="col-lg-8 col-md-8 text-right ">' +
+            '<div class="row" >' +
+            '<div class="col-lg-4 col-md-4  ">' +
+            '<img class="img_user" src="../images/avatar.png" height="20" width="20"/>' +
+            '</div>' +
+            '<div class="col-lg-6 col-md-6 text-left ">' +
+            '<p class="info_text_response" style="font-family: Quicksand Bold">'+ tasks[i].username+'</p>' +
+            '</div>' +
+            '<div class="col-lg-2 col-md-2 text-left">' +
+            '<p class="info_text_response text-center" style="margin-left:1.5rem">'+tasks[i].category+'</p>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+            '<div class="col-lg-4 col-md-4 text-left"></div>' +
             '</div>' +
             '<div class="col-lg-12 text-center">' +
-                '<img style="height:10rem; margin-bottom:1rem"id=' + i + '>' +
+            '<img style="height:10rem; margin-bottom:1rem"id=' + i + '>' +
             '</div>' +
             '</div>' +
             '<div class="col-lg-6">' +
-                '<div class="row">'+
-                '<div class="col-lg-12 mx-lg-auto text-center">' +
-                    '<div class="col-lg-4 mx-lg-auto text-right">'+
-                    '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" ></p>' +
-                    '</div><div class="col-lg-8 mx-lg-auto text-left">';
+            '<div class="row">'+
+            '<div class="col-lg-12 mx-lg-auto text-center">' +
+            '<div class="col-lg-4 mx-lg-auto text-right">'+
+            '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" ></p>' +
+            '</div><div class="col-lg-8 mx-lg-auto text-left">';
 
-              if(tasks[i].description !== undefined)
-                contentString=+'<p class="info_text_response text-center" >'+tasks[i].description+'</p>';
+        if(tasks[i].description !== undefined)
+            contentString=+'<p class="info_text_response text-center" >'+tasks[i].description+'</p>';
 
-               contentString += '</div></div>' +
-                '</div>' +
-                '<div class="row">'+
-                '<div class="col-lg-12 mx-lg-auto text-center">' +
-                '<div class="workers"><div class="workers_task"></div></div>'+
-                '</div>' +
-                '</div>' +
+        contentString += '</div></div>' +
+            '</div>' +
+            '<div class="row">'+
+            '<div class="col-lg-12 mx-lg-auto text-center">' +
+            '<div class="workers"><div class="workers_task"></div></div>'+
+            '</div>' +
+            '</div>' +
             '</div>' +
             '</div><hr style="margin-bottom: 0; margin-top:0">' +
 
             '<div class="row">' +
             '<div class="col-lg-6 text-left"></div>' +
             '<div class="col-lg-6 text-right">' +
-                '<p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].creationtime + ' </p>' +
+            '<p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].creationtime + ' </p>' +
             '</div>' +
             '</div>' +
             '</div>';
