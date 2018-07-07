@@ -174,12 +174,16 @@ function hideShow(element){
     }else if(current_position === "show_more_variable"){
         if(document.getElementById("open_button").style.display = "block")
             document.getElementById("open_button").style.display = "none";
+
         else if(document.getElementById("candidate_button").style.display = "block")
             document.getElementById("candidate_button").style.display = "none";
+
         else if(document.getElementById("wait_button").style.display = "block")
             document.getElementById("wait_button").style.display = "none";
+
         else if(document.getElementById("closed_button").style.display = "block")
             document.getElementById("closed_button").style.display = "none";
+
         document.getElementById("details_report").style.display = "none";
 
     }else if(current_position === "show_more_users_variable"){
@@ -443,14 +447,14 @@ function fillMap(reports, cursor){
         google.maps.event.addListener(marker, 'click', (function(marker, i) {
 
             return function() {
-                if(tasktime !== null && tasktime !== undefined)
-                    to_show = 1;
-                else if(budget !== null && budget !== undefined)
-                    to_show = 3;
                 else if(status === "closed")
                     to_show = 4;
                 else if(status === "standby")
                     to_show = 0;
+                if(tasktime !== null && tasktime !== undefined)
+                    to_show = 1;
+                else if(budget !== null && budget !== undefined)
+                    to_show = 3;
                 else
                     to_show= 2;
 
