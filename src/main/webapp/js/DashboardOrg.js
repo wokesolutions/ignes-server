@@ -75,17 +75,17 @@ function getShowMore(){
 }
 
 function getShowFeed(task){
-    document.getElementById("report_address_feed").innerHTML = task.address;
-    document.getElementById("report_gravity_feed").innerHTML = task.gravity;
-    document.getElementById("report_user_feed").innerHTML = task.username;
-    document.getElementById("report_state_feed").innerHTML = task.status;
-    document.getElementById("report_title_feed").innerHTML = task.title;
-    document.getElementById("report_category_feed").innerHTML = task.category;
-    document.getElementById("report_creationtime_feed").innerHTML = task.creationtime;
-    document.getElementById("report_up_feed").innerHTML = task.downs;
-    document.getElementById("report_down_feed").innerHTML = task.ups;
+    document.getElementById("report_address_feed").innerHTML = tasks[task].address;
+    document.getElementById("report_gravity_feed").innerHTML = tasks[task].gravity;
+    document.getElementById("report_user_feed").innerHTML = tasks[task].username;
+    document.getElementById("report_state_feed").innerHTML = tasks[task].status;
+    document.getElementById("report_title_feed").innerHTML = tasks[task].title;
+    document.getElementById("report_category_feed").innerHTML = tasks[task].category;
+    document.getElementById("report_creationtime_feed").innerHTML = tasks[task].creationtime;
+    document.getElementById("report_up_feed").innerHTML = tasks[task].downs;
+    document.getElementById("report_down_feed").innerHTML = tasks[task].ups;
     var image = document.getElementById("thumb_feed");
-    image.src = "data:image/jpg;base64," + task.thumbnail;
+    image.src = "data:image/jpg;base64," + tasks[task].thumbnail;
     hideShow("show_feed_task_variable");
 }
 
@@ -908,14 +908,16 @@ var loadMore = function () {
             '</div>' +
             '<div class="col-lg-6">' +
             '<div class="col-lg-12 mx-lg-auto text-center">' +
-            '<button style="margin-top:3rem" type="button" class="btn btn-primary-view" onclick="getShowFeed(tasks[i])">Ver Mais</button>' +
+            '<button style="margin-top:3rem" type="button" class="btn btn-primary-view" id="on_click_'+i+'">Ver Mais</button>' +
             '</div>' +
             '</div></div><hr style="margin-bottom: 0; margin-top:0">' +
             '<div class="row"><div class="col-lg-6 text-left"></div>' +
             '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].creationtime + ' </p></div></div>';
 
         $(".inner").append(contentString);
-
+        document.getElementById("on_click_"+i).onclick = function(){
+            getShowFeed(i);
+        }
         var image = document.getElementById(i);
         image.src = "data:image/jpg;base64," + tasks[i].thumbnail;
 
