@@ -260,6 +260,7 @@
     <hr>
 
     <div class="row">
+
         <div id ="open_button"style="display: none" class="col-lg-3">
             <div class="row">
                 <div class="col-lg-12 col-md-12 mx-auto text-center">
@@ -275,7 +276,7 @@
                     </div>
                 </div>
             </div>
-            <div class="row" style="margin-top: 4rem">
+            <div class="row" style="margin-top: 4rem;margin-left:1rem">
                 <div class="col-lg-6 col-md-6 mx-auto text-center">
                     <p class="info_text_bold_sm">Nome Trabalhador</p>
                 </div>
@@ -283,7 +284,7 @@
                     <p class="info_text_response" id="name_worker"></p>
                 </div>
             </div>
-            <div class="row">
+            <div class="row" style="margin-left:1rem">
                 <div class="col-lg-6 col-md-6 mx-auto text-center">
                     <p class="info_text_bold_sm">Email Trabalhador</p>
                 </div>
@@ -297,7 +298,7 @@
                     <p class="info_text_bold_sm" >Indicações</p>
                 </div>
                 <div class="col-lg-6 col-md-6 mx-auto text-left">
-                    <input class="form-control" id="input_ind">
+                    <textarea class="form-control" rows="4" id="input_ind"></textarea>
                 </div>
             </div>
             <div class="row">
@@ -307,19 +308,18 @@
             </div>
         </div>
 
-
         <div id ="candidate_button"style="display: none" class="col-lg-3">
             <div class="row">
-                <div class="col-lg-12 col-md-12 mx-auto text-center">
-                    <p class="info_text_bold_sm" style="">Candida-te a sua empresa</p>
+                <div class="col-lg-12 col-md-12 mx-auto text-center" style="margin-top:1rem">
+                    <p class="info_text_bold_sm" style="">- Candida-te a sua empresa -</p>
                 </div>
             </div>
-            <div class="row" style="margin-top: 4rem">
+            <div class="row" style="margin-top: 4rem; margin-bottom:2rem">
                 <div class="col-lg-6 col-md-6 mx-auto text-center">
-                    <p class="info_text_bold_sm" >Orçamento</p>
+                    <p class="info_text_bold_sm" style="margin-top:0.5rem" >Orçamento</p>
                 </div>
                 <div class="col-lg-6 col-md-6 mx-auto text-left">
-                    <input class="form-control" id="budget_application">
+                    <input class="form-control" type="number" id="budget_application" style="width: 70%">
                 </div>
             </div>
 
@@ -328,16 +328,15 @@
                     <p class="info_text_bold_sm" >Informações</p>
                 </div>
                 <div class="col-lg-6 col-md-6 mx-auto text-left">
-                    <input class="form-control" id="info_application">
+                    <textarea rows="3" class="form-control" id="info_application">
                 </div>
             </div>
             <div class="row">
                 <div class="col-lg-12 mx-lg-auto text-center" style="margin-top: 3rem">
-                    <button id="send_application" type="button" class="btn btn-circle btn-lg-org"><i class="fa fa-check"> </i> </button>
+                    <button id="send_application" type="button" class="btn btn-circle btn-lg-org"><i class="fa fa-check" id="worker_register"> </i> </button>
                 </div>
             </div>
         </div>
-
 
         <div id ="wait_button"style="display: none" class="col-lg-3">
             <div class="row">
@@ -347,6 +346,7 @@
             </div>
         </div>
 
+        <div id ="standby_button"style="display: none" class="col-lg-3"></div>
 
         <div id ="closed_button"style="display: none" class="col-lg-3">
             <div class="row">

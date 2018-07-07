@@ -172,17 +172,21 @@ function hideShow(element){
         document.getElementById("create_worker").style.display = "none";
 
     }else if(current_position === "show_more_variable"){
-        if(document.getElementById("open_button").style.display = "block")
+
+        if(document.getElementById("open_button").style.display === "block")
             document.getElementById("open_button").style.display = "none";
 
-        else if(document.getElementById("candidate_button").style.display = "block")
+        else if(document.getElementById("candidate_button").style.display === "block") {
             document.getElementById("candidate_button").style.display = "none";
-
-        else if(document.getElementById("wait_button").style.display = "block")
+        }
+        else if(document.getElementById("wait_button").style.display === "block")
             document.getElementById("wait_button").style.display = "none";
 
-        else if(document.getElementById("closed_button").style.display = "block")
+        else if(document.getElementById("closed_button").style.display === "block")
             document.getElementById("closed_button").style.display = "none";
+
+        else if(document.getElementById("standby_button").style.display === "block")
+            document.getElementById("standby_button").style.display = "none";
 
         document.getElementById("details_report").style.display = "none";
 
@@ -214,7 +218,9 @@ function hideShow(element){
 
     }else if(element === "show_more_variable"){
 
-        if(to_show === 1)
+        if(to_show === 0)
+            document.getElementById("standby_button").style.display = "block";
+        else if(to_show === 1)
             document.getElementById("open_button").style.display = "block";
         else if(to_show === 2)
             document.getElementById("candidate_button").style.display = "block";
@@ -447,13 +453,13 @@ function fillMap(reports, cursor){
         google.maps.event.addListener(marker, 'click', (function(marker, i) {
 
             return function() {
-                if(status === "closed")
+                if(reports[i].status === "closed")
                     to_show = 4;
-                else if(status === "standby")
+                else if(reports[i].status === "standby")
                     to_show = 0;
-                else if(tasktime !== null && tasktime !== undefined)
+                else if(reports[i].tasktime !== null && reports[i].tasktime !== undefined)
                     to_show = 1;
-                else if(budget !== null && budget !== undefined)
+                else if(reports[i].budget !== null && reports[i].budget !== undefined)
                     to_show = 3;
                 else
                     to_show= 2;
@@ -900,10 +906,12 @@ function sendApplication(){
 
 var loadMore = function () {
     var i;
-    for(i = currentfeed-10; i<currentfeed; i++) {
+    for (i = currentfeed - 10; i < currentfeed; i++) {
         console.log(i);
         if (tasks[i] === null || tasks[i] === undefined)
             break;
+
+        var workers_feed = tasks[i].workers;
         var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;">' +
             '<div class="row" >' +
             '<div class="col-lg-3 col-md-3 mx-auto">' +
@@ -926,9 +934,9 @@ var loadMore = function () {
 
             '<div class="row">' +
             '<div class="col-lg-12 text-center">' +
-            '<p style="font-family:Quicksand Bold; font-size: 15px; color:#AD363B">'+tasks[i].title+'</p>'+
+            '<p style="font-family:Quicksand Bold; font-size: 15px; color:#AD363B">' + tasks[i].title + '</p>' +
             '</div>' +
-            '</div>'+
+            '</div>' +
 
             '<div class="row">' +
             '<div class="col-lg-6 text-center">' +
@@ -939,10 +947,10 @@ var loadMore = function () {
             '<img class="img_user" src="../images/avatar.png" height="20" width="20"/>' +
             '</div>' +
             '<div class="col-lg-6 col-md-6 text-left ">' +
-            '<p class="info_text_response" style="font-family: Quicksand Bold">'+ tasks[i].username+'</p>' +
+            '<p class="info_text_response" style="font-family: Quicksand Bold">' + tasks[i].username + '</p>' +
             '</div>' +
             '<div class="col-lg-2 col-md-2 text-left">' +
-            '<p class="info_text_response text-center" style="margin-left:1.5rem">'+tasks[i].category+'</p>' +
+            '<p class="info_text_response text-center" style="margin-left:1.5rem">' + tasks[i].category + '</p>' +
             '</div>' +
             '</div>' +
             '</div>' +
@@ -953,21 +961,29 @@ var loadMore = function () {
             '</div>' +
             '</div>' +
             '<div class="col-lg-6">' +
-            '<div class="row">'+
+            '<div class="row">' +
             '<div class="col-lg-12 mx-lg-auto text-center">' +
-            '<div class="col-lg-4 mx-lg-auto text-right">'+
+            '<div class="col-lg-4 mx-lg-auto text-right">' +
             '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" ></p>' +
             '</div><div class="col-lg-8 mx-lg-auto text-left">';
 
-        if(tasks[i].description !== undefined)
-            contentString=+'<p class="info_text_response text-center" >'+tasks[i].description+'</p>';
+        if (tasks[i].description !== undefined)
+            contentString = +'<p class="info_text_response text-center" >' + tasks[i].description + '</p>';
+
 
         contentString += '</div></div>' +
             '</div>' +
-            '<div class="row">'+
-            '<div class="col-lg-12 mx-lg-auto text-center">' +
-            '<div class="workers"><div class="workers_task"></div></div>'+
-            '</div>' +
+            '<div class="row">' +
+            '<div class="col-lg-12 mx-lg-auto text-center">';
+        if (workers_feed !== undefined) {
+            for (var j = 0; 0 < workers_feed.length; j++) {
+                contentString += '<p class="info_text_response" style="font-family: Quicksand Bold">' + workers_feed[j] + '</p>';
+            }
+        } else {
+            contentString += '<p class="info_text_response" style="font-family: Quicksand Bold">Não há trabalhadores associados a este reporte.</p>'
+        }
+
+        contentString +='</div>' +
             '</div>' +
             '</div>' +
             '</div><hr style="margin-bottom: 0; margin-top:0">' +
@@ -980,12 +996,14 @@ var loadMore = function () {
             '</div>' +
             '</div>';
 
+
         $(".inner").append(contentString);
         var image = document.getElementById(i);
         image.src = "data:image/jpg;base64," + tasks[i].thumbnail;
 
-        currentfeed += 10;
+
     }
+    currentfeed += 10;
 
 }
 $('.on').scroll(function () {
@@ -1090,7 +1108,7 @@ function getAvailableWorker(cursor){
 function giveTask(){
     console.log($("#input_ind").val());
     var body = {
-        email: JSON.parse($("#email_select").val()).email,
+        email: $("#email_select").val(),
         report: idReportCurr,
         indications: $("#input_ind").val()
     };
@@ -1099,12 +1117,15 @@ function giveTask(){
     headers.append('Device-Id', localStorage.getItem('fingerprint'));
     headers.append('Device-App', localStorage.getItem('app'));
     headers.append('Device-Info', localStorage.getItem('browser'));
-    fetch(restRequest('/api/org/givetask', 'POST', headers, JSON.stringify(body))).then(function() {
-        alert("Tarefa atribuida com sucesso");
+    fetch(restRequest('/api/org/givetask', 'POST', headers, JSON.stringify(body))).then(function(response) {
+        if(response.status === 200){
+            alert("Tarefa atribuida com sucesso");
+        }else
+            alert("Falha a atribuir tarefa");
+
     }).catch(function(err) {
         console.log('Fetch Error', err);
     });;
-
 }
 
 function viewWorkers(row){
