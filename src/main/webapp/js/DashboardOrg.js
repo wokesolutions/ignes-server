@@ -17,7 +17,7 @@ var currentLoc ={
 
 var emailsarr;
 var workersarr;
-
+var variable;
 var show = false;
 var show_view = false;
 
@@ -74,18 +74,18 @@ function getShowMore(){
     hideShow("show_more_variable");
 }
 
-function getShowFeed(task){
-    document.getElementById("report_address_feed").innerHTML = tasks[task].address;
-    document.getElementById("report_gravity_feed").innerHTML = tasks[task].gravity;
-    document.getElementById("report_user_feed").innerHTML = tasks[task].username;
-    document.getElementById("report_state_feed").innerHTML = tasks[task].status;
-    document.getElementById("report_title_feed").innerHTML = tasks[task].title;
-    document.getElementById("report_category_feed").innerHTML = tasks[task].category;
-    document.getElementById("report_creationtime_feed").innerHTML = tasks[task].creationtime;
-    document.getElementById("report_up_feed").innerHTML = tasks[task].downs;
-    document.getElementById("report_down_feed").innerHTML = tasks[task].ups;
+function getShowFeed(){
+    document.getElementById("report_address_feed").innerHTML = tasks[variable].address;
+    document.getElementById("report_gravity_feed").innerHTML = tasks[variable].gravity;
+    document.getElementById("report_user_feed").innerHTML = tasks[variable].username;
+    document.getElementById("report_state_feed").innerHTML = tasks[variable].status;
+    document.getElementById("report_title_feed").innerHTML = tasks[variable].title;
+    document.getElementById("report_category_feed").innerHTML = tasks[variable].category;
+    document.getElementById("report_creationtime_feed").innerHTML = tasks[variable].creationtime;
+    document.getElementById("report_up_feed").innerHTML = tasks[variable].downs;
+    document.getElementById("report_down_feed").innerHTML = tasks[variable].ups;
     var image = document.getElementById("thumb_feed");
-    image.src = "data:image/jpg;base64," + tasks[task].thumbnail;
+    image.src = "data:image/jpg;base64," + tasks[variable].thumbnail;
     hideShow("show_feed_task_variable");
 }
 
@@ -907,7 +907,7 @@ var loadMore = function () {
             '</div>' +
             '<div class="col-lg-6">' +
             '<div class="col-lg-12 mx-lg-auto text-center">' +
-            '<button style="margin-top:3rem" type="button" class="btn btn-primary-view" id="on_click_'+i+'" value=i>Ver Mais</button>' +
+            '<button style="margin-top:3rem" type="button" class="btn btn-primary-view" id="on_click_'+i+'" value="'+i+'">Ver Mais</button>' +
             '</div>' +
             '</div></div><hr style="margin-bottom: 0; margin-top:0">' +
             '<div class="row"><div class="col-lg-6 text-left"></div>' +
@@ -915,8 +915,8 @@ var loadMore = function () {
 
         $(".inner").append(contentString);
         document.getElementById("on_click_"+i).onclick = function(){
-            var variable = document.getElementById("on_click_"+i).value;
-            getShowFeed(variable);
+            variable = document.getElementById("on_click_"+i).value;
+            getShowFeed();
         }
         var image = document.getElementById(i);
         image.src = "data:image/jpg;base64," + tasks[i].thumbnail;
