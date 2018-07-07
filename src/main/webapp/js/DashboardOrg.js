@@ -901,16 +901,56 @@ var loadMore = function () {
             '<div class="row"><div class="col-lg-12 text-center">' +
             '<p style="font-family:Quicksand Bold; font-size: 15px; color:#AD363B">'+tasks[i].title+'</p>'+
             '</div></div>'+
+
             '<div class="row">' +
             '<div class="col-lg-6 text-center">' +
+            '<div class="row" >' +
+            '<div class="col-lg-8 col-md-8 text-right ">' +
+                '<div class="row" >' +
+                '<div class="col-lg-6 col-md-6  ">' +
+                    '<img class="img_user" src="../images/avatar.png" height="20" width="20"/>' +
+                '</div>' +
+                '<div class="col-lg-4 col-md-4 text-left ">' +
+                    '<p class="info_text_response" style="margin-top:1rem; font-family: Quicksand Bold">'+ tasks[i].username+'</p>' +
+                '</div>' +
+                '<div class="col-lg-2 col-md-2 text-left">' +
+                    '<p class="info_text_response text-center" style="margin-top:1rem;">'+tasks[i].category+'</p>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+            '<div class="col-lg-4 col-md-4 text-left"></div>' +
+            '</div>' +
+            '<div class="col-lg-12 text-center">' +
             '<img style="height:10rem; margin-bottom:1rem"id=' + i + '>' +
             '</div>' +
-            '<div class="col-lg-6">' +
-            '<div class="col-lg-12 mx-lg-auto text-center">' +
-            '<button style="margin-top:3rem" type="button" class="btn btn-primary-view" id="on_click_'+i+'" value="'+i+'">Ver Mais</button>' +
             '</div>' +
+            '<div class="col-lg-6">' +
+                '<div class="col-lg-12 mx-lg-auto text-center">' +
+
+                '</div>' +
             '</div></div><hr style="margin-bottom: 0; margin-top:0">' +
-            '<div class="row"><div class="col-lg-6 text-left"></div>' +
+            '<div class="row"><div class="col-lg-6 text-left">' +
+            '<div class="col-lg-6 col-md-6">' +
+            '<div class="row">' +
+            '<div class="col-lg-6 col-md-6">' +
+            ' <i class="fa fa-thumbs-up" style="font-size:2rem"></i>' +
+            '</div>' +
+            '<div class="col-lg-6 col-md-6 text-left">' +
+            '<p class="info_text_response"style="margin-top: 5px">'+tasks[i].ups+'</p>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+            '<div class="col-lg-6 col-md-6">' +
+            '<div class="row">' +
+            '<div class="col-lg-6 col-md-6">' +
+            '<i class="fa fa-thumbs-down" style="font-size:2rem"></i>' +
+            '</div>' +
+            '<div class="col-lg-6 col-md-6 text-left">' +
+            '<p class="info_text_response" style="margin-top: 5px">'+ tasks[i].downs+'</p>' +
+            '</div>' +
+            '</div>' +
+            '</div>'+
+            '</div>'+
             '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].creationtime + ' </p></div></div>';
 
         $(".inner").append(contentString);
@@ -919,11 +959,7 @@ var loadMore = function () {
 
         currentfeed += 10;
     }
-    for(var j = currentfeed-10; j<currentfeed; j++) {
-        document.getElementById("on_click_" + j).onclick = function () {
-            getShowFeed(j);
-        }
-    }
+
 }
 $('.on').scroll(function () {
     var top = $('.on').scrollTop();
