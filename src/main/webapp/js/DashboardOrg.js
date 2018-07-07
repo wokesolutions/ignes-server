@@ -872,9 +872,9 @@ function deleteWorker (row){
 }
 
 var loadMore = function () {
-    console.log(tasks);
     var i;
     for(i = currentfeed-10; i<currentfeed; i++) {
+        console.log(i);
         if (tasks[i] === null || tasks[i] === undefined)
             break;
         var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
@@ -916,7 +916,8 @@ var loadMore = function () {
 
         $(".inner").append(contentString);
         document.getElementById("on_click_"+i).onclick = function(){
-            getShowFeed(i);
+            var variable = i;
+            getShowFeed(variable);
         }
         var image = document.getElementById(i);
         image.src = "data:image/jpg;base64," + tasks[i].thumbnail;
