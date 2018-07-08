@@ -1165,6 +1165,7 @@ var loadMoreTasks = function(email,cursor){
                         else
                             type_private = "Público";
 
+                        var id_img = "img_"+ i;
                         var contentString = '<div class="tasks_remove" id="content" style="margin-bottom:2rem; background:#f8f9fa;">' +
                             '<div class="row" >' +
                             '<div class="col-lg-3 col-md-3 mx-auto">' +
@@ -1210,7 +1211,7 @@ var loadMoreTasks = function(email,cursor){
                             '<div class="col-lg-4 col-md-4 text-left"></div>' +
                             '</div>' +
                             '<div class="col-lg-12 text-center">' +
-                            '<img style="height:10rem; margin-bottom:1rem"id="img_"' + i + '>' +
+                            '<img style="height:10rem; margin-bottom:1rem"id="'+id_img +'">' +
                             '</div>' +
                             '</div>' +
                             '<div class="col-lg-6">' +

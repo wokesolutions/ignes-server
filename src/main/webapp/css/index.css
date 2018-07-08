@@ -619,13 +619,13 @@ label {
 }
 .on {
     width: 800px;
-    height: 370px;
+    height: 620px;
     overflow: auto;
 }
 
 .tasks {
     width: 800px;
-    height: 620px;
+    height: 370px;
     overflow: auto;
 }
 
