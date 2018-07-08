@@ -131,12 +131,10 @@ function getCurrentLocation() {
 
     if(navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (position) {
-            console.log(currentLoc);
             currentLoc = {
                 center: {lat: position.coords.latitude, lng: position.coords.longitude},
                 zoom: 15
             };
-            console.log(currentLoc);
 
             var mapElement = document.getElementById('map');
             map = new google.maps.Map(mapElement, currentLoc);
@@ -316,7 +314,6 @@ function getMarkers(cursor){
                 var newCursor = response.headers.get("Cursor");
                 response.json().then(function(data) {
                     reports = data;
-                    console.log("Markers  "+ data);
                     fillMap(reports, newCursor);
                 });
 
@@ -518,7 +515,7 @@ function getInfo(idReport, i){
                 document.getElementById('report_address_id').innerHTML= reports[i].address;
                 document.getElementById('report_address_id_2').innerHTML= reports[i].address;
 
-                if(reports[i].description !== "" || reports[i].description !== undefined )
+                if(reports[i].description !== "" && reports[i].description !== undefined )
                     document.getElementById('report_description_id').innerHTML= reports[i].description;
                 else
                     document.getElementById('report_description_id').innerHTML= "-";
@@ -539,6 +536,7 @@ function getInfo(idReport, i){
                 document.getElementById('report_up_id').innerHTML= reports[i].ups;
                 document.getElementById('report_down_id').innerHTML= reports[i].downs;
 
+                $(".comments_remove").remove();
                 loadMoreComments(idReport ,"");
 
             }else{
@@ -640,7 +638,6 @@ function getFirstWorkers(){
                         document.getElementById("previous_list").style.display = "none";
                 }
                 response.json().then(function(data) {
-                    console.log(JSON.stringify(data));
                     if(data != null){
                         var i;
                         for(i = 0; i < data.length; i++){
@@ -707,7 +704,6 @@ function getNextWorkers(){
                         document.getElementById("next_list").style.display = "none";
                 }
                 response.json().then(function(data) {
-                    console.log(JSON.stringify(data));
                     if(data != null){
                         var i;
 
@@ -907,7 +903,6 @@ function sendApplication(){
 var loadMore = function () {
     var i;
     for (i = currentfeed - 10; i < currentfeed; i++) {
-        console.log(i);
         if (tasks[i] === null || tasks[i] === undefined)
             break;
 
@@ -940,41 +935,34 @@ var loadMore = function () {
 
             '<div class="row">' +
             '<div class="col-lg-6 text-center">' +
-            '<div class="row" >' +
-            '<div class="col-lg-8 col-md-8 text-right ">' +
-            '<div class="row" >' +
-            '<div class="col-lg-4 col-md-4  ">' +
-            '<img class="img_user" src="../images/avatar.png" height="20" width="20"/>' +
-            '</div>' +
-            '<div class="col-lg-6 col-md-6 text-left ">' +
-            '<p class="info_text_response" style="font-family: Quicksand Bold">' + tasks[i].username + '</p>' +
-            '</div>' +
-            '<div class="col-lg-2 col-md-2 text-left">' +
-            '<p class="info_text_response text-center" style="margin-left:1.5rem">' + tasks[i].category + '</p>' +
-            '</div>' +
-            '</div>' +
-            '</div>' +
-            '<div class="col-lg-4 col-md-4 text-left"></div>' +
-            '</div>' +
-            '<div class="col-lg-12 text-center">' +
-            '<img style="height:10rem; margin-bottom:1rem"id=' + i + '>' +
-            '</div>' +
+                '<div class="row" >' +
+                '<div class="col-lg-8 col-md-8 text-right ">' +
+                '<div class="row" >' +
+                '<div class="col-lg-4 col-md-4  ">' +
+                '<img class="img_user" src="../images/avatar.png" height="20" width="20"/>' +
+                '</div>' +
+                '<div class="col-lg-6 col-md-6 text-left ">' +
+                '<p class="info_text_response" style="font-family: Quicksand Bold">' + tasks[i].username + '</p>' +
+                '</div>' +
+                '<div class="col-lg-2 col-md-2 text-left">' +
+                '<p class="info_text_response text-center" style="margin-left:1.5rem">' + tasks[i].category + '</p>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '<div class="col-lg-4 col-md-4 text-left"></div>' +
+                '</div>' +
+                '<div class="col-lg-12 text-center">' +
+                '<img style="height:10rem; margin-bottom:1rem"id=' + i + '>' +
+                '</div>' +
             '</div>' +
             '<div class="col-lg-6">' +
-            '<div class="row">' +
-            '<div class="col-lg-12 mx-lg-auto text-center">' +
-            '<div class="col-lg-4 mx-lg-auto text-right">' +
-            '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" ></p>' +
-            '</div><div class="col-lg-8 mx-lg-auto text-left">';
-
-        if (tasks[i].description !== undefined)
-            contentString = +'<p class="info_text_response text-center" >' + tasks[i].description + '</p>';
-
-
-        contentString += '</div></div>' +
-            '</div>' +
-            '<div class="row">' +
-            '<div class="col-lg-12 mx-lg-auto text-center">';
+                '<div class="row">' +
+                '<div class="col-lg-12 mx-lg-auto text-center">' +
+                '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" >Trabalhadores associados:</p>';
+            contentString += '</div>' +
+                '</div>' +
+                '<div class="row">' +
+                '<div class="col-lg-12 mx-lg-auto text-center">';
         if (workers_feed !== undefined) {
             for (var j = 0; 0 < workers_feed.length; j++) {
                 contentString += '<p class="info_text_response" style="font-family: Quicksand Bold">' + workers_feed[j] + '</p>';
@@ -984,17 +972,16 @@ var loadMore = function () {
         }
 
         contentString +='</div>' +
+            '</div></div>' +
             '</div>' +
-            '</div>' +
-            '</div><hr style="margin-bottom: 0; margin-top:0">' +
-
+            '<hr style="margin-bottom: 0; margin-top:0">' +
             '<div class="row">' +
             '<div class="col-lg-6 text-left"></div>' +
             '<div class="col-lg-6 text-right">' +
             '<p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].creationtime + ' </p>' +
             '</div>' +
             '</div>' +
-            '</div>';
+            '</div></div>';
 
 
         $(".inner").append(contentString);
@@ -1004,11 +991,10 @@ var loadMore = function () {
 
     }
     currentfeed += 10;
-
 }
+
 $('.on').scroll(function () {
     var top = $('.on').scrollTop();
-    $('.two').html("top: "+top+" diff: "+($(".inner").height() - $(".on").height()));
     if (top >= $(".inner").height() - $(".on").height()) {
         $('.two').append(" bottom");
         loadMore();
@@ -1016,34 +1002,48 @@ $('.on').scroll(function () {
 });
 
 var loadMoreComments = function(idReport,cursor){
-    var body = "";
-    var headers = new Headers();
-    headers.append('Authorization', localStorage.getItem('token'));
-    headers.append('Device-Id', localStorage.getItem('fingerprint'));
-    headers.append('Device-App', localStorage.getItem('app'));
-    headers.append('Device-Info', localStorage.getItem('browser'));
-    fetch(restRequest("/api/report/comment/get/" + idReport + "?cursor=" + cursor, 'GET', headers, body)).then(function(response) {
+    if(cursor!= null) {
+        var body = "";
+        var headers = new Headers();
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
+        fetch(restRequest("/api/report/comment/get/" + idReport + "?cursor=" + cursor, 'GET', headers, body)).then(function (response) {
 
-            if (response.status === 200 || response.status === 204) {
-                commentsCursor = response.headers.get("Cursor");
-                response.json().then(function(data) {
-                    console.log(data);
-                    var i;
-                    for(i = 0; i<data.length; i++){
-                        $(".inner_comment").append(
-                            '<div class="row"><div class="col-lg-6 text-left">'+
-                            '<p style="font-family:Quicksand Bold; color:#AD363B; margin-right:1rem; font-size:15px;">'+  data[i].username +'</p></div>' +
-                            '<div class="col-lg-6 text-left">'+ '<p style="font-family:Quicksand; font-size:15px;">' + data[i].text + '</p></div></div>');
-                    }
+                if (response.status === 200 || response.status === 204) {
+                    commentsCursor = response.headers.get("Cursor");
+                    response.json().then(function (data) {
+                        console.log(data);
+                        var i;
 
-                });
+                        for (i = 0; i < data.length; i++) {
+                            $(".inner_comment").append('<div class="comments_remove" >'+
+                                '<div id="content" style="margin-bottom:1rem; background:#f8f9fa; width:300px">' +
+                                '<div class="row">' +
+                                     '<div class="col-lg-12 text-left">' +
+                                         '<p style="font-family:Quicksand Bold; color:#AD363B; margin-right:1rem; font-size:15px;">' + data[i].username + '</p></div></div>' +
+                                '<div class="row"><div class="col-lg-12 text-left">' +
+                                        '<p style="font-family:Quicksand; font-size:14px;">' + data[i].text + '</p>' +
+                                    '</div>' +
+                                '</div>' +
+                                '<hr style="margin-top:0;">' +
+                                '<div class="row">' +
+                                '<div class="col-lg-6"></div>' +
+                                '<div class="col-lg-6 text-right">' +
+                                '<p style="font-family:Quicksand Bold; font-size:12px; margin-bottom:0;">' + data[i].creationtime +
+                                '</p></div></div></div></div>');
+                        }
+
+                    });
+                }
+
             }
-
-        }
-    )
-        .catch(function(err) {
-            console.log('Fetch Error', err);
-        });
+        )
+            .catch(function (err) {
+                console.log('Fetch Error', err);
+            });
+    }
 }
 $('.comments').scroll(function () {
     var top = $('.comments').scrollTop();
@@ -1067,10 +1067,9 @@ function getAvailableWorker(cursor){
                 if (response.status === 200) {
                     var newCursor = response.headers.get("Cursor");
                     response.json().then(function(data) {
-                        console.log(JSON.stringify(data));
+
                         if(data !== null){
                             var i;
-                            console.log(data.length);
                             for(i = 0; i < data.length; i++){
 
                                 var email = data[i].email;
