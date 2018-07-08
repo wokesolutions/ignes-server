@@ -1138,7 +1138,7 @@ function viewWorkers(row){
     document.getElementById("worker_services").innerHTML = service;
 
     hideShow("show_more_users_variable");
-
+    $(".tasks_remove").remove();
     loadMoreTasks(email_worker, "");
 }
 
@@ -1161,11 +1161,11 @@ var loadMoreTasks = function(email,cursor){
                         var type_private = "";
 
                         if(data[i].isprivate === true)
-                            type_private= "privado";
+                            type_private= "Privado";
                         else
-                            type_private = "publico";
+                            type_private = "Público";
 
-                        var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;">' +
+                        var contentString = '<div class="tasks_remove" id="content" style="margin-bottom:2rem; background:#f8f9fa;">' +
                             '<div class="row" >' +
                             '<div class="col-lg-3 col-md-3 mx-auto">' +
                             '<div class="row">' +
@@ -1240,8 +1240,7 @@ var loadMoreTasks = function(email,cursor){
 
                         $(".tasks_worker").append(contentString);
 
-                        var image = document.getElementById("img_"+ i);
-                        image.src = "data:image/jpg;base64," + data[i].thumbnail;
+                        getThumbnailTask(data[i].task, i);
                     }
 
                 });
@@ -1262,4 +1261,25 @@ $('.tasks').scroll(function () {
     }
 });
 
+function getThumbnailTask(reportId, i){
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+    fetch(restRequest('/api/report/thumbnail/' + reportId, 'GET', headers, body).then(function(response) {
+        if(response.status === 200){
+            response.json().then(function(data) {
+                var img = document.getElementById("img_" + i);
+                img.src = "data:image/jpg;base64," + data.thumbnail;
+            });
+        } else{
+            console.log("Não deu 200 ao pedir o thumbnail");
+        }
+    }).catch(function(err) {
+        console.log('Fetch Error', err);
+    })
+    );
+}
 
