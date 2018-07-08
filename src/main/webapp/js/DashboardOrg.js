@@ -862,28 +862,33 @@ function getProfile(){
 
 function deleteWorker (row){
     var email = document.getElementById("user_table").rows[row].cells[1].innerHTML;
-
-    var body = "";
-    var headers = new Headers();
-    headers.append('Authorization', localStorage.getItem('token'));
-    headers.append('Device-Id', localStorage.getItem('fingerprint'));
-    headers.append('Device-App', localStorage.getItem('app'));
-    headers.append('Device-Info', localStorage.getItem('browser'));
-
-    fetch(restRequest('/api/org/deleteworker/' + email, 'DELETE', headers, body)).then(function(response) {
-
-            if (response.status === 200 || response.status === 204) {
-                alert("Trabalhador apagado com sucesso.")
-
-            }else{
-                alert("Falha ao apagar o utilizador.")
-            }
-
-        }
-    )
-        .catch(function(err) {
-            console.log('Fetch Error', err);
+    var delWorker = prompt("Por favor indique o motivo:", "Motivo");
+    if(delWorker != null) {
+        var body = JSON.stringify({
+            info:delWorker
         });
+        var headers = new Headers();
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
+
+        fetch(restRequest('/api/org/deleteworker/' + email, 'DELETE', headers, body)).then(function (response) {
+
+                if (response.status === 200 || response.status === 204) {
+                    alert("Trabalhador apagado com sucesso.")
+
+                } else {
+                    alert("Falha ao apagar o utilizador.")
+                }
+
+            }
+        )
+            .catch(function (err) {
+                console.log('Fetch Error', err);
+            });
+    }else
+        alert("Indique um motivo.")
 }
 
 function sendApplication(){
