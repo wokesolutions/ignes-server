@@ -1181,7 +1181,8 @@ var loadMoreTasks = function(email,cursor){
                             type_private = "Público";
 
                         var id_img = "img_"+ i;
-                        var contentString = '<div class="tasks_remove" id="content" style="margin-bottom:2rem; background:#f8f9fa;">' +
+                        var contentString = '<div class="tasks_remove" >'+
+                            '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;">' +
                             '<div class="row" >' +
                             '<div class="col-lg-3 col-md-3 mx-auto">' +
                             '<div class="row">' +
@@ -1251,7 +1252,7 @@ var loadMoreTasks = function(email,cursor){
                             '<p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p>' +
                             '</div>' +
                             '</div>' +
-                            '</div></div>';
+                            '</div>';
 
 
                         $(".tasks_worker").append(contentString);
