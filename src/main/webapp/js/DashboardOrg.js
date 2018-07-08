@@ -472,6 +472,7 @@ function fillMap(reports, cursor){
         console.log(cursor);
         getMarkers(cursor);
     }else{
+        console.log("iniciar");
         loadMore();
     }
 }
