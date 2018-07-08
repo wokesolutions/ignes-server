@@ -1272,6 +1272,7 @@ function getThumbnailTask(reportId, i){
     fetch(restRequest('/api/report/thumbnail/' + reportId, 'GET', headers, body).then(function(response) {
         if(response.status === 200){
             response.json().then(function(data) {
+                console.log(data);
                 var img = document.getElementById("img_" + i);
                 img.src = "data:image/jpg;base64," + data.thumbnail;
             });
