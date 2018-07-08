@@ -1070,6 +1070,7 @@ function getAvailableWorker(cursor){
 
                         if(data !== null){
                             var i;
+                            $(".dropdown-m").append(<option value="" disabled selected>Select your option</option>);
                             for(i = 0; i < data.length; i++){
 
                                 var email = data[i].email;
@@ -1157,35 +1158,85 @@ var loadMoreTasks = function(email,cursor){
                     console.log(data);
                     var i;
                     for(i = 0; i<data.length; i++){
-                        var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;"> ' +
+                        var type_private = "";
+
+                        if(data[i].isprivate === true)
+                            type_private= "privado";
+                        else
+                            type_private = "publico";
+
+                        var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;">' +
                             '<div class="row" >' +
-                            '<div class="col-lg-3 col-md-3 mx-auto">'+
-                            '<div class="row">'+
-                            '<div class="col-lg-6">'+
-                            '<i class="fa fa-tachometer"></i></div>'+
-                            '<div class="col-lg-6">'+
-                            '<p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"">'+data[i].gravity +
-                            '</p></div></div></div>'+
+                            '<div class="col-lg-3 col-md-3 mx-auto">' +
+                            '<div class="row">' +
+                            '<div class="col-lg-1">' +
+                            '<p class="text-center"style="margin-top:3px; margin-left:1rem;font-family:Quicksand Bold; font-size:15px; color:#AD363B"">' + data[i].gravity +
+                            '</div>' +
+                            '<div class="col-lg-1">' +
+                            '<i class="fa fa-tachometer" style="color: #AD363B"></i>' +
+                            '</div>' +
+                            '<div class="col-lg-10"></div>' +
+                            '</div></div>' +
                             '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
                             '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
                             '</div>' +
-                            '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].status+'</p></div>'+
+                            '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].status + '</p></div>' +
                             '</div>' +
-                            ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">'+
-                            '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].address + '</p>' +'</div>' +'</div><hr>'+
-                            '<div class="row"><div class="col-lg-6 text-center">' +'<img style="height:10rem;"id=' +i + '>' +
-                            '</div><div class="col-lg-6"><p class="info_text_bold_sm text-center">Descrição</p><p class="text-center" style="font-family:Quicksand; font-size:15px; color:#3b4956">'+ data[i].description+' </p>';
+                            ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">' +
+                            '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].address + '</p>' + '</div>' + '</div><hr>' +
 
-                        if(data[i].indications === undefined || data[i].indications === "") {
+                            '<div class="row">' +
+                            '<div class="col-lg-12 text-center">' +
+                            '<p style="font-family:Quicksand Bold; font-size: 15px; color:#AD363B">' + data[i].title + '</p>' +
+                            '</div>' +
+                            '</div>' +
 
-                            contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956"></p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
-                                '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].username + '('+ data[i].phone +')' +'</p></div>' +
-                                '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
-                        }else {
-                            contentString += '<p class="info_text_bold_sm text-center">Indicações</p><p class="text-center"style="font-family:Quicksand; font-size:15px; color:#3b4956">' + data[i].indications + ' </p></div></div><hr style="margin-bottom: 0; margin-top:0">' +
-                                '<div class="row"><div class="col-lg-6 text-left">' + '<p style="margin-left:5rem;font-family:Quicksand bold; font-size:15px; color:#3b4956">' + data[i].username + '('+ data[i].phone +')' +'</p></div>' +
-                                '<div class="col-lg-6 text-right"><p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p></div></div>';
-                        }
+                            '<div class="row">' +
+                            '<div class="col-lg-6 text-center">' +
+                            '<div class="row" >' +
+                            '<div class="col-lg-8 col-md-8 text-right ">' +
+                            '<div class="row" >' +
+                            '<div class="col-lg-4 col-md-4  ">' +
+                            '<i class="fa fa-lock"></i>' +
+                            '</div>' +
+                            '<div class="col-lg-6 col-md-6 text-left ">' +
+                            '<p class="info_text_response" style="font-family: Quicksand Bold">' + type_private + '</p>' +
+                            '</div>' +
+                            '<div class="col-lg-2 col-md-2 text-left">' +
+                            '<p class="info_text_response text-center" style="margin-left:1.5rem">' + data[i].category + '</p>' +
+                            '</div>' +
+                            '</div>' +
+                            '</div>' +
+                            '<div class="col-lg-4 col-md-4 text-left"></div>' +
+                            '</div>' +
+                            '<div class="col-lg-12 text-center">' +
+                            '<img style="height:10rem; margin-bottom:1rem"id=' + i + '>' +
+                            '</div>' +
+                            '</div>' +
+                            '<div class="col-lg-6">' +
+                            '<div class="row">' +
+                            '<div class="col-lg-12 mx-lg-auto text-center">' +
+                            '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" >Descrição</p>'+
+                            '<p class="info_text_response text-center" >'+data[i].description+'</p>';
+                        contentString += '</div>' +
+                            '</div>' +
+                            '<div class="row">' +
+                            '<div class="col-lg-12 mx-lg-auto text-center">'+
+                            '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" >Indicações</p>'+
+                            '<p class="info_text_response text-center" >'+data[i].indications+'</p>';
+
+                        contentString +='</div>' +
+                            '</div></div>' +
+                            '</div>' +
+                            '<hr style="margin-bottom: 0; margin-top:0">' +
+                            '<div class="row">' +
+                            '<div class="col-lg-6 text-left"></div>' +
+                            '<div class="col-lg-6 text-right">' +
+                            '<p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p>' +
+                            '</div>' +
+                            '</div>' +
+                            '</div></div>';
+
 
                         $(".tasks_worker").append(contentString);
 

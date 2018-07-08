@@ -623,6 +623,12 @@ label {
     overflow: auto;
 }
 
+.tasks {
+    width: 800px;
+    height: 620px;
+    overflow: auto;
+}
+
 .scrool_markers{
     width: 320px;
     height: 500px;
