@@ -862,7 +862,9 @@ function getProfile(){
 
 function deleteWorker (row){
     var email = document.getElementById("user_table").rows[row].cells[1].innerHTML;
-    var delWorker = prompt("Por favor indique o motivo:", "Motivo");
+    var text = '<p style ="font-family: Quicksand Bold; font-size:20px ">Por favor indique o motivo:</p>';
+    var text_place = '<p style ="font-family: Quicksand;">Escreva o motivo...</p>'
+    var delWorker = prompt(text, text_place);
     if(delWorker != null) {
         var body = JSON.stringify({
             info:delWorker
