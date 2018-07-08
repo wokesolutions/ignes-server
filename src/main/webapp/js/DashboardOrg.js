@@ -28,6 +28,21 @@ var URL_BASE = 'https://main-dot-mimetic-encoder-209111.appspot.com';
 
 google.maps.event.addDomListener(window, 'load', init());
 
+var iconBase = 'https://maps.google.com/mapfiles/kml/shapes/';
+var icons = {
+    parking: {
+        name: 'Parking',
+        icon: iconBase + 'parking_lot_maps.png'
+    },
+    library: {
+        name: 'Library',
+        icon: iconBase + 'library_maps.png'
+    },
+    info: {
+        name: 'Info',
+        icon: iconBase + 'info-i_maps.png'
+    }
+};
 
 function init() {
 
@@ -52,6 +67,17 @@ function init() {
     document.getElementById("remove_button").onclick = showButtonDelete;
     document.getElementById("view_button").onclick = showButtonView;
 
+    var legend = document.getElementById('legend');
+    for (var key in icons) {
+        var type = icons[key];
+        var name = type.name;
+        var icon = type.icon;
+        var div = document.createElement('div');
+        div.innerHTML = '<img src="' + icon + '"> ' + name;
+        legend.appendChild(div);
+    }
+
+    map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
 
     $("#email_select").change(function(){
         var email = $("#email_select").val();
@@ -130,22 +156,6 @@ function searchLocation(){
 
 function getCurrentLocation() {
 
-    var iconBase = 'https://maps.google.com/mapfiles/kml/shapes/';
-    var icons = {
-        parking: {
-            name: 'Parking',
-            icon: iconBase + 'parking_lot_maps.png'
-        },
-        library: {
-            name: 'Library',
-            icon: iconBase + 'library_maps.png'
-        },
-        info: {
-            name: 'Info',
-            icon: iconBase + 'info-i_maps.png'
-        }
-    };
-
     if(navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (position) {
             currentLoc = {
@@ -164,18 +174,6 @@ function getCurrentLocation() {
 
         getMarkers();
     }
-
-    var legend = document.getElementById('legend');
-    for (var key in icons) {
-        var type = icons[key];
-        var name = type.name;
-        var icon = type.icon;
-        var div = document.createElement('div');
-        div.innerHTML = '<img src="' + icon + '"> ' + name;
-        legend.appendChild(div);
-    }
-
-    map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
 
     return currentLoc;
 }
