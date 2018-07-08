@@ -456,10 +456,19 @@ function fillMap(reports, cursor){
                     to_show = 0;
                 else if(reports[i].tasktime !== null && reports[i].tasktime !== undefined)
                     to_show = 1;
-                else if(reports[i].budget !== null && reports[i].budget !== undefined)
+                else if(reports[i].budget !== null && reports[i].budget !== undefined) {
+                    document.getElementById('budget_input').innerHTML= reports[i].budget;
+                    if(reports[i].info !== null && reports[i].info !== undefined && reports[i].info != "")
+                        document.getElementById('info_input').innerHTML= reports[i].info;
+                    else
+                        document.getElementById('info_input').innerHTML= "-";
                     to_show = 3;
+                }
                 else
                     to_show= 2;
+
+
+
 
                 reportID = reports[i].report;
                 getInfo(reportID, i);
@@ -560,7 +569,6 @@ function showMap(){
 function showProfile() {
     getProfile();
     hideShow('profile_variable');
-
 }
 
 function showWorkers(){
@@ -965,7 +973,8 @@ var loadMore = function () {
                 '<div class="row">' +
                 '<div class="col-lg-12 mx-lg-auto text-center">';
         if (workers_feed !== undefined) {
-            for (var j = 0; 0 < workers_feed.length; j++) {
+            var j;
+            for (j = 0; j < workers_feed.length; j++) {
                 contentString += '<p class="info_text_response" style="font-family: Quicksand Bold">' + workers_feed[j] + '</p>';
             }
         } else {
