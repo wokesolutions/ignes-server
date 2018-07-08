@@ -1070,7 +1070,7 @@ function getAvailableWorker(cursor){
 
                         if(data !== null){
                             var i;
-                            $(".dropdown-m").append(<option value="" disabled selected>Select your option</option>);
+                            $(".dropdown-m").append('<option value="" disabled selected>Select your option</option>');
                             for(i = 0; i < data.length; i++){
 
                                 var email = data[i].email;
@@ -1210,7 +1210,7 @@ var loadMoreTasks = function(email,cursor){
                             '<div class="col-lg-4 col-md-4 text-left"></div>' +
                             '</div>' +
                             '<div class="col-lg-12 text-center">' +
-                            '<img style="height:10rem; margin-bottom:1rem"id=' + i + '>' +
+                            '<img style="height:10rem; margin-bottom:1rem"id="img_"' + i + '>' +
                             '</div>' +
                             '</div>' +
                             '<div class="col-lg-6">' +
@@ -1240,7 +1240,7 @@ var loadMoreTasks = function(email,cursor){
 
                         $(".tasks_worker").append(contentString);
 
-                        var image = document.getElementById(i);
+                        var image = document.getElementById("img_"+ i);
                         image.src = "data:image/jpg;base64," + data[i].thumbnail;
                     }
 
