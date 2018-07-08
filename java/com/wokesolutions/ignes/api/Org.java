@@ -454,6 +454,8 @@ public class Org {
 			task.setProperty(DSUtils.TASK_INDICATIONS, data.indications);
 		
 		task.setProperty(DSUtils.TASK_TIME, new Date());
+		
+		datastore.put(task);
 
 		return Response.ok().build();
 	}
@@ -877,7 +879,7 @@ public class Org {
 		jsonReport.put(Prop.THUMBNAIL, tn);
 
 		Key reportK = report.getKey();
-		Key applicationK = KeyFactory.createKey(orgK, DSUtils.APPLICATION, orgK.getName());
+		Key applicationK = KeyFactory.createKey(orgK, DSUtils.APPLICATION, reportK.getName());
 		Key taskK = KeyFactory.createKey(reportK, DSUtils.ORGTASK, reportK.getName());
 
 		Entity application;
