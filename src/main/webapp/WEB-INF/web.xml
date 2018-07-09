@@ -33,11 +33,11 @@
 		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>
 
-	<resource-files>
+<!--<resource-files>
 		<include path="/**.json"/>
-	</resource-files>
+	</resource-files>-->
 
-	<!-- Filters -->
+	 <!--Filters -->
 
 	<filter>
 		<filter-name>DeviceControlFilter</filter-name>
