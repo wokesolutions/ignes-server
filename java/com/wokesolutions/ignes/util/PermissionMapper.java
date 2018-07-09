@@ -12,7 +12,7 @@ public class PermissionMapper {
 	private final static String GET_COMMENT = "comment/get";
 	private final static String GET_REPORT = "report/get";
 	private final static String THUMBNAIL = "thumbnail";
-	private final static String ACCEPT_APPLICATION = "report/acceptapplication";
+	private final static String APPLICATION = "application";
 	private final static String CREATE_REPORT = "report/create";
 	private final static String GET_REPORT_VOTE = "report/vote/get";
 	private final static String POST_REPORT_VOTE = "report/vote";
@@ -42,7 +42,7 @@ public class PermissionMapper {
 			return permissions;
 		}
 		
-		if(req.contains(ACCEPT_APPLICATION)) {
+		if(req.contains(APPLICATION)) {
 			permissions.add(UserLevel.LEVEL1);
 			permissions.add(UserLevel.LEVEL2);
 			permissions.add(UserLevel.LEVEL3);

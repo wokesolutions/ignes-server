@@ -829,85 +829,11 @@ public class Profile {
 			}
 		}
 	}
-
-	@GET
-	@Path("/getapplications/{report}")
-	@Produces(CustomHeader.JSON_CHARSET_UTF8)
-	public Response applications(@Context HttpServletRequest request,
-			@PathParam(ParamName.REPORT) String report) {
-		int retries = 5;
-		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
-
-		while(true) {
-			try {
-				Key reportK = KeyFactory.createKey(DSUtils.REPORT, report);
-				Entity reportE;
-				try {
-					reportE = datastore.get(reportK);
-				} catch(EntityNotFoundException e) {
-					LOG.info(Log.REPORT_NOT_FOUND);
-					return Response.status(Status.NOT_FOUND).build();
-				}
-
-				Key userK = KeyFactory.createKey(DSUtils.USER, username);
-				if(!reportE.getProperty(DSUtils.REPORT_USER).equals(userK)) {
-					LOG.info(Log.REPORT_IS_PRIVATE);
-					return Response.status(Status.FORBIDDEN).build();
-				}
-
-				Filter applicationF = new Query.FilterPredicate(DSUtils.APPLICATION_REPORT,
-						FilterOperator.EQUAL, reportK);
-				Query applicationQ = new Query(DSUtils.APPLICATION).setFilter(applicationF);
-				List<Entity> applications = datastore.prepare(applicationQ)
-						.asList(FetchOptions.Builder.withDefaults());
-
-				JSONArray array = new JSONArray();
-
-				for(Entity application : applications) {
-					JSONObject obj = new JSONObject();
-
-					Entity org;
-					try {
-						org = datastore.get(application.getParent());
-					} catch(EntityNotFoundException e) {
-						LOG.info(Log.UNEXPECTED_ERROR);
-						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-					}
-					
-					Entity user;
-					try {
-						user = datastore.get(org.getParent());
-					} catch(EntityNotFoundException e) {
-						LOG.info(Log.USER_NOT_FOUND);
-						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-					}
-
-					obj.put(Prop.NIF, org.getKey().getName());
-					obj.put(Prop.BUDGET, application.getProperty(DSUtils.APPLICATION_BUDGET));
-					obj.put(Prop.PHONE, org.getProperty(DSUtils.ORG_PHONE));
-					obj.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
-					obj.put(Prop.INFO, application.getProperty(DSUtils.APPLICATION_INFO));
-					obj.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
-					
-					array.put(obj);
-				}
-				
-				return Response.ok(array.toString()).build();
-			} catch(DatastoreException e) {
-				if(retries == 0) {
-					LOG.warning(Log.TOO_MANY_RETRIES);
-					return Response.status(Status.REQUEST_TIMEOUT).build();
-				}
-
-				retries--;
-			}
-		}
-	}
 	
 	@POST
 	@Path("/forgotpassword/{email}")
 	public Response forgotPassword(@PathParam(ParamName.EMAIL) String email) {
-		if(email == null || !email.equals(""))
+		if(email == null || email.equals(""))
 			return Response.status(Status.BAD_REQUEST).build();
 		
 		int retries = 5;
@@ -915,7 +841,7 @@ public class Profile {
 			try {
 				Filter emailF = new Query.FilterPredicate(DSUtils.USER_EMAIL,
 						FilterOperator.EQUAL, email);
-				Query userQ = new Query(DSUtils.FOLLOW).setFilter(emailF);
+				Query userQ = new Query(DSUtils.USER).setFilter(emailF);
 				Entity user;
 				
 				try {

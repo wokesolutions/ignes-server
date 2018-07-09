@@ -1,4 +1,4 @@
-package com.wokesolutions.ignes.api;
+package com.wokesolutions.ignes.util;
 
 public class Category {
 	

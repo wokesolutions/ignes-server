@@ -31,6 +31,7 @@ import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUti
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.OrgRegisterData;
 import com.wokesolutions.ignes.data.UserRegisterData;
+import com.wokesolutions.ignes.util.Category;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Email;
@@ -214,8 +215,9 @@ public class Register {
 			try {
 				Entity user = new Entity(DSUtils.USER, data.nif);
 				user.setProperty(DSUtils.USER_EMAIL, data.email);
-				user.setProperty(DSUtils.USER_PASSWORD,
+				user.setUnindexedProperty(DSUtils.USER_PASSWORD,
 						DigestUtils.sha512Hex(data.password));
+				user.setUnindexedProperty(DSUtils.USER_FORGOTPASSWORD, null);
 				user.setProperty(DSUtils.USER_ACTIVATION, Profile.NOT_ACTIVATED);
 				user.setProperty(DSUtils.USER_LEVEL, UserLevel.ORG);
 				user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);

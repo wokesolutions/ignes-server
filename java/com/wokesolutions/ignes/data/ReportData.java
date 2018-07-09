@@ -7,8 +7,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.google.api.client.util.Base64;
-import com.wokesolutions.ignes.api.Category;
 import com.wokesolutions.ignes.api.Report;
+import com.wokesolutions.ignes.util.Category;
 
 public class ReportData {
 	

@@ -140,9 +140,12 @@ public class Login {
 						datastore.put(txn,stats);				
 						txn.commit();
 						return Response.status(Status.FORBIDDEN).build();
-					} else
-						user.setProperty(DSUtils.USER_PASSWORD,
+					} else {
+						user.setUnindexedProperty(DSUtils.USER_PASSWORD,
 								user.getProperty(DSUtils.USER_FORGOTPASSWORD));
+						
+						user.setUnindexedProperty(DSUtils.USER_FORGOTPASSWORD, null);
+					}
 				} else {
 					LOG.info(Log.WRONG_PASSWORD + data.username);
 
