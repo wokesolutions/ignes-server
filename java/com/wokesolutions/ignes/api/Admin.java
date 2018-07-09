@@ -135,7 +135,7 @@ public class Admin {
 
 			Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
 			userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
-			
+
 			Entity userStats = new Entity(DSUtils.USERSTATS, userKey);
 			userStats.setUnindexedProperty(DSUtils.USERSTATS_LOGINS, 0L);
 			userStats.setUnindexedProperty(DSUtils.USERSTATS_LOGINSFAILED, 0L);
@@ -497,22 +497,22 @@ public class Admin {
 
 		return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
 	}
-	
+
 	@POST
 	@Path("/confirmreport/{report}")
 	public Response confirmReport(@PathParam(ParamName.REPORT) String reportid,
 			@Context HttpServletRequest request) {
 		int retries = 5;
-		
+
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
-		
+
 		Key userK = KeyFactory.createKey(DSUtils.USER, username);
 		Key adminK = KeyFactory.createKey(userK, DSUtils.ADMIN, username);
 
 		while(true) {
 			try {
 				Key reportK = KeyFactory.createKey(DSUtils.REPORT, reportid);
-				
+
 				Entity report;
 				try {
 					report = datastore.get(reportK);
@@ -520,27 +520,27 @@ public class Admin {
 					LOG.info(Log.REPORT_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
-				
+
 				if(!report.getProperty(DSUtils.REPORT_STATUS).equals(Report.STANDBY)) {
 					LOG.info(Log.REPORT_STANDBY);
 					return Response.status(Status.EXPECTATION_FAILED).build();
 				}
-				
+
 				report.setProperty(DSUtils.REPORT_STATUS, Report.OPEN);
-				
+
 				Entity statuslog = new Entity(DSUtils.REPORTSTATUSLOG, report.getKey());
 				statuslog.setProperty(DSUtils.REPORTSTATUSLOG_NEWSTATUS, Report.OPEN);
 				statuslog.setProperty(DSUtils.REPORTSTATUSLOG_OLDSTATUS, Report.STANDBY);
 				statuslog.setProperty(DSUtils.REPORTSTATUSLOG_TIME, new Date());
 				statuslog.setProperty(DSUtils.REPORTSTATUSLOG_USER, adminK);
-				
+
 				Transaction txn = datastore.beginTransaction();
-				
+
 				datastore.put(txn, report);
 				datastore.put(txn, statuslog);
-				
+
 				txn.commit();
-				
+
 				return Response.ok().build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
@@ -763,7 +763,7 @@ public class Admin {
 		datastore.delete(txn, commentsK);
 		return true;
 	}
-	
+
 	@GET
 	@Path("/publicreports")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
@@ -774,7 +774,7 @@ public class Admin {
 				Filter reportF = new Query.FilterPredicate(DSUtils.REPORT_PRIVATE,
 						FilterOperator.EQUAL, false);
 				Query reportQ = new Query(DSUtils.REPORT).setFilter(reportF);
-				
+
 
 				reportQ.addProjection(new PropertyProjection(DSUtils.REPORT_TITLE, String.class))
 				.addProjection(new PropertyProjection(DSUtils.REPORT_ADDRESS, String.class))
@@ -783,15 +783,15 @@ public class Admin {
 				.addProjection(new PropertyProjection(DSUtils.REPORT_LAT, Double.class))
 				.addProjection(new PropertyProjection(DSUtils.REPORT_LNG, Double.class))
 				.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIMEFORMATTED, String.class));
-				
+
 				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
-				
+
 				if(cursor != null && !cursor.equals(""))
 					fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
-				
+
 				QueryResultList<Entity> reports = datastore.prepare(reportQ)
 						.asQueryResultList(fetchOptions);
-				
+
 				if(reports.isEmpty())
 					return Response.status(Status.NO_CONTENT).build();
 
@@ -803,6 +803,7 @@ public class Admin {
 					rep.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
 					rep.put(Prop.ADDRESS, report.getProperty(DSUtils.REPORT_ADDRESS));
 					rep.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
+					rep.put(Prop.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
 					rep.put(Prop.USERNAME,
 							((Key) report.getProperty(DSUtils.REPORT_USER)).getName());
 
@@ -810,11 +811,52 @@ public class Admin {
 					if(points != null) {
 						rep.put(Prop.POINTS, points);
 					}
-					
+
 					rep.put(Prop.LAT, report.getProperty(DSUtils.REPORT_LAT));
 					rep.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
 					rep.put(Prop.CREATIONTIME,
 							report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
+
+					if(report.getProperty(DSUtils.REPORT_STATUS).equals(Report.OPEN)) {
+						Filter applicationF = new Query.FilterPredicate(DSUtils.APPLICATION_REPORT,
+								FilterOperator.EQUAL, report.getKey());
+						Query applicationQ = new Query(DSUtils.APPLICATION).setFilter(applicationF);
+						
+						FetchOptions defaultOptions = FetchOptions.Builder.withDefaults();
+						List<Entity> applications = datastore.prepare(applicationQ).asList(defaultOptions);
+						
+						JSONArray apps = new JSONArray();
+						
+						for(Entity application : applications) {
+							JSONObject app = new JSONObject();
+
+							Key orgK = application.getParent();
+							Entity org;
+							
+							Entity user;
+							try {
+								org = datastore.get(orgK);
+								user = datastore.get(org.getParent());
+							} catch(EntityNotFoundException e) {
+								LOG.info(Log.ORG_NOT_FOUND);
+								continue;
+							}
+							
+							app.put(Prop.BUDGET, application.getProperty(DSUtils.APPLICATION_BUDGET));
+							app.put(Prop.INFO, application.getProperty(DSUtils.APPLICATION_INFO));
+							app.put(Prop.APPLICATION_TIME, application.getProperty(DSUtils.APPLICATION_TIME));
+							
+							app.put(Prop.NIF, orgK.getName());
+							app.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
+							app.put(Prop.PHONE, org.getProperty(DSUtils.ORG_PHONE));
+							app.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
+							
+							apps.put(app);
+						}
+						
+						if(apps.length() > 0)
+							rep.put(Prop.APPLICATIONS, apps);
+					}
 
 					array.put(rep);
 				}
@@ -825,7 +867,7 @@ public class Admin {
 					return Response.ok(array.toString()).build();
 
 				return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
-				
+
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Log.TOO_MANY_RETRIES);
@@ -837,7 +879,7 @@ public class Admin {
 	}
 
 	// ---------------x--------------- SUBCLASS
-	
+
 	private static final String ORGNAME = "Organização";
 	private static final String COUNT = "Número de candidaturas";
 
@@ -853,31 +895,31 @@ public class Admin {
 				arraytitle.put(ORGNAME);
 				arraytitle.put(COUNT);
 				array.put(arraytitle);
-				
+
 				FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
-				
+
 				Query orgQ = new Query(DSUtils.ORG)
 						.addProjection(new PropertyProjection(DSUtils.ORG_NAME, String.class));
 				List<Entity> orgs = datastore.prepare(orgQ).asList(fetchOptions);
-				
+
 				for(Entity org : orgs) {
 					JSONArray arrayinner = new JSONArray();
-					
+
 					Filter applicationF = new Query.FilterPredicate(DSUtils.APPLICATIONLOG_ORG,
 							FilterOperator.EQUAL, org.getKey());
 					Query applicationQ = new Query(DSUtils.APPLICATIONLOG).setFilter(applicationF);
-					
+
 					int count = datastore.prepare(applicationQ)
 							.countEntities(FetchOptions.Builder.withDefaults());
-					
+
 					arrayinner.put(org.getKey().getName() + " - " +
 							org.getProperty(DSUtils.ORG_NAME).toString());
-					
+
 					arrayinner.put(count);
-					
+
 					array.put(arrayinner);
 				}
-				
+
 				return Response.ok(array.toString()).build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {

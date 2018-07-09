@@ -132,7 +132,6 @@ public class DSUtils {
 		public static final String ORG_LOCALITY = "org_locality";
 		public static final String ORG_CATEGORIES = "org_categories";
 		public static final String ORG_PRIVATE = "org_private";
-		public static final String ORG_EMAIL = "org_email";
 		
 	// UnconfOrg
 		public static final String UNCONFORG_NAME = "unconforg_name";
