@@ -1172,15 +1172,24 @@ var loadMoreTasks = function(email,cursor){
                 tasksCursor = response.headers.get("Cursor");
                 response.json().then(function(data) {
                     console.log(data);
+                    document.getElementById("numb_report").innerHTML = data.length;
                     var i;
                     for(i = 0; i<data.length; i++){
                         console.log(i);
                         var type_private = "";
+                        var description = "-";
+                        var indications = "-";
 
                         if(data[i].isprivate === true)
                             type_private= "Privado";
                         else
                             type_private = "Público";
+
+                        if(data[i].description !== undefined)
+                            description = data[i].description;
+
+                        if(data[i].indications !== undefined)
+                            indications= data[i].indications;
 
                         var id_img = "img_"+ i;
                         var contentString = '<div class="tasks_remove" >'+
@@ -1202,7 +1211,7 @@ var loadMoreTasks = function(email,cursor){
                             '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].status + '</p></div>' +
                             '</div>' +
                             ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">' +
-                            '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].address + '</p>' + '</div>' + '</div><hr>' +
+                            '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].address + '</p>' + '</div>' + '</div><hr style="margin-bottom: 0; margin-top:0">' +
 
                             '<div class="row">' +
                             '<div class="col-lg-12 text-center">' +
@@ -1236,13 +1245,13 @@ var loadMoreTasks = function(email,cursor){
                             '<div class="row">' +
                             '<div class="col-lg-12 mx-lg-auto text-center">' +
                             '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" >Descrição</p>'+
-                            '<p class="info_text_response text-center" >'+data[i].description+'</p>';
+                            '<p class="info_text_response text-center" >'+description+'</p>';
                         contentString += '</div>' +
                             '</div>' +
                             '<div class="row">' +
                             '<div class="col-lg-12 mx-lg-auto text-center">'+
                             '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" >Indicações</p>'+
-                            '<p class="info_text_response text-center" >'+data[i].indications+'</p>';
+                            '<p class="info_text_response text-center" >'+indications+'</p>';
 
                         contentString +='</div>' +
                             '</div></div>' +
