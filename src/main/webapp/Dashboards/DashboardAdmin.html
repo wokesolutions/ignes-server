@@ -16,6 +16,9 @@
         <a class = "navbar-brand js-scroll-trigger"  id ="expBrand" href="#page-top"><img src="../images/admin.png" height="70" width="auto"/></a>
         <div class="collapse navbar-collapse" id="navbarResponsive">
             <ul class="navbar-nav ml-auto">
+                <li id ="public_reports_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Reportes Públicos</a></li>
+                <li id ="pending_verify_reports_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Reportes Públicos</a></li>
+                <li id ="statistics_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Estatísticas</a></li>
                 <li id ="list_users_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Utilizadores</a></li>
                 <li id ="list_pending_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Organizações Pendestes</a></li>
                 <li id = "logout_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"><a class="fa fa-power-off"> </a>Terminar Sessão</a></li>
@@ -58,6 +61,7 @@
     </div>
 </div>
 
+<!--Pending orgs-->
 <div id="list_pending_orgs"style="display: none">
     <div class="row">
 
@@ -107,7 +111,7 @@
 </div>
 
 <!--Tabela das ocorrências em standby-->
-<div id="list_pending_reports">
+<div id="list_pending_reports" style="display: none">
     <div class="row">
 
         <div class=" col-md-2 col-lg-2 text-center">
@@ -133,7 +137,6 @@
                     <th class="th-style">Criador</th>
                     <th class="th-style">Latitude</th>
                     <th class="th-style">Longitude</th>
-                    <th class="th-style">Estado</th>
                     <th class="th-style">Data de criação</th>
                 </tr>
             </table>
@@ -151,8 +154,47 @@
     </div>
 </div>
 
+<!--Tabela das ocorrências públicas por verificar-->
+<div id="list_pending_public_reports">
+    <div class="row">
+
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button class="btn btn-default btn-style" id="refresh_public_reports_pending"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
+        </div>
+        <div class=" col-md-10 col-lg-10 text-center"></div>
+    </div>
+
+    <div class="container">
+        <div class="table-responsive">
+            <table class=" table table-hover table-style text-center" id="public_reports_pending_table">
+                <tr>
+                    <th class="th-style">Id</th>
+                    <th class="th-style">Título</th>
+                    <th class="th-style">Morada</th>
+                    <th class="th-style">Gravidade</th>
+                    <th class="th-style">Criador</th>
+                    <th class="th-style">Latitude</th>
+                    <th class="th-style">Longitude</th>
+                    <th class="th-style">Pontos</th>
+                    <th class="th-style">Data de criação</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-8 col-lg-8 text-center"></div>
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button style="display: none" class="btn btn-default" id="previous_public_reports_pending"><i class="fa fa-toggle-left size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center">
+            <button style="display: none" class="btn btn-default" id="next_public_reports_pending"><i class="fa fa-toggle-right size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center"></div>
+    </div>
+</div>
+
 <!--PIECHART-->
-<div id="piechart" style="width: 900px; height: 500px;"></div>
+<div id="piechart" style="width: 900px; height: 500px; display:none"></div>
 
 <script src="../js/RestApi.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDyB4FcTNeaLK_S-cHrV3EuxmwZGItbIRw"></script>

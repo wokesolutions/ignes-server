@@ -7,8 +7,12 @@ var cursor_pre_pending;
 var cursor_next_pendingrep;
 var cursor_current_pendingrep;
 var cursor_pre_pendingrep;
+var cursor_next_public;
+var cursor_current_public;
+var cursor_pre_public;
 
 var current_position = "list_users_variable";
+
 var URL_BASE = 'https://main-dot-mimetic-encoder-209111.appspot.com';
 
 init();
@@ -24,6 +28,7 @@ function init() {
     getFirstUsers();
     getPendingFirst();
     getPendingReportsFirst();
+    getPublicFirst();
 
     document.getElementById("logout_button").onclick = logOut;
     document.getElementById("next_list").onclick = getNextUsers;
@@ -38,6 +43,9 @@ function init() {
     document.getElementById("next_report_pending").onclick = getPendingReportsNext;
     document.getElementById("previous_reports_pending").onclick = getPendingReportsPre;
     document.getElementById("refresh_reports_pending").onclick = getPendingReportsFirst;
+    document.getElementById("next_public_report_pending").onclick = getPublicNext;
+    document.getElementById("previous_public_reports_pending").onclick = getPublicPre;
+    document.getElementById("refresh_public_reports_pending").onclick = getPublicFirst;
 
 }
 
@@ -915,9 +923,9 @@ function activateReport(row){
     fetch(restRequest('/api/admin/confirmreport/' + report,'POST', headers, body)).then(function(response) {
 
             if (response.status === 200 || response.status === 204) {
-                alert("Utilizador apagado com sucesso.")
+                alert("Report ativado com sucesso.")
             }else{
-                alert("Falha ao apagar utilizador.")
+                alert("Falha ao ativar reporte.")
             }
 
         }
@@ -941,20 +949,16 @@ function drawChart(){
     fetch(restRequest("/api/admin/stats/org/applications",'GET', headers, body)).then(function(response) {
 
             if (response.status === 200 || response.status === 204) {
-                response.json().then(function(data){
-                    console.log(data);
-                    data[1][1] = 10;
-                    var dados = google.visualization.arrayToDataTable(data);
+                data[1][1] = 4;
+                var data = google.visualization.arrayToDataTable(data);
 
-                    var options = {
-                        title: 'My Daily Activities'
-                    };
+                var options = {
+                    title: 'My Daily Activities'
+                };
 
-                    var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+                var chart = new google.visualization.PieChart(document.getElementById('piechart'));
 
-                    chart.draw(dados, options);
-                });
-
+                chart.draw(data, options);
             }else{
                 alert("Falha ao apagar utilizador.")
             }
@@ -965,3 +969,270 @@ function drawChart(){
             console.log('Fetch Error', err);
         });
 }
+
+function getPublicNext(){
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/publicreports?cursor=' + cursor_next_public,'GET', headers, body)).then(function(response) {
+            var table = document.getElementById("public_reports_pending_table");
+
+            if (response.status === 200) {
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+
+                if(document.getElementById("previous_public_reports_pending").style.display === "none")
+                    document.getElementById("previous_public_reports_pending").style.display = "block";
+
+                if(response.headers.get("Cursor") !== null) {
+
+                    cursor_pre_public = cursor_current_public;
+                    cursor_current_public = cursor_next_public;
+                    cursor_next_public = response.headers.get("Cursor");
+
+                    if(document.getElementById("next_public_reports_pending").style.display === "none")
+                        document.getElementById("next_public_reports_pending").style.display = "block";
+
+                } else{
+                    if(document.getElementById("next_public reports_pending").style.display === "block")
+                        document.getElementById("next_public_reports_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            var cell10 = row.insertCell(9);
+                            cell1.innerHTML = data[i].report;
+                            cell2.innerHTML = data[i].title;
+                            cell3.innerHTML = data[i].address;
+                            cell4.innerHTML = data[i].gravity;
+                            cell5.innerHTML = data[i].username;
+                            cell6.innerHTML = data[i].lat;
+                            cell7.innerHTML = data[i].lng;
+                            cell8.innerHTML = data[i].points
+                            cell9.innerHTML = data[i].creationtime;
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+function getPublicPre(){
+    if(cursor_pre_public === "") getPublicFirst();
+
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/publicreports?cursor=' + cursor_pre_public,'GET', headers, body)).then(function(response) {
+            var table = document.getElementById("public_reports_pending_table");
+
+            if (response.status === 200) {
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+
+                if (document.getElementById("previous_public_reports_pending").style.display === "none")
+                    document.getElementById("previous_public_reports_pending").style.display = "block";
+
+                if (response.headers.get("Cursor") !== null) {
+
+                    cursor_next_public= cursor_current_public;
+                    cursor_current_public = cursor_pre_public;
+                    cursor_pre_public = response.headers.get("Cursor");
+
+                    if (document.getElementById("next_public_reports_pending").style.display === "none")
+                        document.getElementById("next_public_reports_pending").style.display = "block";
+
+                } else {
+                    if (document.getElementById("next_public_reports_pending").style.display === "block")
+                        document.getElementById("next_public_reports_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            var cell10 = row.insertCell(9);
+                            cell1.innerHTML = data[i].report;
+                            cell2.innerHTML = data[i].title;
+                            cell3.innerHTML = data[i].address;
+                            cell4.innerHTML = data[i].gravity;
+                            cell5.innerHTML = data[i].username;
+                            cell6.innerHTML = data[i].lat;
+                            cell7.innerHTML = data[i].lng;
+                            cell8.innerHTML = data[i].points
+                            cell9.innerHTML = data[i].creationtime;
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+function getPublicFirst(){
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/admin/publicreports?cursor=','GET', headers, body)).then(function(response) {
+            var table = document.getElementById("public_reports_pending_table");
+
+            if (response.status === 200) {
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+                if(response.headers.get("Cursor") !== null) {
+
+                    cursor_pre_public = "";
+                    cursor_current_public = "";
+                    cursor_next_public = response.headers.get("Cursor");
+
+                    if(document.getElementById("next_public_reports_pending").style.display === "none")
+                        document.getElementById("next_public_reports_pending").style.display = "block";
+                    if(document.getElementById("previous_public_reports_pending").style.display === "block")
+                        document.getElementById("previous_public_reports_pending").style.display = "none";
+                } else{
+                    if(document.getElementById("next_public_reports_pending").style.display === "block")
+                        document.getElementById("next_public_reports_pending").style.display = "none";
+                    if(document.getElementById("previous_public_reports_pending").style.display === "block")
+                        document.getElementById("previous_public_reports_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            var cell10 = row.insertCell(9);
+                            cell1.innerHTML = data[i].report;
+                            cell2.innerHTML = data[i].title;
+                            cell3.innerHTML = data[i].address;
+                            cell4.innerHTML = data[i].gravity;
+                            cell5.innerHTML = data[i].username;
+                            cell6.innerHTML = data[i].lat;
+                            cell7.innerHTML = data[i].lng;
+                            cell8.innerHTML = data[i].points
+                            cell9.innerHTML = data[i].creationtime;
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+function activatePublicReport(row){
+    var table = document.getElementById("public_reports_pending_table");
+    var reportId = table.rows[row].cells[0].innerHTML;
+    var nif = table.rows[row].cells[0].value;
+
+    var headers = new Headers();
+    var body = JSON.stringify({
+        report:reportId,
+        nif: nif
+    });
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest('/api/report/acceptapplication','POST', headers, body)).then(function(response) {
+
+            if (response.status === 200 || response.status === 204) {
+                alert("Utilizador apagado com sucesso.")
+            }else{
+                alert("Falha ao apagar utilizador.")
+            }
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
+}
+

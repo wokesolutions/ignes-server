@@ -562,6 +562,41 @@ function getInfo(idReport, i){
 
 }
 
+function translate(category){
+    switch (category) {
+        case "LIXO":
+            category = "Limpeza de Lixo Geral";
+            break;
+        case "PESADOS":
+            category = "Transportes Pesados";
+            break;
+        case "PERIGOSOS":
+            category = "Transportes Perigosos";
+            break;
+        case "PESSOAS":
+            category = "Transportes de Pessoas";
+            break;
+        case "TRANSPORTE":
+            category = "Transportes Gerais";
+            break;
+        case "MADEIRAS":
+            category = "Madeiras";
+            break;
+        case "CARCACAS":
+            category = "Carcaças";
+            break;
+        case "BIOLOGICO":
+            category = "Outros resíduos biológicos";
+            break;
+        case "JARDINAGEM":
+            category = "Jardinagem";
+            break;
+        case "MATAS":
+            category = "Limpeza de Matas/Florestas";
+    }
+    return category;
+}
+
 function showMap(){
     hideShow('map_variable');
 }
@@ -921,6 +956,8 @@ var loadMore = function () {
         if (tasks[i] === null || tasks[i] === undefined)
             break;
 
+        var category = translate(task[i].category);
+
         var workers_feed = tasks[i].workers;
         var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;">' +
             '<div class="row" >' +
@@ -960,7 +997,7 @@ var loadMore = function () {
                 '<p class="info_text_response" style="font-family: Quicksand Bold">' + tasks[i].username + '</p>' +
                 '</div>' +
                 '<div class="col-lg-2 col-md-2 text-left">' +
-                '<p class="info_text_response text-center" style="margin-left:1.5rem">' + tasks[i].category + '</p>' +
+                '<p class="info_text_response text-center" style="margin-left:1.5rem">' + category + '</p>' +
                 '</div>' +
                 '</div>' +
                 '</div>' +
@@ -1172,7 +1209,7 @@ var loadMoreTasks = function(email,cursor){
                 tasksCursor = response.headers.get("Cursor");
                 response.json().then(function(data) {
                     console.log(data);
-                    document.getElementById("numb_report").innerHTML = data.length;
+                    document.getElementById("num_report").innerHTML = data.length;
                     var i;
                     for(i = 0; i<data.length; i++){
                         console.log(i);
