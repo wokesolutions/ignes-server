@@ -17,10 +17,10 @@
         <div class="collapse navbar-collapse" id="navbarResponsive">
             <ul class="navbar-nav ml-auto">
                 <li id ="public_reports_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Reportes Públicos</a></li>
-                <li id ="pending_verify_reports_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Reportes Públicos</a></li>
+                <li id ="pending_verify_reports_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Reportes Standby Pendentes</a></li>
                 <li id ="statistics_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Estatísticas</a></li>
                 <li id ="list_users_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Utilizadores</a></li>
-                <li id ="list_pending_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Organizações Pendestes</a></li>
+                <li id ="list_pending_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a class="fa fa-users"> </a>Organizações Pendentes</a></li>
                 <li id = "logout_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"><a class="fa fa-power-off"> </a>Terminar Sessão</a></li>
             </ul>
         </div>
@@ -30,15 +30,24 @@
 <!--List Users-->
 <div id="list_users">
     <div class="row">
-
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <p class="info_text_bold_sm">- Lista de Utilizadores -</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <p style="font-family: 'Quicksand'; margin-left:1rem; font-size:12px"> Nesta tabela encontram-se todos os utilizadores registados na aplicação. Consegue ainda promover/despromover os utilizadores a administrador,</p>
+        </div>
+    </div>
+    <div class="row">
         <div class=" col-md-2 col-lg-2 text-center">
             <button class="btn btn-default btn-style" id="refresh_users"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
         </div>
         <div class=" col-md-10 col-lg-10 text-center"></div>
     </div>
-    <div class="container">
+    <div>
         <div class="table-responsive">
-            <table class=" table table-hover table-style text-center" id="user_table">
+            <table class=" table table-hover table-style-pend text-center" id="user_table">
                 <tr>
                     <th class="th-style">Nome</th>
                     <th class="th-style">Email</th>
@@ -64,26 +73,24 @@
 <!--Pending orgs-->
 <div id="list_pending_orgs"style="display: none">
     <div class="row">
-
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <p class="info_text_bold_sm">- Lista de Organazições Pendentes -</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <p style="font-family: 'Quicksand'; margin-left:1rem; font-size:12px"> Nesta tabela encontram-se todas as organizações ainda por ativar. Pode ativar estas organizações nos botões correspondentes.</p>
+        </div>
+    </div>
+    <div class="row">
         <div class=" col-md-2 col-lg-2 text-center">
             <button class="btn btn-default btn-style" id="refresh_orgs_pending"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
         </div>
         <div class=" col-md-10 col-lg-10 text-center"></div>
     </div>
-    <div class="row">
-        <div class="col-lg-4 text-center" style="margin-top: 3rem">
-            <button  id ="create_button" type="button" class="btn btn-lg btn-block-style"><a class="fa fa-edit"> </a> Registar utilizador</button>
-        </div>
-        <div class="col-lg-4 text-center" style="margin-top: 3rem">
-            <button id="remove_button"type="button" class="btn btn-lg btn-block-style"><a class="fa fa-trash-o" style="margin-right:.5rem;"></a>Remover utilizador</button>
-        </div>
-        <div class="col-lg-4 text-center" style="margin-top: 3rem">
-            <button id="view_button" type="button" class="btn btn-lg btn-block-style"><a class="fa fa-search" style="margin-right:.5rem;"></a>Ver utilizador</button>
-        </div>
-    </div>
-    <div class="container">
+    <div>
         <div class="table-responsive">
-            <table class=" table table-hover table-style text-center" id="orgs_pending_table">
+            <table class=" table table-hover table-style-pend text-center" id="orgs_pending_table">
                 <tr>
                     <th class="th-style">NIF</th>
                     <th class="th-style">Nome</th>
@@ -113,22 +120,24 @@
 <!--Tabela das ocorrências em standby-->
 <div id="list_pending_reports" style="display: none">
     <div class="row">
-
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <p class="info_text_bold_sm">- Ocorrências em Standby -</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <p style="font-family: 'Quicksand'; margin-left:1rem; font-size:12px"> Nesta tabela encontram-se todas as ocorrências em Standby. Pode as activar nos botões correspondentes.</p>
+        </div>
+    </div>
+    <div class="row">
         <div class=" col-md-2 col-lg-2 text-center">
             <button class="btn btn-default btn-style" id="refresh_reports_pending"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
         </div>
         <div class=" col-md-10 col-lg-10 text-center"></div>
     </div>
-    <div class="row">
-
-        <div class="col-lg-4 text-center" style="margin-top: 3rem">
-            <button id="remove_report"type="button" class="btn btn-lg btn-block-style"><a class="fa fa-trash-o" style="margin-right:.5rem;"></a>Remover utilizador</button>
-        </div>
-
-    </div>
-    <div class="container">
+    <div>
         <div class="table-responsive">
-            <table class=" table table-hover table-style text-center" id="reports_pending_table">
+            <table class=" table table-hover table-style-pend text-center" id="reports_pending_table">
                 <tr>
                     <th class="th-style">Id</th>
                     <th class="th-style">Nome</th>
@@ -155,18 +164,16 @@
 </div>
 
 <!--Tabela das ocorrências públicas por verificar-->
-<div id="list_pending_public_reports">
+<div id="list_pending_public_reports" style="display: none">
     <div class="row">
-
         <div class=" col-md-2 col-lg-2 text-center">
             <button class="btn btn-default btn-style" id="refresh_public_reports_pending"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
         </div>
         <div class=" col-md-10 col-lg-10 text-center"></div>
     </div>
-
-    <div class="container">
+    <div>
         <div class="table-responsive">
-            <table class=" table table-hover table-style text-center" id="public_reports_pending_table">
+            <table class=" table table-hover table-style-pend text-center" id="public_reports_pending_table">
                 <tr>
                     <th class="th-style">Id</th>
                     <th class="th-style">Título</th>
@@ -194,7 +201,8 @@
 </div>
 
 <!--PIECHART-->
-<div id="piechart" style="width: 900px; height: 500px; display:none"></div>
+<div id="piechart" style="width: 40rem; height:40rem; display:none">
+</div>
 
 <script src="../js/RestApi.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDyB4FcTNeaLK_S-cHrV3EuxmwZGItbIRw"></script>

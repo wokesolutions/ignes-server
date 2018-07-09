@@ -486,8 +486,14 @@ label {
 }
 
 .table-style{
+     margin-top: 2rem;
+     font-family: "Quicksand";
+}
+
+.table-style-pend{
     margin-top: 2rem;
     font-family: "Quicksand";
+    font-size:0.8rem;
 }
 
 .th-style{
@@ -509,6 +515,14 @@ label {
 .btn-primary-style{
     color: #fff;
     margin-top: 10px;
+    background-color: #3e4e5a;
+    border-color: #3e4e5a
+}
+
+.btn-primary-style-pend{
+    color: #fff;
+    margin-top: 10px;
+    margin-right:1rem;
     background-color: #3e4e5a;
     border-color: #3e4e5a
 }

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cronentries>
-  <cron>
-    <url>/api/report/closedef</url>
-    <description>Close reports</description>
-    <schedule>every 72 hours</schedule>
-  </cron>
-</cronentries>

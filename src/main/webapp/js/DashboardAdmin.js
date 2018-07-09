@@ -31,6 +31,9 @@ function init() {
     getPublicFirst();
 
     document.getElementById("logout_button").onclick = logOut;
+    document.getElementById("public_reports_button").onclick = showPublicReports;
+    document.getElementById("statistics_button").onclick = showStatisticsReports;
+    document.getElementById("pending_verify_reports_button").onclick = showPendingReports;
     document.getElementById("next_list").onclick = getNextUsers;
     document.getElementById("previous_list").onclick = getPreUsers;
     document.getElementById("refresh_users").onclick = getFirstUsers;
@@ -39,7 +42,6 @@ function init() {
     document.getElementById("refresh_orgs_pending").onclick = getPendingFirst;
     document.getElementById("list_pending_button").onclick = showPending;
     document.getElementById("list_users_button").onclick = showUsers;
-    document.getElementById("remove_button").onclick = showDeleteButton;
     document.getElementById("next_report_pending").onclick = getPendingReportsNext;
     document.getElementById("previous_reports_pending").onclick = getPendingReportsPre;
     document.getElementById("refresh_reports_pending").onclick = getPendingReportsFirst;
@@ -47,6 +49,18 @@ function init() {
     document.getElementById("previous_public_reports_pending").onclick = getPublicPre;
     document.getElementById("refresh_public_reports_pending").onclick = getPublicFirst;
 
+}
+
+function showPendingReports(){
+    hideShow("reports_pending_variable");
+}
+
+function showPublicReports(){
+    hideShow("list_public_variable");
+}
+
+function showStatisticsReports(){
+    hideShow("statistics_variable");
 }
 
 function showUsers(){
@@ -67,6 +81,18 @@ function hideShow(element){
 
         document.getElementById("list_pending_orgs").style.display = "none";
 
+    } else if(current_position === "list_public_variable"){
+
+        document.getElementById("list_pending_public_reports").style.display = "none";
+
+    } else if(current_position === "statistics_variable"){
+
+        document.getElementById("piechart").style.display = "none";
+
+    } else if(current_position === "reports_pending_variable"){
+
+        document.getElementById("list_pending_reports").style.display = "none";
+
     }
 
     if(element === "show_pending_variable"){
@@ -78,6 +104,21 @@ function hideShow(element){
 
         document.getElementById("list_users").style.display = "block";
         current_position = "list_users_variable";
+
+    } else if(element === "list_public_variable"){
+
+        document.getElementById("list_pending_public_reports").style.display = "block";
+        current_position = "list_public_variable";
+
+    } else if(element === "statistics_variable"){
+
+        document.getElementById("piechart").style.display = "block";
+        current_position = "statistics_variable";
+
+    } else if(element === "reports_pending_variable"){
+
+        document.getElementById("list_pending_reports").style.display = "block";
+        current_position = "reports_pending_variable";
 
     }
 }
@@ -191,7 +232,6 @@ function getFirstUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
-                            var cell6 = row.insertCell(5);
                             cell1.innerHTML = data[i].username;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
@@ -598,7 +638,7 @@ function getPendingFirst(){
                             cell7.innerHTML = data[i].services;
                             cell8.innerHTML = data[i].creationtime;
                             cell9.innerHTML = data[i].isfirestation;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -643,34 +683,6 @@ function activateOrg(row){
         .catch(function(err) {
             console.log('Fetch Error', err);
         });
-}
-
-function deleteUser(row){
-    var table = document.getElementById("user_table");
-    var username = table.rows[row].cells[0].innerHTML;
-
-    var headers = new Headers();
-    var body = "";
-    headers.append('Authorization', localStorage.getItem('token'));
-    headers.append('Device-Id', localStorage.getItem('fingerprint'));
-    headers.append('Device-App', localStorage.getItem('app'));
-    headers.append('Device-Info', localStorage.getItem('browser'));
-
-
-    fetch(restRequest('/api/admin/deleteuser/' + username,'DELETE', headers, body)).then(function(response) {
-
-            if (response.status === 200 || response.status === 204) {
-                alert("Utilizador apagado com sucesso.")
-            }else{
-                alert("Falha ao apagar utilizador.")
-            }
-
-        }
-    )
-        .catch(function(err) {
-            console.log('Fetch Error', err);
-        });
-
 }
 
 function getPendingReportsNext(){
@@ -878,7 +890,6 @@ function getPendingReportsFirst(){
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
                             var cell9 = row.insertCell(8);
-                            var cell10 = row.insertCell(9);
                             cell1.innerHTML = data[i].report;
                             cell2.innerHTML = data[i].title;
                             cell3.innerHTML = data[i].address;
@@ -886,9 +897,8 @@ function getPendingReportsFirst(){
                             cell5.innerHTML = data[i].username;
                             cell6.innerHTML = data[i].lat;
                             cell7.innerHTML = data[i].lng;
-                            cell8.innerHTML = data[i].status;
-                            cell9.innerHTML = data[i].creationtime;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateReport(this.parentNode.rowIndex)'></button>";
+                            cell8.innerHTML = data[i].creationtime;
+                            cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -949,16 +959,20 @@ function drawChart(){
     fetch(restRequest("/api/admin/stats/org/applications",'GET', headers, body)).then(function(response) {
 
             if (response.status === 200 || response.status === 204) {
-                data[1][1] = 4;
-                var data = google.visualization.arrayToDataTable(data);
+                response.json().then(function(data){
+                    console.log(data);
+                    var dados = google.visualization.arrayToDataTable(data);
 
-                var options = {
-                    title: 'My Daily Activities'
-                };
+                    var options = {
+                        title: 'Eficácia por organização'
 
-                var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+                    };
 
-                chart.draw(data, options);
+                    var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+                    chart.draw(dados, options);
+                });
+
             }else{
                 alert("Falha ao apagar utilizador.")
             }
@@ -1028,7 +1042,7 @@ function getPublicNext(){
                             cell7.innerHTML = data[i].lng;
                             cell8.innerHTML = data[i].points
                             cell9.innerHTML = data[i].creationtime;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -1108,7 +1122,7 @@ function getPublicPre(){
                             cell7.innerHTML = data[i].lng;
                             cell8.innerHTML = data[i].points
                             cell9.innerHTML = data[i].creationtime;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -1185,7 +1199,7 @@ function getPublicFirst(){
                             cell7.innerHTML = data[i].lng;
                             cell8.innerHTML = data[i].points
                             cell9.innerHTML = data[i].creationtime;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
