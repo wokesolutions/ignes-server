@@ -124,7 +124,7 @@ header.masthead .site-heading {
     margin-left: 1rem;
 }
 .dropdown-n {
-    margin-bottom: 1rem;
+
     color: #000000;
     background-color: #ffffff;
     border-color: #c7c4c4;
@@ -669,4 +669,10 @@ label {
     height: 400px;
     overflow: auto;
     overflow-x: hidden;
+}
+
+.foto {
+    width: 150px;
+    height: auto;
+    border-radius: 50%;
 }

@@ -309,15 +309,19 @@ function getMarkers(cursor){
     headers.append('Device-Info', localStorage.getItem('browser'));
 
     fetch(restRequest('/api/org/reports?cursor=' + cursor , 'GET', headers, body)).then(function(response) {
-
+        var newCursor = response.headers.get("Cursor");
+        console.log(newCursor);
             if (response.status === 200) {
-                var newCursor = response.headers.get("Cursor");
                 response.json().then(function(data) {
                     reports = data;
                     fillMap(reports, newCursor);
                 });
 
-            }else{
+            }else if(response.status === 204){
+                var empty=[];
+                fillMap(empty, newCursor);
+            }
+            else{
                 console.log("Tratar do Forbidden");
                 return;
             }
@@ -471,6 +475,7 @@ function fillMap(reports, cursor){
 
 
                 reportID = reports[i].report;
+                $(".remove_work").remove();
                 getInfo(reportID, i);
 
             }
@@ -536,7 +541,7 @@ function getInfo(idReport, i){
                 else if(reports[i].status === "closed")
                     status = "Fechado";
                 else if (reports[i].status === "wip")
-                    status = "Trabalho em progresso";
+                    status = "Em resolução";
                 else if(reports[i].status === "wip")
                     status = "Em espera";
 
@@ -548,21 +553,18 @@ function getInfo(idReport, i){
                 var categoria = translate(reports[i].category);
                 document.getElementById('category_report').innerHTML= categoria;
 
-                var workers_feed = tasks[i].workers;
-                var content= "";
 
-                $(".remove_work").remove();
-                $(".list_users_report").append('<div class="remove_work">');
+                var content= "";
+                var workers_feed = reports[i].workers;
                 if (workers_feed !== undefined) {
                     var j;
                     for (j = 0; j < workers_feed.length; j++) {
-                        content += '<p class="info_text_response" style="font-family: Quicksand Bold">' + workers_feed[j] + '</p>';
+                        content += '<div class="remove_work"><p class="info_text_response" style="font-family: Quicksand Bold">' + workers_feed[j] + '</p></div>';
                     }
                 } else {
-                    content += '<p class="info_text_response" style="font-family: Quicksand Bold">Não há trabalhadores associados a este reporte.</p>'
+                    content += '<div class="remove_work"><p class="info_text_response" style="font-family: Quicksand Bold">Não há trabalhadores associados a este reporte.</p></div>'
                 }
                 $(".list_users_report").append(content);
-                $(".list_users_report").append('</div>');
                 if(reports[i].private === true)
                     document.getElementById('report_private_id').innerHTML= "Privado";
                 else
@@ -999,7 +1001,7 @@ var loadMore = function () {
         else if(tasks[i].status === "closed")
             status = "Fechado";
         else if (tasks[i].status === "wip")
-            status = "Trabalho em progresso";
+            status = "Em resolução";
         else if(tasks[i].status === "wip")
             status = "Em espera";
 
@@ -1285,7 +1287,7 @@ var loadMoreTasks = function(email,cursor){
                         else if(data[i].status === "closed")
                             status = "Fechado";
                         else if (data[i].status === "wip")
-                            status = "Trabalho em progresso";
+                            status = "Em resolução";
                         else if(data[i].status === "wip")
                             status = "Em espera";
 
