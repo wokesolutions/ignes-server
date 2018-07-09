@@ -40,7 +40,8 @@ public class LevelManager {
 
 			datastore.put(txn, log);
 			datastore.put(txn, reporter);
-		} else if(pointsval >= LEVEL2_POINTS && !level.equals(UserLevel.LEVEL2)) {
+		} else if(pointsval >= LEVEL2_POINTS && pointsval < LEVEL3_POINTS
+				&& !level.equals(UserLevel.LEVEL2)) {
 			Entity log = new Entity(DSUtils.LEVELLOG);
 			log.setProperty(DSUtils.LEVELLOG_TIME, new Date());
 			log.setProperty(DSUtils.LEVELLOG_OLDLEVEL, level);

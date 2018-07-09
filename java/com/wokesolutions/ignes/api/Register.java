@@ -115,7 +115,7 @@ public class Register {
 
 				user.setUnindexedProperty(DSUtils.USER_ACTIVATION, code);
 				
-				Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
+				Entity userPoints = new Entity(DSUtils.USERPOINTS, data.username, user.getKey());
 				userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
 
 				Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);

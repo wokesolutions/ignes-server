@@ -61,6 +61,8 @@ public class Org {
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	private static final int BATCH_SIZE = 10;
 	private static final int BATCH_SIZE_BIG = 20;
+	
+	public static final String WORKER = "worker";
 
 	@POST
 	@Path("/registerworker")
@@ -202,8 +204,8 @@ public class Org {
 	@Path("/deleteworker/{email}")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response deleteWorker(@PathParam(ParamName.EMAIL) String email,
-			@Context HttpServletRequest request) {
-		if(!isValid(email))
+			@Context HttpServletRequest request, String info) {
+		if(!isValid(email) || info == null || info.equals(""))
 			return Response.status(Status.BAD_REQUEST).build();
 
 		String org = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
@@ -215,7 +217,7 @@ public class Org {
 		int retries = 5;
 		while(true) {
 			try {
-				return deleteWorkerRetry(email, org);
+				return deleteWorkerRetry(email, org, info);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -224,13 +226,13 @@ public class Org {
 		}
 	}
 
-	public Response deleteWorkerRetry(String email, String org) {
+	public Response deleteWorkerRetry(String email, String org, String info) {
 		Key userKey = KeyFactory.createKey(DSUtils.USER, email);
 		TransactionOptions options = TransactionOptions.Builder.withXG(true);
 		Transaction txn = datastore.beginTransaction(options);
 
 		try {
-			Entity user = datastore.get(userKey);
+			datastore.get(userKey);
 			Entity worker;
 
 			Key orgUK = KeyFactory.createKey(DSUtils.USER, org);
@@ -256,19 +258,11 @@ public class Org {
 				return Response.status(Status.FORBIDDEN).build();
 			}
 
-			Entity deletedWorker = new Entity(DSUtils.DELETEDWORKER, email);
-			deletedWorker.setProperty(DSUtils.DELETEDWORKER_CREATIONTIME,
-					worker.getProperty(DSUtils.WORKER_CREATIONTIME));
-
-			deletedWorker.setProperty(DSUtils.DELETEDWORKER_JOB,
-					worker.getProperty(DSUtils.WORKER_JOB));
-
-			deletedWorker.setProperty(DSUtils.DELETEDWORKER_ORG, org);
-
-			deletedWorker.setProperty(DSUtils.DELETEDWORKER_PASSWORD,
-					user.getProperty(DSUtils.USER_PASSWORD));
-
-			deletedWorker.setProperty(DSUtils.DELETEDWORKER_DELETIONTIME, new Date());
+			Entity deletionLog = new Entity(DSUtils.DELETIONLOG, org, orgK);
+			deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_DELETED, worker.getKey());
+			deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_TIME, new Date());
+			deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_INFO, info);
+			deletionLog.setProperty(DSUtils.DELETIONLOG_TYPE, WORKER);
 
 			LOG.info(userKey.toString());
 
@@ -300,7 +294,7 @@ public class Org {
 
 			datastore.delete(txn, devices);
 
-			datastore.put(txn, deletedWorker);
+			datastore.put(txn, deletionLog);
 
 			LOG.info(Log.DELETED_WORKER + email);
 			txn.commit();
@@ -447,7 +441,7 @@ public class Org {
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
-		Entity task = new Entity(DSUtils.TASK, reportK.getName(), orgtaskK);
+		Entity task = new Entity(DSUtils.TASK, data.email, orgtaskK);
 		task.setProperty(DSUtils.TASK_WORKER, workerK);
 
 		if(data.indications != null && !data.indications.equals(""))
@@ -817,7 +811,6 @@ public class Org {
 			return Response.status(Status.NO_CONTENT).build();
 
 		for(Entity report : reportList) {
-			LOG.info(report.toString());
 			String cat = report.getProperty(DSUtils.REPORT_CATEGORY).toString();
 			if(cats.contains(cat))
 				addReportToArray(report, array, orgK);
@@ -906,6 +899,8 @@ public class Org {
 
 						for(Entity workerT : workers)
 							arrayW.put(((Key) workerT.getProperty(DSUtils.TASK_WORKER)).getParent().getName());
+						
+						jsonReport.put(Prop.WORKERS, arrayW);
 					}
 				}
 			} catch(EntityNotFoundException e1) {}

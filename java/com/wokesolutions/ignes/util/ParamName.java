@@ -22,6 +22,7 @@ public class ParamName {
 		public static final String REPORT = "report";
 		public static final String NIF = "nif";
 		public static final String EMAIL = "email";
+		public static final String COMMENT = "comment";
 		
 	// Both
 		public static final String USERNAME = "username";

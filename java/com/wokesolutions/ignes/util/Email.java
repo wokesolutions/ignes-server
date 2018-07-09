@@ -37,6 +37,12 @@ public class Email {
 			+ " funcionabilidades da nossa aplicação!\n\n"
 			+ "Bom trabalho!";
 	
+	private static final String FORGOT_PW_SUBJECT = "Email de recuperação de palavra-passe";
+	private static final String FORGOT_PW_TEXT = "Recebemos um pedido de recuperação da sua palavra-"
+			+ "passe. Utilize a seguinte palavra-passe para entrar na sua conta, e ir ao seu perfil"
+			+ " alterá-la para uma à sua escolha.\n\n"
+			+ "Palavra-passe: ";
+	
 	private static final Configuration configuration = new Configuration()
 			.domain(DOMAIN)
 			.apiKey(Secrets.MAILGUN)
@@ -78,6 +84,16 @@ public class Email {
 		.to(email)
 		.subject(ORG_CONFIRMED_SUBJECT)
 		.text(ORG_CONFIRMED_TEXT)
+		.build()
+		.send();
+	}
+	
+	public static void sendForgotPwMessage(String email, String password) {
+
+		Mail.using(configuration)
+		.to(email)
+		.subject(FORGOT_PW_SUBJECT)
+		.text(FORGOT_PW_TEXT + password)
 		.build()
 		.send();
 	}

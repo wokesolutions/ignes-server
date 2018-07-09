@@ -77,6 +77,9 @@ public class Report {
 	private static final int BATCH_SIZE = 10;
 
 	public static final String PORTUGAL = "Portugal";
+	
+	public static final String REPORT = "report";
+	public static final String COMMENT = "comment";
 
 	public static final String OPEN = "open";
 	public static final String CLOSED = "closed";
@@ -930,7 +933,7 @@ public class Report {
 			}
 		}
 	}
-	
+
 	@POST
 	@Path("/acceptapplication")
 	public Response accept(@Context HttpServletRequest request, AcceptData data) {
@@ -965,7 +968,7 @@ public class Report {
 			LOG.info(Log.REPORT_NOT_FOUND);
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		}
-		
+
 		Entity user;
 		try {
 			user = datastore.get(userK);
@@ -973,17 +976,15 @@ public class Report {
 			LOG.info(Log.UNEXPECTED_ERROR);
 			return Response.status(Status.EXPECTATION_FAILED).build();
 		}
-		
+
 		boolean isprivate = (boolean) report.getProperty(DSUtils.REPORT_PRIVATE);
 		String userlevel = user.getProperty(DSUtils.USER_LEVEL).toString();
-		
-		/*
+
 		if(userlevel.equals(UserLevel.ADMIN) && isprivate
 				|| !userlevel.equals(UserLevel.ADMIN) && !isprivate) {
 			LOG.info(Log.FORBIDDEN);
 			return Response.status(Status.FORBIDDEN).build();
 		}
-		*/
 
 		Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
 		if(!reporterK.equals(userK)) {
@@ -1004,7 +1005,7 @@ public class Report {
 				.asList(FetchOptions.Builder.withDefaults());
 
 		Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
-		
+
 		for(Entity application : applications)
 			datastore.delete(txn, application.getKey());
 
@@ -1017,6 +1018,134 @@ public class Report {
 
 		txn.commit();
 		return Response.ok().build();
+	}
+
+	@DELETE
+	@Path("/delete/{report}")
+	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
+	public Response deleteReport(@Context HttpServletRequest request,
+			@PathParam(ParamName.REPORT) String report, String info) {
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+
+		int retries = 5;
+		while(true) {
+			try {
+				Key userK = KeyFactory.createKey(DSUtils.USER, username);
+				Entity user;
+				try {
+					user = datastore.get(userK);
+				} catch(EntityNotFoundException e) {
+					LOG.info(Log.USER_NOT_FOUND);
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+				
+				String userlevel = user.getProperty(DSUtils.USER_LEVEL).toString();
+				
+				if(userlevel.equals(UserLevel.ADMIN)
+						&& (info == null || info.equals(""))) {
+					LOG.info(Log.BAD_FORMAT);
+					return Response.status(Status.BAD_REQUEST).build();
+				}
+
+				Key reportK = KeyFactory.createKey(DSUtils.REPORT, report);
+				Entity reportE;
+				try {
+					reportE = datastore.get(reportK);
+				} catch (EntityNotFoundException e) {
+					LOG.info(Log.REPORT_NOT_FOUND);
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+
+				List<Entity> toDelete = hasPermissionToDelete(reportE, user);
+				
+				if(toDelete == null) {
+					LOG.info(Log.FORBIDDEN);
+					return Response.status(Status.FORBIDDEN).build();
+				}
+				
+				Transaction txn = datastore.beginTransaction();
+				
+				if(user.getProperty(DSUtils.USER_LEVEL).equals(UserLevel.ADMIN)
+						&& !user.getProperty(DSUtils.REPORT_USER).equals(user.getKey())) {
+					Key pointsK = KeyFactory.createKey(user.getKey(), DSUtils.USERPOINTS, username);
+					Entity points;
+					try {
+						points = datastore.get(pointsK);
+					} catch (EntityNotFoundException e) {
+						LOG.info(Log.UNEXPECTED_ERROR);
+						txn.rollback();
+						return Response.status(Status.EXPECTATION_FAILED).build();
+					}
+					
+					points.setProperty(DSUtils.USERPOINTS_POINTS,
+							(long) points.getProperty(DSUtils.USERPOINTS_POINTS) - 1);
+					
+					datastore.put(txn, points);
+				}
+				
+				for(Entity deleted : toDelete)
+					datastore.delete(txn, deleted.getKey());
+				
+				Entity deletionLog = new Entity(DSUtils.DELETIONLOG, username, userK);
+				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_DELETED, reportK);
+				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_INFO, info);
+				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_TIME, new Date());
+				deletionLog.setProperty(DSUtils.DELETIONLOG_TYPE, COMMENT);
+				
+				datastore.put(txn, deletionLog);
+				
+				txn.commit();
+				return Response.ok().build();
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+	
+	private List<Entity> hasPermissionToDelete(Entity report, Entity user) {
+		String status = report.getProperty(DSUtils.REPORT_STATUS).toString();
+		Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
+		String level = user.getProperty(DSUtils.USER_LEVEL).toString();
+		
+		if(level.equals(UserLevel.ADMIN))
+			return null;
+		
+		if(!(status.equals(Report.OPEN) || status.equals(Report.STANDBY)))
+			return null;
+		
+		if(!report.getProperty(DSUtils.REPORT_USER).equals(reporterK))
+			return null;
+		
+		FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
+		
+		Query orgtaskQ = new Query(DSUtils.ORGTASK).setAncestor(report.getKey()).setKeysOnly();
+		List<Entity> orgtasks = datastore.prepare(orgtaskQ).asList(fetchOptions);
+		
+		if(!level.equals(UserLevel.ADMIN) && !orgtasks.isEmpty())
+			return null;
+		
+		List<Entity> toDelete = new LinkedList<Entity>();
+		
+		Query applicationQ = new Query(DSUtils.APPLICATION)
+				.setAncestor(report.getKey()).setKeysOnly();
+		List<Entity> applications = datastore.prepare(applicationQ).asList(fetchOptions);
+		
+		toDelete.addAll(applications);
+		
+		if(!orgtasks.isEmpty())
+			for(Entity orgtask : orgtasks) {
+				toDelete.add(orgtask);
+				
+				Query taskQ = new Query(DSUtils.TASK)
+						.setAncestor(orgtask.getKey()).setKeysOnly();
+				List<Entity> tasks = datastore.prepare(taskQ).asList(fetchOptions);
+				
+				toDelete.addAll(tasks);
+			}
+		
+		return toDelete;
 	}
 
 	// ---------------x--------------- SUBCLASS
@@ -1199,8 +1328,11 @@ public class Report {
 		int retries = 5;
 		while(true) {
 			try {
+
+				Key userK = KeyFactory.createKey(DSUtils.USER, username);
+
 				try {
-					datastore.get(KeyFactory.createKey(DSUtils.REPORT, report));
+					datastore.get(userK);
 				} catch (EntityNotFoundException e) {
 					LOG.info(Log.REPORT_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
@@ -1213,8 +1345,7 @@ public class Report {
 				comment.setProperty(DSUtils.REPORTCOMMENT_TIME, date);
 				comment.setProperty(DSUtils.REPORTCOMMENT_TIMEFORMATTED, 
 						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));
-				comment.setProperty(DSUtils.REPORTCOMMENT_USER,
-						KeyFactory.createKey(DSUtils.USER, username));
+				comment.setProperty(DSUtils.REPORTCOMMENT_USER, userK);
 				comment.setProperty(DSUtils.REPORTCOMMENT_REPORT, report);
 				datastore.put(comment);
 				return Response.ok().build();
@@ -1308,6 +1439,61 @@ public class Report {
 				cursor = list.getCursor().toWebSafeString();
 
 				return Response.ok(array.toString()).header(CustomHeader.CURSOR, cursor).build();
+			} catch(DatastoreException e) {
+				if(retries == 0)
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				retries--;
+			}
+		}
+	}
+
+	@DELETE
+	@Path("/comment/delete/{comment}")
+	public Response deleteComment(@Context HttpServletRequest request,
+			@PathParam(ParamName.COMMENT) String comment) {
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+
+		int retries = 5;
+		while(true) {
+			try {
+				Key userK = KeyFactory.createKey(DSUtils.USER, username);
+				Entity user;
+				try {
+					user = datastore.get(userK);
+				} catch(EntityNotFoundException e) {
+					LOG.info(Log.USER_NOT_FOUND);
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+
+				Key commentK = KeyFactory.createKey(DSUtils.REPORT, comment);
+				Entity commentE;
+				try {
+					commentE = datastore.get(commentK);
+				} catch(EntityNotFoundException e) {
+					LOG.info(Log.REPORT_NOT_FOUND);
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+
+				if(!commentE.getProperty(DSUtils.REPORTCOMMENT_USER).equals(userK)
+						&& !user.getProperty(DSUtils.USER_LEVEL).equals(UserLevel.ADMIN)) {
+					LOG.info(Log.FORBIDDEN);
+					return Response.status(Status.FORBIDDEN).build();
+				}
+				
+				Entity deletionLog = new Entity(DSUtils.DELETIONLOG, username, userK);
+				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_DELETED, commentK);
+				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_TIME, new Date());
+				deletionLog.setProperty(DSUtils.DELETIONLOG_TYPE, REPORT);
+				
+				Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
+				
+				datastore.put(txn, deletionLog);
+
+				datastore.delete(txn, commentK);
+				
+				txn.commit();
+
+				return Response.ok().build();
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();

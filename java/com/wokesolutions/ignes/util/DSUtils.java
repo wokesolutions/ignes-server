@@ -35,6 +35,7 @@ public class DSUtils {
 		public static final String ORGTASK = "OrgTask";
 		public static final String FOLLOW = "Follow";
 		public static final String APPLICATIONLOG = "ApplicationLog";
+		public static final String DELETIONLOG = "DeletionLog";
 	
 	// Admin
 		public static final String ADMIN_CREATIONTIME = "admin_creationtime";
@@ -51,6 +52,7 @@ public class DSUtils {
 
 	// User
 		public static final String USER_PASSWORD = "user_password";
+		public static final String USER_FORGOT_PASSWORD = "user_forgot_password";
 		public static final String USER_EMAIL = "user_email";
 		public static final String USER_LEVEL = "user_level";
 		public static final String USER_CREATIONTIME = "user_creationtime";
@@ -305,4 +307,10 @@ public class DSUtils {
 		public static final String APPLICATIONLOG_TIME = "applicationlog_time";
 		public static final String APPLICATIONLOG_BUDGET = "applicationlog_budget";
 		public static final String APPLICATIONLOG_INFO = "applicationlog_info";
+		
+	// DeletionLog
+		public static final String DELETIONLOG_DELETED = "deletionlog_deleted";
+		public static final String DELETIONLOG_TIME = "deletionlog_time";
+		public static final String DELETIONLOG_INFO = "deletionlog_info";
+		public static final String DELETIONLOG_TYPE = "deletionlog_type";
 }

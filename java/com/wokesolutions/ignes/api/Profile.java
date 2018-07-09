@@ -1,9 +1,7 @@
 package com.wokesolutions.ignes.api;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -42,13 +40,13 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.cloud.datastore.DatastoreException;
-import com.wokesolutions.ignes.data.AcceptData;
 import com.wokesolutions.ignes.data.PasswordData;
 import com.wokesolutions.ignes.data.ProfPicData;
 import com.wokesolutions.ignes.data.UserOptionalData;
 import com.wokesolutions.ignes.exceptions.NotSameNorAdminException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
+import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.ParamName;
@@ -895,6 +893,48 @@ public class Profile {
 				}
 				
 				return Response.ok(array.toString()).build();
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Log.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
+	
+	@POST
+	@Path("/forgotpassword/{email}")
+	public Response forgotPassword(@PathParam(ParamName.EMAIL) String email) {
+		if(email == null || !email.equals(""))
+			return Response.status(Status.BAD_REQUEST).build();
+		
+		int retries = 5;
+		while(true) {
+			try {
+				Filter emailF = new Query.FilterPredicate(DSUtils.USER_EMAIL,
+						FilterOperator.EQUAL, email);
+				Query userQ = new Query(DSUtils.FOLLOW).setFilter(emailF);
+				Entity user;
+				
+				try {
+					user = datastore.prepare(userQ).asSingleEntity();
+				} catch(TooManyResultsException e) {
+					LOG.info(Log.UNEXPECTED_ERROR);
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+				
+				String password = Long.toString(System.currentTimeMillis());
+				password = password.substring(password.length() - 6);
+				
+				Email.sendForgotPwMessage(email, password);
+				
+				user.setProperty(DSUtils.USER_FORGOT_PASSWORD, DigestUtils.sha512Hex(password));
+				
+				datastore.put(user);
+
+				return Response.ok().build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Log.TOO_MANY_RETRIES);

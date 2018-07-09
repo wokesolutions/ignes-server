@@ -1,11 +1,8 @@
 package com.wokesolutions.ignes.api;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -162,7 +159,7 @@ public class Worker {
 		}
 
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
-		Query query = new Query(DSUtils.TASK).setKeysOnly();
+		Query query = new Query(DSUtils.TASK);
 		Filter filter = new Query.FilterPredicate(DSUtils.TASK_WORKER,
 				FilterOperator.EQUAL, workerK);
 		query.setFilter(filter);
@@ -173,20 +170,18 @@ public class Worker {
 		JSONArray array = new JSONArray();
 
 		QueryResultList<Entity> tasks = datastore.prepare(query).asQueryResultList(fetchOptions);
-		List<Key> keys = new ArrayList<Key>(tasks.size());
-		Map<Key, Entity> taskMap = new HashMap<Key, Entity>(tasks.size());
-
+		
 		for(Entity task : tasks) {
-			taskMap.put(task.getKey(), task);
-			keys.add(task.getParent());
-		}
-
-		Map<Key, Entity> reports = datastore.get(keys);
-
-		for(Entity task : taskMap.values()) {
 			JSONObject jsonReport = new JSONObject();
 
-			Entity report = reports.get(task.getParent());
+			Key reportK = KeyFactory.createKey(DSUtils.REPORT, task.getParent().getName());
+			Entity report;
+			try {
+				report = datastore.get(reportK);
+			} catch (EntityNotFoundException e1) {
+				LOG.info(Log.REPORT_NOT_FOUND);
+				continue;
+			}
 
 			jsonReport.put(Prop.TASK, report.getKey().getName());
 			jsonReport.put(Prop.TITLE, report.getProperty(DSUtils.REPORT_TITLE));
@@ -197,10 +192,11 @@ public class Worker {
 			jsonReport.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
 			jsonReport.put(Prop.GRAVITY, report.getProperty(DSUtils.REPORT_GRAVITY));
 			jsonReport.put(Prop.STATUS, report.getProperty(DSUtils.REPORT_STATUS));
+			jsonReport.put(Prop.CATEGORY, report.getProperty(DSUtils.REPORT_CATEGORY));
 			jsonReport.put(Prop.DESCRIPTION, report.getProperty(DSUtils.REPORT_DESCRIPTION));
 			jsonReport.put(Prop.CREATIONTIME,
 					report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
-			jsonReport.put(Prop.CREATIONTIME, report.getProperty(DSUtils.REPORT_PRIVATE));
+			jsonReport.put(Prop.ISPRIVATE, report.getProperty(DSUtils.REPORT_PRIVATE));
 
 			jsonReport.put(Prop.INDICATIONS, task.getProperty(DSUtils.TASK_INDICATIONS));
 			jsonReport.put(Prop.TASK_TIME, task.getProperty(DSUtils.TASK_TIMEFORMATTED));

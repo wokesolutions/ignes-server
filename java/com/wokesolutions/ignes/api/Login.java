@@ -98,7 +98,7 @@ public class Login {
 				txn.rollback();
 				return Response.status(Status.FORBIDDEN).build();
 			}
-			
+
 			String level = user.getProperty(DSUtils.USER_LEVEL).toString();
 
 			if(level.equals(UserLevel.ORG)) {
@@ -125,17 +125,36 @@ public class Login {
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
-			String hashedPWD = (String) user.getProperty(DSUtils.USER_PASSWORD);
+			String hashedPWD = user.getProperty(DSUtils.USER_PASSWORD).toString();
+
+			Object hashedForgotPWDo = user.getProperty(DSUtils.USER_FORGOT_PASSWORD);
+
 			if(!hashedPWD.equals(DigestUtils.sha512Hex(data.password))) {
-				LOG.info(Log.WRONG_PASSWORD + data.username);
+				if(hashedForgotPWDo != null) {
+					if(!hashedForgotPWDo.equals(DigestUtils.sha512Hex(data.password))) {
+						LOG.info(Log.WRONG_PASSWORD + data.username);
 
-				stats.setProperty(DSUtils.USERSTATS_LOGINSFAILED,
-						1L + (long) stats.getProperty(DSUtils.USERSTATS_LOGINSFAILED));
+						stats.setProperty(DSUtils.USERSTATS_LOGINSFAILED,
+								1L + (long) stats.getProperty(DSUtils.USERSTATS_LOGINSFAILED));
 
-				datastore.put(txn,stats);				
-				txn.commit();
-				return Response.status(Status.FORBIDDEN).build();
-			}
+						datastore.put(txn,stats);				
+						txn.commit();
+						return Response.status(Status.FORBIDDEN).build();
+					} else
+						user.setProperty(DSUtils.USER_PASSWORD,
+								user.getProperty(DSUtils.USER_FORGOT_PASSWORD));
+				} else {
+					LOG.info(Log.WRONG_PASSWORD + data.username);
+
+					stats.setProperty(DSUtils.USERSTATS_LOGINSFAILED,
+							1L + (long) stats.getProperty(DSUtils.USERSTATS_LOGINSFAILED));
+
+					datastore.put(txn,stats);				
+					txn.commit();
+					return Response.status(Status.FORBIDDEN).build();
+				}
+			} else
+				user.setProperty(DSUtils.USER_FORGOT_PASSWORD, null);
 
 			String token;
 			try {
@@ -204,14 +223,14 @@ public class Login {
 			newToken.setUnindexedProperty(DSUtils.TOKEN_DATE, date);
 			newToken.setProperty(DSUtils.TOKEN_DEVICE, deviceid);
 			newToken.setProperty(DSUtils.TOKEN_USER, userKey);
-			
+
 			stats.setProperty(DSUtils.USERSTATS_LOGINS,
 					(long) stats.getProperty(DSUtils.USERSTATS_LOGINS) + 1L);
 			stats.setProperty(DSUtils.USERSTATS_LASTIN, new Date());
 
 			LOG.info(data.username + Log.LOGGED_IN);
-			List<Entity> logs = Arrays.asList(log, stats, newToken);
-			datastore.put(txn, logs);
+			List<Entity> list = Arrays.asList(log, stats, newToken, user);
+			datastore.put(txn, list);
 
 			ResponseBuilder response;
 
