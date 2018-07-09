@@ -862,9 +862,8 @@ function getProfile(){
 
 function deleteWorker (row){
     var email = document.getElementById("user_table").rows[row].cells[1].innerHTML;
-    var text = '<p style ="font-family: Quicksand Bold; font-size:20px ">Por favor indique o motivo:</p>';
-    var text_place = '<p style ="font-family: Quicksand;">Escreva o motivo...</p>'
-    var delWorker = prompt(text, text_place);
+
+    var delWorker = prompt("Por favor indique o motivo:", "Escreva o motivo...");
     if(delWorker != null) {
         var body = JSON.stringify({
             info:delWorker
@@ -1175,6 +1174,7 @@ var loadMoreTasks = function(email,cursor){
                     console.log(data);
                     var i;
                     for(i = 0; i<data.length; i++){
+                        console.log(i);
                         var type_private = "";
 
                         if(data[i].isprivate === true)
@@ -1259,7 +1259,7 @@ var loadMoreTasks = function(email,cursor){
 
                         $(".tasks_worker").append(contentString);
 
-                        getThumbnailTask(data[i].task, i);
+                       getThumbnailTask(data[i].task, i);
                     }
 
                 });
@@ -1287,7 +1287,7 @@ function getThumbnailTask(reportId, i){
     headers.append('Device-Id', localStorage.getItem('fingerprint'));
     headers.append('Device-App', localStorage.getItem('app'));
     headers.append('Device-Info', localStorage.getItem('browser'));
-    fetch(restRequest('/api/report/thumbnail/' + reportId, 'GET', headers, body).then(function(response) {
+    fetch(restRequest('/api/report/thumbnail/' + reportId, 'GET', headers, body)).then(function(response) {
         if(response.status === 200){
             response.json().then(function(data) {
                 console.log(data);
@@ -1299,7 +1299,7 @@ function getThumbnailTask(reportId, i){
         }
     }).catch(function(err) {
         console.log('Fetch Error', err);
-    })
+    }
     );
 }
 
