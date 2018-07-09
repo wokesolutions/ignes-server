@@ -817,46 +817,72 @@ public class Admin {
 					rep.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
 					rep.put(Prop.CREATIONTIME,
 							report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
-
-					if(report.getProperty(DSUtils.REPORT_STATUS).equals(Report.OPEN)) {
-						Filter applicationF = new Query.FilterPredicate(DSUtils.APPLICATION_REPORT,
-								FilterOperator.EQUAL, report.getKey());
-						Query applicationQ = new Query(DSUtils.APPLICATION).setFilter(applicationF);
+					
+					Key reportK = report.getKey();
+					
+					Key orgtaskK = KeyFactory.createKey(reportK, DSUtils.ORGTASK, reportK.getName());
+					
+					LOG.info(orgtaskK.toString());
+					Entity orgtask;
+					try {
+						orgtask = datastore.get(orgtaskK);
 						
-						FetchOptions defaultOptions = FetchOptions.Builder.withDefaults();
-						List<Entity> applications = datastore.prepare(applicationQ).asList(defaultOptions);
+						JSONObject orgObj = new JSONObject();
 						
-						JSONArray apps = new JSONArray();
-						
-						for(Entity application : applications) {
-							JSONObject app = new JSONObject();
-
-							Key orgK = application.getParent();
-							Entity org;
-							
-							Entity user;
-							try {
-								org = datastore.get(orgK);
-								user = datastore.get(org.getParent());
-							} catch(EntityNotFoundException e) {
-								LOG.info(Log.ORG_NOT_FOUND);
-								continue;
-							}
-							
-							app.put(Prop.BUDGET, application.getProperty(DSUtils.APPLICATION_BUDGET));
-							app.put(Prop.INFO, application.getProperty(DSUtils.APPLICATION_INFO));
-							app.put(Prop.APPLICATION_TIME, application.getProperty(DSUtils.APPLICATION_TIME));
-							
-							app.put(Prop.NIF, orgK.getName());
-							app.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
-							app.put(Prop.PHONE, org.getProperty(DSUtils.ORG_PHONE));
-							app.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
-							
-							apps.put(app);
+						Key orgK = (Key) orgtask.getProperty(DSUtils.ORGTASK_ORG);
+						Entity org;
+						try {
+							org = datastore.get(orgK);
+						} catch(EntityNotFoundException e) {
+							LOG.info(Log.ORG_NOT_FOUND);
+							continue;
 						}
 						
-						if(apps.length() > 0)
-							rep.put(Prop.APPLICATIONS, apps);
+						orgObj.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
+						orgObj.put(Prop.NIF, orgK.getParent().getName());
+						
+						rep.put(Prop.ORG, orgObj);
+					} catch(EntityNotFoundException e) {
+						if(report.getProperty(DSUtils.REPORT_STATUS).equals(Report.OPEN)) {
+							Filter applicationF = new Query.FilterPredicate(DSUtils.APPLICATION_REPORT,
+									FilterOperator.EQUAL, report.getKey());
+							Query applicationQ = new Query(DSUtils.APPLICATION).setFilter(applicationF);
+							
+							FetchOptions defaultOptions = FetchOptions.Builder.withDefaults();
+							List<Entity> applications = datastore.prepare(applicationQ).asList(defaultOptions);
+							
+							JSONArray apps = new JSONArray();
+							
+							for(Entity application : applications) {
+								JSONObject app = new JSONObject();
+
+								Key orgK = application.getParent();
+								Entity org;
+								
+								Entity user;
+								try {
+									org = datastore.get(orgK);
+									user = datastore.get(org.getParent());
+								} catch(EntityNotFoundException e2) {
+									LOG.info(Log.ORG_NOT_FOUND);
+									continue;
+								}
+								
+								app.put(Prop.BUDGET, application.getProperty(DSUtils.APPLICATION_BUDGET));
+								app.put(Prop.INFO, application.getProperty(DSUtils.APPLICATION_INFO));
+								app.put(Prop.APPLICATION_TIME, application.getProperty(DSUtils.APPLICATION_TIME));
+								
+								app.put(Prop.NIF, orgK.getName());
+								app.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
+								app.put(Prop.PHONE, org.getProperty(DSUtils.ORG_PHONE));
+								app.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
+								
+								apps.put(app);
+							}
+							
+							if(apps.length() > 0)
+								rep.put(Prop.APPLICATIONS, apps);
+						}
 					}
 
 					array.put(rep);

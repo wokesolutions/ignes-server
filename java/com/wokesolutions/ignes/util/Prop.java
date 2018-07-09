@@ -49,4 +49,5 @@ public class Prop {
 	public static final String APPLICATION_TIME = "applicationtime";
 	public static final String WORKERS = "workers";
 	public static final String APPLICATIONS = "applications";
+	public static final String ORG = "org";
 }
