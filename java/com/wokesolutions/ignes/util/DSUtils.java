@@ -52,7 +52,7 @@ public class DSUtils {
 
 	// User
 		public static final String USER_PASSWORD = "user_password";
-		public static final String USER_FORGOT_PASSWORD = "user_forgot_password";
+		public static final String USER_FORGOTPASSWORD = "user_forgotpassword";
 		public static final String USER_EMAIL = "user_email";
 		public static final String USER_LEVEL = "user_level";
 		public static final String USER_CREATIONTIME = "user_creationtime";

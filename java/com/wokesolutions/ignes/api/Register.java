@@ -102,6 +102,7 @@ public class Register {
 				Entity user = new Entity(DSUtils.USER, data.username);
 				userKey = user.getKey();
 				user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(data.password));
+				user.setUnindexedProperty(DSUtils.USER_FORGOTPASSWORD, null);
 				user.setProperty(DSUtils.USER_EMAIL, data.email);
 				user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1.toString());
 				user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);

@@ -127,7 +127,7 @@ public class Login {
 
 			String hashedPWD = user.getProperty(DSUtils.USER_PASSWORD).toString();
 
-			Object hashedForgotPWDo = user.getProperty(DSUtils.USER_FORGOT_PASSWORD);
+			Object hashedForgotPWDo = user.getProperty(DSUtils.USER_FORGOTPASSWORD);
 
 			if(!hashedPWD.equals(DigestUtils.sha512Hex(data.password))) {
 				if(hashedForgotPWDo != null) {
@@ -142,7 +142,7 @@ public class Login {
 						return Response.status(Status.FORBIDDEN).build();
 					} else
 						user.setProperty(DSUtils.USER_PASSWORD,
-								user.getProperty(DSUtils.USER_FORGOT_PASSWORD));
+								user.getProperty(DSUtils.USER_FORGOTPASSWORD));
 				} else {
 					LOG.info(Log.WRONG_PASSWORD + data.username);
 
@@ -154,7 +154,7 @@ public class Login {
 					return Response.status(Status.FORBIDDEN).build();
 				}
 			} else
-				user.setProperty(DSUtils.USER_FORGOT_PASSWORD, null);
+				user.setProperty(DSUtils.USER_FORGOTPASSWORD, null);
 
 			String token;
 			try {

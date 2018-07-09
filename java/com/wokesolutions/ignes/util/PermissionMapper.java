@@ -28,6 +28,7 @@ public class PermissionMapper {
 	private final static String REGISTER_WORKER = "registerworker";
 	private final static String REGISTER = "register";
 	private final static String CATEGORY = "category";
+	private final static String FORGOT_PASSWORD = "forgotpassword";
 	
 	public final static String FORBIDDEN = "f";
 
@@ -56,6 +57,11 @@ public class PermissionMapper {
 			permissions.add(UserLevel.ADMIN);
 			permissions.add(UserLevel.ORG);
 			permissions.add(UserLevel.WORKER);
+			return permissions;
+		}
+		
+		if(req.contains(FORGOT_PASSWORD)) {
+			permissions.add(UserLevel.GUEST);
 			return permissions;
 		}
 		

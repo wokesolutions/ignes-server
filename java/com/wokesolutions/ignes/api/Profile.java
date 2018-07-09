@@ -930,7 +930,7 @@ public class Profile {
 				
 				Email.sendForgotPwMessage(email, password);
 				
-				user.setProperty(DSUtils.USER_FORGOT_PASSWORD, DigestUtils.sha512Hex(password));
+				user.setProperty(DSUtils.USER_FORGOTPASSWORD, DigestUtils.sha512Hex(password));
 				
 				datastore.put(user);
 
