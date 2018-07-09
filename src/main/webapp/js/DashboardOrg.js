@@ -530,11 +530,39 @@ function getInfo(idReport, i){
                 else
                     document.getElementById('report_description_id').innerHTML= "-";
 
-                document.getElementById('report_state_id').innerHTML= reports[i].status;
-                document.getElementById('report_state_id_2').innerHTML= reports[i].status;
+                var status = "";
+                if(reports[i].status === "open")
+                    status = "Aberto";
+                else if(reports[i].status === "closed")
+                    status = "Fechado";
+                else if (reports[i].status === "wip")
+                    status = "Trabalho em progresso";
+                else if(reports[i].status === "wip")
+                    status = "Em espera";
+
+                document.getElementById('report_state_id').innerHTML= status;
+                document.getElementById('report_state_id_2').innerHTML= status;
                 document.getElementById('report_gravity_id').innerHTML= reports[i].gravity;
                 document.getElementById('report_gravity_id_2').innerHTML= reports[i].gravity;
 
+                var categoria = translate(reports[i].category);
+                document.getElementById('category_report').innerHTML= categoria;
+
+                var workers_feed = tasks[i].workers;
+                var content= "";
+
+                $(".remove_work").remove();
+                $(".list_users_report").append('<div class="remove_work">');
+                if (workers_feed !== undefined) {
+                    var j;
+                    for (j = 0; j < workers_feed.length; j++) {
+                        content += '<p class="info_text_response" style="font-family: Quicksand Bold">' + workers_feed[j] + '</p>';
+                    }
+                } else {
+                    content += '<p class="info_text_response" style="font-family: Quicksand Bold">Não há trabalhadores associados a este reporte.</p>'
+                }
+                $(".list_users_report").append(content);
+                $(".list_users_report").append('</div>');
                 if(reports[i].private === true)
                     document.getElementById('report_private_id').innerHTML= "Privado";
                 else
@@ -563,38 +591,40 @@ function getInfo(idReport, i){
 }
 
 function translate(category){
+    var cat= "";
     switch (category) {
         case "LIXO":
-            category = "Limpeza de Lixo Geral";
+            cat = "Limpeza de Lixo Geral";
             break;
         case "PESADOS":
-            category = "Transportes Pesados";
+            cat = "Transportes Pesados";
             break;
         case "PERIGOSOS":
-            category = "Transportes Perigosos";
+            cat = "Transportes Perigosos";
             break;
         case "PESSOAS":
-            category = "Transportes de Pessoas";
+            cat = "Transportes de Pessoas";
             break;
         case "TRANSPORTE":
-            category = "Transportes Gerais";
+            cat = "Transportes Gerais";
             break;
         case "MADEIRAS":
-            category = "Madeiras";
+            cat = "Madeiras";
             break;
         case "CARCACAS":
-            category = "Carcaças";
+            cat = "Carcaças";
             break;
         case "BIOLOGICO":
-            category = "Outros resíduos biológicos";
+            cat = "Outros resíduos biológicos";
             break;
         case "JARDINAGEM":
-            category = "Jardinagem";
+            cat = "Jardinagem";
             break;
         case "MATAS":
-            category = "Limpeza de Matas/Florestas";
+            cat = "Limpeza de Matas/Florestas";
+
     }
-    return category;
+    return cat;
 }
 
 function showMap(){
@@ -874,10 +904,17 @@ function getProfile(){
                     document.getElementById("organization_zip").innerHTML = data.zip;
                     var show_service ="";
                     var service = JSON.parse(data.services);
+
                     for(var i = 0; i< service.length; i++) {
-                        if (i !== service.length - 1)
-                            show_service += service[i] + "/";
-                        else  show_service += service[i];
+                        if (i !== service.length - 1) {
+                            var service_temp= translate(service[i]);
+
+                            show_service += service_temp + "/";
+                        }
+                        else {
+                            var service_temp= translate(service[i]);
+                            show_service += service_temp;
+                        }
                     }
                     document.getElementById("organization_service").innerHTML = show_service;
                 });
@@ -956,7 +993,17 @@ var loadMore = function () {
         if (tasks[i] === null || tasks[i] === undefined)
             break;
 
-        var category = translate(task[i].category);
+        var status = "";
+        if(tasks[i].status === "open")
+            status = "Aberto";
+        else if(tasks[i].status === "closed")
+            status = "Fechado";
+        else if (tasks[i].status === "wip")
+            status = "Trabalho em progresso";
+        else if(tasks[i].status === "wip")
+            status = "Em espera";
+
+        var category = translate(tasks[i].category);
 
         var workers_feed = tasks[i].workers;
         var contentString = '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;">' +
@@ -974,7 +1021,7 @@ var loadMore = function () {
             '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
             '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
             '</div>' +
-            '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].status + '</p></div>' +
+            '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + status + '</p></div>' +
             '</div>' +
             ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">' +
             '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + tasks[i].address + '</p>' + '</div>' + '</div><hr>' +
@@ -982,6 +1029,11 @@ var loadMore = function () {
             '<div class="row">' +
             '<div class="col-lg-12 text-center">' +
             '<p style="font-family:Quicksand Bold; font-size: 15px; color:#AD363B">' + tasks[i].title + '</p>' +
+            '</div>' +
+            '</div>' +
+            '<div class="row">' +
+            '<div class="col-lg-12 text-center">' +
+            '<p class="info_text_response text-center" style="font-family:Quicksand; margin-left:1.5rem">' + category + '</p>' +
             '</div>' +
             '</div>' +
 
@@ -993,11 +1045,10 @@ var loadMore = function () {
                 '<div class="col-lg-4 col-md-4  ">' +
                 '<img class="img_user" src="../images/avatar.png" height="20" width="20"/>' +
                 '</div>' +
-                '<div class="col-lg-6 col-md-6 text-left ">' +
+                '<div class="col-lg-4 col-md-4 text-left ">' +
                 '<p class="info_text_response" style="font-family: Quicksand Bold">' + tasks[i].username + '</p>' +
                 '</div>' +
-                '<div class="col-lg-2 col-md-2 text-left">' +
-                '<p class="info_text_response text-center" style="margin-left:1.5rem">' + category + '</p>' +
+                '<div class="col-lg-4 col-md-4 text-left">' +
                 '</div>' +
                 '</div>' +
                 '</div>' +
@@ -1216,6 +1267,7 @@ var loadMoreTasks = function(email,cursor){
                         var type_private = "";
                         var description = "-";
                         var indications = "-";
+                        var status = "";
 
                         if(data[i].isprivate === true)
                             type_private= "Privado";
@@ -1228,9 +1280,19 @@ var loadMoreTasks = function(email,cursor){
                         if(data[i].indications !== undefined)
                             indications= data[i].indications;
 
+                        if(data[i].status === "open")
+                            status = "Aberto";
+                        else if(data[i].status === "closed")
+                            status = "Fechado";
+                        else if (data[i].status === "wip")
+                            status = "Trabalho em progresso";
+                        else if(data[i].status === "wip")
+                            status = "Em espera";
+
+                        var category = translate(data[i].category);
                         var id_img = "img_"+ i;
                         var contentString = '<div class="tasks_remove" >'+
-                            '<div id="content" style="margin-bottom:2rem; background:#f8f9fa;">' +
+                            '<div id="content" style=" margin-bottom:1rem; background:#f8f9fa;">' +
                             '<div class="row" >' +
                             '<div class="col-lg-3 col-md-3 mx-auto">' +
                             '<div class="row">' +
@@ -1245,7 +1307,7 @@ var loadMoreTasks = function(email,cursor){
                             '<div class="col-lg-6 col-md-6 mx-auto text-center" style="margin-top:1rem">' +
                             '<i class="fa fa-map-marker" style="color:#AD363B; font-size: 2rem"> </i>' +
                             '</div>' +
-                            '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].status + '</p></div>' +
+                            '<div class="col-lg-3 col-md-3 mx-auto-"><p class="text-center"style="font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + status + '</p></div>' +
                             '</div>' +
                             ' <div class="row" >' + '<div class="col-lg-12 col-md-12 mx-auto text-center">' +
                             '<p style="margin-bottom:0;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].address + '</p>' + '</div>' + '</div><hr style="margin-bottom: 0; margin-top:0">' +
@@ -1253,6 +1315,12 @@ var loadMoreTasks = function(email,cursor){
                             '<div class="row">' +
                             '<div class="col-lg-12 text-center">' +
                             '<p style="font-family:Quicksand Bold; font-size: 15px; color:#AD363B">' + data[i].title + '</p>' +
+                            '</div>' +
+                            '</div>' +
+
+                            '<div class="row">' +
+                            '<div class="col-lg-12 text-center">' +
+                            '<p class="info_text_response text-center" style="font-family:Quicksand; margin-left:1.5rem">' + category + '</p>' +
                             '</div>' +
                             '</div>' +
 
@@ -1268,7 +1336,6 @@ var loadMoreTasks = function(email,cursor){
                             '<p class="info_text_response" style="font-family: Quicksand Bold">' + type_private + '</p>' +
                             '</div>' +
                             '<div class="col-lg-2 col-md-2 text-left">' +
-                            '<p class="info_text_response text-center" style="margin-left:1.5rem">' + data[i].category + '</p>' +
                             '</div>' +
                             '</div>' +
                             '</div>' +
@@ -1280,7 +1347,7 @@ var loadMoreTasks = function(email,cursor){
                             '</div>' +
                             '<div class="col-lg-6">' +
                             '<div class="row">' +
-                            '<div class="col-lg-12 mx-lg-auto text-center">' +
+                            '<div class="col-lg-12 mx-lg-auto text-center" style="margin-top:2.5rem">' +
                             '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" >Descrição</p>'+
                             '<p class="info_text_response text-center" >'+description+'</p>';
                         contentString += '</div>' +

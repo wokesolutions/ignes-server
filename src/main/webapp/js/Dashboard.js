@@ -421,11 +421,6 @@ function getProfile(){
                     else
                         document.getElementById("people_birthday").innerHTML = "-";
 
-                    /*  if(data.useroptional_locality !== undefined)
-                          document.getElementById("people_locality").innerHTML = data.useroptional_locality;
-                      else
-                          document.getElementById("people_locality").innerHTML = "-";
-                    */
                     if(data.useroptional_phone !== undefined || data.useroptional_phone !== "" )
                         document.getElementById("people_phone").innerHTML = data.useroptional_phone;
                     else

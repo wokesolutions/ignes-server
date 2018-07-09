@@ -123,6 +123,17 @@ header.masthead .site-heading {
     width: 100% !important;
     margin-left: 1rem;
 }
+.dropdown-n {
+    margin-bottom: 1rem;
+    color: #000000;
+    background-color: #ffffff;
+    border-color: #c7c4c4;
+    font-size: 15px;
+    font-family: Quicksand;
+    width: 100% !important;
+    margin-left: 1rem;
+}
+
 
 
 .divisoria {
@@ -625,9 +636,10 @@ label {
 
 }
 
+
 .tasks {
     width: 800px;
-    height: 370px;
+    height: 390px;
     overflow: auto;
     overflow-x: hidden;
 }
