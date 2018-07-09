@@ -201,28 +201,20 @@ public class Worker {
 			jsonReport.put(Prop.INDICATIONS, task.getProperty(DSUtils.TASK_INDICATIONS));
 			jsonReport.put(Prop.TASK_TIME, task.getProperty(DSUtils.TASK_TIMEFORMATTED));
 
-			Entity userKey;
+			Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
 
+			Key optionalK = KeyFactory.createKey(reporterK, DSUtils.USEROPTIONAL, reporterK.getName());
+			Entity optional;
+			
 			try {
-				userKey = datastore.get(((Key) report.getProperty(DSUtils.REPORT_USER)));
+				optional = datastore.get(optionalK);
+				
+				if(optional.hasProperty(DSUtils.USEROPTIONAL_PHONE))
+					jsonReport.put(Prop.PHONE,
+							optional.getProperty(DSUtils.USEROPTIONAL_PHONE));
 			} catch (EntityNotFoundException e) {
 				LOG.info(Log.UNEXPECTED_ERROR);
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
-
-			Query queryoptional = new Query(DSUtils.USEROPTIONAL).setAncestor(userKey.getKey());
-			Entity optional;
-
-			try {
-				optional = datastore.prepare(queryoptional).asSingleEntity();
-			} catch(TooManyResultsException e) {
-				LOG.info(Log.UNEXPECTED_ERROR);
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			if(optional.hasProperty(DSUtils.USEROPTIONAL_PHONE))
-				jsonReport.put(Prop.PHONE,
-						optional.getProperty(DSUtils.USEROPTIONAL_PHONE));
 
 			array.put(jsonReport);
 		}
