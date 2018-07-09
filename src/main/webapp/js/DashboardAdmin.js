@@ -1040,9 +1040,16 @@ function getPublicNext(){
                             cell5.innerHTML = data[i].username;
                             cell6.innerHTML = data[i].lat;
                             cell7.innerHTML = data[i].lng;
-                            cell8.innerHTML = data[i].points
+                            var orgs = data[i].orgs;
+                            var options = "<option value='' disabled selected>Select your option</option>";
+                            for(var j = 0; j< orgs.length; j++){
+                                options += "<option value = " + orgs[j].nif + ">" + orgs[j].name + "</option>"
+                            }
+                            cell8.innerHTML = "<select className='dropdown-m' id='drop1'>" + options +
+
+                                "</select>";
                             cell9.innerHTML = data[i].creationtime;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -1120,9 +1127,16 @@ function getPublicPre(){
                             cell5.innerHTML = data[i].username;
                             cell6.innerHTML = data[i].lat;
                             cell7.innerHTML = data[i].lng;
-                            cell8.innerHTML = data[i].points
+                            var orgs = data[i].orgs;
+                            var options = "<option value='' disabled selected>Select your option</option>";
+                            for(var j = 0; j< orgs.length; j++){
+                                options += "<option value = " + orgs[j].nif + ">" + orgs[j].name + "</option>"
+                            }
+                            cell8.innerHTML = "<select className='dropdown-m' id='drop1'>" + options +
+
+                                "</select>";
                             cell9.innerHTML = data[i].creationtime;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -1197,9 +1211,16 @@ function getPublicFirst(){
                             cell5.innerHTML = data[i].username;
                             cell6.innerHTML = data[i].lat;
                             cell7.innerHTML = data[i].lng;
-                            cell8.innerHTML = data[i].points
+                            var orgs = data[i].orgs;
+                            var options = "<option value='' disabled selected>Select your option</option>";
+                            for(var j = 0; j< orgs.length; j++){
+                                options += "<option value = " + orgs[j].nif + "," + orgs[j].budget + ">" + orgs[j].name + "</option>"
+                            }
+                            cell8.innerHTML = "<select className='dropdown-m' id='drop1'>" + options +
+
+                                "</select>";
                             cell9.innerHTML = data[i].creationtime;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -1220,33 +1241,43 @@ function getPublicFirst(){
 }
 
 function activatePublicReport(row){
+
     var table = document.getElementById("public_reports_pending_table");
     var reportId = table.rows[row].cells[0].innerHTML;
-    var nif = table.rows[row].cells[0].value;
+    var index = table.rows[row].cells[7].value.indexOf(",");
+    var nif = table.rows[row].cells[7].value.substring(0, index);
+    var budget = table.rows[row].cells[7].value.substring(index);
+    console.log(index);
+    console.log(nif);
+    console.log(budget);
 
-    var headers = new Headers();
-    var body = JSON.stringify({
-        report:reportId,
-        nif: nif
-    });
-    headers.append('Authorization', localStorage.getItem('token'));
-    headers.append('Device-Id', localStorage.getItem('fingerprint'));
-    headers.append('Device-App', localStorage.getItem('app'));
-    headers.append('Device-Info', localStorage.getItem('browser'));
+    var yes = prompt("Budget: " + budget, "Pressione 's' se sim ou 'n' se não pretende aceitar este candidato:" );
 
+    if(yes === "s") {
 
-    fetch(restRequest('/api/report/acceptapplication','POST', headers, body)).then(function(response) {
-
-            if (response.status === 200 || response.status === 204) {
-                alert("Utilizador apagado com sucesso.")
-            }else{
-                alert("Falha ao apagar utilizador.")
-            }
-
-        }
-    )
-        .catch(function(err) {
-            console.log('Fetch Error', err);
+        var headers = new Headers();
+        var body = JSON.stringify({
+            report: reportId,
+            nif: nif
         });
-}
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
 
+
+        fetch(restRequest('/api/report/acceptapplication', 'POST', headers, body)).then(function (response) {
+
+                if (response.status === 200 || response.status === 204) {
+                    alert("Organização atribuida com sucesso.")
+                } else {
+                    alert("Falha ao atribuir organização.")
+                }
+
+            }
+        )
+            .catch(function (err) {
+                console.log('Fetch Error', err);
+            });
+    }
+}
