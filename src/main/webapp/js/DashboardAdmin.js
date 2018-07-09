@@ -10,6 +10,8 @@ var cursor_pre_pendingrep;
 var cursor_next_public;
 var cursor_current_public;
 var cursor_pre_public;
+var org_public= [];
+var public_reports = [];
 
 var current_position = "list_users_variable";
 
@@ -732,18 +734,14 @@ function getPendingReportsNext(){
                             var cell6 = row.insertCell(5);
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
-                            var cell9 = row.insertCell(8);
-                            var cell10 = row.insertCell(9);
-                            cell1.innerHTML = data[i].nif;
-                            cell2.innerHTML = data[i].name;
-                            cell3.innerHTML = data[i].email;
-                            cell4.innerHTML = data[i].address;
-                            cell5.innerHTML = data[i].locality;
-                            cell6.innerHTML = data[i].phone;
-                            cell7.innerHTML = data[i].services;
-                            cell8.innerHTML = data[i].creationtime;
-                            cell9.innerHTML = data[i].isfirestation;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                            cell1.innerHTML = data[i].title;
+                            cell2.innerHTML = data[i].address;
+                            cell3.innerHTML = data[i].gravity;
+                            cell4.innerHTML = data[i].username;
+                            cell5.innerHTML = data[i].lat;
+                            cell6.innerHTML = data[i].lng;
+                            cell7.innerHTML = data[i].creationtime;
+                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -812,18 +810,14 @@ function getPendingReportsPre(){
                             var cell6 = row.insertCell(5);
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
-                            var cell9 = row.insertCell(8);
-                            var cell10 = row.insertCell(9);
-                            cell1.innerHTML = data[i].nif;
-                            cell2.innerHTML = data[i].name;
-                            cell3.innerHTML = data[i].email;
-                            cell4.innerHTML = data[i].address;
-                            cell5.innerHTML = data[i].locality;
-                            cell6.innerHTML = data[i].phone;
-                            cell7.innerHTML = data[i].services;
-                            cell8.innerHTML = data[i].creationtime;
-                            cell9.innerHTML = data[i].isfirestation;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                            cell1.innerHTML = data[i].title;
+                            cell2.innerHTML = data[i].address;
+                            cell3.innerHTML = data[i].gravity;
+                            cell4.innerHTML = data[i].username;
+                            cell5.innerHTML = data[i].lat;
+                            cell6.innerHTML = data[i].lng;
+                            cell7.innerHTML = data[i].creationtime;
+                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -889,16 +883,14 @@ function getPendingReportsFirst(){
                             var cell6 = row.insertCell(5);
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
-                            var cell9 = row.insertCell(8);
-                            cell1.innerHTML = data[i].report;
-                            cell2.innerHTML = data[i].title;
-                            cell3.innerHTML = data[i].address;
-                            cell4.innerHTML = data[i].gravity;
-                            cell5.innerHTML = data[i].username;
-                            cell6.innerHTML = data[i].lat;
-                            cell7.innerHTML = data[i].lng;
-                            cell8.innerHTML = data[i].creationtime;
-                            cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'></button>";
+                            cell1.innerHTML = data[i].title;
+                            cell2.innerHTML = data[i].address;
+                            cell3.innerHTML = data[i].gravity;
+                            cell4.innerHTML = data[i].username;
+                            cell5.innerHTML = data[i].lat;
+                            cell6.innerHTML = data[i].lng;
+                            cell7.innerHTML = data[i].creationtime;
+                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -1032,24 +1024,33 @@ function getPublicNext(){
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
                             var cell9 = row.insertCell(8);
-                            var cell10 = row.insertCell(9);
-                            cell1.innerHTML = data[i].report;
-                            cell2.innerHTML = data[i].title;
-                            cell3.innerHTML = data[i].address;
-                            cell4.innerHTML = data[i].gravity;
-                            cell5.innerHTML = data[i].username;
-                            cell6.innerHTML = data[i].lat;
-                            cell7.innerHTML = data[i].lng;
-                            var orgs = data[i].orgs;
-                            var options = "<option value='' disabled selected>Select your option</option>";
-                            for(var j = 0; j< orgs.length; j++){
-                                options += "<option value = " + orgs[j].nif + ">" + orgs[j].name + "</option>"
-                            }
-                            cell8.innerHTML = "<select className='dropdown-m' id='drop1'>" + options +
+                            public_reports.push(data[i].report);
+                            cell1.innerHTML = data[i].title;
+                            cell2.innerHTML = data[i].address;
+                            cell3.innerHTML = data[i].gravity;
+                            cell4.innerHTML = data[i].username;
+                            cell5.innerHTML = data[i].lat;
+                            cell6.innerHTML = data[i].lng;
+                            var orgs = data[i].applications;
+                            if(orgs!==undefined) {
+                                var options = "<option value='' disabled selected>Select your option</option>";
+                                var temp = [];
+                                for (var j = 0; j < orgs.length; j++) {
+                                    temp.push(orgs[j]);
+                                    options += "<option value = " + k + ">" + orgs[j].name + "</option>"
+                                }
+                                cell7.innerHTML = "<select className='dropdown-m' id='drop1'>" + options +
 
-                                "</select>";
-                            cell9.innerHTML = data[i].creationtime;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                                    "</select>";
+                                org_public.push(temp);
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                                k = k + 1;
+                            } else if(data[i].org !== undefined){
+                                cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
+                            } else{
+                                cell7.innerHTML = "-";
+                            }
+                            cell8.innerHTML = data[i].creationtime;
                         }
 
                     }else{
@@ -1119,24 +1120,33 @@ function getPublicPre(){
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
                             var cell9 = row.insertCell(8);
-                            var cell10 = row.insertCell(9);
-                            cell1.innerHTML = data[i].report;
-                            cell2.innerHTML = data[i].title;
-                            cell3.innerHTML = data[i].address;
-                            cell4.innerHTML = data[i].gravity;
-                            cell5.innerHTML = data[i].username;
-                            cell6.innerHTML = data[i].lat;
-                            cell7.innerHTML = data[i].lng;
-                            var orgs = data[i].orgs;
-                            var options = "<option value='' disabled selected>Select your option</option>";
-                            for(var j = 0; j< orgs.length; j++){
-                                options += "<option value = " + orgs[j].nif + ">" + orgs[j].name + "</option>"
-                            }
-                            cell8.innerHTML = "<select className='dropdown-m' id='drop1'>" + options +
+                            public_reports.push(data[i].report);
+                            cell1.innerHTML = data[i].title;
+                            cell2.innerHTML = data[i].address;
+                            cell3.innerHTML = data[i].gravity;
+                            cell4.innerHTML = data[i].username;
+                            cell5.innerHTML = data[i].lat;
+                            cell6.innerHTML = data[i].lng;
+                            var orgs = data[i].applications;
+                            if(orgs!==undefined) {
+                                var options = "<option value='' disabled selected>Select your option</option>";
+                                var temp = [];
+                                for (var j = 0; j < orgs.length; j++) {
+                                    temp.push(orgs[j]);
+                                    options += "<option value = " + k + ">" + orgs[j].name + "</option>"
+                                }
+                                cell7.innerHTML = "<select className='dropdown-m' id='drop1'>" + options +
 
-                                "</select>";
-                            cell9.innerHTML = data[i].creationtime;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                                    "</select>";
+                                org_public.push(temp);
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                                k = k + 1;
+                            } else if(data[i].org !== undefined){
+                                cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
+                            } else{
+                                cell7.innerHTML = "-";
+                            }
+                            cell8.innerHTML = data[i].creationtime;
                         }
 
                     }else{
@@ -1191,6 +1201,7 @@ function getPublicFirst(){
                 response.json().then(function(data) {
                     console.log(JSON.stringify(data));
                     if(data != null){
+                        var k = 0;
                         var i;
                         for(i = 0; i < data.length; i++){
                             var row = table.insertRow(-1);
@@ -1203,24 +1214,33 @@ function getPublicFirst(){
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
                             var cell9 = row.insertCell(8);
-                            var cell10 = row.insertCell(9);
-                            cell1.innerHTML = data[i].report;
-                            cell2.innerHTML = data[i].title;
-                            cell3.innerHTML = data[i].address;
-                            cell4.innerHTML = data[i].gravity;
-                            cell5.innerHTML = data[i].username;
-                            cell6.innerHTML = data[i].lat;
-                            cell7.innerHTML = data[i].lng;
+                            public_reports.push(data[i].report);
+                            cell1.innerHTML = data[i].title;
+                            cell2.innerHTML = data[i].address;
+                            cell3.innerHTML = data[i].gravity;
+                            cell4.innerHTML = data[i].username;
+                            cell5.innerHTML = data[i].lat;
+                            cell6.innerHTML = data[i].lng;
                             var orgs = data[i].applications;
-                            var options = "<option value='' disabled selected>Select your option</option>";
-                            for(var j = 0; j< orgs.length; j++){
-                                options += "<option value = " + orgs[j].nif + "," + orgs[j].budget + ">" + orgs[j].name + "</option>"
-                            }
-                            cell8.innerHTML = "<select className='dropdown-m' id='drop1'>" + options +
+                            if(orgs!==undefined) {
+                                var options = "<option value='' disabled selected>Select your option</option>";
+                                var temp = [];
+                                for (var j = 0; j < orgs.length; j++) {
+                                    temp.push(orgs[j]);
+                                    options += "<option value = " + k + ">" + orgs[j].name + "</option>"
+                                }
+                                cell7.innerHTML = "<select className='dropdown-m' id='drop1'>" + options +
 
-                                "</select>";
-                            cell9.innerHTML = data[i].creationtime;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                                    "</select>";
+                                org_public.push(temp);
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                                k = k + 1;
+                            } else if(data[i].org !== undefined){
+                                cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
+                            } else{
+                                cell7.innerHTML = "-";
+                            }
+                            cell8.innerHTML = data[i].creationtime;
                         }
 
                     }else{
@@ -1243,15 +1263,13 @@ function getPublicFirst(){
 function activatePublicReport(row){
 
     var table = document.getElementById("public_reports_pending_table");
-    var reportId = table.rows[row].cells[0].innerHTML;
-    var index = table.rows[row].cells[7].value.indexOf(",");
-    var nif = table.rows[row].cells[7].value.substring(0, index);
-    var budget = table.rows[row].cells[7].value.substring(index);
-    console.log(index);
-    console.log(nif);
-    console.log(budget);
+    var reportId = public_reports[row];
+    var org = org_public[table.rows[row].cells[7].value];
 
-    var yes = prompt("Budget: " + budget, "Pressione 's' se sim ou 'n' se não pretende aceitar este candidato:" );
+    console.log(reportId);
+    console.log(org);
+
+    var yes = prompt("Budget: " + org.budget + "Info: " + org.info, "Pressione 's' se sim ou 'n' se não pretende aceitar este candidato:" );
 
     if(yes === "s") {
 
