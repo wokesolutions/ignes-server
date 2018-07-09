@@ -22,9 +22,9 @@ import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
+import com.wokesolutions.ignes.api.Email;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
-import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Log;
 
 @Priority(4)

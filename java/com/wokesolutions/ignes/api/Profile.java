@@ -46,7 +46,6 @@ import com.wokesolutions.ignes.data.UserOptionalData;
 import com.wokesolutions.ignes.exceptions.NotSameNorAdminException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
-import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.ParamName;
@@ -112,22 +111,16 @@ public class Profile {
 
 			Key altererKey = KeyFactory.createKey(DSUtils.USER, requester);
 
-			Query useroptionalQuery = new Query(DSUtils.USEROPTIONAL).setAncestor(userKey);
-
+			Key userK = KeyFactory.createKey(DSUtils.USER, username);
+			Key optionalK = KeyFactory.createKey(userK, DSUtils.USEROPTIONAL, username);
+			
 			Entity useroptional;
-
 			try {
-				useroptional = datastore.prepare(useroptionalQuery).asSingleEntity();
-			} catch(TooManyResultsException e3) {
-				LOG.info(Log.UNEXPECTED_ERROR);
+				useroptional = datastore.get(optionalK);
+			} catch(EntityNotFoundException e) {
 				txn.rollback();
-				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-			}
-
-			if(useroptional == null) {
-				txn.rollback();
-				LOG.info(Log.NO_OPTIONAL_USER_ENTITY_FOUND);
-				return Response.status(Status.EXPECTATION_FAILED).build();
+				LOG.info(Log.USER_NOT_FOUND);
+				return Response.status(Status.NOT_FOUND).build();
 			}
 
 			Entity useroptionallog = new Entity(DSUtils.USEROPTIONALLOGS, altererKey);
@@ -158,37 +151,37 @@ public class Profile {
 	private void fillOptional(String username, UserOptionalData data, Entity useroptional,Entity useroptionallog) {
 		if(data.address != null && !data.address.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_ADDRESS))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDADDRESS,
+				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDADDRESS,
 						useroptional.getProperty(DSUtils.USEROPTIONAL_ADDRESS));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWADDRESS, data.address);
-			useroptional.setProperty(DSUtils.USEROPTIONAL_ADDRESS, data.address);
+			useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_NEWADDRESS, data.address);
+			useroptional.setUnindexedProperty(DSUtils.USEROPTIONAL_ADDRESS, data.address);
 		}
 		if(data.birth != null && !data.birth.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_BIRTH))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDBIRTH,
+				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDBIRTH,
 						useroptional.getProperty(DSUtils.USEROPTIONAL_BIRTH));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWBIRTH, data.birth);
-			useroptional.setProperty(DSUtils.USEROPTIONAL_BIRTH, data.birth);
+			useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_NEWBIRTH, data.birth);
+			useroptional.setUnindexedProperty(DSUtils.USEROPTIONAL_BIRTH, data.birth);
 		}
 		if(data.gender != null && !data.gender.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_GENDER))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDGENDER,
+				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDGENDER,
 						useroptional.getProperty(DSUtils.USEROPTIONAL_GENDER));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWGENDER, data.gender);
-			useroptional.setProperty(DSUtils.USEROPTIONAL_GENDER, data.gender);
+			useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_NEWGENDER, data.gender);
+			useroptional.setUnindexedProperty(DSUtils.USEROPTIONAL_GENDER, data.gender);
 		}
 		if(data.job != null && !data.job.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_JOB))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDJOB,
+				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDJOB,
 						useroptional.getProperty(DSUtils.USEROPTIONAL_ADDRESS));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWJOB, data.job);
+			useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_NEWJOB, data.job);
 			useroptional.setProperty(DSUtils.USEROPTIONAL_JOB, data.job);
 		}
 		if(data.locality != null && !data.locality.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_LOCALITY))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDLOCALITY,
+				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDLOCALITY,
 						useroptional.getProperty(DSUtils.USEROPTIONAL_LOCALITY));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWLOCALITY, data.locality);
+			useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_NEWLOCALITY, data.locality);
 			useroptional.setProperty(DSUtils.USEROPTIONAL_LOCALITY, data.locality);
 		}
 		if(data.name != null && !data.name.equals("")) {
@@ -207,16 +200,16 @@ public class Profile {
 		}
 		if(data.skills != null && !data.skills.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_SKILLS))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDSKILLS,
+				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDSKILLS,
 						useroptional.getProperty(DSUtils.USEROPTIONAL_SKILLS));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWSKILLS, data.skills);
+			useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_NEWSKILLS, data.skills);
 			useroptional.setProperty(DSUtils.USEROPTIONAL_SKILLS, data.skills);
 		}
 		if(data.zip != null && !data.zip.equals("")) {
 			if(useroptional.hasProperty(DSUtils.USEROPTIONAL_ZIP))
-				useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_OLDZIP,
+				useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_OLDZIP,
 						useroptional.getProperty(DSUtils.USEROPTIONAL_ZIP));
-			useroptionallog.setProperty(DSUtils.USEROPTIONALLOGS_NEWZIP, data.zip);
+			useroptionallog.setUnindexedProperty(DSUtils.USEROPTIONALLOGS_NEWZIP, data.zip);
 			useroptional.setProperty(DSUtils.USEROPTIONAL_ZIP, data.zip);
 		}
 	}
@@ -705,26 +698,26 @@ public class Profile {
 
 		LOG.info(Log.ATTEMPT_UPDATE_PROFILE);
 
+		Key userK = KeyFactory.createKey(DSUtils.USER, username);
+		Key optionalK = KeyFactory.createKey(userK, DSUtils.USEROPTIONAL, username);
+
+		Entity optional;
+		
+		try {
+			optional = datastore.get(optionalK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Log.USER_NOT_FOUND);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+
 		if(!Storage.saveImage(data.pic, pathImg,
 				data.width, data.height, data.orientation, false))
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Log.STORAGE_ERROR).build();
 
-		Query query = new Query(DSUtils.USEROPTIONAL)
-				.setAncestor(KeyFactory.createKey(DSUtils.USER, username));
+		optional.setProperty(DSUtils.USEROPTIONAL_PICPATH, pathImg.makePath());
 
-		try {
-			Entity optional = datastore.prepare(query).asSingleEntity();
-			LOG.info(optional.toString());
-
-			optional.setProperty(DSUtils.USEROPTIONAL_PICPATH, pathImg.makePath());
-			LOG.info(optional.toString());
-
-			datastore.put(optional);
-		} catch(TooManyResultsException e) {
-			LOG.info(Log.UNEXPECTED_ERROR);
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-		}
-
+		datastore.put(optional);
+		
 		return Response.ok().build();
 	}
 
@@ -752,8 +745,11 @@ public class Profile {
 		String path;
 		Entity optional;
 
+		Key userK = KeyFactory.createKey(DSUtils.USER, username);
+		Key optionalK = KeyFactory.createKey(userK, DSUtils.USEROPTIONAL, username);
+		
 		try {
-			optional = datastore.get(KeyFactory.createKey(DSUtils.USEROPTIONAL_PICPATH, username));
+			optional = datastore.get(optionalK);
 		} catch(EntityNotFoundException e) {
 			LOG.info(Log.USER_NOT_FOUND);
 			return Response.status(Status.NOT_FOUND).build();

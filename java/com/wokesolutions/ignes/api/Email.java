@@ -1,4 +1,6 @@
-package com.wokesolutions.ignes.util;
+package com.wokesolutions.ignes.api;
+
+import com.wokesolutions.ignes.util.Secrets;
 
 import net.sargue.mailgun.Configuration;
 import net.sargue.mailgun.Mail;

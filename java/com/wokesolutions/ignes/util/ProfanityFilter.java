@@ -126,10 +126,8 @@ public class ProfanityFilter {
 		for(int i = 0; i < split.length; i++)
 			if(map.containsKey(split[i])) {
 				char[] str = new char[split[i].length()];
-				for(int j = 0; j < str.length; j++) {
-					if(split[i].charAt(j) != '.' && split[i].charAt(j) != ',')
+				for(int j = 0; j < str.length; j++)
 						str[j] = '*';
-				}
 				
 				String ast = new String(str);
 				

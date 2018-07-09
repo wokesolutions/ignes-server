@@ -48,7 +48,6 @@ import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.UserRegisterData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
-import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.Storage.StoragePath;

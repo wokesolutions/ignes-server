@@ -286,6 +286,9 @@ public class Report {
 				LOG.info(Log.REPORT_CREATED + reportid);
 				datastore.put(txn, entities);
 				txn.commit();
+				
+				cache.delete(data.locality);
+				cache.delete(this.coordsCacheKey(data.lat, data.lng));
 
 				return Response.ok().build();
 			} catch(Exception e) {
@@ -413,10 +416,23 @@ public class Report {
 			@QueryParam(ParamName.CURSOR) String cursor) {
 		if(lat == 0 || lng == 0 || radius == 0)
 			return Response.status(Status.EXPECTATION_FAILED).build();
+		
+		String cacheKey = coordsCacheKey(lat, lng);
+		
+		if(cache.contains(cacheKey)) {
+			LOG.info(Log.USING_CACHE);
+
+			String cacheKeyNum = cacheKey + "#";
+			if(cache.increment(cacheKeyNum, 1L) == null)
+				cache.put(cacheKeyNum, 0, Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(30)));
+
+			return Response.ok().entity(cache.get(cacheKey)).build();
+		}
+		
 		int retries = 5;
 		while(true) {
 			try {
-				return getReportsWithinRadiusRetry(lat, lng, radius, cursor);
+				return getReportsWithinRadiusRetry(lat, lng, radius, cursor, cacheKey);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -426,7 +442,7 @@ public class Report {
 	}
 
 	private Response getReportsWithinRadiusRetry(double lat, double lng,
-			double radius, String cursor) {
+			double radius, String cursor, String cacheKey) {
 		LOG.info(Log.ATTEMPT_GIVE_ALL_REPORTS);
 
 		int precision = Haversine.getPrecision(lat, lng, radius);
@@ -492,6 +508,13 @@ public class Report {
 				LOG.info(Log.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
+			
+			String cacheKeyNum = cacheKey + "#";
+			if(cache.increment(cacheKeyNum, 1L) == null)
+				cache.put(cacheKeyNum, 0L, Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(30)));
+
+			if((long) cache.get(cacheKeyNum) >= 5L)
+				cache.put(cacheKey, jsonReports.toString());
 
 			if(reports.size() < BATCH_SIZE)
 				return Response.ok()
@@ -510,22 +533,20 @@ public class Report {
 		if(location == null || location == "")
 			return Response.status(Status.EXPECTATION_FAILED).build();
 
-		String cacheKey = encodeCacheKey(true, location, cursor);
-
-		if(cache.contains(cacheKey)) {
+		if(cache.contains(location)) {
 			LOG.info(Log.USING_CACHE);
 
-			String cacheKeyNum = cacheKey + "#";
+			String cacheKeyNum = location + "#";
 			if(cache.increment(cacheKeyNum, 1L) == null)
-				cache.put(cacheKeyNum, 0, Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(15)));
+				cache.put(cacheKeyNum, 0, Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(30)));
 
-			return Response.ok().entity(cache.get(cacheKey)).build();
+			return Response.ok().entity(cache.get(location)).build();
 		}
 
 		int retries = 5;
 		while(true) {
 			try {
-				return getReportsInLocationRetry(location, cursor, cacheKey);
+				return getReportsInLocationRetry(location, cursor, location);
 			} catch(DatastoreException e) {
 				if(retries == 0)
 					return Response.status(Status.REQUEST_TIMEOUT).build();
@@ -578,11 +599,10 @@ public class Report {
 
 			String cacheKeyNum = cacheKey + "#";
 			if(cache.increment(cacheKeyNum, 1L) == null)
-				cache.put(cacheKeyNum, 0L, Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(15)));
+				cache.put(cacheKeyNum, 0L, Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(30)));
 
 			if((long) cache.get(cacheKeyNum) >= 5L)
-				cache.put(cacheKey, jsonReports.toString(),
-						Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(15)));
+				cache.put(cacheKey, jsonReports.toString());
 
 			cursor = reports.getCursor().toWebSafeString();
 
@@ -789,16 +809,18 @@ public class Report {
 		return df.format(d);
 	}
 
-	private String encodeCacheKey(boolean type, String request, String cursor) {
-		String key;
-		if(type)
-			key = "l";
-		else
-			key = "r";
-
-		key += request + "|" + cursor;
-
-		return key;
+	private String coordsCacheKey(double lat, double lng) {
+		DecimalFormat df = new DecimalFormat("#.#");
+		df.setRoundingMode(RoundingMode.DOWN);
+		String newlat = df.format(lat);
+		String newlng = df.format(lng);
+		
+		int hash = 13;
+		
+		hash = hash * 17 + newlat.hashCode();
+		hash = hash * 17 + newlng.hashCode();
+		
+		return Integer.toString(hash);
 	}
 
 	@GET
