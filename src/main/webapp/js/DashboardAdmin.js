@@ -1264,7 +1264,7 @@ function activatePublicReport(row){
 
     var table = document.getElementById("public_reports_pending_table");
     var reportId = public_reports[row];
-    var org = org_public[table.rows[row].cells[7].value];
+    var org = org_public[$('#drop1').val()];
 
     console.log(reportId);
     console.log(org);
