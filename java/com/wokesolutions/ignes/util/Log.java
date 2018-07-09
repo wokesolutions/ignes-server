@@ -62,6 +62,7 @@ public class Log {
 		public static final String INVALID_EMAIL = "Email inválido";
 		public static final String INVALID_USERNAME = "Nome de utilizador inválido";
 		public static final String FORBIDDEN = "Não tem permissão";
+		public static final String DUPLICATED = "Duplicado";
 		
 	// Error Requests
 		public static final String TOO_MANY_REQUESTS = "Demasiados pedidos do mesmo IP";

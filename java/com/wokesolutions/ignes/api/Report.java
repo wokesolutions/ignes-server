@@ -64,6 +64,7 @@ import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.ReportVotes;
 import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.ParamName;
+import com.wokesolutions.ignes.util.ProfanityFilter;
 import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.Storage.StoragePath;
 import com.wokesolutions.ignes.util.UserLevel;
@@ -73,8 +74,10 @@ public class Report {
 
 	private static final Logger LOG = Logger.getLogger(Report.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-	MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
+	private static final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 	private static final int BATCH_SIZE = 10;
+	
+	private static final ProfanityFilter proffilter = new ProfanityFilter();
 
 	public static final String PORTUGAL = "Portugal";
 	
@@ -239,12 +242,12 @@ public class Report {
 					report.setProperty(DSUtils.REPORT_ADDRESS, data.address);
 
 				if(data.title != null)
-					report.setProperty(DSUtils.REPORT_TITLE, data.title);
+					report.setProperty(DSUtils.REPORT_TITLE, proffilter.filter(data.title));
 				else
 					report.setProperty(DSUtils.REPORT_TITLE, OCORRENCIA_RAPIDA + data.locality);
 
 				if(data.description != null)
-					report.setProperty(DSUtils.REPORT_DESCRIPTION, data.description);
+					report.setProperty(DSUtils.REPORT_DESCRIPTION, proffilter.filter(data.description));
 				else
 					report.setProperty(DSUtils.REPORT_DESCRIPTION, null);
 
@@ -1415,7 +1418,7 @@ public class Report {
 				Date date = new Date();
 
 				Entity comment = new Entity(DSUtils.REPORTCOMMENT);
-				comment.setProperty(DSUtils.REPORTCOMMENT_TEXT, text);
+				comment.setProperty(DSUtils.REPORTCOMMENT_TEXT, proffilter.filter(text));
 				comment.setProperty(DSUtils.REPORTCOMMENT_TIME, date);
 				comment.setProperty(DSUtils.REPORTCOMMENT_TIMEFORMATTED, 
 						new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(date));

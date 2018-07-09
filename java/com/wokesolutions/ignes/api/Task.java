@@ -2,7 +2,6 @@ package com.wokesolutions.ignes.api;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 
@@ -25,11 +24,10 @@ import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
+import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
-import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
-import com.google.appengine.api.datastore.Query.Filter;
-import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultList;
 import com.google.cloud.datastore.DatastoreException;
@@ -37,6 +35,7 @@ import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.ParamName;
+import com.wokesolutions.ignes.util.ProfanityFilter;
 import com.wokesolutions.ignes.util.Prop;
 
 @Path("/task")
@@ -44,6 +43,8 @@ public class Task {
 
 	private static final Logger LOG = Logger.getLogger(Task.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+	
+	private static final ProfanityFilter proffilter = new ProfanityFilter();
 
 	private static final int BATCH_SIZE = 10;
 	
@@ -81,22 +82,25 @@ public class Task {
 	private Response addNoteRetry(String note, String task, String worker) {
 		Date time = new Date();
 		
-		Entity noteE = new Entity(DSUtils.NOTE, makeId(task, worker, time));
-
-		Query query = new Query(DSUtils.TASK).setAncestor(KeyFactory.createKey(DSUtils.REPORT, task));
-
+		Key reportK = KeyFactory.createKey(DSUtils.REPORT, task);
+		Key orgtaskK = KeyFactory.createKey(reportK, DSUtils.ORGTASK, task);
+		
+		Key noteK = KeyFactory.createKey(orgtaskK, DSUtils.NOTE, makeId(task, worker, time));
+		
+		Entity noteE;
 		try {
-			datastore.prepare(query).asSingleEntity();
-		} catch(TooManyResultsException e) {
-			LOG.info(Log.TASK_NOT_FOUND);
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-		}
+			datastore.get(noteK);
 
+			LOG.info(Log.DUPLICATED);
+			return Response.status(Status.CONFLICT).build();
+		} catch (EntityNotFoundException e) {}
+
+		noteE = new Entity(noteK);
 		JSONObject obj = new JSONObject(note);
 		note = obj.getString(Prop.NOTE);
 		
 		noteE.setProperty(DSUtils.NOTE_TASK, task);
-		noteE.setUnindexedProperty(DSUtils.NOTE_TEXT, note);
+		noteE.setUnindexedProperty(DSUtils.NOTE_TEXT, proffilter.filter(note));
 		noteE.setProperty(DSUtils.NOTE_WORKER, worker);
 		noteE.setProperty(DSUtils.NOTE_TIME, time);
 
@@ -134,26 +138,15 @@ public class Task {
 	}
 	
 	private Response getNotesRetry(String taskid, String cursor) {
-		List<Entity> task = null;
-		Query query = new Query(DSUtils.TASK).setAncestor(KeyFactory.createKey(DSUtils.REPORT, taskid));
-		
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 		
 		if(cursor != null && !cursor.equals(""))
 			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
 		
-		try {
-			task = datastore.prepare(query).asQueryResultList(FetchOptions.Builder.withLimit(1));
-		} catch(TooManyResultsException e) {}
+		Key reportK = KeyFactory.createKey(DSUtils.REPORT, taskid);
+		Key orgtaskK = KeyFactory.createKey(reportK, DSUtils.ORGTASK, taskid);
 		
-		if(task.isEmpty()) {
-			LOG.info(Log.TASK_NOT_FOUND);
-			return Response.status(Status.NOT_FOUND).build();
-		}
-		
-		Query query2 = new Query(DSUtils.NOTE);
-		Filter filter = new Query.FilterPredicate(DSUtils.NOTE_TASK, FilterOperator.EQUAL, taskid);
-		query2.setFilter(filter);
+		Query query2 = new Query(DSUtils.NOTE).setAncestor(orgtaskK);
 		
 		QueryResultList<Entity> notes = datastore.prepare(query2).asQueryResultList(fetchOptions);
 		
