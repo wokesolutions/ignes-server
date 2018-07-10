@@ -564,7 +564,7 @@ function getInfo(idReport, i){
                     content += '<div class="remove_work"><p class="info_text_response" style="font-family: Quicksand Bold">Não há trabalhadores associados a este reporte.</p></div>'
                 }
                 $(".list_users_report").append(content);
-                if(reports[i].private === true)
+                if(reports[i].isprivate === true)
                     document.getElementById('report_private_id').innerHTML= "Privado";
                 else
                     document.getElementById('report_private_id').innerHTML= "Público";
