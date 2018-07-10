@@ -1281,7 +1281,7 @@ function activatePublicReport(row){
         var headers = new Headers();
         var body = JSON.stringify({
             report: reportId,
-            nif: nif
+            nif: org.nif
         });
         headers.append('Authorization', localStorage.getItem('token'));
         headers.append('Device-Id', localStorage.getItem('fingerprint'));
