@@ -1564,7 +1564,7 @@ public class Report {
 					return Response.status(Status.EXPECTATION_FAILED).build();
 				}
 
-				Key commentK = KeyFactory.createKey(DSUtils.REPORT, comment);
+				Key commentK = KeyFactory.createKey(DSUtils.REPORTCOMMENT, Long.parseLong(comment));
 				Entity commentE;
 				try {
 					commentE = datastore.get(commentK);

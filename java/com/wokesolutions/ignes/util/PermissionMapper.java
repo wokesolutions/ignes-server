@@ -10,9 +10,11 @@ public class PermissionMapper {
 	private final static String VERIFYTOKEN = "verifytoken";
 	private final static String POST_COMMENT = "comment/post";
 	private final static String GET_COMMENT = "comment/get";
+	private final static String DELETE_COMMENT = "comment/delete";
 	private final static String GET_REPORT = "report/get";
 	private final static String THUMBNAIL = "thumbnail";
 	private final static String APPLICATION = "application";
+	private final static String DELETE_REPORT = "report/delete";
 	private final static String CREATE_REPORT = "report/create";
 	private final static String GET_REPORT_VOTE = "report/vote/get";
 	private final static String POST_REPORT_VOTE = "report/vote";
@@ -42,6 +44,14 @@ public class PermissionMapper {
 			return permissions;
 		}
 		
+		if(req.contains(DELETE_REPORT)) {
+			permissions.add(UserLevel.LEVEL1);
+			permissions.add(UserLevel.LEVEL2);
+			permissions.add(UserLevel.LEVEL3);
+			permissions.add(UserLevel.ADMIN);
+			return permissions;
+		}
+		
 		if(req.contains(APPLICATION)) {
 			permissions.add(UserLevel.LEVEL1);
 			permissions.add(UserLevel.LEVEL2);
@@ -57,6 +67,14 @@ public class PermissionMapper {
 			permissions.add(UserLevel.ADMIN);
 			permissions.add(UserLevel.ORG);
 			permissions.add(UserLevel.WORKER);
+			return permissions;
+		}
+		
+		if(req.contains(DELETE_COMMENT)) {
+			permissions.add(UserLevel.LEVEL1);
+			permissions.add(UserLevel.LEVEL2);
+			permissions.add(UserLevel.LEVEL3);
+			permissions.add(UserLevel.ADMIN);
 			return permissions;
 		}
 		

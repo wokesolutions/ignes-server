@@ -823,6 +823,7 @@ public class Admin {
 					Key orgtaskK = KeyFactory.createKey(reportK, DSUtils.ORGTASK, reportK.getName());
 					
 					LOG.info(orgtaskK.toString());
+					
 					Entity orgtask;
 					try {
 						orgtask = datastore.get(orgtaskK);
