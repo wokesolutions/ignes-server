@@ -239,7 +239,7 @@ function hideShow(element){
 }
 
 function verifyIsLoggedIn(){
-    console.log(localStorage.getItem('token'));
+
     var headers = new Headers();
     var body = "";
     headers.append('Authorization', localStorage.getItem('token'));
@@ -267,7 +267,7 @@ function verifyIsLoggedIn(){
 }
 
 function logOut(){
-    console.log(localStorage.getItem('token'));
+
     var headers = new Headers();
     var body = "";
     headers.append('Authorization', localStorage.getItem('token'));
@@ -310,7 +310,6 @@ function getMarkers(cursor){
 
     fetch(restRequest('/api/org/reports?cursor=' + cursor , 'GET', headers, body)).then(function(response) {
         var newCursor = response.headers.get("Cursor");
-        console.log(newCursor);
             if (response.status === 200) {
                 response.json().then(function(data) {
                     reports = data;
@@ -346,7 +345,7 @@ function fillMap(reports, cursor){
         var tasktime = reports[i].tasktime;
         var gravity = reports[i].gravity;
         var color;
-        console.log(reports[i]);
+
         if(gravity === 1) {
             color = '#5dcb21';
             if(status === "standby") {
@@ -699,7 +698,6 @@ function getFirstWorkers(){
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
                 if(response.headers.get("Cursor") !== null) {
-                    console.log("Existe cursor");
                     cursor_pre_workers = "";
                     cursor_current_workers = "";
                     cursor_next_workers = response.headers.get("Cursor");
@@ -849,7 +847,7 @@ function getPreWorkers(){
                             document.getElementById("next_list").style.display = "none";
                     }
                     response.json().then(function(data) {
-                        console.log(JSON.stringify(data));
+
                         if(data != null){
                             var i;
                             for(i = 0; i < data.length; i++){
@@ -1120,7 +1118,6 @@ var loadMoreComments = function(idReport,cursor){
                 if (response.status === 200 || response.status === 204) {
                     commentsCursor = response.headers.get("Cursor");
                     response.json().then(function (data) {
-                        console.log(data);
                         var i;
 
                         for (i = 0; i < data.length; i++) {
@@ -1261,11 +1258,11 @@ var loadMoreTasks = function(email,cursor){
             if (response.status === 200 || response.status === 204) {
                 tasksCursor = response.headers.get("Cursor");
                 response.json().then(function(data) {
-                    console.log(data);
+
                     document.getElementById("num_report").innerHTML = data.length;
                     var i;
                     for(i = 0; i<data.length; i++){
-                        console.log(i);
+
                         var type_private = "";
                         var description = "-";
                         var indications = "-";
@@ -1405,7 +1402,6 @@ function getThumbnailTask(reportId, i){
     fetch(restRequest('/api/report/thumbnail/' + reportId, 'GET', headers, body)).then(function(response) {
         if(response.status === 200){
             response.json().then(function(data) {
-                console.log(data);
                 var img = document.getElementById("img_" + i);
                 img.src = "data:image/jpg;base64," + data.thumbnail;
             });

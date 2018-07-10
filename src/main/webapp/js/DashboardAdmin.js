@@ -1267,13 +1267,12 @@ function activatePublicReport(row){
 
     var table = document.getElementById("public_reports_pending_table");
 
-    var report = public_reports[row];
 
+
+    var report = public_reports[row - 1];
     var reportId = report.report;
-    var org = report.orgs[$('#drop' + row).prop('selectedIndex')];
 
-    console.log(reportId);
-    console.log(org);
+    var org = report.applications[table.rows[row].cells[6].firstChild.selectedIndex - 1];
 
     var yes = prompt("Budget: " + org.budget + "Info: " + org.info, "Pressione 's' se sim ou 'n' se não pretende aceitar este candidato:" );
 
