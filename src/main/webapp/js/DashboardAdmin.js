@@ -10,7 +10,7 @@ var cursor_pre_pendingrep;
 var cursor_next_public;
 var cursor_current_public;
 var cursor_pre_public;
-var org_public= [];
+var standby_rep= [];
 var public_reports = [];
 
 var current_position = "list_users_variable";
@@ -234,11 +234,19 @@ function getFirstUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
                             cell1.innerHTML = data[i].username;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
-                            cell4.innerHTML = data[i].points;
-                            cell5.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
+                            if(data[i].org !== undefined)
+                                cell4.innerHTML = data[i].org;
+                            else
+                                cell4.innerHTML = "-";
+                            if(data[i].points !== undefined)
+                                cell5.innerHTML = data[i].points;
+                            else
+                                cell5.innerHTML = "-";
+                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -301,11 +309,19 @@ function getNextUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
                             cell1.innerHTML = data[i].username;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
-                            cell4.innerHTML = data[i].points;
-                            cell5.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
+                            if(data[i].org !== undefined)
+                                cell4.innerHTML = data[i].org;
+                            else
+                                cell4.innerHTML = "-";
+                            if(data[i].points !== undefined)
+                                cell5.innerHTML = data[i].points;
+                            else
+                                cell5.innerHTML = "-";
+                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
                         }
 
                     }else{
@@ -363,18 +379,26 @@ function getPreUsers(){
                     console.log(JSON.stringify(data));
                     if (data != null) {
                         var i;
-                        for (i = 0; i < data.length; i++) {
+                        for(i = 0; i < data.length; i++){
                             var row = table.insertRow(-1);
                             var cell1 = row.insertCell(0);
                             var cell2 = row.insertCell(1);
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
                             cell1.innerHTML = data[i].username;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
-                            cell4.innerHTML = data[i].points;
-                            cell5.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
+                            if(data[i].org !== undefined)
+                                cell4.innerHTML = data[i].org;
+                            else
+                                cell4.innerHTML = "-";
+                            if(data[i].points !== undefined)
+                                cell5.innerHTML = data[i].points;
+                            else
+                                cell5.innerHTML = "-";
+                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
                         }
 
                     } else {
@@ -688,6 +712,7 @@ function activateOrg(row){
 }
 
 function getPendingReportsNext(){
+    standby_rep = [];
     var headers = new Headers();
     var body = "";
     headers.append('Authorization', localStorage.getItem('token'));
@@ -725,6 +750,7 @@ function getPendingReportsNext(){
                     if(data != null){
                         var i;
                         for(i = 0; i < data.length; i++){
+                            standby_rep.push(data[i].report);
                             var row = table.insertRow(-1);
                             var cell1 = row.insertCell(0);
                             var cell2 = row.insertCell(1);
@@ -762,6 +788,7 @@ function getPendingReportsNext(){
 }
 
 function getPendingReportsPre(){
+    standby_rep = [];
     if(cursor_pre_pendingrep === "") getPendingReportsFirst();
 
     var headers = new Headers();
@@ -801,6 +828,7 @@ function getPendingReportsPre(){
                     if(data != null){
                         var i;
                         for(i = 0; i < data.length; i++){
+                            standby_rep.push(data[i].report);
                             var row = table.insertRow(-1);
                             var cell1 = row.insertCell(0);
                             var cell2 = row.insertCell(1);
@@ -838,6 +866,7 @@ function getPendingReportsPre(){
 }
 
 function getPendingReportsFirst(){
+    standby_rep = [];
     var headers = new Headers();
     var body = "";
     headers.append('Authorization', localStorage.getItem('token'));
@@ -853,6 +882,10 @@ function getPendingReportsFirst(){
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
+
+                if(document.getElementById("previous_reports_pending").style.display === "block")
+                    document.getElementById("previous_reports_pending").style.display = "none";
+
                 if(response.headers.get("Cursor") !== null) {
 
                     cursor_pre_pendingrep = "";
@@ -874,6 +907,7 @@ function getPendingReportsFirst(){
                     if(data != null){
                         var i;
                         for(i = 0; i < data.length; i++){
+                            standby_rep.push(data[i].report);
                             var row = table.insertRow(-1);
                             var cell1 = row.insertCell(0);
                             var cell2 = row.insertCell(1);
@@ -911,8 +945,7 @@ function getPendingReportsFirst(){
 }
 
 function activateReport(row){
-    var table = document.getElementById("reports_pending_table");
-    var report = table.rows[row].cells[0].innerHTML;
+    var reportId = standby_rep[row];
 
     var headers = new Headers();
     var body = "";
@@ -922,7 +955,7 @@ function activateReport(row){
     headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-    fetch(restRequest('/api/admin/confirmreport/' + report,'POST', headers, body)).then(function(response) {
+    fetch(restRequest('/api/admin/confirmreport/' + reportId,'POST', headers, body)).then(function(response) {
 
             if (response.status === 200 || response.status === 204) {
                 alert("Report ativado com sucesso.")
@@ -977,6 +1010,7 @@ function drawChart(){
 }
 
 function getPublicNext(){
+    public_reports = [];
     var headers = new Headers();
     var body = "";
     headers.append('Authorization', localStorage.getItem('token'));
@@ -1024,7 +1058,6 @@ function getPublicNext(){
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
                             var cell9 = row.insertCell(8);
-                            public_reports.push(data[i].report);
                             cell1.innerHTML = data[i].title;
                             cell2.innerHTML = data[i].address;
                             cell3.innerHTML = data[i].gravity;
@@ -1032,23 +1065,27 @@ function getPublicNext(){
                             cell5.innerHTML = data[i].lat;
                             cell6.innerHTML = data[i].lng;
                             var orgs = data[i].applications;
-                            if(orgs!==undefined) {
+                            if(orgs !== undefined) {
                                 var options = "<option value='' disabled selected>Select your option</option>";
-                                var temp = [];
                                 for (var j = 0; j < orgs.length; j++) {
-                                    temp.push(orgs[j]);
-                                    options += "<option value = " + k + ">" + orgs[j].name + "</option>"
+                                    options += "<option>" + orgs[j].name + "</option>"
                                 }
-                                cell7.innerHTML = "<select className='dropdown-m' id='drop1'>" + options +
+
+                                cell7.innerHTML = "<select className='dropdown-m' id='drop'" + i + ">" + options +
 
                                     "</select>";
-                                org_public.push(temp);
+
+                                public_reports.push({report: data[i].report, applications: data[i].applications});
+
                                 cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
-                                k = k + 1;
+
+
                             } else if(data[i].org !== undefined){
                                 cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
+                                public_reports.push({});
                             } else{
                                 cell7.innerHTML = "-";
+                                public_reports.push({});
                             }
                             cell8.innerHTML = data[i].creationtime;
                         }
@@ -1071,6 +1108,7 @@ function getPublicNext(){
 }
 
 function getPublicPre(){
+    public_reports = [];
     if(cursor_pre_public === "") getPublicFirst();
 
     var headers = new Headers();
@@ -1120,7 +1158,6 @@ function getPublicPre(){
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
                             var cell9 = row.insertCell(8);
-                            public_reports.push(data[i].report);
                             cell1.innerHTML = data[i].title;
                             cell2.innerHTML = data[i].address;
                             cell3.innerHTML = data[i].gravity;
@@ -1128,23 +1165,27 @@ function getPublicPre(){
                             cell5.innerHTML = data[i].lat;
                             cell6.innerHTML = data[i].lng;
                             var orgs = data[i].applications;
-                            if(orgs!==undefined) {
+                            if(orgs !== undefined) {
                                 var options = "<option value='' disabled selected>Select your option</option>";
-                                var temp = [];
                                 for (var j = 0; j < orgs.length; j++) {
-                                    temp.push(orgs[j]);
-                                    options += "<option value = " + k + ">" + orgs[j].name + "</option>"
+                                    options += "<option>" + orgs[j].name + "</option>"
                                 }
-                                cell7.innerHTML = "<select className='dropdown-m' id='drop1'>" + options +
+
+                                cell7.innerHTML = "<select className='dropdown-m' id='drop'" + i + ">" + options +
 
                                     "</select>";
-                                org_public.push(temp);
+
+                                public_reports.push({report: data[i].report, applications: data[i].applications});
+
                                 cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
-                                k = k + 1;
+
+
                             } else if(data[i].org !== undefined){
                                 cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
+                                public_reports.push({});
                             } else{
                                 cell7.innerHTML = "-";
+                                public_reports.push({});
                             }
                             cell8.innerHTML = data[i].creationtime;
                         }
@@ -1167,6 +1208,7 @@ function getPublicPre(){
 }
 
 function getPublicFirst(){
+    public_reports = [];
     var headers = new Headers();
     var body = "";
     headers.append('Authorization', localStorage.getItem('token'));
@@ -1182,6 +1224,8 @@ function getPublicFirst(){
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
+                if(document.getElementById("previous_public_reports_pending").style.display === "block")
+                    document.getElementById("previous_public_reports_pending").style.display = "none";
                 if(response.headers.get("Cursor") !== null) {
 
                     cursor_pre_public = "";
@@ -1201,7 +1245,6 @@ function getPublicFirst(){
                 response.json().then(function(data) {
                     console.log(JSON.stringify(data));
                     if(data != null){
-                        var k = 0;
                         var i;
                         for(i = 0; i < data.length; i++){
                             var row = table.insertRow(-1);

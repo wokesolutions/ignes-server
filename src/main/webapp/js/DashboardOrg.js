@@ -135,12 +135,11 @@ function getCurrentLocation() {
                 center: {lat: position.coords.latitude, lng: position.coords.longitude},
                 zoom: 15
             };
-
-            var mapElement = document.getElementById('map');
-            map = new google.maps.Map(mapElement, currentLoc);
-
-            getMarkers();
         })
+        var mapElement = document.getElementById('map');
+        map = new google.maps.Map(mapElement, currentLoc);
+
+        getMarkers();
     }else {
         var mapElement = document.getElementById('map');
         map = new google.maps.Map(mapElement, currentLoc);
@@ -1148,6 +1147,7 @@ var loadMoreComments = function(idReport,cursor){
             });
     }
 }
+
 $('.comments').scroll(function () {
     var top = $('.comments').scrollTop();
     $('.two').html("top: "+top+" diff: "+($(".inner_comment").height() - $(".comments").height()));
