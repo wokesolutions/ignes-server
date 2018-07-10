@@ -1214,27 +1214,27 @@ function getPublicFirst(){
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
                             var cell9 = row.insertCell(8);
-                            public_reports.push(data[i].report);
                             cell1.innerHTML = data[i].title;
                             cell2.innerHTML = data[i].address;
                             cell3.innerHTML = data[i].gravity;
                             cell4.innerHTML = data[i].username;
                             cell5.innerHTML = data[i].lat;
                             cell6.innerHTML = data[i].lng;
-                            var orgs = data[i].applications;
-                            if(orgs!==undefined) {
+                            if(data[i].applications !== undefined) {
                                 var options = "<option value='' disabled selected>Select your option</option>";
-                                var temp = [];
                                 for (var j = 0; j < orgs.length; j++) {
-                                    temp.push(orgs[j]);
-                                    options += "<option value = " + k + ">" + orgs[j].name + "</option>"
+                                    options += "<option>" + orgs[j].name + "</option>"
                                 }
-                                cell7.innerHTML = "<select className='dropdown-m' id='drop1'>" + options +
+
+                                cell7.innerHTML = "<select className='dropdown-m' id='drop'" + i + ">" + options +
 
                                     "</select>";
-                                org_public.push(temp);
+
+                                public_reports.push({report: data[i].report, applications: data[i].applications});
+
                                 cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
-                                k = k + 1;
+
+
                             } else if(data[i].org !== undefined){
                                 cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
                             } else{
@@ -1263,8 +1263,11 @@ function getPublicFirst(){
 function activatePublicReport(row){
 
     var table = document.getElementById("public_reports_pending_table");
-    var reportId = public_reports[row];
-    var org = org_public[$('#drop1').val()];
+
+    var report = public_reports[row];
+
+    var reportId = report.report;
+    var org = report.orgs[$('#drop' + row).prop('selectedIndex')];
 
     console.log(reportId);
     console.log(org);
