@@ -1238,8 +1238,10 @@ function getPublicFirst(){
 
                             } else if(data[i].org !== undefined){
                                 cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
+                                public_reports.push({});
                             } else{
                                 cell7.innerHTML = "-";
+                                public_reports.push({});
                             }
                             cell8.innerHTML = data[i].creationtime;
                         }
