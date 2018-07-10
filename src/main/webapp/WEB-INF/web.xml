@@ -33,7 +33,7 @@
 		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>
 
-<!--<resource-files>
+<!--	<resource-files>
 		<include path="/**.json"/>
 	</resource-files>-->
 
