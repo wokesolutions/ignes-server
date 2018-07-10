@@ -1220,9 +1220,10 @@ function getPublicFirst(){
                             cell4.innerHTML = data[i].username;
                             cell5.innerHTML = data[i].lat;
                             cell6.innerHTML = data[i].lng;
-                            if(data[i].applications !== undefined) {
+                            var orgs = data[i].applications;
+                            if(orgs !== undefined) {
                                 var options = "<option value='' disabled selected>Select your option</option>";
-                                for (var j = 0; j < data[i].applications.length; j++) {
+                                for (var j = 0; j < orgs.length; j++) {
                                     options += "<option>" + orgs[j].name + "</option>"
                                 }
 
