@@ -523,14 +523,35 @@ label {
     color: #fff;
     margin-top: 10px;
     margin-right:1rem;
-    background-color: #3e4e5a;
-    border-color: #3e4e5a
+    background-color: #AD363B;
+    border-color: #AD363B;
 }
 
-tbody{
-    overflow-y:auto;
+#table-wrapper {
+    position:relative;
+}
+#table-scroll {
+    height:150px;
+    overflow:auto;
+    margin-top:20px;
+}
+#table-wrapper table {
+    width:100%;
+
 }
 
+#table-wrapper-two {
+    position:relative;
+}
+#table-scroll-tow {
+    height:150px;
+    overflow:auto;
+    margin-top:20px;
+}
+#table-wrapper-two table {
+    width:100%;
+
+}
 .delete_style{
     font-family: "Quicksand Bold";
 }

@@ -246,7 +246,7 @@ function getFirstUsers(){
                                 cell5.innerHTML = data[i].points;
                             else
                                 cell5.innerHTML = "-";
-                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
+                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -321,7 +321,7 @@ function getNextUsers(){
                                 cell5.innerHTML = data[i].points;
                             else
                                 cell5.innerHTML = "-";
-                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
+                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -398,7 +398,7 @@ function getPreUsers(){
                                 cell5.innerHTML = data[i].points;
                             else
                                 cell5.innerHTML = "-";
-                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'></button>";
+                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     } else {
@@ -504,10 +504,33 @@ function getPendingNext(){
                             cell4.innerHTML = data[i].address;
                             cell5.innerHTML = data[i].locality;
                             cell6.innerHTML = data[i].phone;
-                            cell7.innerHTML = data[i].services;
+                            var service = JSON.parse(data[i].services);
+                            var show_service ="";
+
+                            for(var i = 0; i< service.length; i++) {
+                                if (i !== service.length - 1) {
+                                    var service_temp= translate(service[i]);
+
+                                    show_service += service_temp + "/";
+                                }
+                                else {
+                                    var service_temp= translate(service[i]);
+                                    show_service += service_temp;
+                                }
+                            }
+
+                            cell7.innerHTML = show_service;
                             cell8.innerHTML = data[i].creationtime;
+
+                            var type= "";
+
+                            if(data[i].isfirestation)
+                                type= "Privada";
+                            else
+                                type= "Pública";
+
                             cell9.innerHTML = data[i].isfirestation;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -587,7 +610,7 @@ function getPendingPre(){
                             cell7.innerHTML = data[i].services;
                             cell8.innerHTML = data[i].creationtime;
                             cell9.innerHTML = data[i].isfirestation;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -664,7 +687,7 @@ function getPendingFirst(){
                             cell7.innerHTML = data[i].services;
                             cell8.innerHTML = data[i].creationtime;
                             cell9.innerHTML = data[i].isfirestation;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateOrg(this.parentNode.rowIndex)'></button>";
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -767,7 +790,7 @@ function getPendingReportsNext(){
                             cell5.innerHTML = data[i].lat;
                             cell6.innerHTML = data[i].lng;
                             cell7.innerHTML = data[i].creationtime;
-                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'></button>";
+                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -845,7 +868,7 @@ function getPendingReportsPre(){
                             cell5.innerHTML = data[i].lat;
                             cell6.innerHTML = data[i].lng;
                             cell7.innerHTML = data[i].creationtime;
-                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'></button>";
+                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -924,7 +947,7 @@ function getPendingReportsFirst(){
                             cell5.innerHTML = data[i].lat;
                             cell6.innerHTML = data[i].lng;
                             cell7.innerHTML = data[i].creationtime;
-                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'></button>";
+                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -1077,7 +1100,7 @@ function getPublicNext(){
 
                                 public_reports.push({report: data[i].report, applications: data[i].applications});
 
-                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
 
 
                             } else if(data[i].org !== undefined){
@@ -1177,7 +1200,7 @@ function getPublicPre(){
 
                                 public_reports.push({report: data[i].report, applications: data[i].applications});
 
-                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
 
 
                             } else if(data[i].org !== undefined){
@@ -1276,7 +1299,7 @@ function getPublicFirst(){
 
                                 public_reports.push({report: data[i].report, applications: data[i].applications});
 
-                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'></button>";
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
 
 
                             } else if(data[i].org !== undefined){
@@ -1346,4 +1369,41 @@ function activatePublicReport(row){
                 console.log('Fetch Error', err);
             });
     }
+}
+
+function translate(category){
+    var cat= "";
+    switch (category) {
+        case "LIXO":
+            cat = "Limpeza de Lixo Geral";
+            break;
+        case "PESADOS":
+            cat = "Transportes Pesados";
+            break;
+        case "PERIGOSOS":
+            cat = "Transportes Perigosos";
+            break;
+        case "PESSOAS":
+            cat = "Transportes de Pessoas";
+            break;
+        case "TRANSPORTE":
+            cat = "Transportes Gerais";
+            break;
+        case "MADEIRAS":
+            cat = "Madeiras";
+            break;
+        case "CARCACAS":
+            cat = "Carcaças";
+            break;
+        case "BIOLOGICO":
+            cat = "Outros resíduos biológicos";
+            break;
+        case "JARDINAGEM":
+            cat = "Jardinagem";
+            break;
+        case "MATAS":
+            cat = "Limpeza de Matas/Florestas";
+
+    }
+    return cat;
 }

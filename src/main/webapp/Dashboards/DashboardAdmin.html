@@ -101,7 +101,7 @@
                     <th class="th-style">Telefone</th>
                     <th class="th-style">Serviços</th>
                     <th class="th-style">Data de criação</th>
-                    <th class="th-style">Quartel de Bombeiros</th>
+                    <th class="th-style">Pública/Privada</th>
                 </tr>
             </table>
         </div>
@@ -137,18 +137,20 @@
         <div class=" col-md-10 col-lg-10 text-center"></div>
     </div>
     <div>
-        <div class="table-responsive">
-            <table class=" table table-hover table-style-pend text-center" id="reports_pending_table">
-                <tr>
-                    <th class="th-style">Nome</th>
-                    <th class="th-style">Morada</th>
-                    <th class="th-style">Gravidade</th>
-                    <th class="th-style">Criador</th>
-                    <th class="th-style">Latitude</th>
-                    <th class="th-style">Longitude</th>
-                    <th class="th-style">Data de criação</th>
-                </tr>
-            </table>
+        <div id="table-wrapper">
+            <div id="table-scroll" class="table-responsive">
+                <table class=" table table-hover table-style-pend text-center" id="reports_pending_table">
+                    <tr>
+                        <th class="th-style">Nome</th>
+                        <th class="th-style">Morada</th>
+                        <th class="th-style">Gravidade</th>
+                        <th class="th-style">Criador</th>
+                        <th class="th-style">Latitude</th>
+                        <th class="th-style">Longitude</th>
+                        <th class="th-style">Data de criação</th>
+                    </tr>
+                </table>
+            </div>
         </div>
     </div>
     <div class="row">
@@ -166,25 +168,38 @@
 <!--Tabela das ocorrências públicas por verificar-->
 <div id="list_pending_public_reports" style="display: none">
     <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center" style="margin-top:2rem">
+            <p class="info_text_bold_sm">- Ocorrências Públicas -</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <p style="font-family: 'Quicksand'; margin-left:1rem; font-size:12px"> Nesta tabela encontram-se todas as ocorrências pública e as candidaturas das empresas.
+                Caso exista alguma candidatura por aceitar, selecione a empresa que pretende. </p>
+        </div>
+    </div>
+    <div class="row">
         <div class=" col-md-2 col-lg-2 text-center" style="margin-top:2rem">
             <button class="btn btn-default btn-style" id="refresh_public_reports_pending"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
         </div>
         <div class=" col-md-10 col-lg-10 text-center"></div>
     </div>
     <div>
-        <div class="table-responsive">
-            <table class=" table table-hover table-style-pend text-center" id="public_reports_pending_table">
-                <tr>
-                    <th class="th-style">Título</th>
-                    <th class="th-style">Morada</th>
-                    <th class="th-style">Gravidade</th>
-                    <th class="th-style">Criador</th>
-                    <th class="th-style">Latitude</th>
-                    <th class="th-style">Longitude</th>
-                    <th class="th-style">Candidatos</th>
-                    <th class="th-style">Data de criação</th>
-                </tr>
-            </table>
+        <div id="table-wrapper-two">
+            <div id="table-scroll-two" class="table-responsive">
+                <table class=" table table-hover table-style-pend text-center" id="public_reports_pending_table">
+                    <tr>
+                        <th class="th-style">Título</th>
+                        <th class="th-style">Morada</th>
+                        <th class="th-style">Gravidade</th>
+                        <th class="th-style">Criador</th>
+                        <th class="th-style">Latitude</th>
+                        <th class="th-style">Longitude</th>
+                        <th class="th-style">Candidatos</th>
+                        <th class="th-style">Data de criação</th>
+                    </tr>
+                </table>
+            </div>
         </div>
     </div>
     <div class="row">
