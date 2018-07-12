@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -63,6 +64,7 @@ public class Profile {
 
 	public static final String ACTIVATED = "activated";
 	public static final String NOT_ACTIVATED = "notactivated";
+	private static final long TO_DELETE = TimeUnit.DAYS.toMillis(180);
 
 	@POST
 	@Path("/update/{username}")
@@ -341,6 +343,7 @@ public class Profile {
 			return Response.status(Status.EXPECTATION_FAILED).build();
 
 		user.setProperty(DSUtils.USER_ACTIVATION, ACTIVATED);
+		user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1);
 
 		datastore.put(user);
 
@@ -847,6 +850,11 @@ public class Profile {
 					return Response.status(Status.EXPECTATION_FAILED).build();
 				}
 				
+				if(user == null) {
+					LOG.info(Log.USER_NOT_FOUND);
+					return Response.status(Status.EXPECTATION_FAILED).build();
+				}
+				
 				String password = Long.toString(System.currentTimeMillis());
 				password = password.substring(password.length() - 6);
 				
@@ -866,5 +874,27 @@ public class Profile {
 				retries--;
 			}
 		}
+	}
+	
+	@GET
+	@Path("/deleteddef")
+	public Response deleteDef() {
+		Filter userF = new Query.FilterPredicate(DSUtils.USER_ACTIVATION,
+				FilterOperator.EQUAL, NOT_ACTIVATED);
+		Query userQ = new Query(DSUtils.USER).setFilter(userF)
+				.addProjection(new PropertyProjection(DSUtils.USER_CREATIONTIME, Date.class));
+		
+		List<Entity> users = datastore.prepare(userQ).asList(FetchOptions.Builder.withDefaults());
+		
+		for(Entity user : users) {
+			long closetime = ((Date) user.getProperty(DSUtils.USER_CREATIONTIME)).getTime();
+			long currtime = System.currentTimeMillis();
+			if(currtime - closetime < TO_DELETE)
+				continue;
+
+			return Response.ok().build();
+		}
+		
+		return Response.ok().build();
 	}
 }

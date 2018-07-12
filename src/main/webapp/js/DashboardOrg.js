@@ -128,26 +128,30 @@ function searchLocation(){
 }
 
 function getCurrentLocation() {
-
+    var geo = false;
     if(navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (position) {
+            geo = true;
             currentLoc = {
                 center: {lat: position.coords.latitude, lng: position.coords.longitude},
                 zoom: 15
             };
+       
+		var mapElement = document.getElementById('map');
+        	map = new google.maps.Map(mapElement, {center: {lat: position.coords.latitude, lng: position.coords.longitude},
+                zoom: 15});
+
+        	getMarkers();
         })
-        var mapElement = document.getElementById('map');
-        map = new google.maps.Map(mapElement, currentLoc);
-
-        getMarkers();
-    }else {
-        var mapElement = document.getElementById('map');
-        map = new google.maps.Map(mapElement, currentLoc);
-
-        getMarkers();
+        
     }
+    if(!geo){
+        var mapElement = document.getElementById('map');
+        map = new google.maps.Map(mapElement, currentLoc);
+     }
 
-    return currentLoc;
+        getMarkers();
+    
 }
 
 function hideShow(element){

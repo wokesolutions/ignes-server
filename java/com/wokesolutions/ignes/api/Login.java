@@ -241,7 +241,18 @@ public class Login {
 					.header(CustomHeader.LEVEL, level);
 
 			if(level.equals(UserLevel.WORKER)) {
-				response.header(CustomHeader.ORG, user.getProperty(DSUtils.WORKER_ORG));
+				Key workerK = KeyFactory.createKey(user.getKey(), DSUtils.WORKER, data.username);
+				
+				Entity worker;
+				try {
+					worker = datastore.get(workerK);
+				} catch(EntityNotFoundException e) {
+					LOG.warning(Log.UNEXPECTED_ERROR);
+					txn.rollback();
+					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+				}
+				
+				response.header(CustomHeader.ORG, worker.getProperty(DSUtils.WORKER_ORGNAME));
 				txn.commit();
 				return response.build();
 			}

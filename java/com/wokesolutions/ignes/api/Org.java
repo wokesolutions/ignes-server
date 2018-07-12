@@ -756,6 +756,8 @@ public class Org {
 	private Response reportsRetry(String nif, String cursor) {
 		Key userK = KeyFactory.createKey(DSUtils.USER, nif);
 		Key orgK = KeyFactory.createKey(userK, DSUtils.ORG, nif);
+		
+		LOG.info(orgK.toString());
 
 		Entity org;
 		try {

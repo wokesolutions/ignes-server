@@ -22,13 +22,16 @@ import com.wokesolutions.ignes.util.Log;
 
 @Priority(2)
 public class RequestControlFilter implements Filter {
-	
+
 	public static final Logger LOG = Logger.getLogger(RequestControlFilter.class.getName());
 	MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 
 	private static final String GET = "GET";
 	private static final String POST = "POST";
 	private static final String DELETE = "DELETE";
+
+	public static final String QUEUENAME = "X-AppEngine-QueueName";
+	public static final String CRON = "__cron";
 
 	public void init(FilterConfig arg0) throws ServletException {}  
 
@@ -43,7 +46,16 @@ public class RequestControlFilter implements Filter {
 		}
 
 		HttpServletRequest newreq = (HttpServletRequest) req;
-		
+
+		Object cron = newreq.getHeader(QUEUENAME);
+
+		if(cron != null && cron.toString().equals(CRON)) {
+			req.setAttribute(CustomHeader.CRON, true);
+			chain.doFilter(req, resp);
+			LOG.info(Log.CRON_REQUEST);
+			return;
+		}
+
 		String deviceid = newreq.getHeader(CustomHeader.DEVICE_ID);
 		String deviceapp = newreq.getHeader(CustomHeader.DEVICE_APP);
 		String deviceinfo = newreq.getHeader(CustomHeader.DEVICE_INFO);
@@ -86,13 +98,13 @@ public class RequestControlFilter implements Filter {
 			changeResp(resp, Log.TOO_MANY_REQUESTS);
 			return;
 		}
-		
+
 		req.setAttribute(CustomHeader.DEVICE_ID_ATT, deviceid);
 		req.setAttribute(CustomHeader.DEVICE_APP_ATT, deviceapp);
 		req.setAttribute(CustomHeader.DEVICE_INFO_ATT, deviceinfo);
-		
+
 		LOG.info(deviceid);
-		
+
 		LOG.info(Log.REQUEST_IS_GOOD);
 		chain.doFilter(req, resp);
 	}

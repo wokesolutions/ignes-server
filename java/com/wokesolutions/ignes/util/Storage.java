@@ -66,7 +66,7 @@ public class Storage {
 		Transform rotate = ImagesServiceFactory.makeRotate(orientation);
 		Image rotatedImage = imagesService.applyTransform(rotate, image);
 		
-		GcsFilename fileName = new GcsFilename(BUCKET, path.makePath());
+		/*GcsFilename fileName = new GcsFilename(BUCKET, path.makePath());
 		GcsFileOptions options = new GcsFileOptions.Builder()
                 .mimeType("image/jpg")
                 .acl("public-read")
@@ -78,7 +78,7 @@ public class Storage {
 					Channels.newOutputStream(outputChannel));
 		} catch(IOException e) {
 			return false;
-		}
+		}*/
 		
 		if(!withTn)
 			return true;

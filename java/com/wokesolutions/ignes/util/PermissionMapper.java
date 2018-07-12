@@ -20,6 +20,7 @@ public class PermissionMapper {
 	private final static String POST_REPORT_VOTE = "report/vote";
 	private final static String CHANGE_PW = "changepassword";
 	private final static String PROFILE = "profile";
+	private final static String CLOSE_REPORTDEF = "report/closedef";
 	private final static String CLOSE_REPORT = "report/close";
 	private final static String ADMIN = "admin";
 	private final static String ORG_INFO = "org/info";
@@ -33,14 +34,20 @@ public class PermissionMapper {
 	private final static String FORGOT_PASSWORD = "forgotpassword";
 	
 	public final static String FORBIDDEN = "f";
+	public final static String CRON = "cron";
 
 	public static List<String> getPermissions(String url) { //TODO fix time
 		String req = url.substring(url.indexOf("/api/") + 5);
 
-		List<String> permissions = new ArrayList<String>(8);
+		List<String> permissions = new ArrayList<String>(9);
 		
 		if(req.contains(CATEGORY)) {
 			permissions.add(UserLevel.GUEST);
+			return permissions;
+		}
+		
+		if(req.contains(CLOSE_REPORTDEF)) {
+			permissions.add(CRON);
 			return permissions;
 		}
 		
@@ -61,6 +68,7 @@ public class PermissionMapper {
 		}
 
 		if(req.contains(CHANGE_PW)) {
+			permissions.add(UserLevel.LEVEL0);
 			permissions.add(UserLevel.LEVEL1);
 			permissions.add(UserLevel.LEVEL2);
 			permissions.add(UserLevel.LEVEL3);
@@ -101,6 +109,7 @@ public class PermissionMapper {
 		}
 		
 		if(req.contains(VERIFYTOKEN)) {
+			permissions.add(UserLevel.LEVEL0);
 			permissions.add(UserLevel.LEVEL1);
 			permissions.add(UserLevel.LEVEL2);
 			permissions.add(UserLevel.LEVEL3);
@@ -111,6 +120,7 @@ public class PermissionMapper {
 		}
 
 		if(req.contains(GET_COMMENT)) {
+			permissions.add(UserLevel.LEVEL0);
 			permissions.add(UserLevel.LEVEL1);
 			permissions.add(UserLevel.LEVEL2);
 			permissions.add(UserLevel.LEVEL3);
@@ -151,6 +161,7 @@ public class PermissionMapper {
 		}
 
 		if(req.contains(POST_REPORT_VOTE)) {
+			permissions.add(UserLevel.LEVEL0);
 			permissions.add(UserLevel.LEVEL1);
 			permissions.add(UserLevel.LEVEL2);
 			permissions.add(UserLevel.LEVEL3);
@@ -164,6 +175,7 @@ public class PermissionMapper {
 		}
 
 		if(req.contains(LOGOUT)) {
+			permissions.add(UserLevel.LEVEL0);
 			permissions.add(UserLevel.LEVEL1);
 			permissions.add(UserLevel.LEVEL2);
 			permissions.add(UserLevel.LEVEL3);
@@ -174,6 +186,7 @@ public class PermissionMapper {
 		}
 
 		if(req.contains(PROFILE)) {
+			permissions.add(UserLevel.LEVEL0);
 			permissions.add(UserLevel.LEVEL1);
 			permissions.add(UserLevel.LEVEL2);
 			permissions.add(UserLevel.LEVEL3);

@@ -1,4 +1,4 @@
-var URL_BASE = 'https://hardy-scarab-200218.appspot.com';
+var URL_BASE = 'https://main-dot-mimetic-encoder-209111.appspot.com';
 
 function restRequest(url, method, headers, body){
     if(body==="") {

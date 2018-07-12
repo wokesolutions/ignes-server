@@ -86,13 +86,13 @@ public class Admin {
 		}
 	}
 
-	private Response registerAdminRetry(UserRegisterData registerData) {
-		LOG.info(Log.ATTEMPT_REGISTER_ADMIN + registerData);
+	private Response registerAdminRetry(UserRegisterData data) {
+		LOG.info(Log.ATTEMPT_REGISTER_ADMIN + data);
 
 		Transaction txn = datastore.beginTransaction();
 		try {
 			// If the entity does not exist an Exception is thrown. Otherwise,
-			Key userKey = KeyFactory.createKey(DSUtils.USER, registerData.username);
+			Key userKey = KeyFactory.createKey(DSUtils.USER, data.username);
 			datastore.get(userKey);
 			txn.rollback();
 			return Response.status(Status.CONFLICT).entity(Log.USER_ALREADY_EXISTS).build(); 
@@ -100,7 +100,7 @@ public class Admin {
 
 			Filter filter =
 					new Query.FilterPredicate(DSUtils.USER_EMAIL,
-							FilterOperator.EQUAL, registerData.email);
+							FilterOperator.EQUAL, data.email);
 
 			Query emailQuery = new Query(DSUtils.USER).setFilter(filter);
 
@@ -116,13 +116,13 @@ public class Admin {
 				return Response.status(Status.CONFLICT).entity(Log.EMAIL_ALREADY_IN_USE).build();
 
 			Date date = new Date();
-			Entity user = new Entity(DSUtils.USER, registerData.username);
+			Entity user = new Entity(DSUtils.USER, data.username);
 			Key userKey = user.getKey();
 			Entity admin = new Entity(DSUtils.ADMIN, userKey);
 
 			admin.setUnindexedProperty(DSUtils.ADMIN_CREATIONTIME, date);
-			user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(registerData.password));
-			user.setProperty(DSUtils.USER_EMAIL, registerData.email);
+			user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(data.password));
+			user.setProperty(DSUtils.USER_EMAIL, data.email);
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.ADMIN);
 			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
 
@@ -131,20 +131,20 @@ public class Admin {
 
 			user.setProperty(DSUtils.USER_CREATIONTIMEFORMATTED, sdf.format(date));
 
-			Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
+			Entity useroptional = new Entity(DSUtils.USEROPTIONAL, data.username, userKey);
 
-			Entity userPoints = new Entity(DSUtils.USERPOINTS, user.getKey());
+			Entity userPoints = new Entity(DSUtils.USERPOINTS, data.username, user.getKey());
 			userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
 
-			Entity userStats = new Entity(DSUtils.USERSTATS, userKey);
+			Entity userStats = new Entity(DSUtils.USERSTATS, data.username, userKey);
 			userStats.setUnindexedProperty(DSUtils.USERSTATS_LOGINS, 0L);
 			userStats.setUnindexedProperty(DSUtils.USERSTATS_LOGINSFAILED, 0L);
 			userStats.setUnindexedProperty(DSUtils.USERSTATS_LOGOUTS, 0L);
 
-			List<Entity> list = Arrays.asList(user, admin, useroptional, userPoints);
+			List<Entity> list = Arrays.asList(user, admin, useroptional, userStats, userPoints);
 
 			datastore.put(txn, list);
-			LOG.info(Log.ADMIN_REGISTERED + registerData);
+			LOG.info(Log.ADMIN_REGISTERED + data);
 			txn.commit();
 			return Response.ok().build();
 		} finally {
@@ -348,7 +348,8 @@ public class Admin {
 			us.put(Prop.CREATIONTIME, user.getProperty(DSUtils.USER_CREATIONTIMEFORMATTED));
 
 			if(!level.equals(UserLevel.ORG) && !level.equals(UserLevel.WORKER)) {
-				Key pointsK = KeyFactory.createKey(user.getKey(), DSUtils.USERPOINTS, user.getKey().getName());
+				Key pointsK = KeyFactory.createKey(user.getKey(),
+						DSUtils.USERPOINTS, user.getKey().getName());
 
 				Entity points;
 
@@ -360,6 +361,21 @@ public class Admin {
 				}
 
 				us.put(Prop.POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
+			}
+			
+			if(level.equals(UserLevel.WORKER)) {
+				Key workerK = KeyFactory.createKey(user.getKey(), DSUtils.WORKER, user.getKey().getName());
+				
+				Entity worker;
+				try {
+					worker = datastore.get(workerK);
+				} catch (EntityNotFoundException e) {
+					LOG.info(Log.UNEXPECTED_ERROR);
+					LOG.info(workerK.toString());
+					continue;
+				}
+				
+				us.put(Prop.ORG, ((Key) worker.getProperty(DSUtils.WORKER_ORG)).getParent().getName());
 			}
 
 			array.put(us);

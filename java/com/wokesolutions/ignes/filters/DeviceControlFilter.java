@@ -37,10 +37,19 @@ public class DeviceControlFilter implements Filter {
 	public void init(FilterConfig filterConfig) throws ServletException {}
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
 			throws IOException, ServletException {
-		String deviceid = request.getAttribute(CustomHeader.DEVICE_ID_ATT).toString();
-		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+
+		Object cron = req.getAttribute(CustomHeader.CRON);
+		
+		if(cron != null && (boolean) req.getAttribute(CustomHeader.CRON)) {
+			LOG.info(Log.CRON_REQUEST);
+			chain.doFilter(req, resp);
+			return;
+		}
+		
+		String deviceid = req.getAttribute(CustomHeader.DEVICE_ID_ATT).toString();
+		String username = req.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		Query deviceQuery = new Query(DSUtils.DEVICE);
 		Query.Filter userFilter = new Query.FilterPredicate(DSUtils.DEVICE_USER,
@@ -63,14 +72,14 @@ public class DeviceControlFilter implements Filter {
 		try {
 			user = datastore.get(KeyFactory.createKey(DSUtils.USER, username));
 		} catch(EntityNotFoundException e) {
-			changeResp(response, Log.USER_NOT_FOUND);
+			changeResp(resp, Log.USER_NOT_FOUND);
 			return;
 		}
 		
 		String email = user.getProperty(DSUtils.USER_EMAIL).toString();
 
 		if(existingDevice == null) {
-			String app = request.getAttribute(CustomHeader.DEVICE_APP_ATT).toString();
+			String app = req.getAttribute(CustomHeader.DEVICE_APP_ATT).toString();
 			
 			existingDevice = new Entity(DSUtils.DEVICE, deviceid);
 			existingDevice.setUnindexedProperty(DSUtils.DEVICE_COUNT, 1L);
@@ -78,14 +87,14 @@ public class DeviceControlFilter implements Filter {
 			existingDevice.setProperty(DSUtils.DEVICE_APP, app);
 			
 			Email.sendNewDeviceMessage(email,
-					request.getAttribute(CustomHeader.DEVICE_INFO_ATT).toString());
+					req.getAttribute(CustomHeader.DEVICE_INFO_ATT).toString());
 		} else
 			existingDevice.setProperty(DSUtils.DEVICE_COUNT,
 				(long) existingDevice.getProperty(DSUtils.DEVICE_COUNT) + 1L);
 
 		datastore.put(existingDevice);
 		
-		chain.doFilter(request, response);
+		chain.doFilter(req, resp);
 	}
 
 	@Override

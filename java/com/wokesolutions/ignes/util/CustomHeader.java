@@ -30,6 +30,7 @@ public class CustomHeader {
 	public static final String DEVICE_ID = "Device-ID";
 	public static final String DEVICE_APP = "Device-App";
 	public static final String DEVICE_INFO = "Device-Info";
+	public static final String CRON = "Cron";
 }
 
 

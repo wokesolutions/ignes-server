@@ -104,7 +104,7 @@ public class Register {
 				user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(data.password));
 				user.setUnindexedProperty(DSUtils.USER_FORGOTPASSWORD, null);
 				user.setProperty(DSUtils.USER_EMAIL, data.email);
-				user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL1.toString());
+				user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL0);
 				user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
 				
 				SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
@@ -119,7 +119,7 @@ public class Register {
 				Entity userPoints = new Entity(DSUtils.USERPOINTS, data.username, user.getKey());
 				userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
 
-				Entity useroptional = new Entity(DSUtils.USEROPTIONAL, userKey);
+				Entity useroptional = new Entity(DSUtils.USEROPTIONAL, data.username, userKey);
 				
 				Entity userstats = new Entity(DSUtils.USERSTATS, data.username, userKey);
 				userstats.setUnindexedProperty(DSUtils.USERSTATS_LOGINS, 0L);

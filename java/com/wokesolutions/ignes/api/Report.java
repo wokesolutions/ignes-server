@@ -74,7 +74,7 @@ public class Report {
 
 	private static final Logger LOG = Logger.getLogger(Report.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-	private static final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
+	// private static final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 	private static final int BATCH_SIZE = 10;
 	
 	private static final ProfanityFilter proffilter = new ProfanityFilter();
@@ -96,7 +96,7 @@ public class Report {
 
 	private static final String OCORRENCIA_RAPIDA = "Ocorrência rápida - ";
 
-	private static final long TO_CLOSE = TimeUnit.DAYS.toMillis(3);  
+	private static final long TO_CLOSE = TimeUnit.DAYS.toMillis(3);
 
 	private static final int DEFAULT_GRAVITY = 2;
 	private static final int NO_TRUST_GRAVITY = 1;
@@ -287,8 +287,12 @@ public class Report {
 				datastore.put(txn, entities);
 				txn.commit();
 				
-				cache.delete(data.locality);
-				cache.delete(this.coordsCacheKey(data.lat, data.lng));
+				/*cache.delete(data.locality);
+				
+				if(data.lat == 0 && data.lng == 0)
+					cache.delete(coordsCacheKey(middle[0], middle[1]));
+				else
+					cache.delete(coordsCacheKey(data.lat, data.lng));*/
 
 				return Response.ok().build();
 			} catch(Exception e) {
@@ -419,15 +423,16 @@ public class Report {
 		
 		String cacheKey = coordsCacheKey(lat, lng);
 		
-		if(cache.contains(cacheKey)) {
+		/*if(cache.contains(cacheKey)) {
 			LOG.info(Log.USING_CACHE);
+			LOG.info(cacheKey);
 
 			String cacheKeyNum = cacheKey + "#";
 			if(cache.increment(cacheKeyNum, 1L) == null)
 				cache.put(cacheKeyNum, 0, Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(30)));
 
 			return Response.ok().entity(cache.get(cacheKey)).build();
-		}
+		}*/
 		
 		int retries = 5;
 		while(true) {
@@ -509,12 +514,14 @@ public class Report {
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 			
-			String cacheKeyNum = cacheKey + "#";
-			if(cache.increment(cacheKeyNum, 1L) == null)
-				cache.put(cacheKeyNum, 0L, Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(30)));
+			/*String cacheKeyNum = cacheKey + "#";
+			if(cache.get(cacheKeyNum) == null)
+				cache.put(cacheKeyNum, "0", Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(30)));
+			else
+				cache.put(cacheKeyNum, Long.parseLong(cache.get(cacheKeyNum).toString()) + 1L);
 
-			if((long) cache.get(cacheKeyNum) >= 5L)
-				cache.put(cacheKey, jsonReports.toString());
+			if(Long.parseLong(cache.get(cacheKeyNum).toString()) >= 5L)
+				cache.put(cacheKey, jsonReports.toString());*/
 
 			if(reports.size() < BATCH_SIZE)
 				return Response.ok()
@@ -533,15 +540,17 @@ public class Report {
 		if(location == null || location == "")
 			return Response.status(Status.EXPECTATION_FAILED).build();
 
-		if(cache.contains(location)) {
+		/*if(cache.contains(location)) {
 			LOG.info(Log.USING_CACHE);
 
 			String cacheKeyNum = location + "#";
-			if(cache.increment(cacheKeyNum, 1L) == null)
-				cache.put(cacheKeyNum, 0, Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(30)));
+			if(cache.get(cacheKeyNum) == null)
+				cache.put(cacheKeyNum, "0", Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(30)));
+			else
+				cache.put(cacheKeyNum, Long.parseLong(cache.get(cacheKeyNum).toString()) + 1L);
 
 			return Response.ok().entity(cache.get(location)).build();
-		}
+		}*/
 
 		int retries = 5;
 		while(true) {
@@ -597,12 +606,12 @@ public class Report {
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
 
-			String cacheKeyNum = cacheKey + "#";
+			/*String cacheKeyNum = cacheKey + "#";
 			if(cache.increment(cacheKeyNum, 1L) == null)
 				cache.put(cacheKeyNum, 0L, Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(30)));
 
-			if((long) cache.get(cacheKeyNum) >= 5L)
-				cache.put(cacheKey, jsonReports.toString());
+			if(Long.parseLong(cache.get(cacheKeyNum).toString()) >= 5L)
+				cache.put(cacheKey, jsonReports.toString());*/
 
 			cursor = reports.getCursor().toWebSafeString();
 
@@ -812,8 +821,12 @@ public class Report {
 	private String coordsCacheKey(double lat, double lng) {
 		DecimalFormat df = new DecimalFormat("#.#");
 		df.setRoundingMode(RoundingMode.DOWN);
+		
 		String newlat = df.format(lat);
 		String newlng = df.format(lng);
+		
+		LOG.info(newlat);
+		LOG.info(newlng);
 		
 		int hash = 13;
 		
@@ -897,7 +910,7 @@ public class Report {
 		}
 	}
 
-	@DELETE
+	@GET
 	@Path("/closedef")
 	public Response closeDef() {
 		Query query = new Query(DSUtils.REPORT);
@@ -1086,7 +1099,7 @@ public class Report {
 		}
 
 		Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
-		if(!reporterK.equals(userK)) {
+		if(!reporterK.equals(userK) && isprivate == true) {
 			LOG.info(Log.NOT_REPORTER);
 			return Response.status(Status.FORBIDDEN).build();
 		}

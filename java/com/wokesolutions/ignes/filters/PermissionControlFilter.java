@@ -63,6 +63,14 @@ public class PermissionControlFilter implements Filter {
 
 		LOG.info(url);
 		
+		Object cron = request.getAttribute(CustomHeader.CRON);
+		
+		if(cron != null && (boolean) request.getAttribute(CustomHeader.CRON)) {
+			LOG.info(Log.CRON_REQUEST);
+			chain.doFilter(req, resp);
+			return;
+		}
+		
 		List<String> permissions = PermissionMapper.getPermissions(url);
 
 		if(permissions.get(0).equals(UserLevel.GUEST)) {

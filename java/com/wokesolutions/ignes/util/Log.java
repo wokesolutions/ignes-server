@@ -128,6 +128,7 @@ public class Log {
 		public static final String NOT_GUEST_REQUEST = "Pedido exige autenticação";
 		public static final String GUEST_REQUEST = "Pedido não exige autenticação";
 		public static final String PERMISSION_GRANTED = "Autenticação foi verificada";
+		public static final String CRON_REQUEST = "Pedido vem do app engine (cron)";
 		
 	// Info Requests
 		public static final String REQUEST_IS_GOOD = "Pedido foi aceite";
