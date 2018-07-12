@@ -1089,7 +1089,7 @@ function getPublicNext(){
                             cell6.innerHTML = data[i].lng;
                             var orgs = data[i].applications;
                             if(orgs !== undefined) {
-                                var options = "<option value='' disabled selected>Select your option</option>";
+                                var options = "<option value='' disabled selected>Selecione a Organização</option>";
                                 for (var j = 0; j < orgs.length; j++) {
                                     options += "<option>" + orgs[j].name + "</option>"
                                 }
