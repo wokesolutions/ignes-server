@@ -96,9 +96,8 @@ function hideShow(element){
 
     } else if(current_position === "statistics_variable"){
 
-        document.getElementById("piechart").style.display = "none";
+        document.getElementById("statistic").style.display = "none";
 
-        document.getElementById("top_table").style.display = "none";
 
     } else if(current_position === "reports_pending_variable"){
 
@@ -127,10 +126,8 @@ function hideShow(element){
 
     } else if(element === "statistics_variable"){
 
-        document.getElementById("piechart").style.display = "block";
+        document.getElementById("statistic").style.display = "block";
         current_position = "statistics_variable";
-
-        document.getElementById("top_table").style.display = "block";
 
 
     } else if(element === "reports_pending_variable"){
@@ -746,19 +743,6 @@ function getPendingFirst(){
                     if(data != null){
                         var i;
                         for(i = 0; i < data.length; i++){
-                            var service = JSON.parse(data[i].services);
-                            var show_service ="";
-
-                            for(var i = 0; i< service.length; i++) {
-                                if (i !== service.length - 1) {
-                                    var service_temp= translate(service[i]);
-                                    show_service += service_temp + "/";
-                                }
-                                else {
-                                    var service_temp= translate(service[i]);
-                                    show_service += service_temp;
-                                }
-                            }
 
                             var type= "";
 
@@ -784,7 +768,7 @@ function getPendingFirst(){
                             cell4.innerHTML = data[i].address;
                             cell5.innerHTML = data[i].locality;
                             cell6.innerHTML = data[i].phone;
-                            cell7.innerHTML = show_service;
+                            cell7.innerHTML = data[i].services;
                             cell8.innerHTML = data[i].creationtime;
                             cell9.innerHTML = type;
                             cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
@@ -1520,7 +1504,7 @@ function getTopUsers(){
     headers.append('Device-App', localStorage.getItem('app'));
     headers.append('Device-Info', localStorage.getItem('browser'));
 
-    fetch(restRequest('api/profile/usertop','GET', headers, body)).then(function (response){
+    fetch(restRequest('/api/profile/usertop','GET', headers, body)).then(function (response){
         if (response.status === 200) {
             response.json().then(function(data) {
                 var table = document.getElementById("top_table");
