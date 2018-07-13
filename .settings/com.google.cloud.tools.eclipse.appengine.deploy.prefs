@@ -4,5 +4,5 @@ include.optional.configuration.files=true
 project.bucket=
 project.id=mimetic-encoder-209111
 project.previousVersion.stop=true
-project.promote=false
-project.version=main
+project.promote=true
+project.version=

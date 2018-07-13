@@ -55,6 +55,7 @@ import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.callbacks.LevelManager;
 import com.wokesolutions.ignes.data.AcceptData;
+import com.wokesolutions.ignes.data.InfoData;
 import com.wokesolutions.ignes.data.ReportData;
 import com.wokesolutions.ignes.exceptions.VoteException;
 import com.wokesolutions.ignes.util.CustomHeader;
@@ -1132,11 +1133,11 @@ public class Report {
 		return Response.ok().build();
 	}
 
-	@DELETE
+	@POST
 	@Path("/delete/{report}")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
 	public Response deleteReport(@Context HttpServletRequest request,
-			@PathParam(ParamName.REPORT) String report, String info) {
+			@PathParam(ParamName.REPORT) String report, InfoData info) {
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		int retries = 5;
@@ -1154,7 +1155,7 @@ public class Report {
 				String userlevel = user.getProperty(DSUtils.USER_LEVEL).toString();
 				
 				if(userlevel.equals(UserLevel.ADMIN)
-						&& (info == null || info.equals(""))) {
+						&& (info == null || info.info == null || info.info.equals(""))) {
 					LOG.info(Log.BAD_FORMAT);
 					return Response.status(Status.BAD_REQUEST).build();
 				}
@@ -1175,7 +1176,7 @@ public class Report {
 					return Response.status(Status.FORBIDDEN).build();
 				}
 				
-				Transaction txn = datastore.beginTransaction();
+				Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
 				
 				if(user.getProperty(DSUtils.USER_LEVEL).equals(UserLevel.ADMIN)
 						&& !user.getProperty(DSUtils.REPORT_USER).equals(user.getKey())) {
@@ -1195,12 +1196,15 @@ public class Report {
 					datastore.put(txn, points);
 				}
 				
+				for(Entity del : toDelete)
+					LOG.info(del.getKey().getName());
+				
 				for(Entity deleted : toDelete)
 					datastore.delete(txn, deleted.getKey());
 				
 				Entity deletionLog = new Entity(DSUtils.DELETIONLOG, username, userK);
 				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_DELETED, reportK);
-				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_INFO, info);
+				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_INFO, info.info);
 				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_TIME, new Date());
 				deletionLog.setProperty(DSUtils.DELETIONLOG_TYPE, COMMENT);
 				
@@ -1221,13 +1225,15 @@ public class Report {
 		Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
 		String level = user.getProperty(DSUtils.USER_LEVEL).toString();
 		
-		if(level.equals(UserLevel.ADMIN))
-			return null;
+		LOG.info(status);
 		
 		if(!(status.equals(Report.OPEN) || status.equals(Report.STANDBY)))
 			return null;
 		
-		if(!report.getProperty(DSUtils.REPORT_USER).equals(reporterK))
+		LOG.info(reporterK.toString() + " " + user.getKey().toString());
+		LOG.info(level);
+		
+		if(!reporterK.equals(user.getKey()) && !level.equals(UserLevel.ADMIN))
 			return null;
 		
 		FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
@@ -1256,6 +1262,17 @@ public class Report {
 				
 				toDelete.addAll(tasks);
 			}
+		
+		toDelete.add(report);
+		
+		Key repPointsK = KeyFactory.createKey(report.getKey(), DSUtils.REPORTVOTES, report.getKey().getName());
+		
+		try {
+			toDelete.add(datastore.get(repPointsK));
+		} catch (EntityNotFoundException e) {
+			LOG.info(Log.UNEXPECTED_ERROR);
+			return null;
+		}
 		
 		return toDelete;
 	}

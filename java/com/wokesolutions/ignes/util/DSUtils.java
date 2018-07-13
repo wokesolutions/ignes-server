@@ -42,6 +42,7 @@ public class DSUtils {
 		public static final String ADMIN_WASPROMOTED = "admin_waspromoted";
 		public static final String ADMIN_WASDEMOTED = "admin_wasdemoted";
 		public static final String ADMIN_OLDLEVEL = "admin_oldlevel";
+		public static final String ADMIN_LOCALITY = "admin_locality";
 	
 	// AdminLog
 		public static final String ADMINLOG_PROMOTED = "adminlog_promoted";

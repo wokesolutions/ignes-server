@@ -12,10 +12,10 @@ var cursor_current_public;
 var cursor_pre_public;
 var standby_rep= [];
 var public_reports = [];
-
+var pending_reports = [];
 var current_position = "list_users_variable";
 
-var URL_BASE = 'https://main-dot-mimetic-encoder-209111.appspot.com';
+var URL_BASE = 'https://mimetic-encoder-209111.appspot.com';
 
 init();
 
@@ -34,6 +34,8 @@ function init() {
 
     document.getElementById("logout_button").onclick = logOut;
     document.getElementById("public_reports_button").onclick = showPublicReports;
+    document.getElementById("add_admin_button").onclick = showAddAdmin;
+    document.getElementById("add_adm").onclick = addAdmin;
     document.getElementById("statistics_button").onclick = showStatisticsReports;
     document.getElementById("pending_verify_reports_button").onclick = showPendingReports;
     document.getElementById("next_list").onclick = getNextUsers;
@@ -44,10 +46,10 @@ function init() {
     document.getElementById("refresh_orgs_pending").onclick = getPendingFirst;
     document.getElementById("list_pending_button").onclick = showPending;
     document.getElementById("list_users_button").onclick = showUsers;
-    document.getElementById("next_report_pending").onclick = getPendingReportsNext;
+    document.getElementById("next_reports_pending").onclick = getPendingReportsNext;
     document.getElementById("previous_reports_pending").onclick = getPendingReportsPre;
     document.getElementById("refresh_reports_pending").onclick = getPendingReportsFirst;
-    document.getElementById("next_public_report_pending").onclick = getPublicNext;
+    document.getElementById("next_public_reports_pending").onclick = getPublicNext;
     document.getElementById("previous_public_reports_pending").onclick = getPublicPre;
     document.getElementById("refresh_public_reports_pending").onclick = getPublicFirst;
 
@@ -73,6 +75,10 @@ function showPending(){
     hideShow("show_pending_variable");
 }
 
+function showAddAdmin(){
+    hideShow("add_admin_variable");
+}
+
 function hideShow(element){
 
     if(current_position === "list_users_variable"){
@@ -94,6 +100,10 @@ function hideShow(element){
     } else if(current_position === "reports_pending_variable"){
 
         document.getElementById("list_pending_reports").style.display = "none";
+
+    } else if(current_position === "add_admin_variable"){
+
+        document.getElementById("add_admin_report").style.display = "none";
 
     }
 
@@ -122,6 +132,46 @@ function hideShow(element){
         document.getElementById("list_pending_reports").style.display = "block";
         current_position = "reports_pending_variable";
 
+    } else if(element === "add_admin_variable"){
+        document.getElementById("add_admin_report").style.display = "block";
+        current_position = "add_admin_variable";
+    }
+}
+
+function addAdmin(){
+    var name = document.getElementById("admin_username").value;
+    var email = document.getElementById("admin_email").value;
+    var password = document.getElementById("admin_password").value;
+    var confirmation = document.getElementById("admin_confirmation").value;
+    var locality = document.getElementById("admin_locality").value;
+    if(password === confirmation){
+        var headers = new Headers();
+        var body = {username:name,email:email,locality:locality,password:password};
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
+
+        fetch(restRequest('/api/admin/register', 'POST', headers, JSON.stringify(body))).then(function(response) {
+
+                if (response.status === 200) {
+                    alert("Administrador registado com sucesso.");
+                    document.getElementById("admin_username").innerHTML = "";
+                    document.getElementById("admin_email").innerHTML = "";
+                    document.getElementById("admin_password").innerHTML = "";
+                    document.getElementById("admin_confirmation").innerHTML = "";
+                    document.getElementById("admin_locality").innerHTML = "";
+                }else{
+                    alert("Utilizador já existe ou falta informação em algum campo.")
+                }
+
+            }
+        )
+            .catch(function(err) {
+                console.log('Fetch Error', err);
+            });
+    }else{
+        alert("A password e a confirmação não estão coerentes.");
     }
 }
 
@@ -246,7 +296,7 @@ function getFirstUsers(){
                                 cell5.innerHTML = data[i].points;
                             else
                                 cell5.innerHTML = "-";
-                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -321,7 +371,7 @@ function getNextUsers(){
                                 cell5.innerHTML = data[i].points;
                             else
                                 cell5.innerHTML = "-";
-                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -398,7 +448,7 @@ function getPreUsers(){
                                 cell5.innerHTML = data[i].points;
                             else
                                 cell5.innerHTML = "-";
-                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     } else {
@@ -529,7 +579,7 @@ function getPendingNext(){
                             else
                                 type= "Pública";
 
-                            cell9.innerHTML = data[i].isfirestation;
+                            cell9.innerHTML = type;
                             cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
@@ -607,9 +657,32 @@ function getPendingPre(){
                             cell4.innerHTML = data[i].address;
                             cell5.innerHTML = data[i].locality;
                             cell6.innerHTML = data[i].phone;
-                            cell7.innerHTML = data[i].services;
+                            var service = JSON.parse(data[i].services);
+                            var show_service ="";
+
+                            for(var i = 0; i< service.length; i++) {
+                                if (i !== service.length - 1) {
+                                    var service_temp= translate(service[i]);
+
+                                    show_service += service_temp + "/";
+                                }
+                                else {
+                                    var service_temp= translate(service[i]);
+                                    show_service += service_temp;
+                                }
+                            }
+
+                            cell7.innerHTML = show_service;
                             cell8.innerHTML = data[i].creationtime;
-                            cell9.innerHTML = data[i].isfirestation;
+
+                            var type= "";
+
+                            if(data[i].isfirestation)
+                                type= "Privada";
+                            else
+                                type= "Pública";
+
+                            cell9.innerHTML = type;
                             cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
@@ -684,9 +757,31 @@ function getPendingFirst(){
                             cell4.innerHTML = data[i].address;
                             cell5.innerHTML = data[i].locality;
                             cell6.innerHTML = data[i].phone;
+                            /*  var service = JSON.parse(data[i].services);
+                             var show_service ="";
+
+                            for(var i = 0; i< service.length; i++) {
+                                 if (i !== service.length - 1) {
+                                     var service_temp= translate(service[i]);
+
+                                     show_service += service_temp + "/";
+                                 }
+                                 else {
+                                     var service_temp= translate(service[i]);
+                                     show_service += service_temp;
+                                 }
+                             }
+                             cell7.innerHTML = show_service;*/
                             cell7.innerHTML = data[i].services;
                             cell8.innerHTML = data[i].creationtime;
-                            cell9.innerHTML = data[i].isfirestation;
+                            var type= "";
+
+                            if(data[i].isprivate === true)
+                                type= "Privada";
+                            else
+                                type= "Pública";
+
+                            cell9.innerHTML = type;
                             cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
@@ -783,6 +878,7 @@ function getPendingReportsNext(){
                             var cell6 = row.insertCell(5);
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
+                            standby_rep.push(data[i].report);
                             cell1.innerHTML = data[i].title;
                             cell2.innerHTML = data[i].address;
                             cell3.innerHTML = data[i].gravity;
@@ -861,6 +957,7 @@ function getPendingReportsPre(){
                             var cell6 = row.insertCell(5);
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
+                            standby_rep.push(data[i].report);
                             cell1.innerHTML = data[i].title;
                             cell2.innerHTML = data[i].address;
                             cell3.innerHTML = data[i].gravity;
@@ -940,6 +1037,7 @@ function getPendingReportsFirst(){
                             var cell6 = row.insertCell(5);
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
+                            standby_rep.push(data[i].report);
                             cell1.innerHTML = data[i].title;
                             cell2.innerHTML = data[i].address;
                             cell3.innerHTML = data[i].gravity;
@@ -1012,8 +1110,9 @@ function drawChart(){
                     var dados = google.visualization.arrayToDataTable(data);
 
                     var options = {
-                        title: 'Eficácia por organização'
-
+                        title: 'Eficácia por organização',
+                        width:500,
+                        height:500
                     };
 
                     var chart = new google.visualization.PieChart(document.getElementById('piechart'));
@@ -1189,7 +1288,7 @@ function getPublicPre(){
                             cell6.innerHTML = data[i].lng;
                             var orgs = data[i].applications;
                             if(orgs !== undefined) {
-                                var options = "<option value='' disabled selected>Select your option</option>";
+                                var options = "<option value='' disabled selected>Selecione a Organização</option>";
                                 for (var j = 0; j < orgs.length; j++) {
                                     options += "<option>" + orgs[j].name + "</option>"
                                 }
@@ -1200,7 +1299,7 @@ function getPublicPre(){
 
                                 public_reports.push({report: data[i].report, applications: data[i].applications});
 
-                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
 
 
                             } else if(data[i].org !== undefined){
@@ -1288,7 +1387,7 @@ function getPublicFirst(){
                             cell6.innerHTML = data[i].lng;
                             var orgs = data[i].applications;
                             if(orgs !== undefined) {
-                                var options = "<option value='' disabled selected>Select your option</option>";
+                                var options = "<option value='' disabled selected>Selecione a Organização</option>";
                                 for (var j = 0; j < orgs.length; j++) {
                                     options += "<option>" + orgs[j].name + "</option>"
                                 }
@@ -1299,7 +1398,7 @@ function getPublicFirst(){
 
                                 public_reports.push({report: data[i].report, applications: data[i].applications});
 
-                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
 
 
                             } else if(data[i].org !== undefined){

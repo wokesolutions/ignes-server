@@ -8,5 +8,20 @@
 	<automatic-scaling>
 		<min-instances>1</min-instances>
 	</automatic-scaling>
+	
+	<!-- 
+	<static-files>
+		<include path="/**.html" expiration="1m"/>
+		<include path="/**.js" expiration="1m"/>
+		<include path="/**.jpg" expiration="1m"/>
+		<include path="/**.jpeg" expiration="1m"/>
+		<include path="/**.png" expiration="1m"/>
+		<include path="/**.ico" expiration="1m"/>
+		<include path="/**.css" expiration="1m"/>
+		<include path="/**.xml" expiration="1m"/>
+		<include path="/**.otf" expiration="1m"/>
+		<include path="/**.svg" expiration="1m"/>
+	</static-files>
+	 -->
 
 </appengine-web-app>

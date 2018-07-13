@@ -45,6 +45,7 @@ import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.DatastoreException;
+import com.wokesolutions.ignes.data.AdminRegisterData;
 import com.wokesolutions.ignes.data.UserRegisterData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
@@ -67,7 +68,7 @@ public class Admin {
 	@POST
 	@Path("/register")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)
-	public Response registerAdmin(UserRegisterData registerData) {
+	public Response registerAdmin(AdminRegisterData registerData) {
 		if(!registerData.isValid())
 			return Response.status(Status.BAD_REQUEST).entity(Log.REGISTER_DATA_INVALID).build();
 
@@ -86,7 +87,7 @@ public class Admin {
 		}
 	}
 
-	private Response registerAdminRetry(UserRegisterData data) {
+	private Response registerAdminRetry(AdminRegisterData data) {
 		LOG.info(Log.ATTEMPT_REGISTER_ADMIN + data);
 
 		Transaction txn = datastore.beginTransaction();
@@ -118,9 +119,11 @@ public class Admin {
 			Date date = new Date();
 			Entity user = new Entity(DSUtils.USER, data.username);
 			Key userKey = user.getKey();
-			Entity admin = new Entity(DSUtils.ADMIN, userKey);
+			Entity admin = new Entity(DSUtils.ADMIN, data.username, userKey);
 
 			admin.setUnindexedProperty(DSUtils.ADMIN_CREATIONTIME, date);
+			admin.setProperty(DSUtils.ADMIN_LOCALITY, data.locality);
+			
 			user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(data.password));
 			user.setProperty(DSUtils.USER_EMAIL, data.email);
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.ADMIN);
@@ -190,7 +193,7 @@ public class Admin {
 
 			Date date = new Date();
 
-			Entity admin = new Entity(DSUtils.ADMIN, userKey);
+			Entity admin = new Entity(DSUtils.ADMIN, username, userKey);
 			admin.setUnindexedProperty(DSUtils.ADMIN_CREATIONTIME, date);
 			admin.setUnindexedProperty(DSUtils.ADMIN_OLDLEVEL, user.getProperty(DSUtils.USER_LEVEL));
 
@@ -247,19 +250,14 @@ public class Admin {
 		TransactionOptions options = TransactionOptions.Builder.withXG(true);
 		Transaction txn = datastore.beginTransaction(options);
 		try {
-			Key userKey = KeyFactory.createKey(DSUtils.USER, username);
-			Entity user = datastore.get(userKey);
-			Query adminQuery = new Query(DSUtils.ADMIN).setAncestor(userKey);
-			Entity admin = null;
+			Key userK = KeyFactory.createKey(DSUtils.USER, username);
+			Key adminK = KeyFactory.createKey(userK, DSUtils.USER, username);
+			Entity admin;
+			Entity user;
 			try {
-				admin = datastore.prepare(adminQuery).asSingleEntity();
-			} catch(TooManyResultsException e) {
-				txn.rollback();
-				LOG.info(Log.USER_NOT_ADMIN);
-				return Response.status(Status.EXPECTATION_FAILED).build();
-			}
-
-			if(admin == null) {
+				user = datastore.get(userK);
+				admin = datastore.get(adminK);
+			} catch(EntityNotFoundException e) {
 				txn.rollback();
 				LOG.info(Log.USER_NOT_ADMIN);
 				return Response.status(Status.EXPECTATION_FAILED).build();
@@ -285,10 +283,6 @@ public class Admin {
 			LOG.info(Log.ADMIN_DEMOTED + username);
 			txn.commit();
 			return Response.ok().build();
-		} catch (EntityNotFoundException e) {
-			txn.rollback();
-			LOG.info(Log.UNEXPECTED_ERROR);
-			return Response.status(Status.EXPECTATION_FAILED).build();
 		} finally {
 			if(txn.isActive()) {
 				txn.rollback();
@@ -447,12 +441,15 @@ public class Admin {
 	@GET
 	@Path("/standbyreports")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
-	public Response getAllStandbys(@QueryParam(ParamName.CURSOR) String cursor) {
+	public Response getAllStandbys(@QueryParam(ParamName.CURSOR) String cursor,
+			@Context HttpServletRequest request) {
 		int retries = 5;
-
+		
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString()
+;
 		while(true) {
 			try {
-				return getAllStandbysRetry(cursor);
+				return getAllStandbysRetry(cursor, username);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Log.TOO_MANY_RETRIES);
@@ -463,16 +460,32 @@ public class Admin {
 		}
 	}
 
-	private Response getAllStandbysRetry(String cursor) {
+	private Response getAllStandbysRetry(String cursor, String username) {
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 
 		if(cursor != null && !cursor.equals(""))
 			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
+		
+		Key userK = KeyFactory.createKey(DSUtils.USER, username);
+		Key adminK = KeyFactory.createKey(userK, DSUtils.ADMIN, username);
+		
+		Entity admin;
+		try {
+			admin = datastore.get(adminK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Log.UNEXPECTED_ERROR);
+			return Response.status(Status.EXPECTATION_FAILED).build();
+		}
 
 		Filter adminFilter = new Query.FilterPredicate(DSUtils.REPORT_STATUS,
 				FilterOperator.EQUAL, Report.STANDBY);
+		Filter localityFilter = new Query.FilterPredicate(DSUtils.REPORT_STATUS,
+				FilterOperator.EQUAL, admin.getProperty(DSUtils.ADMIN_LOCALITY));
+		
+		CompositeFilter filter = new Query.CompositeFilter(CompositeFilterOperator.AND,
+				Arrays.asList(adminFilter, localityFilter));
 
-		Query query = new Query(DSUtils.REPORT).setFilter(adminFilter);
+		Query query = new Query(DSUtils.REPORT).setFilter(filter);
 
 		query.addProjection(new PropertyProjection(DSUtils.REPORT_TITLE, String.class))
 		.addProjection(new PropertyProjection(DSUtils.REPORT_ADDRESS, String.class))
@@ -536,6 +549,19 @@ public class Admin {
 					LOG.info(Log.REPORT_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
+				
+				Entity admin;
+				try {
+					admin = datastore.get(adminK);
+				} catch(EntityNotFoundException e) {
+					LOG.info(Log.REPORT_NOT_FOUND);
+					return Response.status(Status.NOT_FOUND).build();
+				}
+				
+				if(!report.getProperty(DSUtils.REPORT_LOCALITY).equals(admin.getProperty(DSUtils.ADMIN_LOCALITY))) {
+					LOG.info(Log.UNEXPECTED_ERROR);
+					return Response.status(Status.FORBIDDEN).build();
+				}
 
 				if(!report.getProperty(DSUtils.REPORT_STATUS).equals(Report.STANDBY)) {
 					LOG.info(Log.REPORT_STANDBY);
@@ -567,7 +593,6 @@ public class Admin {
 			}
 		}
 	}
-
 	@POST
 	@Path("/confirmorg/{nif}")
 	@Consumes(CustomHeader.JSON_CHARSET_UTF8)

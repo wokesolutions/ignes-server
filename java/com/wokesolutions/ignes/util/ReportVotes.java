@@ -223,7 +223,8 @@ public class ReportVotes {
 
 			points.setProperty(DSUtils.USERPOINTS_POINTS, pointsval - POINTS_UP);
 
-			reportvotes.setProperty(DSUtils.REPORTVOTES_UP, ups - 1);
+			if(ups > 0)
+				reportvotes.setProperty(DSUtils.REPORTVOTES_UP, ups - 1);
 			reportvotes.setProperty(DSUtils.REPORTVOTES_RELEVANCE,
 					relevance - POINTS_UP);
 		} else if(vote.equals(DOWN)) {
@@ -231,7 +232,8 @@ public class ReportVotes {
 
 			points.setProperty(DSUtils.USERPOINTS_POINTS, pointsval - POINTS_DOWN);
 
-			reportvotes.setProperty(DSUtils.REPORTVOTES_UP, downs - 1);
+			if(downs > 0)
+				reportvotes.setProperty(DSUtils.REPORTVOTES_UP, downs - 1);
 			reportvotes.setProperty(DSUtils.REPORTVOTES_RELEVANCE,
 					relevance - POINTS_DOWN);
 		} else
@@ -262,7 +264,8 @@ public class ReportVotes {
 			datastore.put(txn, points);
 
 			reportvotes.setProperty(DSUtils.REPORTVOTES_UP, ups + 1);
-			reportvotes.setProperty(DSUtils.REPORTVOTES_DOWN, downs - 1);
+			if(downs > 0)
+				reportvotes.setProperty(DSUtils.REPORTVOTES_DOWN, downs - 1);
 			reportvotes.setProperty(DSUtils.REPORTVOTES_RELEVANCE,
 					relevance + POINTS_UP - POINTS_DOWN);
 		} else if(vote.equals(DOWN) && oldvoteS.equals(UP)) {
@@ -273,7 +276,8 @@ public class ReportVotes {
 				datastore.put(txn, points);
 			}
 
-			reportvotes.setProperty(DSUtils.REPORTVOTES_UP, ups - 1);
+			if(ups > 0)
+				reportvotes.setProperty(DSUtils.REPORTVOTES_UP, ups - 1);
 			reportvotes.setProperty(DSUtils.REPORTVOTES_DOWN, downs + 1);
 			reportvotes.setProperty(DSUtils.REPORTVOTES_RELEVANCE,
 					relevance - POINTS_UP + POINTS_DOWN);

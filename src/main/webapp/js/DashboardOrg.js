@@ -24,7 +24,7 @@ var show_view = false;
 
 getCurrentLocation();
 
-var URL_BASE = 'https://main-dot-mimetic-encoder-209111.appspot.com';
+var URL_BASE = 'https://mimetic-encoder-209111.appspot.com';
 
 google.maps.event.addDomListener(window, 'load', init());
 
@@ -130,28 +130,34 @@ function searchLocation(){
 function getCurrentLocation() {
     var geo = false;
     if(navigator.geolocation) {
+        console.log("ola");
+
         navigator.geolocation.getCurrentPosition(function (position) {
             geo = true;
+            console.log("adeus");
             currentLoc = {
                 center: {lat: position.coords.latitude, lng: position.coords.longitude},
                 zoom: 15
             };
-       
-		var mapElement = document.getElementById('map');
-        	map = new google.maps.Map(mapElement, {center: {lat: position.coords.latitude, lng: position.coords.longitude},
+
+            var mapElement = document.getElementById('map');
+            map = new google.maps.Map(mapElement, {center: {lat: position.coords.latitude, lng: position.coords.longitude},
                 zoom: 15});
 
-        	getMarkers();
+            getMarkers();
         })
-        
+
     }
     if(!geo){
+
+
+        console.log("coio");
         var mapElement = document.getElementById('map');
         map = new google.maps.Map(mapElement, currentLoc);
-     }
+    }
 
-        getMarkers();
-    
+    getMarkers();
+
 }
 
 function hideShow(element){
@@ -674,6 +680,10 @@ function createWorker(){
                 alert("Trabalhador registado com sucesso.")
                 getFirstWorkers();
                 showWorkers();
+                document.getElementById("worker_username").innerHTML = "";
+                document.getElementById("worker_email").innerHTML = "";
+                document.getElementById("worker_jobs").innerHTML = "";
+
             }else{
                 alert("Utilizador já existe ou falta informação em algum campo")
             }

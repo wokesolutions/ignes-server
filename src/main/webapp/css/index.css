@@ -377,6 +377,7 @@ footer a{
     margin-right: 2rem;
     font-family: "Quicksand Bold";
     color: white;
+    font-size:12px;
 
 }
 
@@ -535,16 +536,15 @@ label {
     overflow:auto;
     margin-top:20px;
 }
-#table-wrapper table {
+#table-wrapper-two table {
     width:100%;
 
 }
-
 #table-wrapper-two {
     position:relative;
 }
-#table-scroll-tow {
-    height:150px;
+#table-scroll-two {
+    height:480px;
     overflow:auto;
     margin-top:20px;
 }
