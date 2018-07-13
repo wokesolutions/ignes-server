@@ -45,11 +45,10 @@ import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.DatastoreException;
-import com.google.cloud.datastore.StructuredQuery.OrderBy;
 import com.wokesolutions.ignes.data.AdminRegisterData;
-import com.wokesolutions.ignes.data.UserRegisterData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
+import com.wokesolutions.ignes.util.DistrictCode;
 import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.Storage.StoragePath;
@@ -998,5 +997,272 @@ public class Admin {
 				retries--;
 			}
 		}
+	}
+	
+	@GET
+	@Path("/stats/reports/map")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response reportMap() {
+		int retries = 5;
+		
+		while(true) {
+			try {
+				JSONArray array = new JSONArray();
+				
+				fillCounts(array);
+				
+				return Response.ok(array.toString()).build();
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Log.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+				retries--;
+			}
+		}
+	}
+	
+	private void fillCounts(JSONArray counts) {
+		FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
+		
+		// --------------------------- ACORES
+		
+		Filter districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.ACORES);
+		Query districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		int count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		JSONArray position = new JSONArray();
+		position.put(DistrictCode.ACORES_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- AVEIRO
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.AVEIRO);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.AVEIRO_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- BEJA
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.BEJA);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.BEJA_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- BRAGA
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.BRAGA);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.BRAGA_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- BRAGANÇA
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.BRAGANÇA);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.BRAGANÇA_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- CASTELO_BRANCO
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.CASTELO_BRANCO);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.CASTELO_BRANCO_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- COIMBRA
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.COIMBRA);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.COIMBRA_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- EVORA
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.EVORA);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.EVORA_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- FARO
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.FARO);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.FARO_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- GUARDA
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.GUARDA);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.GUARDA_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- LEIRIA
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.LEIRIA);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.LEIRIA_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- LISBOA
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.LISBOA);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.LISBOA_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- MADEIRA
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.MADEIRA);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.MADEIRA_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- PORTALEGRE
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.PORTALEGRE);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.PORTALEGRE_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- PORTO
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.PORTO);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.PORTO_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- SANTAREM
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.SANTAREM);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.SANTAREM_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- SETUBAL
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.SETUBAL);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.SETUBAL_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- VIANA_DO_CASTELO
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.VIANA_DO_CASTELO);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.VIANA_DO_CASTELO_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- VILA_REAL
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.VILA_REAL);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.VILA_REAL_CODE);
+		position.put(count);
+		counts.put(position);
+		
+		// --------------------------- VISEU
+		
+		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
+				FilterOperator.EQUAL, DistrictCode.VISEU);
+		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
+		count = datastore.prepare(districtQ).countEntities(fetchOptions);
+		
+		position = new JSONArray();
+		position.put(DistrictCode.VISEU_CODE);
+		position.put(count);
+		counts.put(position);
 	}
 }

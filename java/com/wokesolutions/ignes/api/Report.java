@@ -95,7 +95,7 @@ public class Report {
 	public static final String LAT = "lat";
 	public static final String LNG = "lng";
 
-	private static final String OCORRENCIA_RAPIDA = "Ocorrência rápida - ";
+	private static final String OCORRENCIA_RAPIDA = "Ocorrência Rápida";
 
 	private static final long TO_CLOSE = TimeUnit.DAYS.toMillis(3);
 
@@ -231,7 +231,7 @@ public class Report {
 				if(data.title != null && !data.title.equals(""))
 					report.setProperty(DSUtils.REPORT_TITLE, proffilter.filter(data.title));
 				else
-					report.setProperty(DSUtils.REPORT_TITLE, OCORRENCIA_RAPIDA + data.locality);
+					report.setProperty(DSUtils.REPORT_TITLE, OCORRENCIA_RAPIDA);
 
 				if(data.description != null)
 					report.setProperty(DSUtils.REPORT_DESCRIPTION, proffilter.filter(data.description));

@@ -115,7 +115,7 @@ public class Profile {
 
 			Key userK = KeyFactory.createKey(DSUtils.USER, username);
 			Key optionalK = KeyFactory.createKey(userK, DSUtils.USEROPTIONAL, username);
-			
+
 			Entity useroptional;
 			try {
 				useroptional = datastore.get(optionalK);
@@ -705,7 +705,7 @@ public class Profile {
 		Key optionalK = KeyFactory.createKey(userK, DSUtils.USEROPTIONAL, username);
 
 		Entity optional;
-		
+
 		try {
 			optional = datastore.get(optionalK);
 		} catch(EntityNotFoundException e) {
@@ -720,7 +720,7 @@ public class Profile {
 		optional.setProperty(DSUtils.USEROPTIONAL_PICPATH, pathImg.makePath());
 
 		datastore.put(optional);
-		
+
 		return Response.ok().build();
 	}
 
@@ -750,7 +750,7 @@ public class Profile {
 
 		Key userK = KeyFactory.createKey(DSUtils.USER, username);
 		Key optionalK = KeyFactory.createKey(userK, DSUtils.USEROPTIONAL, username);
-		
+
 		try {
 			optional = datastore.get(optionalK);
 		} catch(EntityNotFoundException e) {
@@ -828,13 +828,13 @@ public class Profile {
 			}
 		}
 	}
-	
+
 	@POST
 	@Path("/forgotpassword/{email}")
 	public Response forgotPassword(@PathParam(ParamName.EMAIL) String email) {
 		if(email == null || email.equals(""))
 			return Response.status(Status.BAD_REQUEST).build();
-		
+
 		int retries = 5;
 		while(true) {
 			try {
@@ -842,26 +842,26 @@ public class Profile {
 						FilterOperator.EQUAL, email);
 				Query userQ = new Query(DSUtils.USER).setFilter(emailF);
 				Entity user;
-				
+
 				try {
 					user = datastore.prepare(userQ).asSingleEntity();
 				} catch(TooManyResultsException e) {
 					LOG.info(Log.UNEXPECTED_ERROR);
 					return Response.status(Status.EXPECTATION_FAILED).build();
 				}
-				
+
 				if(user == null) {
 					LOG.info(Log.USER_NOT_FOUND);
 					return Response.status(Status.EXPECTATION_FAILED).build();
 				}
-				
+
 				String password = Long.toString(System.currentTimeMillis());
 				password = password.substring(password.length() - 6);
-				
+
 				Email.sendForgotPwMessage(email, password);
-				
+
 				user.setProperty(DSUtils.USER_FORGOTPASSWORD, DigestUtils.sha512Hex(password));
-				
+
 				datastore.put(user);
 
 				return Response.ok().build();
@@ -875,7 +875,7 @@ public class Profile {
 			}
 		}
 	}
-	
+
 	@GET
 	@Path("/deleteddef")
 	public Response deleteDef() {
@@ -883,9 +883,9 @@ public class Profile {
 				FilterOperator.EQUAL, NOT_ACTIVATED);
 		Query userQ = new Query(DSUtils.USER).setFilter(userF)
 				.addProjection(new PropertyProjection(DSUtils.USER_CREATIONTIME, Date.class));
-		
+
 		List<Entity> users = datastore.prepare(userQ).asList(FetchOptions.Builder.withDefaults());
-		
+
 		for(Entity user : users) {
 			long closetime = ((Date) user.getProperty(DSUtils.USER_CREATIONTIME)).getTime();
 			long currtime = System.currentTimeMillis();
@@ -894,16 +894,16 @@ public class Profile {
 
 			return Response.ok().build();
 		}
-		
+
 		return Response.ok().build();
 	}
-	
+
 	@GET
 	@Path("/usertop")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response userTop(@Context HttpServletRequest request) {
 		int retries = 5;
-		
+
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
 
 		while(true) {
@@ -911,19 +911,21 @@ public class Profile {
 				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 				Query userQ = new Query(DSUtils.USERPOINTS)
 						.addSort(DSUtils.USERPOINTS_POINTS, Query.SortDirection.DESCENDING);
-				
+
 				List<Entity> userPointsList = datastore.prepare(userQ).asList(fetchOptions);
-				
+
 				JSONArray array = new JSONArray();
-				
+
 				int place = 1;
 				
+				boolean intop = false;
+
 				for(Entity userPoints : userPointsList) {
 					JSONObject obj = new JSONObject();
-					
+
 					Key userK = KeyFactory
 							.createKey(DSUtils.USER, userPoints.getKey().getName());
-					
+
 					Entity user;
 					try {
 						user = datastore.get(userK);
@@ -931,16 +933,45 @@ public class Profile {
 						LOG.info(Log.USER_NOT_FOUND);
 						return Response.status(Status.NOT_FOUND).build();
 					}
-					
+
 					obj.put(Prop.PLACE, place++);
 					obj.put(Prop.USERNAME, user.getKey().getName());
 					obj.put(Prop.POINTS, userPoints.getProperty(DSUtils.USERPOINTS_POINTS));
-					
+
 					array.put(obj);
+					
+					if(user.getKey().getName().equals(username))
+						intop = true;
 				}
+
+				if(intop)
+					return Response.ok(array.toString()).build();
 				
 				Key userK = KeyFactory.createKey(DSUtils.USER, username);
-				
+
+				Entity user;
+				try {
+					user = datastore.get(userK);
+				} catch(EntityNotFoundException e) {
+					LOG.info(Log.USER_NOT_FOUND);
+					return Response.status(Status.NOT_FOUND).build();
+				}
+
+				if(!user.getProperty(DSUtils.USER_LEVEL).equals(UserLevel.ADMIN)) {
+					Key userPointsK = KeyFactory.createKey(userK, DSUtils.USERPOINTS, username);
+					Entity userPoints;
+					try {
+						userPoints = datastore.get(userPointsK);
+					} catch(EntityNotFoundException e) {
+						LOG.info(Log.USER_NOT_FOUND);
+						return Response.status(Status.NOT_FOUND).build();
+					}
+
+					JSONObject userPlace = new JSONObject();
+					userPlace.put(Prop.PLACE, 0);
+					userPlace.put(Prop.USERNAME, username);
+					userPlace.put(Prop.POINTS, userPoints.getProperty(DSUtils.USERPOINTS_POINTS));
+				}
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Log.TOO_MANY_RETRIES);
