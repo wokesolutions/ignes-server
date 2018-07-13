@@ -16,13 +16,13 @@
         <a class = "navbar-brand js-scroll-trigger"  id ="expBrand" href="#page-top"><img src="../images/admin.png" height="70" width="auto"/></a>
         <div class="collapse navbar-collapse" id="navbarResponsive">
             <ul class="navbar-nav ml-auto">
-                <li id ="add_admin_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a style="margin-right:4px" class="fa fa-user-plus"> </a>Adicionar Administrador</a></li>
-                <li id ="public_reports_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a style="margin-right:4px" class="fa fa-users"> </a>Reportes Públicos</a></li>
-                <li id ="pending_verify_reports_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a style="margin-right:4px" class="fa fa-users"> </a>Reportes Standby Pendentes</a></li>
-                <li id ="statistics_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a style="margin-right:4px" class="fa fa-users"> </a>Estatísticas</a></li>
-                <li id ="list_users_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a style="margin-right:4px" class="fa fa-users"> </a>Utilizadores</a></li>
-                <li id ="list_pending_button"class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l" ><a style="margin-right:4px" class="fa fa-users"> </a>Organizações Pendentes</a></li>
-                <li id = "logout_button" class="nav-item pointer-finger l"><a class="nav-link js-scroll-trigger l"><a style="margin-right:4px" class="fa fa-power-off"> </a>Terminar Sessão</a></li>
+                <li id ="add_admin_button" class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll" ><a style="margin-right:4px" class="fa fa-user-plus"> </a>Adicionar Administrador</a></li>
+                <li id ="public_reports_button"class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll" ><a style="margin-right:4px" class="fa fa-map-marker"> </a>Ocorrências</a></li>
+                <li id ="pending_verify_reports_button"class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll" ><a style="margin-right:4px" class="fa fa-hourglass-3"> </a>Ocorrências Standby</a></li>
+                <li id ="statistics_button"class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll" ><a style="margin-right:4px" class="fa fa-bar-chart"> </a>Estatísticas</a></li>
+                <li id ="list_users_button"class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll" ><a style="margin-right:4px" class="fa fa-users"> </a>Utilizadores</a></li>
+                <li id ="list_pending_button"class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll" ><a style="margin-right:4px" class="fa fa-building-o"> </a>Organizações</a></li>
+                <li id = "logout_button" class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll"><a style="margin-right:4px" class="fa fa-power-off"> </a>Terminar Sessão</a></li>
             </ul>
         </div>
     </div>
@@ -227,47 +227,52 @@
             <p style="font-family: 'Quicksand'; margin-left:1rem; font-size:12px"> Nesta aréa pode registar um administrador que fica associado a uma localidade. </p>
         </div>
     </div>
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <a id ="iconMarker" style="margin-top:1rem" class="fa fa-user-plus"></a>
+        </div>
+    </div>
     <div class="container" style="margin-top: 2rem">
         <div class="row">
             <div class="col-lg-8 col-md-8 mx-auto">
-                <div class="row">
-                    <div class="col-lg-6">
-                        <p class="info_text_bold_sm">Nome de Utilizador</p>
+                <div class="row" style="margin-top:0.8rem">
+                    <div class="col-lg-2">
+                        <p class="info_text_bold_sm_black">Nome de Utilizador</p>
                     </div>
-                    <div class="col-lg-6">
+                    <div class="col-lg-10">
                         <input type="text" class="form-control border" id="admin_username" placeholder="Nome de Utilizador" />
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-lg-6">
-                        <p class="info_text_bold_sm">Email</p>
+                <div class="row" style="margin-top:2rem">
+                    <div class="col-lg-2" style="margin-top:0.5rem">
+                        <p class="info_text_bold_sm_black">Email</p>
                     </div>
-                    <div class="col-lg-6">
+                    <div class="col-lg-10">
                         <input type="email" class="form-control border" id="admin_email" placeholder="Email" />
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-lg-6">
-                        <p class="info_text_bold_sm">Password</p>
+                <div class="row" style="margin-top:2rem">
+                    <div class="col-lg-2" style="margin-top:0.5rem">
+                        <p class="info_text_bold_sm_black">Password</p>
                     </div>
-                    <div class="col-lg-6">
-                        <input type="text" class="form-control border" id="admin_password" placeholder="Password" />
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-6">
-                        <p class="info_text_bold_sm">Confirmar Password</p>
-                    </div>
-                    <div class="col-lg-6">
-                        <input type="text" class="form-control border" id="admin_confirmation" placeholder="Confirmar Password"/>
+                    <div class="col-lg-10">
+                        <input type="password" class="form-control border" id="admin_password" placeholder="Password" />
                     </div>
                 </div>
-                <div class="row">
+                <div class="row" style="margin-top:2rem">
+                    <div class="col-lg-2">
+                        <p class="info_text_bold_sm_black">Confirmar Password</p>
+                    </div>
+                    <div class="col-lg-10">
+                        <input type="password" class="form-control border" id="admin_confirmation" placeholder="Confirmar Password"/>
+                    </div>
+                </div>
+                <div class="row" style="margin-top:2rem">
 
-                    <div class="col-lg-6">
-                        <p class="info_text_bold_sm">Localidade</p>
+                    <div class="col-lg-2" style="margin-top:0.5rem">
+                        <p class="info_text_bold_sm_black">Localidade</p>
                     </div>
-                    <div class="col-lg-6">
+                    <div class="col-lg-10">
                         <input type="text" class="form-control border" id="admin_locality" placeholder="Localidade" />
                     </div>
 

@@ -257,7 +257,7 @@ footer a{
 }
 
 #iconMarker {
-    font-size: 2rem;
+    font-size: 6rem;
     color:#AD363B;
     margin-top: 2rem;
 }
@@ -377,7 +377,14 @@ footer a{
     margin-right: 2rem;
     font-family: "Quicksand Bold";
     color: white;
-    font-size:12px;
+
+}
+
+.ll{
+    margin-right: 2rem;
+    font-family: "Quicksand Bold";
+    color: white;
+    font-size:14px;
 
 }
 
@@ -645,6 +652,13 @@ label {
     color: #AD363B;
     font-size: 15px;
 }
+
+.info_text_bold_sm_black{
+    font-family: "Quicksand Bold";
+    color: #1a1a1a;
+    font-size: 15px;
+}
+
 
 .info_text_response{
     font-family: "Quicksand";
