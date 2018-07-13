@@ -212,20 +212,6 @@ public class Report {
 				report.setUnindexedProperty(DSUtils.REPORT_CREATIONLATLNG,
 						request.getHeader(CustomHeader.APPENGINE_LATLNG));
 
-				Query userpointsQ = new Query(DSUtils.USERPOINTS)
-						.setAncestor(userKey);
-
-				int points;
-				try {
-					Entity pointsE = datastore.prepare(userpointsQ).asSingleEntity();
-
-					points = Integer.parseInt(pointsE.getProperty(DSUtils.USERPOINTS_POINTS).toString());
-				} catch(TooManyResultsException e3) {
-					LOG.info(Log.UNEXPECTED_ERROR);
-					txn.rollback();
-					return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-				}
-
 				if(data.gravity >= 1 && data.gravity <= 5) {
 					report.setProperty(DSUtils.REPORT_GRAVITY, data.gravity);
 
@@ -233,7 +219,7 @@ public class Report {
 						report.setProperty(DSUtils.REPORT_STATUS, STANDBY);
 				} else {
 					int gravity = DEFAULT_GRAVITY;
-					if(points < LevelManager.LEVEL2_POINTS)
+					if(user.getProperty(DSUtils.USER_LEVEL).equals(UserLevel.LEVEL1))
 						gravity = NO_TRUST_GRAVITY;
 
 					report.setProperty(DSUtils.REPORT_GRAVITY, gravity);
@@ -242,7 +228,7 @@ public class Report {
 				if(data.address != null)
 					report.setProperty(DSUtils.REPORT_ADDRESS, data.address);
 
-				if(data.title != null)
+				if(data.title != null && !data.title.equals(""))
 					report.setProperty(DSUtils.REPORT_TITLE, proffilter.filter(data.title));
 				else
 					report.setProperty(DSUtils.REPORT_TITLE, OCORRENCIA_RAPIDA + data.locality);

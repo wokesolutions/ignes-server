@@ -897,4 +897,57 @@ public class Profile {
 		
 		return Response.ok().build();
 	}
+	
+	@GET
+	@Path("/usertop")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response userTop(@Context HttpServletRequest request) {
+		int retries = 5;
+		
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+
+		while(true) {
+			try {
+				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
+				Query userQ = new Query(DSUtils.USERPOINTS)
+						.addSort(DSUtils.USERPOINTS_POINTS, Query.SortDirection.DESCENDING);
+				
+				List<Entity> userPointsList = datastore.prepare(userQ).asList(fetchOptions);
+				
+				JSONArray array = new JSONArray();
+				
+				int place = 1;
+				
+				for(Entity userPoints : userPointsList) {
+					JSONObject obj = new JSONObject();
+					
+					Key userK = KeyFactory
+							.createKey(DSUtils.USER, userPoints.getKey().getName());
+					
+					Entity user;
+					try {
+						user = datastore.get(userK);
+					} catch(EntityNotFoundException e) {
+						LOG.info(Log.USER_NOT_FOUND);
+						return Response.status(Status.NOT_FOUND).build();
+					}
+					
+					obj.put(Prop.PLACE, place++);
+					obj.put(Prop.USERNAME, user.getKey().getName());
+					obj.put(Prop.POINTS, userPoints.getProperty(DSUtils.USERPOINTS_POINTS));
+					
+					array.put(obj);
+				}
+				
+				Key userK = KeyFactory.createKey(DSUtils.USER, username);
+				
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Log.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+				retries--;
+			}
+		}
+	}
 }

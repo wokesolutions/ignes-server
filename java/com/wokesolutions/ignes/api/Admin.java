@@ -45,6 +45,7 @@ import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUtils;
 import com.google.cloud.datastore.DatastoreException;
+import com.google.cloud.datastore.StructuredQuery.OrderBy;
 import com.wokesolutions.ignes.data.AdminRegisterData;
 import com.wokesolutions.ignes.data.UserRegisterData;
 import com.wokesolutions.ignes.util.CustomHeader;
@@ -479,7 +480,7 @@ public class Admin {
 
 		Filter adminFilter = new Query.FilterPredicate(DSUtils.REPORT_STATUS,
 				FilterOperator.EQUAL, Report.STANDBY);
-		Filter localityFilter = new Query.FilterPredicate(DSUtils.REPORT_STATUS,
+		Filter localityFilter = new Query.FilterPredicate(DSUtils.REPORT_LOCALITY,
 				FilterOperator.EQUAL, admin.getProperty(DSUtils.ADMIN_LOCALITY));
 		
 		CompositeFilter filter = new Query.CompositeFilter(CompositeFilterOperator.AND,
@@ -815,7 +816,6 @@ public class Admin {
 				Filter reportF = new Query.FilterPredicate(DSUtils.REPORT_PRIVATE,
 						FilterOperator.EQUAL, false);
 				Query reportQ = new Query(DSUtils.REPORT).setFilter(reportF);
-
 
 				reportQ.addProjection(new PropertyProjection(DSUtils.REPORT_TITLE, String.class))
 				.addProjection(new PropertyProjection(DSUtils.REPORT_ADDRESS, String.class))
