@@ -740,6 +740,27 @@ function getPendingFirst(){
                     if(data != null){
                         var i;
                         for(i = 0; i < data.length; i++){
+                            var service = JSON.parse(data[i].services);
+                            var show_service ="";
+
+                            for(var i = 0; i< service.length; i++) {
+                                if (i !== service.length - 1) {
+                                    var service_temp= translate(service[i]);
+                                    show_service += service_temp + "/";
+                                }
+                                else {
+                                    var service_temp= translate(service[i]);
+                                    show_service += service_temp;
+                                }
+                            }
+
+                            var type= "";
+
+                            if(data[i].isprivate === true)
+                                type= "Privada";
+                            else
+                                type= "Pública";
+
                             var row = table.insertRow(-1);
                             var cell1 = row.insertCell(0);
                             var cell2 = row.insertCell(1);
@@ -757,30 +778,8 @@ function getPendingFirst(){
                             cell4.innerHTML = data[i].address;
                             cell5.innerHTML = data[i].locality;
                             cell6.innerHTML = data[i].phone;
-                            /*  var service = JSON.parse(data[i].services);
-                             var show_service ="";
-
-                            for(var i = 0; i< service.length; i++) {
-                                 if (i !== service.length - 1) {
-                                     var service_temp= translate(service[i]);
-
-                                     show_service += service_temp + "/";
-                                 }
-                                 else {
-                                     var service_temp= translate(service[i]);
-                                     show_service += service_temp;
-                                 }
-                             }
-                             cell7.innerHTML = show_service;*/
-                            cell7.innerHTML = data[i].services;
+                            cell7.innerHTML = show_service;
                             cell8.innerHTML = data[i].creationtime;
-                            var type= "";
-
-                            if(data[i].isprivate === true)
-                                type= "Privada";
-                            else
-                                type= "Pública";
-
                             cell9.innerHTML = type;
                             cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
