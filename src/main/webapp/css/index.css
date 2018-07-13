@@ -538,7 +538,7 @@ label {
     position:relative;
 }
 #table-scroll {
-    height:150px;
+    height:480px;
     overflow:auto;
     margin-top:20px;
 }

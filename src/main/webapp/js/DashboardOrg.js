@@ -150,8 +150,6 @@ function getCurrentLocation() {
     }
     if(!geo){
 
-
-        console.log("coio");
         var mapElement = document.getElementById('map');
         map = new google.maps.Map(mapElement, currentLoc);
     }

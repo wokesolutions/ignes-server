@@ -31,6 +31,7 @@ function init() {
     getPendingFirst();
     getPendingReportsFirst();
     getPublicFirst();
+    getTopUsers();
 
     document.getElementById("logout_button").onclick = logOut;
     document.getElementById("public_reports_button").onclick = showPublicReports;
@@ -97,6 +98,8 @@ function hideShow(element){
 
         document.getElementById("piechart").style.display = "none";
 
+        document.getElementById("top_table").style.display = "none";
+
     } else if(current_position === "reports_pending_variable"){
 
         document.getElementById("list_pending_reports").style.display = "none";
@@ -126,6 +129,9 @@ function hideShow(element){
 
         document.getElementById("piechart").style.display = "block";
         current_position = "statistics_variable";
+
+        document.getElementById("top_table").style.display = "block";
+
 
     } else if(element === "reports_pending_variable"){
 
@@ -1504,4 +1510,40 @@ function translate(category){
 
     }
     return cat;
+}
+
+function getTopUsers(){
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+    fetch(restRequest('api/profile/usertop','GET', headers, body)).then(function (response){
+        if (response.status === 200) {
+            response.json().then(function(data) {
+                var table = document.getElementById("top_table");
+                if(data != null){
+                    var i;
+                    for(i = 0; i < data.length; i++){
+                        var row = table.insertRow(-1);
+                        var cell1 = row.insertCell(0);
+                        var cell2 = row.insertCell(1);
+                        var cell3 = row.insertCell(2);
+                        cell1.innerHTML = data[i].place;
+                        cell2.innerHTML = data[i].username;
+                        cell3.innerHTML = data[i].points;
+                    }
+                }
+            });
+
+            alert("Organização atribuida com sucesso.")
+        } else {
+            alert("Falha ao pedir top utilizadores.")
+        }
+    })
+        .catch(function (err) {
+            console.log('Fetch Error', err);
+        });
 }
