@@ -751,12 +751,14 @@ public class Profile {
 			return Response.status(Status.NOT_FOUND).build();
 		}
 
-		path = optional.getProperty(DSUtils.USEROPTIONAL_PICPATH).toString();
-
-		if(path == null) {
+		Object pathO = optional.getProperty(DSUtils.USEROPTIONAL_PICPATH);
+		
+		if(pathO == null) {
 			LOG.info(Log.USER_HAS_NO_IMAGE);
 			return Response.status(Status.NO_CONTENT).build();
 		}
+		
+		path = pathO.toString();
 		
 		if(cache.contains(path)) {
 			JSONObject obj = new JSONObject();

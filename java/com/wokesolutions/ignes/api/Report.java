@@ -492,7 +492,7 @@ public class Report {
 
 		JSONArray jsonReports;
 
-		if(reports.isEmpty())
+		if(reports.isEmpty() && (cursor == null || cursor.equals("")))
 			return Response.status(Status.NO_CONTENT).build();
 		else {
 			try {
@@ -584,7 +584,7 @@ public class Report {
 
 		JSONArray jsonReports;
 
-		if(reports.isEmpty())
+		if(reports.isEmpty() && (cursor == null || cursor.equals("")))
 			return Response.status(Status.NO_CONTENT).build();
 		else {
 			try {

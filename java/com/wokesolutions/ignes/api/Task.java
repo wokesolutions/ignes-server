@@ -118,15 +118,18 @@ public class Task {
 	@Path("/notes/{task}")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response getNotes(@PathParam(ParamName.TASK) String taskid,
-			@QueryParam(ParamName.CURSOR) String cursor) {
+			@QueryParam(ParamName.CURSOR) String cursor,
+			@Context HttpServletRequest request) {
 		
 		if(taskid == null || taskid.equals(""))
 			return Response.status(Status.BAD_REQUEST).build();
 		
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		
 		int retries = 5;
 		while(true) {
 			try {
-				return getNotesRetry(taskid, cursor);
+				return getNotesRetry(taskid, cursor, username);
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Log.TOO_MANY_RETRIES);
@@ -137,7 +140,7 @@ public class Task {
 		}
 	}
 	
-	private Response getNotesRetry(String taskid, String cursor) {
+	private Response getNotesRetry(String taskid, String cursor, String username) {
 		FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
 		
 		if(cursor != null && !cursor.equals(""))
@@ -145,6 +148,17 @@ public class Task {
 		
 		Key reportK = KeyFactory.createKey(DSUtils.REPORT, taskid);
 		Key orgtaskK = KeyFactory.createKey(reportK, DSUtils.ORGTASK, taskid);
+		
+		Entity orgTask;
+		try {
+			orgTask = datastore.get(orgtaskK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Log.FORBIDDEN);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+		
+		Key orgK;
+		
 		
 		Query query2 = new Query(DSUtils.NOTE).setAncestor(orgtaskK);
 		

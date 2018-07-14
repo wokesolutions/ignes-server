@@ -333,7 +333,7 @@ public class Admin {
 
 		QueryResultList<Entity> list = datastore.prepare(query).asQueryResultList(fetchOptions);
 
-		if(list.isEmpty())
+		if(list.isEmpty() && (cursor == null || cursor.equals("")))
 			return Response.status(Status.NO_CONTENT).build();
 
 		JSONArray array = new JSONArray();
