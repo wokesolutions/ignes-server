@@ -25,33 +25,33 @@ public class Email {
 					+ "e ajudar a sua comunidade.\n\nPoderá alterar a sua palavra-passe mais tarde, "
 					+ "no menu da aplicação.\n\nA empresa que registou a conta foi: ";
 	private static final String PASSWORD = "\n\nPassword: ";
-	
+
 	private static final String NEW_DEVICE_SUBJECT = "Novo dispositivo utilizado na sua conta";
 	private static final String NEW_DEVICE_TEXT = "Um novo dispositivo foi detetado a utilizar as suas"
 			+ " credenciais da Ignes. Se não foi você a iniciar sessão neste dispositivo, por favor"
 			+ " entre em contacto connosco imediatamente para podermos resolver a situação."
 			+ " Se foi você, pode ignorar este email, e esperemos que esteja a gostar da nossa aplicação!"
 			+ " \n\nA informação do novo dispositivo é a seguinte:\n\n";
-	
+
 	private static final String ORG_CONFIRMED_SUBJECT = "A sua conta na Ignes foi confirmada";
 	private static final String ORG_CONFIRMED_TEXT = "Obrigado por ter registado a sua organização da sua"
 			+ " empresa na Ignes. A sua conta já foi confirmada, e já pode começar a usufruir das"
 			+ " funcionabilidades da nossa aplicação!\n\n"
 			+ "Bom trabalho!";
-	
+
 	private static final String FORGOT_PW_SUBJECT = "Email de recuperação de palavra-passe";
 	private static final String FORGOT_PW_TEXT = "Recebemos um pedido de recuperação da sua palavra-"
 			+ "passe. Utilize a seguinte palavra-passe para entrar na sua conta, e ir ao seu perfil"
 			+ " alterá-la para uma à sua escolha.\n\n"
 			+ "Palavra-passe: ";
-	
+
 	private static final String CLOSED_REPORT_SUBJECT = "A sua ocorrência foi dada com fechada";
 	private static final String CLOSED_REPORT_TEXT = "A sua occorência \"";
 	private static final String CLOSED_REPORT_TEXT_2 = "\" foi dada como fechada pelo/a ";
 	private static final String CLOSED_REPORT_TEXT_3 = ".\n\nAgradecemos por ter reportado esta ocorrência"
-			+ " e esperemos que possa continuar a ajudar-nos a manter a comunidade segura!"
-			+ "\n\nA equipa da Ignes.";
-	
+			+ " e continue a ajudar-nos a manter a comunidade segura!"
+			+ "\n\n        A equipa da Ignes";
+
 	private static final Configuration configuration = new Configuration()
 			.domain(DOMAIN)
 			.apiKey(Secrets.MAILGUN)
@@ -86,7 +86,7 @@ public class Email {
 		.build()
 		.send();
 	}
-	
+
 	public static void sendOrgConfirmedMessage(String email) {
 
 		Mail.using(configuration)
@@ -96,7 +96,7 @@ public class Email {
 		.build()
 		.send();
 	}
-	
+
 	public static void sendForgotPwMessage(String email, String password) {
 
 		Mail.using(configuration)
@@ -106,20 +106,23 @@ public class Email {
 		.build()
 		.send();
 	}
-	
+
 	public static void sendClosedReport(String email, Entity closer, String reportTitle) {
 		String username = closer.getKey().getName();
 		String levelS = closer.getProperty(DSUtils.USER_LEVEL).toString();
 		String level;
-		if(levelS.equals(UserLevel.WORKER))
+		String closertext;
+		if(levelS.equals(UserLevel.WORKER)) {
 			level = "colaborador/a ";
-		else if(levelS.equals(UserLevel.ADMIN))
+			String orgname = closer.getProperty(DSUtils.WORKER_ORG).toString();
+			closertext = level + username + " do nosso parceiro " + orgname;
+		} else if(levelS.equals(UserLevel.ADMIN)) {
 			level = "administrador/a ";
+			closertext = level + username;
+		}
 		else
 			return;
-		
-		String closertext = level + username;
-		
+
 		Mail.using(configuration)
 		.to(email)
 		.subject(CLOSED_REPORT_SUBJECT)

@@ -78,11 +78,11 @@ public class Report {
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	// private static final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 	private static final int BATCH_SIZE = 10;
-	
+
 	private static final ProfanityFilter proffilter = new ProfanityFilter();
 
 	public static final String PORTUGAL = "Portugal";
-	
+
 	public static final String REPORT = "report";
 	public static final String COMMENT = "comment";
 
@@ -274,9 +274,9 @@ public class Report {
 				LOG.info(Log.REPORT_CREATED + reportid);
 				datastore.put(txn, entities);
 				txn.commit();
-				
+
 				/*cache.delete(data.locality);
-				
+
 				if(data.lat == 0 && data.lng == 0)
 					cache.delete(coordsCacheKey(middle[0], middle[1]));
 				else
@@ -408,9 +408,9 @@ public class Report {
 			@QueryParam(ParamName.CURSOR) String cursor) {
 		if(lat == 0 || lng == 0 || radius == 0)
 			return Response.status(Status.EXPECTATION_FAILED).build();
-		
+
 		String cacheKey = coordsCacheKey(lat, lng);
-		
+
 		/*if(cache.contains(cacheKey)) {
 			LOG.info(Log.USING_CACHE);
 			LOG.info(cacheKey);
@@ -421,7 +421,7 @@ public class Report {
 
 			return Response.ok().entity(cache.get(cacheKey)).build();
 		}*/
-		
+
 		int retries = 5;
 		while(true) {
 			try {
@@ -501,7 +501,7 @@ public class Report {
 				LOG.info(Log.REPORT_NOT_FOUND);
 				return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 			}
-			
+
 			/*String cacheKeyNum = cacheKey + "#";
 			if(cache.get(cacheKeyNum) == null)
 				cache.put(cacheKeyNum, "0", Expiration.byDeltaSeconds((int) TimeUnit.MINUTES.toSeconds(30)));
@@ -809,18 +809,18 @@ public class Report {
 	private String coordsCacheKey(double lat, double lng) {
 		DecimalFormat df = new DecimalFormat("#.#");
 		df.setRoundingMode(RoundingMode.DOWN);
-		
+
 		String newlat = df.format(lat);
 		String newlng = df.format(lng);
-		
+
 		LOG.info(newlat);
 		LOG.info(newlng);
-		
+
 		int hash = 13;
-		
+
 		hash = hash * 17 + newlat.hashCode();
 		hash = hash * 17 + newlng.hashCode();
-		
+
 		return Integer.toString(hash);
 	}
 
@@ -867,7 +867,7 @@ public class Report {
 						LOG.info(Log.UNEXPECTED_ERROR);
 						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 					}
-					
+
 					Entity user;
 					try {
 						user = datastore.get(org.getParent());
@@ -882,10 +882,10 @@ public class Report {
 					obj.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
 					obj.put(Prop.INFO, application.getProperty(DSUtils.APPLICATION_INFO));
 					obj.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
-					
+
 					array.put(obj);
 				}
-				
+
 				return Response.ok(array.toString()).build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
@@ -1027,10 +1027,11 @@ public class Report {
 						LOG.info(Log.USER_NOT_FOUND);
 						return Response.status(Status.NOT_FOUND).build();
 					}
-					
-					Email.sendClosedReport(reporter.getProperty(DSUtils.USER_EMAIL).toString(),
-							user, reportE.getKey().getName());
-					
+
+					if((boolean) reporter.getProperty(DSUtils.USER_SENDEMAIL))
+						Email.sendClosedReport(reporter.getProperty(DSUtils.USER_EMAIL).toString(),
+								user, reportE.getProperty(DSUtils.REPORT_TITLE).toString());
+
 					return Response.ok().build();
 				} finally {
 					if(txn.isActive()) {
@@ -1151,9 +1152,9 @@ public class Report {
 					LOG.info(Log.USER_NOT_FOUND);
 					return Response.status(Status.EXPECTATION_FAILED).build();
 				}
-				
+
 				String userlevel = user.getProperty(DSUtils.USER_LEVEL).toString();
-				
+
 				if(userlevel.equals(UserLevel.ADMIN)
 						&& (info == null || info.info == null || info.info.equals(""))) {
 					LOG.info(Log.BAD_FORMAT);
@@ -1170,14 +1171,14 @@ public class Report {
 				}
 
 				List<Entity> toDelete = hasPermissionToDelete(reportE, user);
-				
+
 				if(toDelete == null) {
 					LOG.info(Log.FORBIDDEN);
 					return Response.status(Status.FORBIDDEN).build();
 				}
-				
+
 				Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
-				
+
 				if(user.getProperty(DSUtils.USER_LEVEL).equals(UserLevel.ADMIN)
 						&& !user.getProperty(DSUtils.REPORT_USER).equals(user.getKey())) {
 					Key pointsK = KeyFactory.createKey(user.getKey(), DSUtils.USERPOINTS, username);
@@ -1189,27 +1190,27 @@ public class Report {
 						txn.rollback();
 						return Response.status(Status.EXPECTATION_FAILED).build();
 					}
-					
+
 					points.setProperty(DSUtils.USERPOINTS_POINTS,
 							(long) points.getProperty(DSUtils.USERPOINTS_POINTS) - 1);
-					
+
 					datastore.put(txn, points);
 				}
-				
+
 				for(Entity del : toDelete)
 					LOG.info(del.getKey().getName());
-				
+
 				for(Entity deleted : toDelete)
 					datastore.delete(txn, deleted.getKey());
-				
+
 				Entity deletionLog = new Entity(DSUtils.DELETIONLOG, username, userK);
 				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_DELETED, reportK);
 				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_INFO, info.info);
 				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_TIME, new Date());
 				deletionLog.setProperty(DSUtils.DELETIONLOG_TYPE, COMMENT);
-				
+
 				datastore.put(txn, deletionLog);
-				
+
 				txn.commit();
 				return Response.ok().build();
 			} catch(DatastoreException e) {
@@ -1219,61 +1220,61 @@ public class Report {
 			}
 		}
 	}
-	
+
 	private List<Entity> hasPermissionToDelete(Entity report, Entity user) {
 		String status = report.getProperty(DSUtils.REPORT_STATUS).toString();
 		Key reporterK = (Key) report.getProperty(DSUtils.REPORT_USER);
 		String level = user.getProperty(DSUtils.USER_LEVEL).toString();
-		
+
 		LOG.info(status);
-		
+
 		if(!(status.equals(Report.OPEN) || status.equals(Report.STANDBY)))
 			return null;
-		
+
 		LOG.info(reporterK.toString() + " " + user.getKey().toString());
 		LOG.info(level);
-		
+
 		if(!reporterK.equals(user.getKey()) && !level.equals(UserLevel.ADMIN))
 			return null;
-		
+
 		FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
-		
+
 		Query orgtaskQ = new Query(DSUtils.ORGTASK).setAncestor(report.getKey()).setKeysOnly();
 		List<Entity> orgtasks = datastore.prepare(orgtaskQ).asList(fetchOptions);
-		
+
 		if(!level.equals(UserLevel.ADMIN) && !orgtasks.isEmpty())
 			return null;
-		
+
 		List<Entity> toDelete = new LinkedList<Entity>();
-		
+
 		Query applicationQ = new Query(DSUtils.APPLICATION)
 				.setAncestor(report.getKey()).setKeysOnly();
 		List<Entity> applications = datastore.prepare(applicationQ).asList(fetchOptions);
-		
+
 		toDelete.addAll(applications);
-		
+
 		if(!orgtasks.isEmpty())
 			for(Entity orgtask : orgtasks) {
 				toDelete.add(orgtask);
-				
+
 				Query taskQ = new Query(DSUtils.TASK)
 						.setAncestor(orgtask.getKey()).setKeysOnly();
 				List<Entity> tasks = datastore.prepare(taskQ).asList(fetchOptions);
-				
+
 				toDelete.addAll(tasks);
 			}
-		
+
 		toDelete.add(report);
-		
+
 		Key repPointsK = KeyFactory.createKey(report.getKey(), DSUtils.REPORTVOTES, report.getKey().getName());
-		
+
 		try {
 			toDelete.add(datastore.get(repPointsK));
 		} catch (EntityNotFoundException e) {
 			LOG.info(Log.UNEXPECTED_ERROR);
 			return null;
 		}
-		
+
 		return toDelete;
 	}
 
@@ -1608,18 +1609,18 @@ public class Report {
 					LOG.info(Log.FORBIDDEN);
 					return Response.status(Status.FORBIDDEN).build();
 				}
-				
+
 				Entity deletionLog = new Entity(DSUtils.DELETIONLOG, username, userK);
 				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_DELETED, commentK);
 				deletionLog.setUnindexedProperty(DSUtils.DELETIONLOG_TIME, new Date());
 				deletionLog.setProperty(DSUtils.DELETIONLOG_TYPE, REPORT);
-				
+
 				Transaction txn = datastore.beginTransaction(TransactionOptions.Builder.withXG(true));
-				
+
 				datastore.put(txn, deletionLog);
 
 				datastore.delete(txn, commentK);
-				
+
 				txn.commit();
 
 				return Response.ok().build();

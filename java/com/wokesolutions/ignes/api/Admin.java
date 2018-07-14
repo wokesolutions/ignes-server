@@ -129,6 +129,7 @@ public class Admin {
 			user.setProperty(DSUtils.USER_EMAIL, data.email);
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.ADMIN);
 			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
+			user.setUnindexedProperty(DSUtils.USER_SENDEMAIL, true);
 
 			SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 			sdf.setTimeZone(TimeZone.getTimeZone(Report.PORTUGAL));
@@ -159,6 +160,7 @@ public class Admin {
 		}
 	}
 
+	/*
 	@POST
 	@Path("/promote/{username}")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
@@ -292,6 +294,7 @@ public class Admin {
 			}
 		}
 	}
+	*/
 
 	@GET
 	@Path("/userlist")
@@ -342,7 +345,8 @@ public class Admin {
 			us.put(Prop.LEVEL, level);
 			us.put(Prop.CREATIONTIME, user.getProperty(DSUtils.USER_CREATIONTIMEFORMATTED));
 
-			if(!level.equals(UserLevel.ORG) && !level.equals(UserLevel.WORKER)) {
+			if(!level.equals(UserLevel.ORG) && !level.equals(UserLevel.WORKER)
+					&& !level.equals(UserLevel.ADMIN)) {
 				Key pointsK = KeyFactory.createKey(user.getKey(),
 						DSUtils.USERPOINTS, user.getKey().getName());
 
@@ -1009,6 +1013,12 @@ public class Admin {
 		while(true) {
 			try {
 				JSONArray array = new JSONArray();
+				
+				JSONArray first = new JSONArray();
+				first.put("Distrito");
+				first.put("# de Ocorrências");
+				
+				array.put(first);
 				
 				fillCounts(array);
 				

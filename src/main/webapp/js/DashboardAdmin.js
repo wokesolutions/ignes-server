@@ -25,7 +25,8 @@ function init() {
     verifyIsLoggedIn();
 
     google.charts.load('current', {'packages':['corechart']});
-    google.charts.setOnLoadCallback(drawChart);
+    google.charts.setOnLoadCallback(drawPieChart);
+    google.charts.setOnLoadCallback(drawGeoChart);
 
     getFirstUsers();
     getPendingFirst();
@@ -1096,7 +1097,7 @@ function activateReport(row){
 
 }
 
-function drawChart(){
+function drawPieChart(){
 
     var headers = new Headers();
     var body = "";
@@ -1542,6 +1543,43 @@ function getTopUsers(){
         }
     })
         .catch(function (err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+function drawGeoChart(){
+
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest("/api/admin/stats/reports/map",'GET', headers, body)).then(function(response) {
+
+            if (response.status === 200 || response.status === 204) {
+                response.json().then(function(data){
+                    console.log(data);
+                    var dados = google.visualization.arrayToDataTable(data);
+
+                    var options = {
+                    	region: 'PT'
+                    };
+
+                    var chart = new google.visualization.GeoChart(document.getElementById('geomap'));
+
+                    chart.draw(dados, options);
+                });
+
+            }else{
+                alert("Falha ao apagar utilizador.")
+            }
+
+        }
+    )
+        .catch(function(err) {
             console.log('Fetch Error', err);
         });
 }

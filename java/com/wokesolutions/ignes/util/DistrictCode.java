@@ -2,26 +2,26 @@ package com.wokesolutions.ignes.util;
 
 public class DistrictCode {
 	
-	public static final String AVEIRO_CODE = "PT-01";
-	public static final String BEJA_CODE = "PT-02";
-	public static final String BRAGA_CODE = "PT-03";
-	public static final String BRAGANÇA_CODE = "PT-04";
-	public static final String CASTELO_BRANCO_CODE = "PT-05";
-	public static final String COIMBRA_CODE = "PT-06";
-	public static final String EVORA_CODE = "PT-07";
-	public static final String FARO_CODE = "PT-08";
-	public static final String GUARDA_CODE = "PT-09";
-	public static final String LEIRIA_CODE = "PT-10";
-	public static final String LISBOA_CODE = "PT-11";
-	public static final String PORTALEGRE_CODE = "PT-12";
-	public static final String PORTO_CODE = "PT-13";
-	public static final String SANTAREM_CODE = "PT-14";
-	public static final String SETUBAL_CODE = "PT-15";
-	public static final String VIANA_DO_CASTELO_CODE = "PT-16";
-	public static final String VILA_REAL_CODE = "PT-17";
-	public static final String VISEU_CODE = "PT-18";
-	public static final String ACORES_CODE = "PT-20";
-	public static final String MADEIRA_CODE = "PT-30";
+	public static final String AVEIRO_CODE = "PT-AV";
+	public static final String BEJA_CODE = "PT-BE";
+	public static final String BRAGA_CODE = "PT-BR";
+	public static final String BRAGANÇA_CODE = "PT-BA";
+	public static final String CASTELO_BRANCO_CODE = "PT-CB";
+	public static final String COIMBRA_CODE = "PT-CO";
+	public static final String EVORA_CODE = "PT-EV";
+	public static final String FARO_CODE = "PT-FA";
+	public static final String GUARDA_CODE = "PT-GU";
+	public static final String LEIRIA_CODE = "PT-LE";
+	public static final String LISBOA_CODE = "PT-LI";
+	public static final String PORTALEGRE_CODE = "PT-PA";
+	public static final String PORTO_CODE = "PT-PO";
+	public static final String SANTAREM_CODE = "PT-SA";
+	public static final String SETUBAL_CODE = "PT-SE";
+	public static final String VIANA_DO_CASTELO_CODE = "PT-VC";
+	public static final String VILA_REAL_CODE = "PT-VR";
+	public static final String VISEU_CODE = "PT-VI";
+	public static final String ACORES_CODE = "PT-AC";
+	public static final String MADEIRA_CODE = "PT-MA";
 	
 	public static final String AVEIRO = "Aveiro";
 	public static final String BEJA = "Beja";

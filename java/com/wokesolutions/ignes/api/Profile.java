@@ -62,6 +62,7 @@ public class Profile {
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
 	private static final int BATCH_SIZE = 20;
+	private static final int TOP_SIZE = 10;
 
 	public static final String ACTIVATED = "activated";
 	public static final String NOT_ACTIVATED = "notactivated";
@@ -495,6 +496,8 @@ public class Profile {
 			String picb64 = Storage.getImage(picpath);
 			object.put(Prop.PROFPIC, picb64);
 		}
+		
+		object.put(Prop.SEND_EMAIL, user.getProperty(DSUtils.USER_SENDEMAIL));
 
 		return Response.ok(object.toString()).build();
 	}
@@ -909,7 +912,7 @@ public class Profile {
 
 		while(true) {
 			try {
-				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
+				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(TOP_SIZE);
 				Query userQ = new Query(DSUtils.USERPOINTS)
 						.addSort(DSUtils.USERPOINTS_POINTS, Query.SortDirection.DESCENDING);
 
@@ -981,5 +984,26 @@ public class Profile {
 				retries--;
 			}
 		}
+	}
+	
+	@POST
+	@Path("/changesendemail")
+	public Response changeSendEmail(@Context HttpServletRequest request) {
+		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString();
+		
+		Key userK = KeyFactory.createKey(DSUtils.USER, username);
+		Entity user;
+		try {
+			user = datastore.get(userK);
+		} catch(EntityNotFoundException e) {
+			LOG.info(Log.USER_NOT_FOUND);
+			return Response.status(Status.NOT_FOUND).build();
+		}
+		
+		user.setProperty(DSUtils.USER_SENDEMAIL, !((boolean) user.getProperty(DSUtils.USER_SENDEMAIL)));
+		
+		datastore.put(user);
+		
+		return Response.ok().build();
 	}
 }

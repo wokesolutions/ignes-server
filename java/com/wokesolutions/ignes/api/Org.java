@@ -176,6 +176,7 @@ public class Org {
 			user.setProperty(DSUtils.USER_EMAIL, email);
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.WORKER);
 			user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
+			user.setUnindexedProperty(DSUtils.USER_SENDEMAIL, true);
 
 			Entity userStats = new Entity(DSUtils.USERSTATS, email, userK);
 			userStats.setProperty(DSUtils.USERSTATS_LOGINS, 0L);

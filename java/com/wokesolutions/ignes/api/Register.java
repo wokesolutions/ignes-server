@@ -107,6 +107,7 @@ public class Register {
 				user.setProperty(DSUtils.USER_EMAIL, data.email);
 				user.setProperty(DSUtils.USER_LEVEL, UserLevel.LEVEL0);
 				user.setUnindexedProperty(DSUtils.USER_CREATIONTIME, date);
+				user.setUnindexedProperty(DSUtils.USER_SENDEMAIL, true);
 				
 				SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 				sdf.setTimeZone(TimeZone.getTimeZone(Report.PORTUGAL));
