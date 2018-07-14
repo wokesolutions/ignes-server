@@ -1020,7 +1020,7 @@ public class Admin {
 				
 				array.put(first);
 				
-				fillCounts(array);
+				fillDistricts(array);
 				
 				return Response.ok(array.toString()).build();
 			} catch(DatastoreException e) {
@@ -1033,7 +1033,38 @@ public class Admin {
 		}
 	}
 	
-	private void fillCounts(JSONArray counts) {
+	@GET
+	@Path("/stats/reports/months")
+	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	public Response reportsMonths() {
+		int retries = 5;
+		
+		while(true) {
+			try {
+				JSONArray array = new JSONArray();
+				
+				JSONArray first = new JSONArray();
+				first.put("Mês");
+				first.put("# de Ocorrências");
+				
+				array.put(first);
+				
+				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
+				
+				Query reportList = 
+				
+				return Response.ok(array.toString()).build();
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Log.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+				retries--;
+			}
+		}
+	}
+	
+	private void fillDistricts(JSONArray counts) {
 		FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
 		
 		// --------------------------- ACORES
