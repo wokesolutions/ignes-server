@@ -40,6 +40,9 @@ import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Transaction;
+import com.google.appengine.api.memcache.Expiration;
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.PasswordData;
 import com.wokesolutions.ignes.data.ProfPicData;
@@ -60,6 +63,7 @@ public class Profile {
 
 	private static final Logger LOG = Logger.getLogger(Profile.class.getName());
 	private static final DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+	private static final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 
 	private static final int BATCH_SIZE = 20;
 	private static final int TOP_SIZE = 10;
@@ -733,22 +737,7 @@ public class Profile {
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response getProfPic(@PathParam(ParamName.USERNAME) String username) {
 		int retries = 5;
-		while(true) {
-			try {
-				return getProfPicRetry(username);
-			} catch(DatastoreException e) {
-				if(retries == 0) {
-					LOG.warning(Log.TOO_MANY_RETRIES);
-					return Response.status(Status.REQUEST_TIMEOUT).build();
-				}
-
-				retries--;
-			}
-		}
-	}
-
-	public Response getProfPicRetry(String username) {
-		String img;
+		
 		String path;
 		Entity optional;
 
@@ -768,11 +757,37 @@ public class Profile {
 			LOG.info(Log.USER_HAS_NO_IMAGE);
 			return Response.status(Status.NO_CONTENT).build();
 		}
+		
+		if(cache.contains(path)) {
+			JSONObject obj = new JSONObject();
+			obj.put(Prop.PROFPIC, cache.get(path));
+			
+			return Response.ok(obj.toString()).build();
+		}
+		
+		while(true) {
+			try {
+				return getProfPicRetry(path);
+			} catch(DatastoreException e) {
+				if(retries == 0) {
+					LOG.warning(Log.TOO_MANY_RETRIES);
+					return Response.status(Status.REQUEST_TIMEOUT).build();
+				}
+
+				retries--;
+			}
+		}
+	}
+
+	public Response getProfPicRetry(String path) {
+		String img;
 
 		img = Storage.getImage(path);
 
 		JSONObject obj = new JSONObject();
 		obj.put(Prop.PROFPIC, img);
+		
+		cache.put(path, img, Expiration.byDeltaSeconds((int) TimeUnit.HOURS.toSeconds(12)));
 
 		return Response.ok(obj.toString()).build();
 	}
@@ -923,12 +938,17 @@ public class Profile {
 				int place = 1;
 				
 				boolean intop = false;
+				Key userK;
 
 				for(Entity userPoints : userPointsList) {
 					JSONObject obj = new JSONObject();
 
-					Key userK = KeyFactory
+					userK = KeyFactory
 							.createKey(DSUtils.USER, userPoints.getKey().getName());
+
+					LOG.info(userK.toString());
+					
+					LOG.info(Integer.toString(place));
 
 					Entity user;
 					try {
@@ -951,18 +971,18 @@ public class Profile {
 				if(intop)
 					return Response.ok(array.toString()).build();
 				
-				Key userK = KeyFactory.createKey(DSUtils.USER, username);
+				Key thisuserK = KeyFactory.createKey(DSUtils.USER, username);
 
 				Entity user;
 				try {
-					user = datastore.get(userK);
+					user = datastore.get(thisuserK);
 				} catch(EntityNotFoundException e) {
 					LOG.info(Log.USER_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
 
 				if(!user.getProperty(DSUtils.USER_LEVEL).equals(UserLevel.ADMIN)) {
-					Key userPointsK = KeyFactory.createKey(userK, DSUtils.USERPOINTS, username);
+					Key userPointsK = KeyFactory.createKey(thisuserK, DSUtils.USERPOINTS, username);
 					Entity userPoints;
 					try {
 						userPoints = datastore.get(userPointsK);
@@ -976,6 +996,8 @@ public class Profile {
 					userPlace.put(Prop.USERNAME, username);
 					userPlace.put(Prop.POINTS, userPoints.getProperty(DSUtils.USERPOINTS_POINTS));
 				}
+				
+				return Response.ok(array.toString()).build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Log.TOO_MANY_RETRIES);

@@ -1385,7 +1385,7 @@ var loadMoreTasks = function(email,cursor){
                             '<div class="row">' +
                             '<div id="overlay_notes" onclick="offNotes()">'+
                             '<div id="text">'+
-                            '<div class="on_notes_'+i+'"><div class="inner_notes_'+i+'"></div></div>'+
+                            '<div class="on_notes"><div class="inner_notes"></div></div>'+
                             '</div>'+
                             '</div>'+
                             '<div class="col-lg-6 text-left">' +
@@ -1444,6 +1444,7 @@ function getThumbnailTask(reportId, i){
 }
 
 function onNotes(task) {
+    $(".notes_remove").remove();
     var body = "";
     var headers = new Headers();
     headers.append('Authorization', localStorage.getItem('token'));
@@ -1454,7 +1455,7 @@ function onNotes(task) {
         if(response.status === 200){
             response.json().then(function(data) {
                 console.log(data);
-                $(".notes_remove").remove();
+
                 var contentNotes = '<div class="notes_remove"><div id="content" style="margin-left:10rem;margin-bottom:1rem; background:#f8f9fa; width:500px">' +
                     '<div class="row">' +
                     '<div class="col-lg-12 text-left">' +

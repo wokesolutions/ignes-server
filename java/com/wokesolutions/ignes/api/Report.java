@@ -969,7 +969,8 @@ public class Report {
 
 				String userlevel = user.getProperty(DSUtils.USER_LEVEL).toString();
 
-				Transaction txn = datastore.beginTransaction();
+				Transaction txn = datastore.beginTransaction(TransactionOptions
+						.Builder.withXG(true));
 				
 				String orgname = "";
 
@@ -1001,6 +1002,7 @@ public class Report {
 							worker = datastore.get(workerK);
 						} catch(EntityNotFoundException e) {
 							LOG.info(Log.WORKER_NOT_FOUND);
+							txn.rollback();
 							return Response.status(Status.EXPECTATION_FAILED).build();
 						}
 						
@@ -1009,6 +1011,7 @@ public class Report {
 							org = datastore.get((Key) worker.getProperty(DSUtils.WORKER_ORG));
 						} catch(EntityNotFoundException e) {
 							LOG.info(Log.ORG_NOT_FOUND);
+							txn.rollback();
 							return Response.status(Status.EXPECTATION_FAILED).build();
 						}
 						
