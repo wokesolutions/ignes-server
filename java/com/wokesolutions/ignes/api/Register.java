@@ -34,6 +34,7 @@ import com.wokesolutions.ignes.data.UserRegisterData;
 import com.wokesolutions.ignes.util.Category;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
+import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.UserLevel;
 

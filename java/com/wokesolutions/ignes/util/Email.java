@@ -1,6 +1,6 @@
-package com.wokesolutions.ignes.api;
+package com.wokesolutions.ignes.util;
 
-import com.wokesolutions.ignes.util.Secrets;
+import com.google.appengine.api.datastore.Entity;
 
 import net.sargue.mailgun.Configuration;
 import net.sargue.mailgun.Mail;
@@ -44,6 +44,13 @@ public class Email {
 			+ "passe. Utilize a seguinte palavra-passe para entrar na sua conta, e ir ao seu perfil"
 			+ " alterá-la para uma à sua escolha.\n\n"
 			+ "Palavra-passe: ";
+	
+	private static final String CLOSED_REPORT_SUBJECT = "A sua ocorrência foi dada com fechada";
+	private static final String CLOSED_REPORT_TEXT = "A sua occorência \"";
+	private static final String CLOSED_REPORT_TEXT_2 = "\" foi dada como fechada pelo/a ";
+	private static final String CLOSED_REPORT_TEXT_3 = ".\n\nAgradecemos por ter reportado esta ocorrência"
+			+ " e esperemos que possa continuar a ajudar-nos a manter a comunidade segura!"
+			+ "\n\nA equipa da Ignes.";
 	
 	private static final Configuration configuration = new Configuration()
 			.domain(DOMAIN)
@@ -96,6 +103,28 @@ public class Email {
 		.to(email)
 		.subject(FORGOT_PW_SUBJECT)
 		.text(FORGOT_PW_TEXT + password)
+		.build()
+		.send();
+	}
+	
+	public static void sendClosedReport(String email, Entity closer, String reportTitle) {
+		String username = closer.getKey().getName();
+		String levelS = closer.getProperty(DSUtils.USER_LEVEL).toString();
+		String level;
+		if(levelS.equals(UserLevel.WORKER))
+			level = "colaborador/a ";
+		else if(levelS.equals(UserLevel.ADMIN))
+			level = "administrador/a ";
+		else
+			return;
+		
+		String closertext = level + username;
+		
+		Mail.using(configuration)
+		.to(email)
+		.subject(CLOSED_REPORT_SUBJECT)
+		.text(CLOSED_REPORT_TEXT + reportTitle + CLOSED_REPORT_TEXT_2 + closertext
+				+ CLOSED_REPORT_TEXT_3)
 		.build()
 		.send();
 	}

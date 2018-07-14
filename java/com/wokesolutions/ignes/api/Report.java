@@ -60,6 +60,7 @@ import com.wokesolutions.ignes.data.ReportData;
 import com.wokesolutions.ignes.exceptions.VoteException;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
+import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Haversine;
 import com.wokesolutions.ignes.util.Prop;
 import com.wokesolutions.ignes.util.ReportVotes;
@@ -1017,6 +1018,19 @@ public class Report {
 					datastore.put(txn, Arrays.asList(reportStatusLog, reportE));
 					LOG.info(Log.REPORT_CLOSED);
 					txn.commit();
+
+					Key reporterK = (Key) reportE.getProperty(DSUtils.REPORT_USER);
+					Entity reporter;
+					try {
+						reporter = datastore.get(reporterK);
+					} catch(EntityNotFoundException e) {
+						LOG.info(Log.USER_NOT_FOUND);
+						return Response.status(Status.NOT_FOUND).build();
+					}
+					
+					Email.sendClosedReport(reporter.getProperty(DSUtils.USER_EMAIL).toString(),
+							user, reportE.getKey().getName());
+					
 					return Response.ok().build();
 				} finally {
 					if(txn.isActive()) {

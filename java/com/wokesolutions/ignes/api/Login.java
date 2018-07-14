@@ -38,6 +38,7 @@ import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.UserLevel;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
+import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.JWTUtils;
 
 @Path("/login")

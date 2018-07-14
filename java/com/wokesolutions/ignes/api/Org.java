@@ -47,6 +47,7 @@ import com.wokesolutions.ignes.data.TaskData;
 import com.wokesolutions.ignes.data.WorkerRegisterData;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
+import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.Prop;
