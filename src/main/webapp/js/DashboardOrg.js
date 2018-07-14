@@ -1389,7 +1389,7 @@ var loadMoreTasks = function(email,cursor){
                             '</div>'+
                             '</div>'+
                             '<div class="col-lg-6 text-left">' +
-                            '<button onclick="onNotes('+ data[i].task +')" type="button" id="see_notes" style="background:#f8f9fa;" class="btn btn-default"><i class="fa fa-sticky-note-o"></i></button>'+
+                            '<button onclick="'+ onNotes(data[i].task) +'" type="button" id="see_notes" style="background:#f8f9fa;" class="btn btn-default"><i class="fa fa-sticky-note-o"></i></button>'+
                             '</div>' +
                             '<div class="col-lg-6 text-right">' +
                             '<p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p>' +
@@ -1444,6 +1444,7 @@ function getThumbnailTask(reportId, i){
 }
 
 function onNotes(task) {
+    console.log(task);
     $(".notes_remove").remove();
     var body = "";
     var headers = new Headers();

@@ -25,8 +25,7 @@ function init() {
 
     verifyIsLoggedIn();
 
-    google.charts.load('current', {'packages':['corechart', 'geochart'],
-    	'mapsApiKey':'AIzaSyDyB4FcTNeaLK_S-cHrV3EuxmwZGItbIRw'});
+    google.charts.load('current', {'packages':['corechart']});
     google.charts.setOnLoadCallback(drawPieChart);
     google.charts.setOnLoadCallback(drawGeoChart);
 
@@ -314,12 +313,16 @@ function getNextUsers(){
 
                 if(response.headers.get("Cursor") !== null) {
                     user_cursors.push(response.headers.get("Cursor"));
+                    cursor_pre = cursor_current;
+                    cursor_current = cursor_next;
                     cursor_next = response.headers.get("Cursor");
 
                     if(document.getElementById("next_list").style.display === "none")
                         document.getElementById("next_list").style.display = "block";
 
                 } else{
+                    cursor_pre = cursor_current;
+                    cursor_current = cursor_next;
                     if(document.getElementById("next_list").style.display === "block")
                         document.getElementById("next_list").style.display = "none";
                 }
@@ -351,10 +354,6 @@ function getNextUsers(){
                         alert("Esta empresa ainda não tem trabalhadores associados.")
                     }
                 });
-            }else if (response.status === 204){
-                cursor_pre = cursor_current;
-                cursor_current = cursor_next;
-
             }else{
                 console.log("Tratar do Forbidden");
             }
