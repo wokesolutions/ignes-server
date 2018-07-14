@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <meta charset="UTF-8">
+    <title>Ignes</title>
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="../css/index.css" rel="stylesheet">
+</head>
+<body>
+
+<!--Navbar-->
+<nav class="navbar navbar-expand-lg navbar-light" id = "navbarAdmin">
+    <div class="container" id="cont">
+        <a class = "navbar-brand js-scroll-trigger"  id ="expBrand" href="#page-top"><img src="../images/admin.png" height="70" width="auto"/></a>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ml-auto">
+                <li id ="add_admin_button" class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll" ><a style="margin-right:4px" class="fa fa-user-plus"> </a>Adicionar Administrador</a></li>
+                <li id ="public_reports_button"class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll" ><a style="margin-right:4px" class="fa fa-map-marker"> </a>Ocorrências</a></li>
+                <li id ="pending_verify_reports_button"class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll" ><a style="margin-right:4px" class="fa fa-hourglass-3"> </a>Ocorrências Standby</a></li>
+                <li id ="statistics_button"class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll" ><a style="margin-right:4px" class="fa fa-bar-chart"> </a>Estatísticas</a></li>
+                <li id ="list_users_button"class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll" ><a style="margin-right:4px" class="fa fa-users"> </a>Utilizadores</a></li>
+                <li id ="list_pending_button"class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll" ><a style="margin-right:4px" class="fa fa-building-o"> </a>Organizações</a></li>
+                <li id = "logout_button" class="nav-item pointer-finger ll"><a class="nav-link js-scroll-trigger ll"><a style="margin-right:4px" class="fa fa-power-off"> </a>Terminar Sessão</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!--List Users-->
+<div id="list_users">
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center" style="margin-top:2rem">
+            <p class="info_text_bold_sm">- Lista de Utilizadores -</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <p style="font-family: 'Quicksand'; margin-left:1rem; font-size:12px"> Nesta tabela encontram-se todos os utilizadores registados na aplicação. Consegue ainda promover/despromover os utilizadores a administrador.</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button class="btn btn-default btn-style" id="refresh_users"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
+        </div>
+        <div class=" col-md-10 col-lg-10 text-center"></div>
+    </div>
+    <div>
+        <div class="table-responsive">
+            <table class=" table table-hover table-style-pend text-center" id="user_table">
+                <tr>
+                    <th class="th-style">Nome</th>
+                    <th class="th-style">Email</th>
+                    <th class="th-style">Nivel de Permissões</th>
+                    <th class="th-style">Organização Associada</th>
+                    <th class="th-style">Pontos</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-8 col-lg-8 text-center"></div>
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button style="display: none" class="btn btn-default" id="previous_list"><i class="fa fa-toggle-left size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center">
+            <button style="display: none" class="btn btn-default" id="next_list"><i class="fa fa-toggle-right size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center"></div>
+    </div>
+</div>
+
+<!--Pending orgs-->
+<div id="list_pending_orgs"style="display: none">
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center"style="margin-top:2rem">
+            <p class="info_text_bold_sm">- Lista de Organizações Pendentes -</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <p style="font-family: 'Quicksand'; margin-left:1rem; font-size:12px"> Nesta tabela encontram-se todas as organizações ainda por ativar. Pode ativar estas organizações nos botões correspondentes.</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button class="btn btn-default btn-style" id="refresh_orgs_pending"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
+        </div>
+        <div class=" col-md-10 col-lg-10 text-center"></div>
+    </div>
+    <div>
+        <div class="table-responsive">
+            <table class=" table table-hover table-style-pend text-center" id="orgs_pending_table">
+                <tr>
+                    <th class="th-style">NIF</th>
+                    <th class="th-style">Nome</th>
+                    <th class="th-style">Email</th>
+                    <th class="th-style">Morada</th>
+                    <th class="th-style">Localidade</th>
+                    <th class="th-style">Telefone</th>
+                    <th class="th-style">Serviços</th>
+                    <th class="th-style">Data de criação</th>
+                    <th class="th-style">Pública/Privada</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-8 col-lg-8 text-center"></div>
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button style="display: none" class="btn btn-default" id="previous_list_pending"><i class="fa fa-toggle-left size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center">
+            <button style="display: none" class="btn btn-default" id="next_list_pending"><i class="fa fa-toggle-right size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center"></div>
+    </div>
+</div>
+
+<!--Tabela das ocorrências em standby-->
+<div id="list_pending_reports" style="display: none">
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center" style="margin-top:2rem">
+            <p class="info_text_bold_sm">- Ocorrências em Standby -</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <p style="font-family: 'Quicksand'; margin-left:1rem; font-size:12px"> Nesta tabela encontram-se todas as ocorrências em Standby. Pode as activar nos botões correspondentes.</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button class="btn btn-default btn-style" id="refresh_reports_pending"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
+        </div>
+        <div class=" col-md-10 col-lg-10 text-center"></div>
+    </div>
+    <div>
+        <div id="table-wrapper">
+            <div id="table-scroll" class="table-responsive">
+                <table class=" table table-hover table-style-pend text-center" id="reports_pending_table">
+                    <tr>
+                        <th class="th-style">Nome</th>
+                        <th class="th-style">Morada</th>
+                        <th class="th-style">Gravidade</th>
+                        <th class="th-style">Criador</th>
+                        <th class="th-style">Latitude</th>
+                        <th class="th-style">Longitude</th>
+                        <th class="th-style">Data de criação</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-8 col-lg-8 text-center"></div>
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button style="display: none" class="btn btn-default" id="previous_reports_pending"><i class="fa fa-toggle-left size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center">
+            <button style="display: none" class="btn btn-default" id="next_reports_pending"><i class="fa fa-toggle-right size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center"></div>
+    </div>
+</div>
+
+<!--Tabela das ocorrências públicas por verificar-->
+<div id="list_pending_public_reports" style="display: none">
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center" style="margin-top:2rem">
+            <p class="info_text_bold_sm">- Ocorrências Públicas -</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <p style="font-family: 'Quicksand'; margin-left:1rem; font-size:12px"> Nesta tabela encontram-se todas as ocorrências pública e as candidaturas das empresas.
+                Caso exista alguma candidatura por aceitar, selecione a empresa que pretende. </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button class="btn btn-default btn-style" id="refresh_public_reports_pending"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
+        </div>
+        <div class=" col-md-10 col-lg-10 text-center"></div>
+    </div>
+    <div>
+        <div id="table-wrapper-two">
+            <div id="table-scroll-two" class="table-responsive">
+                <table class=" table table-hover table-style-pend text-center" id="public_reports_pending_table">
+                    <tr>
+                        <th class="th-style">Título</th>
+                        <th class="th-style">Morada</th>
+                        <th class="th-style">Gravidade</th>
+                        <th class="th-style">Criador</th>
+                        <th class="th-style">Latitude</th>
+                        <th class="th-style">Longitude</th>
+                        <th class="th-style">Candidatos</th>
+                        <th class="th-style">Data de criação</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-8 col-lg-8 text-center"></div>
+        <div class=" col-md-2 col-lg-2 text-center">
+            <button style="display: none" class="btn btn-default" id="previous_public_reports_pending"><i class="fa fa-toggle-left size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center">
+            <button style="display: none" class="btn btn-default" id="next_public_reports_pending"><i class="fa fa-toggle-right size"></i> </button>
+        </div>
+        <div class=" col-md-1 col-lg-1 text-center"></div>
+    </div>
+</div>
+
+<!--Create Admin-->
+<div id="add_admin_report" style="display: none">
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center" style="margin-top:2rem">
+            <p class="info_text_bold_sm">- Adicionar administrador -</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <p style="font-family: 'Quicksand'; margin-left:1rem; font-size:12px"> Nesta aréa pode registar um administrador que fica associado a uma localidade. </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 col-md-12 mx-auto text-center">
+            <a id ="iconMarker" style="margin-top:0.8rem" class="fa fa-user-plus"></a>
+        </div>
+    </div>
+    <div class="container" style="margin-top: 2rem">
+        <div class="row">
+            <div class="col-lg-8 col-md-8 mx-auto">
+                <div class="row" style="margin-top:0.8rem">
+                    <div class="col-lg-2">
+                        <p class="info_text_bold_sm_black">Nome de Utilizador</p>
+                    </div>
+                    <div class="col-lg-10">
+                        <input type="text" class="form-control border" id="admin_username" placeholder="Nome de Utilizador" />
+                    </div>
+                </div>
+                <div class="row" style="margin-top:2rem">
+                    <div class="col-lg-2" style="margin-top:0.5rem">
+                        <p class="info_text_bold_sm_black">Email</p>
+                    </div>
+                    <div class="col-lg-10">
+                        <input type="email" class="form-control border" id="admin_email" placeholder="Email" />
+                    </div>
+                </div>
+                <div class="row" style="margin-top:2rem">
+                    <div class="col-lg-2" style="margin-top:0.5rem">
+                        <p class="info_text_bold_sm_black">Password</p>
+                    </div>
+                    <div class="col-lg-10">
+                        <input type="password" class="form-control border" id="admin_password" placeholder="Password" />
+                    </div>
+                </div>
+                <div class="row" style="margin-top:2rem">
+                    <div class="col-lg-2">
+                        <p class="info_text_bold_sm_black">Confirmar Password</p>
+                    </div>
+                    <div class="col-lg-10">
+                        <input type="password" class="form-control border" id="admin_confirmation" placeholder="Confirmar Password"/>
+                    </div>
+                </div>
+                <div class="row" style="margin-top:2rem">
+
+                    <div class="col-lg-2" style="margin-top:0.5rem">
+                        <p class="info_text_bold_sm_black">Localidade</p>
+                    </div>
+                    <div class="col-lg-10">
+                        <input type="text" class="form-control border" id="admin_locality" placeholder="Localidade" />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 mx-lg-auto text-center">
+                <button id="add_adm" type="button" class="btn btn-circle btn-xl-yellow" style="  background-color: #AD363B;border-color: #AD363B;"><i class="fa fa-check" id="worker_register"> </i> </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--STATS-->
+<div id="statistic" style="display:none">
+    <div class="row">
+        <div class="col-lg-6">
+            <div id="piechart" style="width: 40rem; height:40rem"></div>
+        </div>
+        <div class="col-lg-6">
+            <div class="table-responsive">
+                <table class=" table table-hover table-style-pend text-center" id="top_table">
+                    <tr>
+                        <th class="th-style">Posição</th>
+                        <th class="th-style">Nome de Utilizador</th>
+                        <th class="th-style">Pontos</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6">
+            <div id="geomap" style="width: 40rem; height:40rem"></div>
+        </div>
+    </div>
+</div>
+
+<script src = "../js/jquery-3.3.1.min.js"></script>
+<script src="../js/RestApi.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDyB4FcTNeaLK_S-cHrV3EuxmwZGItbIRw"></script>
+<script src="../js/DashboardAdmin.js"></script>
+</body>
+</html>

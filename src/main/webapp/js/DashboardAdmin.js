@@ -209,6 +209,11 @@ function verifyIsLoggedIn(){
 
 
 function getFirstUsers(){
+    user_cursors = [""];
+    console.log(user_cursors);
+    console.log(cursor_pre);
+    console.log(cursor_current);
+    console.log(cursor_next);
     var headers = new Headers();
     var body = "";
     headers.append('Authorization', localStorage.getItem('token'));
@@ -227,6 +232,7 @@ function getFirstUsers(){
                 }
                 document.getElementById("previous_list").style.display = "none";
                 if(response.headers.get("Cursor") !== null) {
+                    user_cursors.push(response.headers.get("Cursor"));
                     cursor_pre = "";
                     cursor_current = "";
                     cursor_next = response.headers.get("Cursor");
@@ -281,6 +287,10 @@ function getFirstUsers(){
 }
 
 function getNextUsers(){
+    console.log(user_cursors);
+    console.log(cursor_pre);
+    console.log(cursor_current);
+    console.log(cursor_next);
     var headers = new Headers();
     var body = "";
     headers.append('Authorization', localStorage.getItem('token'));
@@ -355,79 +365,87 @@ function getNextUsers(){
 }
 
 function getPreUsers(){
+    console.log(user_cursors);
+    console.log(cursor_pre);
+    console.log(cursor_current);
+    console.log(cursor_next);
+
     if(index_user - 1 === 0) getFirstUsers();
 
-    var headers = new Headers();
-    var body = "";
-    headers.append('Authorization', localStorage.getItem('token'));
-    headers.append('Device-Id', localStorage.getItem('fingerprint'));
-    headers.append('Device-App', localStorage.getItem('app'));
-    headers.append('Device-Info', localStorage.getItem('browser'));
+    else {
+
+        var headers = new Headers();
+        var body = "";
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-    fetch(restRequest('/api/admin/userlist?cursor=' + cursor_pre,'GET', headers, body)).then(function (response) {
-            var table = document.getElementById("user_table");
+        fetch(restRequest('/api/admin/userlist?cursor=' + cursor_pre, 'GET', headers, body)).then(function (response) {
+                var table = document.getElementById("user_table");
 
-            if (response.status === 200) {
-                index_user--;
-                if(table.rows.length > 1) {
-                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-                }
-                document.getElementById("previous_list").style.display = "block";
-                if (response.headers.get("Cursor") !== null) {
+                if (response.status === 200) {
+                    index_user--;
+                    if (table.rows.length > 1) {
+                        table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                    }
+                    document.getElementById("previous_list").style.display = "block";
+                    if (response.headers.get("Cursor") !== null) {
 
-                    cursor_next= cursor_current;
-                    cursor_current = cursor_pre;
-                    cursor_pre = user_cursors[index_user];
+                        cursor_next = cursor_current;
+                        cursor_current = cursor_pre;
+                        cursor_pre = user_cursors[index_user - 1];
 
-                    if (document.getElementById("next_list").style.display === "none")
-                        document.getElementById("next_list").style.display = "block";
-
-                } else {
-                    if (document.getElementById("next_list").style.display === "block")
-                        document.getElementById("next_list").style.display = "none";
-                }
-                response.json().then(function (data) {
-                    console.log(JSON.stringify(data));
-                    if (data != null) {
-                        var i;
-                        for(i = 0; i < data.length; i++){
-                            var row = table.insertRow(-1);
-                            var cell1 = row.insertCell(0);
-                            var cell2 = row.insertCell(1);
-                            var cell3 = row.insertCell(2);
-                            var cell4 = row.insertCell(3);
-                            var cell5 = row.insertCell(4);
-                            var cell6 = row.insertCell(5);
-                            cell1.innerHTML = data[i].username;
-                            cell2.innerHTML = data[i].email;
-                            cell3.innerHTML = data[i].level;
-                            if(data[i].org !== undefined)
-                                cell4.innerHTML = data[i].org;
-                            else
-                                cell4.innerHTML = "-";
-                            if(data[i].points !== undefined)
-                                cell5.innerHTML = data[i].points;
-                            else
-                                cell5.innerHTML = "-";
-                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
-                        }
+                        if (document.getElementById("next_list").style.display === "none")
+                            document.getElementById("next_list").style.display = "block";
 
                     } else {
-                        alert("Esta empresa ainda não tem trabalhadores associados.")
+                        if (document.getElementById("next_list").style.display === "block")
+                            document.getElementById("next_list").style.display = "none";
                     }
-                });
+                    response.json().then(function (data) {
+                        console.log(JSON.stringify(data));
+                        if (data != null) {
+                            var i;
+                            for (i = 0; i < data.length; i++) {
+                                var row = table.insertRow(-1);
+                                var cell1 = row.insertCell(0);
+                                var cell2 = row.insertCell(1);
+                                var cell3 = row.insertCell(2);
+                                var cell4 = row.insertCell(3);
+                                var cell5 = row.insertCell(4);
+                                var cell6 = row.insertCell(5);
+                                cell1.innerHTML = data[i].username;
+                                cell2.innerHTML = data[i].email;
+                                cell3.innerHTML = data[i].level;
+                                if (data[i].org !== undefined)
+                                    cell4.innerHTML = data[i].org;
+                                else
+                                    cell4.innerHTML = "-";
+                                if (data[i].points !== undefined)
+                                    cell5.innerHTML = data[i].points;
+                                else
+                                    cell5.innerHTML = "-";
+                                cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                            }
 
-            } else {
-                console.log("Tratar do Forbidden");
+                        } else {
+                            alert("Esta empresa ainda não tem trabalhadores associados.")
+                        }
+                    });
+
+                } else {
+                    console.log("Tratar do Forbidden");
+                }
+
+
             }
-
-
-        }
-    )
-        .catch(function (err) {
-            console.log('Fetch Error', err);
-        });
+        )
+            .catch(function (err) {
+                console.log('Fetch Error', err);
+            });
+    }
 }
 
 function logOut(){
