@@ -1385,11 +1385,11 @@ var loadMoreTasks = function(email,cursor){
                             '<div class="row">' +
                             '<div id="overlay_notes" onclick="offNotes()">'+
                             '<div id="text">'+
-                            '<div class="on_notes"><div class="inner_notes"></div></div>'+
+                            '<div class="on_notes_'+i+'"><div class="inner_notes_'+i+'"></div></div>'+
                             '</div>'+
                             '</div>'+
                             '<div class="col-lg-6 text-left">' +
-                            '<button onclick="onNotes()" type="button" id="see_notes" style="background:#f8f9fa;" class="btn btn-default"><i class="fa fa-sticky-note-o"></i></button>'+
+                            '<button onclick="onNotes('+ data[i].task +')" type="button" id="see_notes" style="background:#f8f9fa;" class="btn btn-default"><i class="fa fa-sticky-note-o"></i></button>'+
                             '</div>' +
                             '<div class="col-lg-6 text-right">' +
                             '<p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p>' +
@@ -1443,27 +1443,44 @@ function getThumbnailTask(reportId, i){
     );
 }
 
-function onNotes() {
-    $(".notes_remove").remove();
-    var contentNotes = '<div class="notes_remove"><div id="content" style="margin-left:10rem;margin-bottom:1rem; background:#f8f9fa; width:500px">' +
-        '<div class="row">' +
-        '<div class="col-lg-12 text-left">' +
-        '<p style="font-family:Quicksand Bold; color:#AD363B; margin-left:0.5rem; margin-top:0.5rem;  font-size:15px;">' + "utilizadorignes@hotmail.com" + '</p></div></div>' +
-        '<div class="row"><div class="col-lg-12 text-left">' +
-        '<p style="margin-left:0.5rem; color:#212529; font-family:Quicksand; font-size:14px;">' + "Já terminaram os trabalhos?" + '</p>' +
-        '</div>' +
-        '</div>' +
-        '<hr style="margin-top:0;">' +
-        '<div class="row">' +
-        '<div class="col-lg-6"></div>' +
-        '<div class="col-lg-6 text-right">' +
-        '<p style="margin-right: 0.5rem; font-family:Quicksand Bold; color:#212529; font-size:12px; margin-bottom:0;">' + "12-07-2018 12:56:07"+
-        '</p></div></div></div></div>';
+function onNotes(task) {
+    var body = "";
+    var headers = new Headers();
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+    fetch(restRequest('/api/task/notes/' + task, 'GET', headers, body)).then(function(response) {
+        if(response.status === 200){
+            response.json().then(function(data) {
+                console.log(data);
+                $(".notes_remove").remove();
+                var contentNotes = '<div class="notes_remove"><div id="content" style="margin-left:10rem;margin-bottom:1rem; background:#f8f9fa; width:500px">' +
+                    '<div class="row">' +
+                    '<div class="col-lg-12 text-left">' +
+                    '<p style="font-family:Quicksand Bold; color:#AD363B; margin-left:0.5rem; margin-top:0.5rem;  font-size:15px;">' + "utilizadorignes@hotmail.com" + '</p></div></div>' +
+                    '<div class="row"><div class="col-lg-12 text-left">' +
+                    '<p style="margin-left:0.5rem; color:#212529; font-family:Quicksand; font-size:14px;">' + "Já terminaram os trabalhos?" + '</p>' +
+                    '</div>' +
+                    '</div>' +
+                    '<hr style="margin-top:0;">' +
+                    '<div class="row">' +
+                    '<div class="col-lg-6"></div>' +
+                    '<div class="col-lg-6 text-right">' +
+                    '<p style="margin-right: 0.5rem; font-family:Quicksand Bold; color:#212529; font-size:12px; margin-bottom:0;">' + "12-07-2018 12:56:07"+
+                    '</p></div></div></div></div>';
 
-    $(".inner_notes").append(contentNotes);
+                $(".inner_notes").append(contentNotes);
 
-    document.getElementById("overlay_notes").style.display = "block";
-
+                document.getElementById("overlay_notes").style.display = "block";
+            });
+        } else{
+            console.log("Não deu 200 ao pedir o thumbnail");
+        }
+    }).catch(function(err) {
+            console.log('Fetch Error', err);
+        }
+    );
 
 }
 

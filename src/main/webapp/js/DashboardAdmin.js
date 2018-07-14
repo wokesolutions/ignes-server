@@ -273,6 +273,7 @@ function getFirstUsers(){
                     }
                 });
 
+
             }else{
                 console.log("Tratar do Forbidden");
             }
@@ -309,8 +310,7 @@ function getNextUsers(){
                 }
 
                 document.getElementById("previous_list").style.display = "block";
-                cursor_pre = cursor_current;
-                cursor_current = cursor_next;
+
                 if(response.headers.get("Cursor") !== null) {
                     user_cursors.push(response.headers.get("Cursor"));
                     cursor_next = response.headers.get("Cursor");
@@ -350,6 +350,9 @@ function getNextUsers(){
                         alert("Esta empresa ainda não tem trabalhadores associados.")
                     }
                 });
+            }else if (response.status === 204){
+                cursor_pre = cursor_current;
+                cursor_current = cursor_next;
 
             }else{
                 console.log("Tratar do Forbidden");
