@@ -1,6 +1,6 @@
 package com.wokesolutions.ignes.util;
 
-public class DistrictCode {
+public class Stats {
 	
 	public static final String AVEIRO_CODE = "PT-AV";
 	public static final String BEJA_CODE = "PT-BE";
@@ -43,4 +43,22 @@ public class DistrictCode {
 	public static final String VISEU = "Viseu";
 	public static final String ACORES = "Açores";
 	public static final String MADEIRA = "Madeira";
+	
+	public static final String DISTRICT = "Distrito";
+	public static final String REPORTNUM = "# de Ocorrências";
+	public static final String ORG = "Organização";
+	public static final String APPLICATIONNUM = "# de candidaturas";
+
+	public static final String JANUARY = "janeiro";
+	public static final String FEBRUARY = "fevereiro";
+	public static final String MARCH = "março";
+	public static final String APRIL = "abril";
+	public static final String MAY = "maio";
+	public static final String JUNE = "junho";
+	public static final String JULY = "julho";
+	public static final String AUGUST = "agosto";
+	public static final String SEPTEMBER = "setembro";
+	public static final String OCTOBER = "outubro";
+	public static final String NOVEMBER = "novembro";
+	public static final String DECEMBER = "dezembro";
 }
