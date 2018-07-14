@@ -1444,8 +1444,8 @@ function getThumbnailTask(reportId, i){
 }
 
 function onNotes() {
-
-    var contentNotes = '<div id="content" style="margin-left:10rem;margin-bottom:1rem; background:#f8f9fa; width:500px">' +
+    $(".notes_remove").remove();
+    var contentNotes = '<div class="notes_remove"><div id="content" style="margin-left:10rem;margin-bottom:1rem; background:#f8f9fa; width:500px">' +
         '<div class="row">' +
         '<div class="col-lg-12 text-left">' +
         '<p style="font-family:Quicksand Bold; color:#AD363B; margin-left:0.5rem; margin-top:0.5rem;  font-size:15px;">' + "utilizadorignes@hotmail.com" + '</p></div></div>' +
@@ -1458,7 +1458,7 @@ function onNotes() {
         '<div class="col-lg-6"></div>' +
         '<div class="col-lg-6 text-right">' +
         '<p style="margin-right: 0.5rem; font-family:Quicksand Bold; color:#212529; font-size:12px; margin-bottom:0;">' + "12-07-2018 12:56:07"+
-        '</p></div></div></div>';
+        '</p></div></div></div></div>';
 
     $(".inner_notes").append(contentNotes);
 

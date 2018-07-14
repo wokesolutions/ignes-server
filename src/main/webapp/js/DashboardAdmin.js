@@ -309,10 +309,10 @@ function getNextUsers(){
                 }
 
                 document.getElementById("previous_list").style.display = "block";
+                cursor_pre = cursor_current;
+                cursor_current = cursor_next;
                 if(response.headers.get("Cursor") !== null) {
                     user_cursors.push(response.headers.get("Cursor"));
-                    cursor_pre = cursor_current;
-                    cursor_current = cursor_next;
                     cursor_next = response.headers.get("Cursor");
 
                     if(document.getElementById("next_list").style.display === "none")
