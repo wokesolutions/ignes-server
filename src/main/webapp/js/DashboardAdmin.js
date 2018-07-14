@@ -12,7 +12,8 @@ var cursor_current_public;
 var cursor_pre_public;
 var standby_rep= [];
 var public_reports = [];
-var pending_reports = [];
+var user_cursors = [""];
+var index_user;
 var current_position = "list_users_variable";
 
 var URL_BASE = 'https://mimetic-encoder-209111.appspot.com';
@@ -220,22 +221,22 @@ function getFirstUsers(){
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
+                index_user = 0;
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
+                document.getElementById("previous_list").style.display = "none";
                 if(response.headers.get("Cursor") !== null) {
                     cursor_pre = "";
                     cursor_current = "";
                     cursor_next = response.headers.get("Cursor");
                     if(document.getElementById("next_list").style.display === "none")
                         document.getElementById("next_list").style.display = "block";
-                    if(document.getElementById("previous_list").style.display === "block")
-                        document.getElementById("previous_list").style.display = "none";
+
                 } else{
                     if(document.getElementById("next_list").style.display === "block")
                         document.getElementById("next_list").style.display = "none";
-                    if(document.getElementById("previous_list").style.display === "block")
-                        document.getElementById("previous_list").style.display = "none";
+
                 }
                 response.json().then(function(data) {
                     console.log(JSON.stringify(data));
@@ -292,13 +293,14 @@ function getNextUsers(){
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
+                index_user++;
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
-                if(document.getElementById("previous_list").style.display === "none")
-                    document.getElementById("previous_list").style.display = "block";
-                if(response.headers.get("Cursor") !== null) {
 
+                document.getElementById("previous_list").style.display = "block";
+                if(response.headers.get("Cursor") !== null) {
+                    user_cursors.push(response.headers.get("Cursor"));
                     cursor_pre = cursor_current;
                     cursor_current = cursor_next;
                     cursor_next = response.headers.get("Cursor");
@@ -353,7 +355,7 @@ function getNextUsers(){
 }
 
 function getPreUsers(){
-    if(cursor_pre === "") getFirstUsers();
+    if(index_user - 1 === 0) getFirstUsers();
 
     var headers = new Headers();
     var body = "";
@@ -367,16 +369,16 @@ function getPreUsers(){
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
+                index_user--;
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
-                if (document.getElementById("previous_list").style.display === "none")
-                    document.getElementById("previous_list").style.display = "block";
+                document.getElementById("previous_list").style.display = "block";
                 if (response.headers.get("Cursor") !== null) {
 
                     cursor_next= cursor_current;
                     cursor_current = cursor_pre;
-                    cursor_pre = response.headers.get("Cursor");
+                    cursor_pre = user_cursors[index_user];
 
                     if (document.getElementById("next_list").style.display === "none")
                         document.getElementById("next_list").style.display = "block";
@@ -396,6 +398,7 @@ function getPreUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
                             cell1.innerHTML = data[i].username;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
@@ -407,6 +410,7 @@ function getPreUsers(){
                                 cell5.innerHTML = data[i].points;
                             else
                                 cell5.innerHTML = "-";
+                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     } else {

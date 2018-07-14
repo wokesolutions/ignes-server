@@ -1,6 +1,6 @@
 var map = null;
 var geocoder = new google.maps.Geocoder();
-var reports;
+var reports = [];
 var reportID;
 var tasks = [];
 var commentsCursor;
@@ -15,6 +15,7 @@ var currentLoc ={
     zoom: 18
 };
 
+var index_report = 0;
 var to_show;
 var emailsarr;
 var workersarr;
@@ -325,10 +326,10 @@ function getMarkers(cursor){
     headers.append('Device-Info', localStorage.getItem('browser'));
 
     fetch(restRequest('/api/org/reports?cursor=' + cursor , 'GET', headers, body)).then(function(response) {
-        var newCursor = response.headers.get("Cursor");
+            var newCursor = response.headers.get("Cursor");
             if (response.status === 200) {
                 response.json().then(function(data) {
-                    reports = data;
+                    reports = reports.concat(data);
                     fillMap(reports, newCursor);
                 });
 
@@ -351,15 +352,15 @@ function getMarkers(cursor){
 }
 
 function fillMap(reports, cursor){
-    var i, marker ;
-    for(i = 0; i<reports.length; i++){
-        var lat = reports[i].lat;
-        var lng = reports[i].lng;
-        var status = reports[i].status;
-        var budget = reports[i].budget;
+    var marker ;
+    for(index_report; index_report<reports.length; index_report++){
+        var lat = reports[index_report].lat;
+        var lng = reports[index_report].lng;
+        var status = reports[index_report].status;
+        var budget = reports[index_report].budget;
         var marker_color;
-        var tasktime = reports[i].tasktime;
-        var gravity = reports[i].gravity;
+        var tasktime = reports[index_report].tasktime;
+        var gravity = reports[index_report].gravity;
         var color;
 
         if(gravity === 1) {
@@ -370,7 +371,7 @@ function fillMap(reports, cursor){
             else if(status === "closed")
                 marker_color = "../marcadores/g1-closed-mine.png";
             else if(tasktime !== null && tasktime !== undefined){
-                tasks.push(reports[i]);
+                tasks.push(reports[index_report]);
                 marker_color = "../marcadores/g1-accepted-mine.png";
             }
             else if(budget !== null && budget !== undefined)
@@ -385,7 +386,7 @@ function fillMap(reports, cursor){
             else if(status === "closed")
                 marker_color = "../marcadores/g2-closed-mine.png";
             else if(tasktime !== null && tasktime !== undefined){
-                tasks.push(reports[i]);
+                tasks.push(reports[index_report]);
                 marker_color = "../marcadores/g2-accepted-mine.png";
             }
             else if(budget !== null && budget !== undefined)
@@ -400,7 +401,7 @@ function fillMap(reports, cursor){
             else if(status === "closed")
                 marker_color = "../marcadores/g3-closed-mine.png";
             else if(tasktime !== null && tasktime !== undefined){
-                tasks.push(reports[i]);
+                tasks.push(reports[index_report]);
                 marker_color = "../marcadores/g3-accepted-mine.png";
             }
             else if(budget !== null && budget !== undefined)
@@ -415,7 +416,7 @@ function fillMap(reports, cursor){
             else if(status === "closed")
                 marker_color = "../marcadores/g4-closed-mine.png";
             else if(tasktime !== null && tasktime !== undefined){
-                tasks.push(reports[i]);
+                tasks.push(reports[index_report]);
                 marker_color = "../marcadores/g4-accepted-mine.png";
             }
             else if(budget !== null && budget !== undefined)
@@ -430,7 +431,7 @@ function fillMap(reports, cursor){
             else if(status === "closed")
                 marker_color = "../marcadores/g5-closed-mine.png";
             else if(tasktime !== null && tasktime !== undefined){
-                tasks.push(reports[i]);
+                tasks.push(reports[index_report]);
                 marker_color = "../marcadores/g5-accepted-mine.png";
             }
             else if(budget !== null && budget !== undefined)
@@ -441,7 +442,7 @@ function fillMap(reports, cursor){
         else{
             console.log("Não existe gravidade neste reporte");
         }
-        if(reports[i].points === null || reports[i].points === undefined) {
+        if(reports[index_report].points === null || reports[index_report].points === undefined) {
             marker = new google.maps.Marker({
                 position: new google.maps.LatLng(lat, lng),
                 map: map,
@@ -449,7 +450,7 @@ function fillMap(reports, cursor){
             });
         } else{
             marker = new google.maps.Polygon({
-                paths: reports[i].points,
+                paths: reports[index_report].points,
                 strokeColor: color,
                 strokeOpacity: 0.8,
                 strokeWeight: 2,
@@ -466,19 +467,19 @@ function fillMap(reports, cursor){
         }
 
 
-        google.maps.event.addListener(marker, 'click', (function(marker, i) {
+        google.maps.event.addListener(marker, 'click', (function(marker, index_report) {
 
             return function() {
-                if(reports[i].status === "closed")
+                if(reports[index_report].status === "closed")
                     to_show = 4;
-                else if(reports[i].status === "standby")
+                else if(reports[index_report].status === "standby")
                     to_show = 0;
-                else if(reports[i].tasktime !== null && reports[i].tasktime !== undefined)
+                else if(reports[index_report].tasktime !== null && reports[index_report].tasktime !== undefined)
                     to_show = 1;
-                else if(reports[i].budget !== null && reports[i].budget !== undefined) {
-                    document.getElementById('budget_input').innerHTML= reports[i].budget;
-                    if(reports[i].info !== null && reports[i].info !== undefined && reports[i].info != "")
-                        document.getElementById('info_input').innerHTML= reports[i].info;
+                else if(reports[index_report].budget !== null && reports[index_report].budget !== undefined) {
+                    document.getElementById('budget_input').innerHTML= reports[index_report].budget;
+                    if(reports[index_report].info !== null && reports[index_report].info !== undefined && reports[index_report].info != "")
+                        document.getElementById('info_input').innerHTML= reports[index_report].info;
                     else
                         document.getElementById('info_input').innerHTML= "-";
                     to_show = 3;
@@ -489,12 +490,12 @@ function fillMap(reports, cursor){
 
 
 
-                reportID = reports[i].report;
+                reportID = reports[index_report].report;
                 $(".remove_work").remove();
-                getInfo(reportID, i);
+                getInfo(reportID, index_report);
 
             }
-        })(marker, i));
+        })(marker, index_report));
     }
 
     if(cursor !== null){
@@ -1059,33 +1060,33 @@ var loadMore = function () {
 
             '<div class="row">' +
             '<div class="col-lg-6 text-center">' +
-                '<div class="row" >' +
-                '<div class="col-lg-8 col-md-8 text-right ">' +
-                '<div class="row" >' +
-                '<div class="col-lg-4 col-md-4  ">' +
-                '<img class="img_user" src="../images/avatar.png" height="20" width="20"/>' +
-                '</div>' +
-                '<div class="col-lg-4 col-md-4 text-left ">' +
-                '<p class="info_text_response" style="font-family: Quicksand Bold">' + tasks[i].username + '</p>' +
-                '</div>' +
-                '<div class="col-lg-4 col-md-4 text-left">' +
-                '</div>' +
-                '</div>' +
-                '</div>' +
-                '<div class="col-lg-4 col-md-4 text-left"></div>' +
-                '</div>' +
-                '<div class="col-lg-12 text-center">' +
-                '<img style="height:10rem; margin-bottom:1rem"id=' + i + '>' +
-                '</div>' +
+            '<div class="row" >' +
+            '<div class="col-lg-8 col-md-8 text-right ">' +
+            '<div class="row" >' +
+            '<div class="col-lg-4 col-md-4  ">' +
+            '<img class="img_user" src="../images/avatar.png" height="20" width="20"/>' +
+            '</div>' +
+            '<div class="col-lg-4 col-md-4 text-left ">' +
+            '<p class="info_text_response" style="font-family: Quicksand Bold">' + tasks[i].username + '</p>' +
+            '</div>' +
+            '<div class="col-lg-4 col-md-4 text-left">' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+            '<div class="col-lg-4 col-md-4 text-left"></div>' +
+            '</div>' +
+            '<div class="col-lg-12 text-center">' +
+            '<img style="height:10rem; margin-bottom:1rem"id=' + i + '>' +
+            '</div>' +
             '</div>' +
             '<div class="col-lg-6">' +
-                '<div class="row">' +
-                '<div class="col-lg-12 mx-lg-auto text-center">' +
-                '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" >Trabalhadores associados:</p>';
-            contentString += '</div>' +
-                '</div>' +
-                '<div class="row">' +
-                '<div class="col-lg-12 mx-lg-auto text-center">';
+            '<div class="row">' +
+            '<div class="col-lg-12 mx-lg-auto text-center">' +
+            '<p class="info_text_response text-center" style="font-family: Quicksand Bold; color:#AD363B" >Trabalhadores associados:</p>';
+        contentString += '</div>' +
+            '</div>' +
+            '<div class="row">' +
+            '<div class="col-lg-12 mx-lg-auto text-center">';
         if (workers_feed !== undefined) {
             var j;
             for (j = 0; j < workers_feed.length; j++) {
@@ -1144,11 +1145,11 @@ var loadMoreComments = function(idReport,cursor){
                             $(".inner_comment").append('<div class="comments_remove" >'+
                                 '<div id="content" style="margin-bottom:1rem; background:#f8f9fa; width:300px">' +
                                 '<div class="row">' +
-                                     '<div class="col-lg-12 text-left">' +
-                                         '<p style="font-family:Quicksand Bold; color:#AD363B; margin-right:1rem; font-size:15px;">' + data[i].username + '</p></div></div>' +
+                                '<div class="col-lg-12 text-left">' +
+                                '<p style="font-family:Quicksand Bold; color:#AD363B; margin-right:1rem; font-size:15px;">' + data[i].username + '</p></div></div>' +
                                 '<div class="row"><div class="col-lg-12 text-left">' +
-                                        '<p style="font-family:Quicksand; font-size:14px;">' + data[i].text + '</p>' +
-                                    '</div>' +
+                                '<p style="font-family:Quicksand; font-size:14px;">' + data[i].text + '</p>' +
+                                '</div>' +
                                 '</div>' +
                                 '<hr style="margin-top:0;">' +
                                 '<div class="row">' +
@@ -1382,7 +1383,14 @@ var loadMoreTasks = function(email,cursor){
                             '</div>' +
                             '<hr style="margin-bottom: 0; margin-top:0">' +
                             '<div class="row">' +
-                            '<div class="col-lg-6 text-left"></div>' +
+                            '<div id="overlay_notes" onclick="offNotes()">'+
+                            '<div id="text">'+
+                            '<div class="on_notes"><div class="inner_notes"></div></div>'+
+                            '</div>'+
+                            '</div>'+
+                            '<div class="col-lg-6 text-left">' +
+                            '<button onclick="onNotes()" type="button" id="see_notes" style="background:#f8f9fa;" class="btn btn-default"><i class="fa fa-sticky-note-o"></i></button>'+
+                            '</div>' +
                             '<div class="col-lg-6 text-right">' +
                             '<p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p>' +
                             '</div>' +
@@ -1392,7 +1400,7 @@ var loadMoreTasks = function(email,cursor){
 
                         $(".tasks_worker").append(contentString);
 
-                       getThumbnailTask(data[i].task, i);
+                        getThumbnailTask(data[i].task, i);
                     }
 
                 });
@@ -1430,8 +1438,35 @@ function getThumbnailTask(reportId, i){
             console.log("Não deu 200 ao pedir o thumbnail");
         }
     }).catch(function(err) {
-        console.log('Fetch Error', err);
-    }
+            console.log('Fetch Error', err);
+        }
     );
 }
 
+function onNotes() {
+
+    var contentNotes = '<div id="content" style="margin-bottom:1rem; background:#f8f9fa; width:300px">' +
+        '<div class="row">' +
+        '<div class="col-lg-12 text-left">' +
+        '<p style="font-family:Quicksand Bold; color:#AD363B; margin-right:1rem; font-size:15px;">' + "Ola" + '</p></div></div>' +
+        '<div class="row"><div class="col-lg-12 text-left">' +
+        '<p style="font-family:Quicksand; font-size:14px;">' + "Eu sou" + '</p>' +
+        '</div>' +
+        '</div>' +
+        '<hr style="margin-top:0;">' +
+        '<div class="row">' +
+        '<div class="col-lg-6"></div>' +
+        '<div class="col-lg-6 text-right">' +
+        '<p style="font-family:Quicksand Bold; font-size:12px; margin-bottom:0;">' + "dia1"+
+        '</p></div></div></div>';
+
+    $(".inner_notes").append(contentNotes);
+
+    document.getElementById("overlay_notes").style.display = "block";
+
+
+}
+
+function offNotes() {
+    document.getElementById("overlay_notes").style.display = "none";
+}
