@@ -50,7 +50,7 @@ public class Email {
 	private static final String CLOSED_REPORT_TEXT_2 = "\" foi dada como fechada pelo/a ";
 	private static final String CLOSED_REPORT_TEXT_3 = ".\n\nAgradecemos por ter reportado esta ocorrência"
 			+ " e continue a ajudar-nos a manter a comunidade segura!"
-			+ "\n\n        A equipa da Ignes";
+			+ "\n\nA equipa da Ignes,\nWokeSolutions";
 
 	private static final Configuration configuration = new Configuration()
 			.domain(DOMAIN)
@@ -107,15 +107,16 @@ public class Email {
 		.send();
 	}
 
-	public static void sendClosedReport(String email, Entity closerU,
+	public static void sendClosedReport(String email, Entity closer,
 			String orgName, String reportTitle) {
-		String username = closerU.getKey().getName();
-		String levelS = closerU.getProperty(DSUtils.USER_LEVEL).toString();
+		String username = closer.getKey().getName();
+		String levelS = closer.getProperty(DSUtils.USER_LEVEL).toString();
 		String level;
 		String closertext;
 		if(levelS.equals(UserLevel.WORKER)) {
 			level = "colaborador/a ";
-			closertext = level + username + " do nosso parceiro " + orgName;
+			closertext = level + closer.getProperty(DSUtils.WORKER_NAME).toString()
+					+ " (" + username + ") do nosso parceiro " + orgName;
 		} else if(levelS.equals(UserLevel.ADMIN)) {
 			level = "administrador/a ";
 			closertext = level + username;

@@ -25,7 +25,8 @@ function init() {
 
     verifyIsLoggedIn();
 
-    google.charts.load('current', {'packages':['corechart']});
+    google.charts.load('current', {'packages':['corechart', 'geochart'],
+    	'mapsApiKey':'AIzaSyDyB4FcTNeaLK_S-cHrV3EuxmwZGItbIRw'});
     google.charts.setOnLoadCallback(drawPieChart);
     google.charts.setOnLoadCallback(drawGeoChart);
 
