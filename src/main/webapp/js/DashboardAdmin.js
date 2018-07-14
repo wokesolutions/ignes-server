@@ -206,45 +206,6 @@ function verifyIsLoggedIn(){
 
 }
 
-function promoDepromo (row){
-    var table = document.getElementById("user_table");
-    var username = table.rows[row].cells[0].innerHTML;
-    var headers = new Headers();
-    var body = "";
-    headers.append('Authorization', localStorage.getItem('token'));
-    headers.append('Device-Id', localStorage.getItem('fingerprint'));
-    headers.append('Device-App', localStorage.getItem('app'));
-    headers.append('Device-Info', localStorage.getItem('browser'));
-    if(table.rows[row].cells[2].innerHTML === "ADMIN"){
-        fetch(restRequest('/api/admin/demote/' + username, 'POST', headers, body)).then(function(response) {
-
-                if (response.status === 200 || response.status === 204) {
-                    alert("Trabalhador despromovido com sucesso.")
-                }else{
-                    alert("Falha ao despromover o utilizador.")
-                }
-
-            }
-        )
-            .catch(function(err) {
-                console.log('Fetch Error', err);
-            });
-    } else{
-        fetch(restRequest('/api/admin/promote/' + username, 'POST', headers, body)).then(function(response) {
-
-                if (response.status === 200 || response.status === 204) {
-                    alert("Trabalhador promovido com sucesso.")
-                }else{
-                    alert("Falha ao promover o utilizador.")
-                }
-
-            }
-        )
-            .catch(function(err) {
-                console.log('Fetch Error', err);
-            });
-    }
-}
 
 function getFirstUsers(){
     var headers = new Headers();
@@ -287,7 +248,6 @@ function getFirstUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
-                            var cell6 = row.insertCell(5);
                             cell1.innerHTML = data[i].username;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
@@ -299,7 +259,6 @@ function getFirstUsers(){
                                 cell5.innerHTML = data[i].points;
                             else
                                 cell5.innerHTML = "-";
-                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-unsorted'></button>";
                         }
 
                     }else{
@@ -362,7 +321,6 @@ function getNextUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
-                            var cell6 = row.insertCell(5);
                             cell1.innerHTML = data[i].username;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
@@ -374,7 +332,6 @@ function getNextUsers(){
                                 cell5.innerHTML = data[i].points;
                             else
                                 cell5.innerHTML = "-";
-                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -439,7 +396,6 @@ function getPreUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
-                            var cell6 = row.insertCell(5);
                             cell1.innerHTML = data[i].username;
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
@@ -451,7 +407,6 @@ function getPreUsers(){
                                 cell5.innerHTML = data[i].points;
                             else
                                 cell5.innerHTML = "-";
-                            cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     } else {
@@ -1565,7 +1520,7 @@ function drawGeoChart(){
                     var dados = google.visualization.arrayToDataTable(data);
 
                     var options = {
-                    	region: 'PT'
+                        region: 'PT'
                     };
 
                     var chart = new google.visualization.GeoChart(document.getElementById('geomap'));
