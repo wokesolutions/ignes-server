@@ -970,6 +970,8 @@ public class Report {
 				String userlevel = user.getProperty(DSUtils.USER_LEVEL).toString();
 
 				Transaction txn = datastore.beginTransaction();
+				
+				String orgname = "";
 
 				try {
 					if(userlevel.equals(UserLevel.WORKER)) {
@@ -993,6 +995,24 @@ public class Report {
 							txn.rollback();
 							return Response.status(Status.FORBIDDEN).build();
 						}
+						
+						Entity worker;
+						try {
+							worker = datastore.get(workerK);
+						} catch(EntityNotFoundException e) {
+							LOG.info(Log.WORKER_NOT_FOUND);
+							return Response.status(Status.EXPECTATION_FAILED).build();
+						}
+						
+						Entity org;
+						try {
+							org = datastore.get((Key) worker.getProperty(DSUtils.WORKER_ORG));
+						} catch(EntityNotFoundException e) {
+							LOG.info(Log.ORG_NOT_FOUND);
+							return Response.status(Status.EXPECTATION_FAILED).build();
+						}
+						
+						orgname = org.getProperty(DSUtils.ORG_NAME).toString();
 					} else if(Arrays.asList(UserLevel.LEVEL1, UserLevel.LEVEL2)
 							.contains(userlevel)) {
 						Key reporter = (Key) reportE.getProperty(DSUtils.REPORT_USER);
@@ -1030,7 +1050,7 @@ public class Report {
 
 					if((boolean) reporter.getProperty(DSUtils.USER_SENDEMAIL))
 						Email.sendClosedReport(reporter.getProperty(DSUtils.USER_EMAIL).toString(),
-								user, reportE.getProperty(DSUtils.REPORT_TITLE).toString());
+								user, orgname, reportE.getProperty(DSUtils.REPORT_TITLE).toString());
 
 					return Response.ok().build();
 				} finally {

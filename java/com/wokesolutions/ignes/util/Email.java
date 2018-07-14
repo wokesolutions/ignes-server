@@ -107,15 +107,15 @@ public class Email {
 		.send();
 	}
 
-	public static void sendClosedReport(String email, Entity closer, String reportTitle) {
-		String username = closer.getKey().getName();
-		String levelS = closer.getProperty(DSUtils.USER_LEVEL).toString();
+	public static void sendClosedReport(String email, Entity closerU,
+			String orgName, String reportTitle) {
+		String username = closerU.getKey().getName();
+		String levelS = closerU.getProperty(DSUtils.USER_LEVEL).toString();
 		String level;
 		String closertext;
 		if(levelS.equals(UserLevel.WORKER)) {
 			level = "colaborador/a ";
-			String orgname = closer.getProperty(DSUtils.WORKER_ORG).toString();
-			closertext = level + username + " do nosso parceiro " + orgname;
+			closertext = level + username + " do nosso parceiro " + orgName;
 		} else if(levelS.equals(UserLevel.ADMIN)) {
 			level = "administrador/a ";
 			closertext = level + username;
