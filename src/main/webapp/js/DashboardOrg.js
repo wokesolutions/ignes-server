@@ -51,6 +51,8 @@ function init() {
     document.getElementById("send_application").onclick = sendApplication;
     document.getElementById("remove_button").onclick = showButtonDelete;
     document.getElementById("view_button").onclick = showButtonView;
+    document.getElementById("on_click").onclick = on;
+    document.getElementById("overlay").onclick = off;
 
     $("#email_select").change(function(){
         var email = $("#email_select").val();
@@ -69,6 +71,13 @@ function init() {
     getFirstWorkers();
 
 
+}
+function on() {
+    document.getElementById("overlay").style.display = "block";
+}
+
+function off() {
+    document.getElementById("overlay").style.display = "none";
 }
 
 function getShowMore(){

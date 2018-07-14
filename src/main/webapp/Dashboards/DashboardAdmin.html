@@ -76,7 +76,7 @@
 <div id="list_pending_orgs"style="display: none">
     <div class="row">
         <div class="col-lg-12 col-md-12 mx-auto text-center"style="margin-top:2rem">
-            <p class="info_text_bold_sm">- Lista de Organazições Pendentes -</p>
+            <p class="info_text_bold_sm">- Lista de Organizações Pendentes -</p>
         </div>
     </div>
     <div class="row">
@@ -180,7 +180,7 @@
         </div>
     </div>
     <div class="row">
-        <div class=" col-md-2 col-lg-2 text-center" style="margin-top:2rem">
+        <div class=" col-md-2 col-lg-2 text-center">
             <button class="btn btn-default btn-style" id="refresh_public_reports_pending"><img src="../images/35923386_2194373630589273_841953408381353984_n.png" height="30"></i> </button>
         </div>
         <div class=" col-md-10 col-lg-10 text-center"></div>
@@ -229,7 +229,7 @@
     </div>
     <div class="row">
         <div class="col-lg-12 col-md-12 mx-auto text-center">
-            <a id ="iconMarker" style="margin-top:1rem" class="fa fa-user-plus"></a>
+            <a id ="iconMarker" style="margin-top:0.8rem" class="fa fa-user-plus"></a>
         </div>
     </div>
     <div class="container" style="margin-top: 2rem">
@@ -288,22 +288,26 @@
     </div>
 </div>
 
-
 <!--PIECHART-->
-<div id="statistic">
-    <div id="piechart" style="width: 40rem; height:40rem; display:none"></div>
+<div id="statistic" style="display:none">
     <div class="row">
-        <div class="table-responsive">
-            <table class=" table table-hover table-style-pend text-center" id="top_table">
-                <tr>
-                    <th class="th-style">Posição</th>
-                    <th class="th-style">Nome de Utilizador</th>
-                    <th class="th-style">Pontos</th>
-                </tr>
-            </table>
+        <div class="col-lg-6">
+            <div id="piechart" style="width: 40rem; height:40rem"></div>
+        </div>
+        <div class="col-lg-6">
+            <div class="table-responsive">
+                <table class=" table table-hover table-style-pend text-center" id="top_table">
+                    <tr>
+                        <th class="th-style">Posição</th>
+                        <th class="th-style">Nome de Utilizador</th>
+                        <th class="th-style">Pontos</th>
+                    </tr>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
 <script src = "../js/jquery-3.3.1.min.js"></script>
 <script src="../js/RestApi.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDyB4FcTNeaLK_S-cHrV3EuxmwZGItbIRw"></script>
