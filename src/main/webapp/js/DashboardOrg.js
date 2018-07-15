@@ -1403,10 +1403,10 @@ var loadMoreTasks = function(email,cursor){
 
                         getThumbnailTask(data[i].task, i);
                     }
-
+                    console.log(arraytasks);
                     var itemLists = document.getElementsByClassName("variable");
 
-                    for (var j = 0; j < itemLists.length; j++ ) (function(i){
+                    for (var j = 0; j < itemLists.length; j++ ) (function(j){
                         itemLists[j].onclick = function() {
                             onNotes(arraytasks[j]);
                         }
@@ -1453,7 +1453,6 @@ function getThumbnailTask(reportId, i){
 }
 
 function onNotes(task) {
-
     console.log(task);
     $(".notes_remove").remove();
     var body = "";
