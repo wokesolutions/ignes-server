@@ -1485,7 +1485,14 @@ function onNotes(task) {
                 document.getElementById("overlay_notes").style.display = "block";
 
             });
-        } else{
+        } else if(response.status === 204){
+            var contentNotes = '<div class="notes_remove">' +
+                '<p class="text-center" style="font-family:Quicksand Bold; color:#212529; font-size:12px;">Esta tarefa não tem notas.</p>' +
+                '</div>';
+
+            $(".inner_notes").append(contentNotes);
+        }
+        else{
             console.log("Não deu 200 ao pedir o thumbnail");
         }
     }).catch(function(err) {
