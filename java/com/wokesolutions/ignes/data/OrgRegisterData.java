@@ -26,6 +26,6 @@ public class OrgRegisterData {
 				&& !name.equals("") && !email.equals("") && email.contains("@")
 				&& !password.equals("") && !address.equals("") && !locality.equals("")
 				&& !zip.equals("") && array.length() > 0 && !phone.equals("")
-				&& array.length() <= 3;
+				&& array.length() <= 3 && zip.matches("\\d{4}(-\\d{3})?$");
 	}
 }

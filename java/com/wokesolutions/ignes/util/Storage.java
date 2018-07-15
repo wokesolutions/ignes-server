@@ -46,7 +46,7 @@ public class Storage {
 
 	private static ImagesService imagesService = ImagesServiceFactory.getImagesService();
 
-	public static void put(String svg) {
+	public static void putPortugalSvg(String svg) {
 		String path = "img/stats/portugal.svg";
 		GcsFilename fileName = new GcsFilename(BUCKET, path);
 		GcsFileOptions options = new GcsFileOptions.Builder()
@@ -56,7 +56,7 @@ public class Storage {
 		GcsOutputChannel outputChannel;
 		try {
 			outputChannel = gcsService.createOrReplace(fileName, options);
-			copy(new ByteArrayInputStream(Base64.encode(svg.getBytes())),
+			copy(new ByteArrayInputStream(svg.getBytes()),
 					Channels.newOutputStream(outputChannel));
 		} catch(IOException e) {}
 	}
@@ -144,6 +144,12 @@ public class Storage {
 		} catch (IOException e) {
 			return null;
 		}
+	}
+	
+	public static InputStream getImageIs(String path) {
+		GcsFilename gcsFilename = new GcsFilename(BUCKET, path);
+		GcsInputChannel readChannel = gcsService.openPrefetchingReadChannel(gcsFilename, 0, BUFFER_SIZE);
+		return Channels.newInputStream(readChannel);
 	}
 
 	public static class StoragePath {
