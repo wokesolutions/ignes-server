@@ -16,7 +16,7 @@ public class UserOptionalData {
 
 	public boolean isValid() {
 		return phone != null || name != null || gender != null || address != null
-				|| locality != null || zip != null || birth != null || job != null
+				|| locality != null || (zip != null && zip.matches("\\d{4}(-\\d{3})?$")) || birth != null || job != null
 				|| skills != null;
 	}
 }

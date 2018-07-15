@@ -35,6 +35,7 @@ import com.google.appengine.repackaged.org.apache.commons.codec.digest.DigestUti
 import com.google.cloud.datastore.DatastoreException;
 import com.wokesolutions.ignes.data.LoginData;
 import com.wokesolutions.ignes.util.Log;
+import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.UserLevel;
 import com.wokesolutions.ignes.util.CustomHeader;
 import com.wokesolutions.ignes.util.DSUtils;
@@ -59,7 +60,7 @@ public class Login {
 			@Context HttpHeaders headers) {
 		if(!data.isValid())
 			return Response.status(Status.FORBIDDEN).entity(Log.LOGIN_DATA_INVALID).build();
-
+		
 		try {
 			datastore.get(KeyFactory.createKey(DSUtils.USER, data.username));
 		} catch (EntityNotFoundException e1) {

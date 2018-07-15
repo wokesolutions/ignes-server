@@ -32,13 +32,12 @@ var URL_BASE = 'https://mimetic-encoder-209111.appspot.com';
 init();
 
 function init() {
-
-
     verifyIsLoggedIn();
 
-    google.charts.load('current', {'packages':['corechart']});
+    google.charts.load('current', {'packages':['corechart', 'bar']});
     google.charts.setOnLoadCallback(drawPieChart);
     google.charts.setOnLoadCallback(drawGeoChart);
+    google.charts.setOnLoadCallback(monthStat);
 
     getFirstUsers();
     getPendingFirst();
@@ -266,7 +265,7 @@ function getFirstUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
-                            cell1.innerHTML = data[i].username;
+                            cell1.outerHTML = "<button type = 'submit' onclick = getProfile(this.parentNode.rowIndex)>" +data[i].username + "</button>";
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
                             if(data[i].org !== undefined)
@@ -348,7 +347,7 @@ function getNextUsers(){
                             var cell3 = row.insertCell(2);
                             var cell4 = row.insertCell(3);
                             var cell5 = row.insertCell(4);
-                            cell1.innerHTML = data[i].username;
+                            cell1.outerHTML = "<button type = 'submit' onclick = getProfile(this.parentNode.rowIndex)>" +data[i].username + "</button>";
                             cell2.innerHTML = data[i].email;
                             cell3.innerHTML = data[i].level;
                             if(data[i].org !== undefined)
@@ -429,8 +428,7 @@ function getPreUsers(){
                                 var cell3 = row.insertCell(2);
                                 var cell4 = row.insertCell(3);
                                 var cell5 = row.insertCell(4);
-                                var cell6 = row.insertCell(5);
-                                cell1.innerHTML = data[i].username;
+                                cell1.outerHTML = "<button type = 'submit' onclick = getProfile(this.parentNode.rowIndex)>" +data[i].username + "</button>";
                                 cell2.innerHTML = data[i].email;
                                 cell3.innerHTML = data[i].level;
                                 if (data[i].org !== undefined)
@@ -441,7 +439,6 @@ function getPreUsers(){
                                     cell5.innerHTML = data[i].points;
                                 else
                                     cell5.innerHTML = "-";
-                                cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                             }
 
                         } else {
@@ -647,7 +644,7 @@ function getPendingPre(){
                                 var cell8 = row.insertCell(7);
                                 var cell9 = row.insertCell(8);
                                 var cell10 = row.insertCell(9);
-                                cell1.innerHTML = data[i].nif;
+                                cell1.outerHTML = data[i].nif;
                                 cell2.innerHTML = data[i].name;
                                 cell3.innerHTML = data[i].email;
                                 cell4.innerHTML = data[i].address;
@@ -1493,31 +1490,8 @@ function drawGeoChart(){
     headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-    fetch(restRequest("/api/admin/stats/reports/map",'GET', headers, body)).then(function(response) {
-
-            if (response.status === 200 || response.status === 204) {
-                response.json().then(function(data){
-                    console.log(data);
-                    var dados = google.visualization.arrayToDataTable(data);
-
-                    var options = {
-                        region: 'PT'
-                    };
-
-                    var chart = new google.visualization.GeoChart(document.getElementById('geomap'));
-
-                    chart.draw(dados, options);
-                });
-
-            }else{
-                alert("Falha ao apagar utilizador.")
-            }
-
-        }
-    )
-        .catch(function(err) {
-            console.log('Fetch Error', err);
-        });
+    fetch(restRequest("/api/admin/stats/reports/map",'GET', headers, body)).then(response => response.text())
+  .then(svg => document.getElementById("geomap").insertAdjacentHTML("afterbegin", svg));
 }
 
 function monthStat(){
@@ -1531,7 +1505,7 @@ function monthStat(){
 
     fetch(restRequest("/api/admin/stats/reports/months",'GET', headers, body)).then(function(response) {
 
-            if (response.status === 200 || response.status === 204) {
+            if (response.status === 200) {
                 response.json().then(function(data){
                     console.log(data);
                     var dados = google.visualization.arrayToDataTable(data);
@@ -1560,6 +1534,7 @@ function monthStat(){
         });
 }
 
-
-
+function getProfile(row){
+    console.log(row);
+}
 

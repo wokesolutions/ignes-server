@@ -6,8 +6,11 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 
@@ -21,9 +24,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.http.entity.ContentType;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -56,6 +61,7 @@ import com.wokesolutions.ignes.util.DSUtils;
 import com.wokesolutions.ignes.util.Stats;
 import com.wokesolutions.ignes.util.Email;
 import com.wokesolutions.ignes.util.Prop;
+import com.wokesolutions.ignes.util.SVG;
 import com.wokesolutions.ignes.util.Storage;
 import com.wokesolutions.ignes.util.Storage.StoragePath;
 import com.wokesolutions.ignes.util.Log;
@@ -129,7 +135,7 @@ public class Admin {
 
 			admin.setUnindexedProperty(DSUtils.ADMIN_CREATIONTIME, date);
 			admin.setProperty(DSUtils.ADMIN_LOCALITY, data.locality);
-			
+
 			user.setUnindexedProperty(DSUtils.USER_PASSWORD, DigestUtils.sha512Hex(data.password));
 			user.setProperty(DSUtils.USER_EMAIL, data.email);
 			user.setProperty(DSUtils.USER_LEVEL, UserLevel.ADMIN);
@@ -143,15 +149,12 @@ public class Admin {
 
 			Entity useroptional = new Entity(DSUtils.USEROPTIONAL, data.username, userKey);
 
-			Entity userPoints = new Entity(DSUtils.USERPOINTS, data.username, user.getKey());
-			userPoints.setProperty(DSUtils.USERPOINTS_POINTS, 0);
-
 			Entity userStats = new Entity(DSUtils.USERSTATS, data.username, userKey);
 			userStats.setUnindexedProperty(DSUtils.USERSTATS_LOGINS, 0L);
 			userStats.setUnindexedProperty(DSUtils.USERSTATS_LOGINSFAILED, 0L);
 			userStats.setUnindexedProperty(DSUtils.USERSTATS_LOGOUTS, 0L);
 
-			List<Entity> list = Arrays.asList(user, admin, useroptional, userStats, userPoints);
+			List<Entity> list = Arrays.asList(user, admin, useroptional, userStats);
 
 			datastore.put(txn, list);
 			LOG.info(Log.ADMIN_REGISTERED + data);
@@ -299,7 +302,7 @@ public class Admin {
 			}
 		}
 	}
-	*/
+	 */
 
 	@GET
 	@Path("/userlist")
@@ -366,10 +369,10 @@ public class Admin {
 
 				us.put(Prop.POINTS, points.getProperty(DSUtils.USERPOINTS_POINTS));
 			}
-			
+
 			if(level.equals(UserLevel.WORKER)) {
 				Key workerK = KeyFactory.createKey(user.getKey(), DSUtils.WORKER, user.getKey().getName());
-				
+
 				Entity worker;
 				try {
 					worker = datastore.get(workerK);
@@ -378,7 +381,7 @@ public class Admin {
 					LOG.info(workerK.toString());
 					continue;
 				}
-				
+
 				us.put(Prop.ORG, ((Key) worker.getProperty(DSUtils.WORKER_ORG)).getParent().getName());
 			}
 
@@ -454,9 +457,9 @@ public class Admin {
 	public Response getAllStandbys(@QueryParam(ParamName.CURSOR) String cursor,
 			@Context HttpServletRequest request) {
 		int retries = 5;
-		
+
 		String username = request.getAttribute(CustomHeader.USERNAME_ATT).toString()
-;
+				;
 		while(true) {
 			try {
 				return getAllStandbysRetry(cursor, username);
@@ -475,10 +478,10 @@ public class Admin {
 
 		if(cursor != null && !cursor.equals(""))
 			fetchOptions.startCursor(Cursor.fromWebSafeString(cursor));
-		
+
 		Key userK = KeyFactory.createKey(DSUtils.USER, username);
 		Key adminK = KeyFactory.createKey(userK, DSUtils.ADMIN, username);
-		
+
 		Entity admin;
 		try {
 			admin = datastore.get(adminK);
@@ -491,7 +494,7 @@ public class Admin {
 				FilterOperator.EQUAL, Report.STANDBY);
 		Filter localityFilter = new Query.FilterPredicate(DSUtils.REPORT_LOCALITY,
 				FilterOperator.EQUAL, admin.getProperty(DSUtils.ADMIN_LOCALITY));
-		
+
 		CompositeFilter filter = new Query.CompositeFilter(CompositeFilterOperator.AND,
 				Arrays.asList(adminFilter, localityFilter));
 
@@ -559,7 +562,7 @@ public class Admin {
 					LOG.info(Log.REPORT_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
-				
+
 				Entity admin;
 				try {
 					admin = datastore.get(adminK);
@@ -567,7 +570,7 @@ public class Admin {
 					LOG.info(Log.REPORT_NOT_FOUND);
 					return Response.status(Status.NOT_FOUND).build();
 				}
-				
+
 				if(!report.getProperty(DSUtils.REPORT_LOCALITY).equals(admin.getProperty(DSUtils.ADMIN_LOCALITY))) {
 					LOG.info(Log.UNEXPECTED_ERROR);
 					return Response.status(Status.FORBIDDEN).build();
@@ -867,19 +870,19 @@ public class Admin {
 					rep.put(Prop.LNG, report.getProperty(DSUtils.REPORT_LNG));
 					rep.put(Prop.CREATIONTIME,
 							report.getProperty(DSUtils.REPORT_CREATIONTIMEFORMATTED));
-					
+
 					Key reportK = report.getKey();
-					
+
 					Key orgtaskK = KeyFactory.createKey(reportK, DSUtils.ORGTASK, reportK.getName());
-					
+
 					LOG.info(orgtaskK.toString());
-					
+
 					Entity orgtask;
 					try {
 						orgtask = datastore.get(orgtaskK);
-						
+
 						JSONObject orgObj = new JSONObject();
-						
+
 						Key orgK = (Key) orgtask.getProperty(DSUtils.ORGTASK_ORG);
 						Entity org;
 						try {
@@ -888,28 +891,28 @@ public class Admin {
 							LOG.info(Log.ORG_NOT_FOUND);
 							continue;
 						}
-						
+
 						orgObj.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
 						orgObj.put(Prop.NIF, orgK.getParent().getName());
-						
+
 						rep.put(Prop.ORG, orgObj);
 					} catch(EntityNotFoundException e) {
 						if(report.getProperty(DSUtils.REPORT_STATUS).equals(Report.OPEN)) {
 							Filter applicationF = new Query.FilterPredicate(DSUtils.APPLICATION_REPORT,
 									FilterOperator.EQUAL, report.getKey());
 							Query applicationQ = new Query(DSUtils.APPLICATION).setFilter(applicationF);
-							
+
 							FetchOptions defaultOptions = FetchOptions.Builder.withDefaults();
 							List<Entity> applications = datastore.prepare(applicationQ).asList(defaultOptions);
-							
+
 							JSONArray apps = new JSONArray();
-							
+
 							for(Entity application : applications) {
 								JSONObject app = new JSONObject();
 
 								Key orgK = application.getParent();
 								Entity org;
-								
+
 								Entity user;
 								try {
 									org = datastore.get(orgK);
@@ -918,19 +921,19 @@ public class Admin {
 									LOG.info(Log.ORG_NOT_FOUND);
 									continue;
 								}
-								
+
 								app.put(Prop.BUDGET, application.getProperty(DSUtils.APPLICATION_BUDGET));
 								app.put(Prop.INFO, application.getProperty(DSUtils.APPLICATION_INFO));
 								app.put(Prop.APPLICATION_TIME, application.getProperty(DSUtils.APPLICATION_TIME));
-								
+
 								app.put(Prop.NIF, orgK.getName());
 								app.put(Prop.NAME, org.getProperty(DSUtils.ORG_NAME));
 								app.put(Prop.PHONE, org.getProperty(DSUtils.ORG_PHONE));
 								app.put(Prop.EMAIL, user.getProperty(DSUtils.USER_EMAIL));
-								
+
 								apps.put(app);
 							}
-							
+
 							if(apps.length() > 0)
 								rep.put(Prop.APPLICATIONS, apps);
 						}
@@ -1005,26 +1008,34 @@ public class Admin {
 			}
 		}
 	}
-	
+
 	@GET
 	@Path("/stats/reports/map")
-	@Produces(CustomHeader.JSON_CHARSET_UTF8)
+	@Produces(MediaType.APPLICATION_SVG_XML)
 	public Response reportMap() {
 		int retries = 5;
-		
+
 		while(true) {
 			try {
-				JSONArray array = new JSONArray();
+				Map<String, Integer> map = new HashMap<>(30);
+
+				double total = fillDistricts(map);
+
+				Map<String, String> colors = new HashMap<>(30);
 				
-				JSONArray first = new JSONArray();
-				first.put(Stats.DISTRICT);
-				first.put(Stats.REPORTNUM);
-				
-				array.put(first);
-				
-				fillDistricts(array);
-				
-				return Response.ok(array.toString()).build();
+				String hex;
+				int g;
+				double perc;
+				for(Entry<String, Integer> dist : map.entrySet()) {
+					perc = dist.getValue() / total;
+					g = (int) (255 * perc);
+					hex = String.format("#%02x%02x%02x", 0, g, 0); 
+					colors.put(dist.getKey(), hex);
+				}
+
+				String svg = SVG.createPortugalSVG(colors, (int) total);
+
+				return Response.ok(svg).build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Log.TOO_MANY_RETRIES);
@@ -1034,53 +1045,53 @@ public class Admin {
 			}
 		}
 	}
-	
+
 	@GET
 	@Path("/stats/reports/months")
 	@Produces(CustomHeader.JSON_CHARSET_UTF8)
 	public Response reportsMonths() {
 		int retries = 5;
-		
+
 		while(true) {
 			try {
 				int[] counts = new int[12];
-				
+
 				FetchOptions fetchOptions = FetchOptions.Builder.withLimit(BATCH_SIZE);
-				
+
 				Query reportQ = new Query(DSUtils.REPORT)
 						.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIME, Date.class));
-				
+
 				QueryResultList<Entity> reportlist =
 						datastore.prepare(reportQ).asQueryResultList(fetchOptions);
-				
+
 				for(Entity report : reportlist) {
 					Date date = (Date) report.getProperty(DSUtils.REPORT_CREATIONTIME);
-					
+
 					LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 					int month = localDate.getMonthValue();
-					
+
 					counts[month - 1]++;
 				}
-				
+
 				while(reportlist.size() == BATCH_SIZE) {
 					fetchOptions.startCursor(reportlist.getCursor());
-					
+
 					reportQ = new Query(DSUtils.REPORT)
 							.addProjection(new PropertyProjection(DSUtils.REPORT_CREATIONTIME,
 									Date.class));
-					
+
 					reportlist = datastore.prepare(reportQ).asQueryResultList(fetchOptions);
-					
+
 					for(Entity report : reportlist) {
 						Date date = (Date) report.getProperty(DSUtils.REPORT_CREATIONTIME);
-						
+
 						LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 						int month = localDate.getMonthValue();
-						
+
 						counts[month - 1]++;
 					}
 				}
-				
+
 				JSONArray array = new JSONArray();
 				JSONArray curr = new JSONArray();
 				curr.put(Stats.MONTH); curr.put(Stats.REPORTNUM);
@@ -1088,67 +1099,67 @@ public class Admin {
 				random.put("role", "style");
 				curr.put(random);
 				array.put(curr);
-				
+
 				curr = new JSONArray();
 				curr.put(Stats.JANUARY);
 				curr.put(counts[0]);
 				array.put(curr);
-				
+
 				curr = new JSONArray();
 				curr.put(Stats.FEBRUARY);
 				curr.put(counts[1]);
 				array.put(curr);
-				
+
 				curr = new JSONArray();
 				curr.put(Stats.MARCH);
 				curr.put(counts[2]);
 				array.put(curr);
-				
+
 				curr = new JSONArray();
 				curr.put(Stats.APRIL);
 				curr.put(counts[3]);
 				array.put(curr);
-				
+
 				curr = new JSONArray();
 				curr.put(Stats.MAY);
 				curr.put(counts[4]);
 				array.put(curr);
-				
+
 				curr = new JSONArray();
 				curr.put(Stats.JUNE);
 				curr.put(counts[5]);
 				array.put(curr);
-			
+
 				curr = new JSONArray();
 				curr.put(Stats.JULY);
 				curr.put(counts[6]);
 				array.put(curr);
-				
+
 				curr = new JSONArray();
 				curr.put(Stats.AUGUST);
 				curr.put(counts[7]);
 				array.put(curr);
-				
+
 				curr = new JSONArray();
 				curr.put(Stats.SEPTEMBER);
 				curr.put(counts[8]);
 				array.put(curr);
-				
+
 				curr = new JSONArray();
 				curr.put(Stats.OCTOBER);
 				curr.put(counts[9]);
 				array.put(curr);
-				
+
 				curr = new JSONArray();
 				curr.put(Stats.NOVEMBER);
 				curr.put(counts[10]);
 				array.put(curr);
-				
+
 				curr = new JSONArray();
 				curr.put(Stats.DECEMBER);
 				curr.put(counts[11]);
 				array.put(curr);
-				
+
 				return Response.ok(array.toString()).build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
@@ -1159,248 +1170,212 @@ public class Admin {
 			}
 		}
 	}
-	
-	private void fillDistricts(JSONArray counts) {
+
+	private double fillDistricts(Map<String, Integer> map) {
 		FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
-		
+
+		int total = 0;
+
 		// --------------------------- ACORES
-		
+
 		Filter districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.ACORES);
 		Query districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		int count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		JSONArray position = new JSONArray();
-		position.put(Stats.ACORES_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Acores", count);
+		total += count;
+
 		// --------------------------- AVEIRO
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.AVEIRO);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.AVEIRO_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Aveiro", count);
+		total += count;
+
 		// --------------------------- BEJA
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.BEJA);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.BEJA_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Beja", count);
+		total += count;
+
 		// --------------------------- BRAGA
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.BRAGA);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.BRAGA_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Braga", count);
+		total += count;
+
 		// --------------------------- BRAGANÇA
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.BRAGANÇA);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.BRAGANÇA_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Braganca", count);
+		total += count;
+
 		// --------------------------- CASTELO_BRANCO
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.CASTELO_BRANCO);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.CASTELO_BRANCO_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("CasteloBranco", count);
+		total += count;
+
 		// --------------------------- COIMBRA
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.COIMBRA);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.COIMBRA_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Coimbra", count);
+		total += count;
+
 		// --------------------------- EVORA
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.EVORA);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.EVORA_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Evora", count);
+		total += count;
+
 		// --------------------------- FARO
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.FARO);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.FARO_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Faro", count);
+		total += count;
+
 		// --------------------------- GUARDA
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.GUARDA);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.GUARDA_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Guarda", count);
+		total += count;
+
 		// --------------------------- LEIRIA
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.LEIRIA);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.LEIRIA_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Leiria", count);
+		total += count;
+
 		// --------------------------- LISBOA
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.LISBOA);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.LISBOA_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Lisboa", count);
+		total += count;
+
 		// --------------------------- MADEIRA
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.MADEIRA);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.MADEIRA_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Madeira", count);
+		total += count;
+
 		// --------------------------- PORTALEGRE
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.PORTALEGRE);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.PORTALEGRE_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Portalegre", count);
+		total += count;
+
 		// --------------------------- PORTO
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.PORTO);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.PORTO_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Porto", count);
+		total += count;
+
 		// --------------------------- SANTAREM
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.SANTAREM);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.SANTAREM_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Santarem", count);
+		total += count;
+
 		// --------------------------- SETUBAL
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.SETUBAL);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.SETUBAL_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("Setubal", count);
+		total += count;
+
 		// --------------------------- VIANA_DO_CASTELO
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.VIANA_DO_CASTELO);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.VIANA_DO_CASTELO_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("VianadoCastelo", count);
+		total += count;
+
 		// --------------------------- VILA_REAL
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.VILA_REAL);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.VILA_REAL_CODE);
-		position.put(count);
-		counts.put(position);
-		
+
+		map.put("VilaReal", count);
+		total += count;
+
 		// --------------------------- VISEU
-		
+
 		districtF = new Query.FilterPredicate(DSUtils.REPORT_DISTRICT,
 				FilterOperator.EQUAL, Stats.VISEU);
 		districtQ = new Query(DSUtils.REPORT).setKeysOnly().setFilter(districtF);
 		count = datastore.prepare(districtQ).countEntities(fetchOptions);
-		
-		position = new JSONArray();
-		position.put(Stats.VISEU_CODE);
-		position.put(count);
-		counts.put(position);
+
+		map.put("Viseu", count);
+		total += count;
+
+		return total * 1.0;
 	}
 }

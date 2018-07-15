@@ -84,7 +84,7 @@ public class RequestControlFilter implements Filter {
 		else
 			cache.increment(deviceid, 1L);
 
-		if((long) cache.get(deviceid) > 50L) {
+		if((long) cache.get(deviceid) > 100L) {
 			changeResp(resp, Log.TOO_MANY_REQUESTS);
 			return;
 		}
