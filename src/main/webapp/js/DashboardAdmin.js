@@ -11,6 +11,7 @@ var cursor_next_public;
 var cursor_current_public;
 var cursor_pre_public;
 var standby_rep= [];
+var public_reports = [];
 
 var user_cursors = [""];
 var index_user;
@@ -24,1500 +25,1510 @@ var index_pending;
 var public_cursors = [""];
 var index_public;
 
-
-var public_reports = [];
-
 var current_position = "list_users_variable";
 
-var URL_BASE = 'https://main-dot-mimetic-encoder-209111.appspot.com';
+var URL_BASE = 'https://mimetic-encoder-209111.appspot.com';
 
 init();
 
 function init() {
 
 
-	verifyIsLoggedIn();
+    verifyIsLoggedIn();
 
-	google.charts.load('current', {'packages':['corechart']});
-	google.charts.setOnLoadCallback(drawChart);
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawPieChart);
+    google.charts.setOnLoadCallback(drawGeoChart);
 
-	getFirstUsers();
-	getPendingFirst();
-	getPendingReportsFirst();
-	getPublicFirst();
-	getTopUsers();
+    getFirstUsers();
+    getPendingFirst();
+    getPendingReportsFirst();
+    getPublicFirst();
+    getTopUsers();
 
-	document.getElementById("logout_button").onclick = logOut;
-	document.getElementById("add_admin_button").onclick = showAddAdmin;
-	document.getElementById("add_adm").onclick = addAdmin;
-	document.getElementById("public_reports_button").onclick = showPublicReports;
-	document.getElementById("statistics_button").onclick = showStatisticsReports;
-	document.getElementById("pending_verify_reports_button").onclick = showPendingReports;
-	document.getElementById("next_list").onclick = getNextUsers;
-	document.getElementById("previous_list").onclick = getPreUsers;
-	document.getElementById("refresh_users").onclick = getFirstUsers;
-	document.getElementById("next_list_pending").onclick = getPendingNext;
-	document.getElementById("previous_list_pending").onclick = getPendingPre;
-	document.getElementById("refresh_orgs_pending").onclick = getPendingFirst;
-	document.getElementById("list_pending_button").onclick = showPending;
-	document.getElementById("list_users_button").onclick = showUsers;
-	document.getElementById("next_report_pending").onclick = getPendingReportsNext;
-	document.getElementById("previous_reports_pending").onclick = getPendingReportsPre;
-	document.getElementById("refresh_reports_pending").onclick = getPendingReportsFirst;
-	document.getElementById("next_public_report_pending").onclick = getPublicNext;
-	document.getElementById("previous_public_reports_pending").onclick = getPublicPre;
-	document.getElementById("refresh_public_reports_pending").onclick = getPublicFirst;
+    document.getElementById("logout_button").onclick = logOut;
+    document.getElementById("public_reports_button").onclick = showPublicReports;
+    document.getElementById("add_admin_button").onclick = showAddAdmin;
+    document.getElementById("add_adm").onclick = addAdmin;
+    document.getElementById("statistics_button").onclick = showStatisticsReports;
+    document.getElementById("pending_verify_reports_button").onclick = showPendingReports;
+    document.getElementById("next_list").onclick = getNextUsers;
+    document.getElementById("previous_list").onclick = getPreUsers;
+    document.getElementById("refresh_users").onclick = getFirstUsers;
+    document.getElementById("next_list_pending").onclick = getPendingNext;
+    document.getElementById("previous_list_pending").onclick = getPendingPre;
+    document.getElementById("refresh_orgs_pending").onclick = getPendingFirst;
+    document.getElementById("list_pending_button").onclick = showPending;
+    document.getElementById("list_users_button").onclick = showUsers;
+    document.getElementById("next_reports_pending").onclick = getPendingReportsNext;
+    document.getElementById("previous_reports_pending").onclick = getPendingReportsPre;
+    document.getElementById("refresh_reports_pending").onclick = getPendingReportsFirst;
+    document.getElementById("next_public_reports_pending").onclick = getPublicNext;
+    document.getElementById("previous_public_reports_pending").onclick = getPublicPre;
+    document.getElementById("refresh_public_reports_pending").onclick = getPublicFirst;
 
 }
 
 function showPendingReports(){
-	hideShow("reports_pending_variable");
-}
-
-function showAddAdmin(){
-	hideShow("add_admin_variable");
+    hideShow("reports_pending_variable");
 }
 
 function showPublicReports(){
-	hideShow("list_public_variable");
+    hideShow("list_public_variable");
 }
 
 function showStatisticsReports(){
-	hideShow("statistics_variable");
+    hideShow("statistics_variable");
 }
 
 function showUsers(){
-	hideShow("list_users_variable");
+    hideShow("list_users_variable");
 }
 
 function showPending(){
-	hideShow("show_pending_variable");
+    hideShow("show_pending_variable");
+}
+
+function showAddAdmin(){
+    hideShow("add_admin_variable");
 }
 
 function hideShow(element){
 
-	if(current_position === "list_users_variable"){
+    if(current_position === "list_users_variable"){
 
-		document.getElementById("list_users").style.display = "none";
+        document.getElementById("list_users").style.display = "none";
 
-	} else if(current_position === "show_pending_variable"){
+    } else if(current_position === "show_pending_variable"){
 
-		document.getElementById("list_pending_orgs").style.display = "none";
+        document.getElementById("list_pending_orgs").style.display = "none";
 
-	} else if(current_position === "list_public_variable"){
+    } else if(current_position === "list_public_variable"){
 
-		document.getElementById("list_pending_public_reports").style.display = "none";
+        document.getElementById("list_pending_public_reports").style.display = "none";
 
-	} else if(current_position === "statistics_variable"){
+    } else if(current_position === "statistics_variable"){
 
-		document.getElementById("piechart").style.display = "none";
+        document.getElementById("statistic").style.display = "none";
 
-		document.getElementById("top_table").style.display = "none";
+    } else if(current_position === "reports_pending_variable"){
 
-	} else if(current_position === "reports_pending_variable"){
+        document.getElementById("list_pending_reports").style.display = "none";
 
-		document.getElementById("list_pending_reports").style.display = "none";
+    } else if(current_position === "add_admin_variable"){
 
-	} else if(current_position === "add_admin_variable"){
+        document.getElementById("add_admin_report").style.display = "none";
 
-		document.getElementById("add_admin_report").style.display = "none";
+    }
 
-	}
+    if(element === "show_pending_variable"){
 
-	if(element === "show_pending_variable"){
+        document.getElementById("list_pending_orgs").style.display = "block";
+        current_position = "show_pending_variable";
 
-		document.getElementById("list_pending_orgs").style.display = "block";
-		current_position = "show_pending_variable";
+    }else if(element === "list_users_variable"){
 
-	}else if(element === "list_users_variable"){
+        document.getElementById("list_users").style.display = "block";
+        current_position = "list_users_variable";
 
-		document.getElementById("list_users").style.display = "block";
-		current_position = "list_users_variable";
+    } else if(element === "list_public_variable"){
 
-	} else if(element === "list_public_variable"){
+        document.getElementById("list_pending_public_reports").style.display = "block";
+        current_position = "list_public_variable";
 
-		document.getElementById("list_pending_public_reports").style.display = "block";
-		current_position = "list_public_variable";
+    } else if(element === "statistics_variable"){
 
-	} else if(element === "statistics_variable"){
-
-		document.getElementById("piechart").style.display = "block";
-		current_position = "statistics_variable";
-
-				document.getElementById("top_table").style.display = "block";
+        document.getElementById("statistic").style.display = "block";
+        current_position = "statistics_variable";
 
 
-	} else if(element === "reports_pending_variable"){
+    } else if(element === "reports_pending_variable"){
 
-		document.getElementById("list_pending_reports").style.display = "block";
-		current_position = "reports_pending_variable";
+        document.getElementById("list_pending_reports").style.display = "block";
+        current_position = "reports_pending_variable";
 
-	} else if(element === "add_admin_variable"){
-		document.getElementById("add_admin_report").style.display = "block";
-		current_position = "add_admin_variable";
-	}
+    } else if(element === "add_admin_variable"){
+        document.getElementById("add_admin_report").style.display = "block";
+        current_position = "add_admin_variable";
+    }
+}
+
+function addAdmin(){
+    var name = document.getElementById("admin_username").value;
+    var email = document.getElementById("admin_email").value;
+    var password = document.getElementById("admin_password").value;
+    var confirmation = document.getElementById("admin_confirmation").value;
+    var locality = document.getElementById("admin_locality").value;
+    if(password === confirmation){
+        var headers = new Headers();
+        var body = {username:name,email:email,locality:locality,password:password};
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
+
+        fetch(restRequest('/api/admin/register', 'POST', headers, JSON.stringify(body))).then(function(response) {
+
+                if (response.status === 200) {
+                    alert("Administrador registado com sucesso.");
+                    document.getElementById("admin_username").innerHTML = "";
+                    document.getElementById("admin_email").innerHTML = "";
+                    document.getElementById("admin_password").innerHTML = "";
+                    document.getElementById("admin_confirmation").innerHTML = "";
+                    document.getElementById("admin_locality").innerHTML = "";
+                }else{
+                    alert("Utilizador já existe ou falta informação em algum campo.")
+                }
+
+            }
+        )
+            .catch(function(err) {
+                console.log('Fetch Error', err);
+            });
+    }else{
+        alert("A password e a confirmação não estão coerentes.");
+    }
 }
 
 function verifyIsLoggedIn(){
-	console.log(localStorage.getItem('token'));
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    console.log(localStorage.getItem('token'));
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/verifytoken','GET', headers, body)).then(function(response) {
+    fetch(restRequest('/api/verifytoken','GET', headers, body)).then(function(response) {
 
-		if (response.status !== 200) {
+            if (response.status !== 200) {
 
-			window.location.href = "index.html";
+                window.location.href = "index.html";
 
-		}
+            }
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 
 
 
-}
-
-function promoDepromo (row){
-	var table = document.getElementById("user_table");
-	var username = table.rows[row].cells[0].innerHTML;
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
-	if(table.rows[row].cells[2].innerHTML === "ADMIN"){
-		fetch(restRequest('/api/admin/demote/' + username, 'POST', headers, body)).then(function(response) {
-
-			if (response.status === 200 || response.status === 204) {
-				alert("Trabalhador despromovido com sucesso.")
-			}else{
-				alert("Falha ao despromover o utilizador.")
-			}
-
-		}
-		)
-		.catch(function(err) {
-			console.log('Fetch Error', err);
-		});
-	} else{
-		fetch(restRequest('/api/admin/promote/' + username, 'POST', headers, body)).then(function(response) {
-
-			if (response.status === 200 || response.status === 204) {
-				alert("Trabalhador promovido com sucesso.")
-			}else{
-				alert("Falha ao promover o utilizador.")
-			}
-
-		}
-		)
-		.catch(function(err) {
-			console.log('Fetch Error', err);
-		});
-	}
 }
 
 function getFirstUsers(){
-	user_cursors = [""];
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    user_cursors = [""];
+    console.log(user_cursors);
+    console.log(cursor_pre);
+    console.log(cursor_current);
+    console.log(cursor_next);
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/admin/userlist?cursor=','GET', headers, body)).then(function(response) {
-		var table = document.getElementById("user_table");
+    fetch(restRequest('/api/admin/userlist?cursor=','GET', headers, body)).then(function(response) {
+            var table = document.getElementById("user_table");
 
-		if (response.status === 200) {
-			index_user = 0;
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
-			document.getElementById("previous_list").style.display = "none";
-			if(response.headers.get("Cursor") !== null) {
-				cursor_pre = "";
-				cursor_current = "";
-				cursor_next = response.headers.get("Cursor");
-				if(document.getElementById("next_list").style.display === "none")
-					document.getElementById("next_list").style.display = "block";
-				
-			} else{
-				if(document.getElementById("next_list").style.display === "block")
-					document.getElementById("next_list").style.display = "none";
-				
-			}
-			response.json().then(function(data) {
-				console.log(JSON.stringify(data));
-				if(data != null){
-					var i;
-					for(i = 0; i < data.length; i++){
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						cell1.innerHTML = data[i].username;
-						cell2.innerHTML = data[i].email;
-						cell3.innerHTML = data[i].level;
-						if(data[i].org !== undefined)
-							cell4.innerHTML = data[i].org;
-						else
-							cell4.innerHTML = "-";
-						if(data[i].points !== undefined)
-							cell5.innerHTML = data[i].points;
-						else
-							cell5.innerHTML = "-";
-					}
+            if (response.status === 200) {
+                index_user = 0;
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+                document.getElementById("previous_list").style.display = "none";
+                if(response.headers.get("Cursor") !== null) {
+                    user_cursors.push(response.headers.get("Cursor"));
+                    cursor_pre = "";
+                    cursor_current = "";
+                    cursor_next = response.headers.get("Cursor");
+                    if(document.getElementById("next_list").style.display === "none")
+                        document.getElementById("next_list").style.display = "block";
 
-				}else{
-					alert("Não deu 200.")
-				}
-			});
+                } else{
+                    if(document.getElementById("next_list").style.display === "block")
+                        document.getElementById("next_list").style.display = "none";
 
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            cell1.innerHTML = data[i].username;
+                            cell2.innerHTML = data[i].email;
+                            cell3.innerHTML = data[i].level;
+                            if(data[i].org !== undefined)
+                                cell4.innerHTML = data[i].org;
+                            else
+                                cell4.innerHTML = "-";
+                            if(data[i].points !== undefined)
+                                cell5.innerHTML = data[i].points;
+                            else
+                                cell5.innerHTML = "-";
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 
 }
 
 function getNextUsers(){
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    console.log(user_cursors);
+    console.log(cursor_pre);
+    console.log(cursor_current);
+    console.log(cursor_next);
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/admin/userlist?cursor=' + cursor_next,'GET', headers, body)).then(function(response) {
-		var table = document.getElementById("user_table");
+    fetch(restRequest('/api/admin/userlist?cursor=' + cursor_next,'GET', headers, body)).then(function(response) {
+            var table = document.getElementById("user_table");
 
-		if (response.status === 200) {
-			index_user++;
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
-			
-			document.getElementById("previous_list").style.display = "block";
-			if(response.headers.get("Cursor") !== null) {
-				user_cursors.push(response.headers.get("Cursor"));
-				cursor_pre = cursor_current;
-				cursor_current = cursor_next;
-				cursor_next = response.headers.get("Cursor");
+            if (response.status === 200) {
+                index_user++;
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
 
-				if(document.getElementById("next_list").style.display === "none")
-					document.getElementById("next_list").style.display = "block";
+                document.getElementById("previous_list").style.display = "block";
 
-			} else{
-				if(document.getElementById("next_list").style.display === "block")
-					document.getElementById("next_list").style.display = "none";
-			}
-			response.json().then(function(data) {
-				console.log(JSON.stringify(data));
-				if(data != null){
-					var i;
-					for(i = 0; i < data.length; i++){
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						cell1.innerHTML = data[i].username;
-						cell2.innerHTML = data[i].email;
-						cell3.innerHTML = data[i].level;
-						if(data[i].org !== undefined)
-							cell4.innerHTML = data[i].org;
-						else
-							cell4.innerHTML = "-";
-						if(data[i].points !== undefined)
-							cell5.innerHTML = data[i].points;
-						else
-							cell5.innerHTML = "-";
-					}
+                if(response.headers.get("Cursor") !== null) {
+                    user_cursors.push(response.headers.get("Cursor"));
+                    cursor_pre = cursor_current;
+                    cursor_current = cursor_next;
+                    cursor_next = response.headers.get("Cursor");
 
-				}else{
-					alert("Esta empresa ainda não tem trabalhadores associados.")
-				}
-			});
+                    if(document.getElementById("next_list").style.display === "none")
+                        document.getElementById("next_list").style.display = "block";
 
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+                } else{
+                    cursor_pre = cursor_current;
+                    cursor_current = cursor_next;
+                    if(document.getElementById("next_list").style.display === "block")
+                        document.getElementById("next_list").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            cell1.innerHTML = data[i].username;
+                            cell2.innerHTML = data[i].email;
+                            cell3.innerHTML = data[i].level;
+                            if(data[i].org !== undefined)
+                                cell4.innerHTML = data[i].org;
+                            else
+                                cell4.innerHTML = "-";
+                            if(data[i].points !== undefined)
+                                cell5.innerHTML = data[i].points;
+                            else
+                                cell5.innerHTML = "-";
+                        }
+
+                    }else{
+                        alert("Esta empresa ainda não tem trabalhadores associados.")
+                    }
+                });
+            }else{
+                console.log("Tratar do Forbidden");
+            }
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 
 }
 
 function getPreUsers(){
-	if( index_user- 1 === 0) getFirstUsers();
+    console.log(user_cursors);
+    console.log(cursor_pre);
+    console.log(cursor_current);
+    console.log(cursor_next);
 
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    if(index_user - 1 === 0) getFirstUsers();
 
+    else {
 
-	fetch(restRequest('/api/admin/userlist?cursor=' + cursor_pre,'GET', headers, body)).then(function (response) {
-		var table = document.getElementById("user_table");
-
-		if (response.status === 200) {
-			index_user--;
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
-			document.getElementById("previous_list").style.display = "block";
-			if (response.headers.get("Cursor") !== null) {
-
-				cursor_next= cursor_current;
-				cursor_current = cursor_pre;
-				cursor_pre = user_cursors[index_user - 1];
-
-				if (document.getElementById("next_list").style.display === "none")
-					document.getElementById("next_list").style.display = "block";
-
-			} else {
-				if (document.getElementById("next_list").style.display === "block")
-					document.getElementById("next_list").style.display = "none";
-			}
-			response.json().then(function (data) {
-				console.log(JSON.stringify(data));
-				if (data != null) {
-					var i;
-					for(i = 0; i < data.length; i++){
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						var cell6 = row.insertCell(5);
-						cell1.innerHTML = data[i].username;
-						cell2.innerHTML = data[i].email;
-						cell3.innerHTML = data[i].level;
-						if(data[i].org !== undefined)
-							cell4.innerHTML = data[i].org;
-						else
-							cell4.innerHTML = "-";
-						if(data[i].points !== undefined)
-							cell5.innerHTML = data[i].points;
-						else
-							cell5.innerHTML = "-";
-						cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
-					}
-
-				} else {
-					alert("Esta empresa ainda não tem trabalhadores associados.")
-				}
-			});
-
-		} else {
-			console.log("Tratar do Forbidden");
-		}
+        var headers = new Headers();
+        var body = "";
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	}
-	)
-	.catch(function (err) {
-		console.log('Fetch Error', err);
-	});
+        fetch(restRequest('/api/admin/userlist?cursor=' + cursor_pre, 'GET', headers, body)).then(function (response) {
+                var table = document.getElementById("user_table");
+
+                if (response.status === 200) {
+                    index_user--;
+                    if (table.rows.length > 1) {
+                        table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                    }
+                    document.getElementById("previous_list").style.display = "block";
+                    if (response.headers.get("Cursor") !== null) {
+
+                        cursor_next = cursor_current;
+                        cursor_current = cursor_pre;
+                        cursor_pre = user_cursors[index_user - 1];
+
+                        if (document.getElementById("next_list").style.display === "none")
+                            document.getElementById("next_list").style.display = "block";
+
+                    } else {
+                        if (document.getElementById("next_list").style.display === "block")
+                            document.getElementById("next_list").style.display = "none";
+                    }
+                    response.json().then(function (data) {
+                        console.log(JSON.stringify(data));
+                        if (data != null) {
+                            var i;
+                            for (i = 0; i < data.length; i++) {
+                                var row = table.insertRow(-1);
+                                var cell1 = row.insertCell(0);
+                                var cell2 = row.insertCell(1);
+                                var cell3 = row.insertCell(2);
+                                var cell4 = row.insertCell(3);
+                                var cell5 = row.insertCell(4);
+                                var cell6 = row.insertCell(5);
+                                cell1.innerHTML = data[i].username;
+                                cell2.innerHTML = data[i].email;
+                                cell3.innerHTML = data[i].level;
+                                if (data[i].org !== undefined)
+                                    cell4.innerHTML = data[i].org;
+                                else
+                                    cell4.innerHTML = "-";
+                                if (data[i].points !== undefined)
+                                    cell5.innerHTML = data[i].points;
+                                else
+                                    cell5.innerHTML = "-";
+                                cell6.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='promoDepromo(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                            }
+
+                        } else {
+                            alert("Esta empresa ainda não tem trabalhadores associados.")
+                        }
+                    });
+
+                } else {
+                    console.log("Tratar do Forbidden");
+                }
+
+
+            }
+        )
+            .catch(function (err) {
+                console.log('Fetch Error', err);
+            });
+    }
 }
 
 function logOut(){
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/logout','POST', headers, body)).then(function(response) {
+    fetch(restRequest('/api/logout','POST', headers, body)).then(function(response) {
 
-		if (response.status === 200) {
-			localStorage.removeItem('token');
-			localStorage.removeItem('ignes_username');
-			window.location.href = "../index.html";
+            if (response.status === 200) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('ignes_username');
+                window.location.href = "../index.html";
 
-		}else{
-			console.log("Tratar do Forbidden")
-		}
-
-
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+            }else{
+                console.log("Tratar do Forbidden")
+            }
 
 
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 
-}
 
-function addAdmin(){
-	var name = document.getElementById("admin_username").value;
-	var email = document.getElementById("admin_email").value;
-	var password = document.getElementById("admin_password").value;
-	var confirmation = document.getElementById("admin_confirmation").value;
-	var locality = document.getElementById("admin_locality").value;
-	if(password === confirmation){
-		var headers = new Headers();
-		var body = {username:name,email:email,locality:locality,password:password};
-		headers.append('Authorization', localStorage.getItem('token'));
-		headers.append('Device-Id', localStorage.getItem('fingerprint'));
-		headers.append('Device-App', localStorage.getItem('app'));
-		headers.append('Device-Info', localStorage.getItem('browser'));
 
-		fetch(restRequest('/api/admin/register', 'POST', headers, JSON.stringify(body))).then(function(response) {
-
-			if (response.status === 200) {
-				alert("Administrador registado com sucesso.");
-				document.getElementById("admin_username").innerHTML = "";
-				document.getElementById("admin_email").innerHTML = "";
-				document.getElementById("admin_password").innerHTML = "";
-				document.getElementById("admin_confirmation").innerHTML = "";
-				document.getElementById("admin_locality").innerHTML = "";
-			}else{
-				alert("Utilizador já existe ou falta informação em algum campo.")
-			}
-
-		}
-		)
-		.catch(function(err) {
-			console.log('Fetch Error', err);
-		});
-	}else{
-		alert("A password e a confirmação não estão coerentes.");
-	}
 }
 
 function getPendingNext(){
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/admin/orgstoconfirm?cursor=' + cursor_next_pending,'GET', headers, body)).then(function(response) {
-		var table = document.getElementById("orgs_pending_table");
-		
-		if (response.status === 200) {
-			index_pending++;
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
+    fetch(restRequest('/api/admin/orgstoconfirm?cursor=' + cursor_next_pending,'GET', headers, body)).then(function(response) {
+            var table = document.getElementById("orgs_pending_table");
 
-				document.getElementById("previous_list_pending").style.display = "block";
+            if (response.status === 200) {
+                index_pending++;
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
 
-			if(response.headers.get("Cursor") !== null) {
-				pending_cursors.push(response.headers.get("Cursor"));
-				cursor_pre_pending = cursor_current_pending;
-				cursor_current_pending = cursor_next_pending;
-				cursor_next_pending = response.headers.get("Cursor");
+                document.getElementById("previous_list_pending").style.display = "block";
 
-				if(document.getElementById("next_list_pending").style.display === "none")
-					document.getElementById("next_list_pending").style.display = "block";
+                if(response.headers.get("Cursor") !== null) {
+                    pending_cursors.push(response.headers.get("Cursor"));
+                    cursor_pre_pending = cursor_current_pending;
+                    cursor_current_pending = cursor_next_pending;
+                    cursor_next_pending = response.headers.get("Cursor");
 
-			} else{
-				cursor_pre_pending = cursor_current_pending;
-				cursor_current_pending = cursor_next_pending;
-				if(document.getElementById("next_list_pending").style.display === "block")
-					document.getElementById("next_list_pending").style.display = "none";
-			}
-			response.json().then(function(data) {
-				console.log(JSON.stringify(data));
-				if(data != null){
-					var i;
-					for(i = 0; i < data.length; i++){
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						var cell6 = row.insertCell(5);
-						var cell7 = row.insertCell(6);
-						var cell8 = row.insertCell(7);
-						var cell9 = row.insertCell(8);
-						var cell10 = row.insertCell(9);
-						cell1.innerHTML = data[i].nif;
-						cell2.innerHTML = data[i].name;
-						cell3.innerHTML = data[i].email;
-						cell4.innerHTML = data[i].address;
-						cell5.innerHTML = data[i].locality;
-						cell6.innerHTML = data[i].phone;
-						var service = JSON.parse(data[i].services);
-						var show_service ="";
+                    if(document.getElementById("next_list_pending").style.display === "none")
+                        document.getElementById("next_list_pending").style.display = "block";
 
-						for(var i = 0; i< service.length; i++) {
-							if (i !== service.length - 1) {
-								var service_temp= translate(service[i]);
+                } else{
+                    cursor_pre_pending = cursor_current_pending;
+                    cursor_current_pending = cursor_next_pending;
+                    if(document.getElementById("next_list_pending").style.display === "block")
+                        document.getElementById("next_list_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            var cell10 = row.insertCell(9);
+                            cell1.innerHTML = data[i].nif;
+                            cell2.innerHTML = data[i].name;
+                            cell3.innerHTML = data[i].email;
+                            cell4.innerHTML = data[i].address;
+                            cell5.innerHTML = data[i].locality;
+                            cell6.innerHTML = data[i].phone;
+                            var service = JSON.parse(data[i].services);
+                            var show_service ="";
 
-								show_service += service_temp + "/";
-							}
-							else {
-								var service_temp= translate(service[i]);
-								show_service += service_temp;
-							}
-						}
+                            for(var i = 0; i< service.length; i++) {
+                                if (i !== service.length - 1) {
+                                    var service_temp= translate(service[i]);
 
-						cell7.innerHTML = show_service;
-						cell8.innerHTML = data[i].creationtime;
+                                    show_service += service_temp + "/";
+                                }
+                                else {
+                                    var service_temp= translate(service[i]);
+                                    show_service += service_temp;
+                                }
+                            }
 
-						var type= "";
+                            cell7.innerHTML = show_service;
+                            cell8.innerHTML = data[i].creationtime;
 
-						if(data[i].isfirestation)
-							type= "Privada";
-						else
-							type= "Pública";
+                            var type= "";
 
-						cell9.innerHTML = data[i].isfirestation;
-						cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
-					}
+                            if(data[i].isfirestation)
+                                type= "Privada";
+                            else
+                                type= "Pública";
 
-				}else{
-					alert("Não deu 200.")
-				}
-			});
+                            cell9.innerHTML = data[i].isfirestation;
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                        }
 
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 function getPendingPre(){
-	if(index_pending- 1 === 0) getPendingFirst();
+    if(index_pending- 1 === 0) getPendingFirst();
 
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
-
-
-	fetch(restRequest('/api/admin/orgstoconfirm?cursor=' + cursor_pre_pending,'GET', headers, body)).then(function(response) {
-		var table = document.getElementById("orgs_pending_table");
-		
-		if (response.status === 200) {
-			index_pending--;
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
-
-			document.getElementById("previous_list_pending").style.display = "block";
-
-			if (response.headers.get("Cursor") !== null) {
-
-				cursor_next_pending= cursor_current_pending;
-				cursor_current_pending = cursor_pre_pending;
-				cursor_pre_pending = pending_cursors[index_pending -1];
-
-				if (document.getElementById("next_list_pending").style.display === "none")
-					document.getElementById("next_list_pending").style.display = "block";
-
-			} else {
-				if (document.getElementById("next_list_pending").style.display === "block")
-					document.getElementById("next_list_pending").style.display = "none";
-			}
-			response.json().then(function(data) {
-				console.log(JSON.stringify(data));
-				if(data != null){
-					var i;
-					for(i = 0; i < data.length; i++){
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						var cell6 = row.insertCell(5);
-						var cell7 = row.insertCell(6);
-						var cell8 = row.insertCell(7);
-						var cell9 = row.insertCell(8);
-						var cell10 = row.insertCell(9);
-						cell1.innerHTML = data[i].nif;
-						cell2.innerHTML = data[i].name;
-						cell3.innerHTML = data[i].email;
-						cell4.innerHTML = data[i].address;
-						cell5.innerHTML = data[i].locality;
-						cell6.innerHTML = data[i].phone;
-						cell7.innerHTML = data[i].services;
-						cell8.innerHTML = data[i].creationtime;
-						cell9.innerHTML = data[i].isfirestation;
-						cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
-					}
-
-				}else{
-					alert("Não deu 200.")
-				}
-			});
-
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+    fetch(restRequest('/api/admin/orgstoconfirm?cursor=' + cursor_pre_pending,'GET', headers, body)).then(function(response) {
+            var table = document.getElementById("orgs_pending_table");
+
+            if (response.status === 200) {
+                index_pending--;
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+
+                document.getElementById("previous_list_pending").style.display = "block";
+
+                if (response.headers.get("Cursor") !== null) {
+
+                    cursor_next_pending= cursor_current_pending;
+                    cursor_current_pending = cursor_pre_pending;
+                    cursor_pre_pending = pending_cursors[index_pending -1];
+
+                    if (document.getElementById("next_list_pending").style.display === "none")
+                        document.getElementById("next_list_pending").style.display = "block";
+
+                } else {
+                    if (document.getElementById("next_list_pending").style.display === "block")
+                        document.getElementById("next_list_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            var cell10 = row.insertCell(9);
+                            cell1.innerHTML = data[i].nif;
+                            cell2.innerHTML = data[i].name;
+                            cell3.innerHTML = data[i].email;
+                            cell4.innerHTML = data[i].address;
+                            cell5.innerHTML = data[i].locality;
+                            cell6.innerHTML = data[i].phone;
+                            cell7.innerHTML = data[i].services;
+                            cell8.innerHTML = data[i].creationtime;
+                            cell9.innerHTML = data[i].isfirestation;
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 function getPendingFirst(){
-	pending_cursors = [""];
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/admin/orgstoconfirm?cursor=','GET', headers, body)).then(function(response) {
-		var table = document.getElementById("orgs_pending_table");
+    fetch(restRequest('/api/admin/orgstoconfirm?cursor=','GET', headers, body)).then(function(response) {
+            var table = document.getElementById("orgs_pending_table");
 
-		if (response.status === 200) {
-			index_pending = 0;
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
-			if(response.headers.get("Cursor") !== null) {
+            if (response.status === 200) {
+                index_pending = 0;
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+                if(response.headers.get("Cursor") !== null) {
 
-				cursor_pre_pending = "";
-				cursor_current_pending = "";
-				cursor_next_pending = response.headers.get("Cursor");
+                    cursor_pre_pending = "";
+                    cursor_current_pending = "";
+                    cursor_next_pending = response.headers.get("Cursor");
 
-				if(document.getElementById("next_list_pending").style.display === "none")
-					document.getElementById("next_list_pending").style.display = "block";
-				if(document.getElementById("previous_list_pending").style.display === "block")
-					document.getElementById("previous_list_pending").style.display = "none";
-			} else{
-				if(document.getElementById("next_list_pending").style.display === "block")
-					document.getElementById("next_list_pending").style.display = "none";
-				if(document.getElementById("previous_list_pending").style.display === "block")
-					document.getElementById("previous_list_pending").style.display = "none";
-			}
-			response.json().then(function(data) {
-				console.log(JSON.stringify(data));
-				if(data != null){
-					var i;
-					for(i = 0; i < data.length; i++){
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						var cell6 = row.insertCell(5);
-						var cell7 = row.insertCell(6);
-						var cell8 = row.insertCell(7);
-						var cell9 = row.insertCell(8);
-						var cell10 = row.insertCell(9);
-						cell1.innerHTML = data[i].nif;
-						cell2.innerHTML = data[i].name;
-						cell3.innerHTML = data[i].email;
-						cell4.innerHTML = data[i].address;
-						cell5.innerHTML = data[i].locality;
-						cell6.innerHTML = data[i].phone;
-						cell7.innerHTML = data[i].services;
-						cell8.innerHTML = data[i].creationtime;
-						cell9.innerHTML = data[i].isfirestation;
-						cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
-					}
+                    if(document.getElementById("next_list_pending").style.display === "none")
+                        document.getElementById("next_list_pending").style.display = "block";
+                    if(document.getElementById("previous_list_pending").style.display === "block")
+                        document.getElementById("previous_list_pending").style.display = "none";
+                } else{
+                    if(document.getElementById("next_list_pending").style.display === "block")
+                        document.getElementById("next_list_pending").style.display = "none";
+                    if(document.getElementById("previous_list_pending").style.display === "block")
+                        document.getElementById("previous_list_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            var cell10 = row.insertCell(9);
+                            cell1.innerHTML = data[i].nif;
+                            cell2.innerHTML = data[i].name;
+                            cell3.innerHTML = data[i].email;
+                            cell4.innerHTML = data[i].address;
+                            cell5.innerHTML = data[i].locality;
+                            cell6.innerHTML = data[i].phone;
+                            cell7.innerHTML = data[i].services;
+                            cell8.innerHTML = data[i].creationtime;
+                            cell9.innerHTML = data[i].isfirestation;
+                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                        }
 
-				}else{
-					alert("Não deu 200.")
-				}
-			});
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
 
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+            }else{
+                console.log("Tratar do Forbidden");
+            }
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 function activateOrg(row){
-	var table = document.getElementById("orgs_pending_table");
-	var nif = table.rows[row].cells[0].innerHTML;
+    var table = document.getElementById("orgs_pending_table");
+    var nif = table.rows[row].cells[0].innerHTML;
 
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/admin/confirmorg/' + nif,'POST', headers, body)).then(function(response) {
+    fetch(restRequest('/api/admin/confirmorg/' + nif,'POST', headers, body)).then(function(response) {
 
-		if (response.status === 200 || response.status === 204) {
-			alert("Organização ativa com sucesso.")
-		}else{
-			alert("Falha ao ativar a organização.")
-		}
+            if (response.status === 200 || response.status === 204) {
+                alert("Organização ativa com sucesso.")
+            }else{
+                alert("Falha ao ativar a organização.")
+            }
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 function getPendingReportsNext(){
-	standby_rep = [];
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    standby_rep = [];
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/admin/standbyreports?cursor=' + cursor_next_pending,'GET', headers, body)).then(function(response) {
-		var table = document.getElementById("reports_pending_table");
+    fetch(restRequest('/api/admin/standbyreports?cursor=' + cursor_next_pending,'GET', headers, body)).then(function(response) {
+            var table = document.getElementById("reports_pending_table");
 
-		if (response.status === 200) {
-			index_reports++;
+            if (response.status === 200) {
+                index_reports++;
 
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
 
-				document.getElementById("previous_reports_pending").style.display = "block";
+                document.getElementById("previous_reports_pending").style.display = "block";
 
-			if(response.headers.get("Cursor") !== null) {
-				reports_reports.push(response.headers.get("Cursor"));
-				cursor_pre_pendingrep = cursor_current_pendingrep;
-				cursor_current_pendingrep = cursor_next_pendingrep;
-				cursor_next_pendingrep = response.headers.get("Cursor");
+                if(response.headers.get("Cursor") !== null) {
+                    reports_reports.push(response.headers.get("Cursor"));
+                    cursor_pre_pendingrep = cursor_current_pendingrep;
+                    cursor_current_pendingrep = cursor_next_pendingrep;
+                    cursor_next_pendingrep = response.headers.get("Cursor");
 
-				if(document.getElementById("next_reports_pending").style.display === "none")
-					document.getElementById("next_reports_pending").style.display = "block";
+                    if(document.getElementById("next_reports_pending").style.display === "none")
+                        document.getElementById("next_reports_pending").style.display = "block";
 
-			} else{
-				cursor_pre_pendingrep = cursor_current_pendingrep;
-				cursor_current_pendingrep = cursor_next_pendingrep;
-				document.getElementById("next_reports_pending").style.display = "none";
-			}
-			response.json().then(function(data) {
-				console.log(JSON.stringify(data));
-				if(data != null){
-					var i;
-					for(i = 0; i < data.length; i++){
-						standby_rep.push(data[i].report);
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						var cell6 = row.insertCell(5);
-						var cell7 = row.insertCell(6);
-						var cell8 = row.insertCell(7);
-						cell1.innerHTML = data[i].title;
-						cell2.innerHTML = data[i].address;
-						cell3.innerHTML = data[i].gravity;
-						cell4.innerHTML = data[i].username;
-						cell5.innerHTML = data[i].lat;
-						cell6.innerHTML = data[i].lng;
-						cell7.innerHTML = data[i].creationtime;
-						cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
-					}
+                } else{
+                    cursor_pre_pendingrep = cursor_current_pendingrep;
+                    cursor_current_pendingrep = cursor_next_pendingrep;
+                    document.getElementById("next_reports_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            standby_rep.push(data[i].report);
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            cell1.innerHTML = data[i].title;
+                            cell2.innerHTML = data[i].address;
+                            cell3.innerHTML = data[i].gravity;
+                            cell4.innerHTML = data[i].username;
+                            cell5.innerHTML = data[i].lat;
+                            cell6.innerHTML = data[i].lng;
+                            cell7.innerHTML = data[i].creationtime;
+                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                        }
 
-				}else{
-					alert("Não deu 200.")
-				}
-			});
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
 
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+            }else{
+                console.log("Tratar do Forbidden");
+            }
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 function getPendingReportsPre(){
-	standby_rep = [];
-	if(index_reports -1 === 0) getPendingReportsFirst();
+    standby_rep = [];
+    if(index_reports -1 === 0) getPendingReportsFirst();
 
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
-
-
-	fetch(restRequest('/api/admin/standbyreports?cursor=' + cursor_pre_pending,'GET', headers, body)).then(function(response) {
-		var table = document.getElementById("orgs_pending_table");
-
-		if (response.status === 200) {
-			index_reports--;
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
-
-				document.getElementById("previous_reports_pending").style.display = "block";
-
-			if (response.headers.get("Cursor") !== null) {
-
-				cursor_next_pendingrep = cursor_current_pendingrep;
-				cursor_current_pendingrep = cursor_pre_pendingrep;
-				cursor_pre_pendingrep = reports_cursors[index_reports - 1];
-
-				if (document.getElementById("next_reports_pending").style.display === "none")
-					document.getElementById("next_reports_pending").style.display = "block";
-
-			} else {
-				if (document.getElementById("next_reports_pending").style.display === "block")
-					document.getElementById("next_reports_pending").style.display = "none";
-			}
-			response.json().then(function(data) {
-				console.log(JSON.stringify(data));
-				if(data != null){
-					var i;
-					for(i = 0; i < data.length; i++){
-						standby_rep.push(data[i].report);
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						var cell6 = row.insertCell(5);
-						var cell7 = row.insertCell(6);
-						var cell8 = row.insertCell(7);
-						cell1.innerHTML = data[i].title;
-						cell2.innerHTML = data[i].address;
-						cell3.innerHTML = data[i].gravity;
-						cell4.innerHTML = data[i].username;
-						cell5.innerHTML = data[i].lat;
-						cell6.innerHTML = data[i].lng;
-						cell7.innerHTML = data[i].creationtime;
-						cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
-					}
-
-				}else{
-					alert("Não deu 200.")
-				}
-			});
-
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+    fetch(restRequest('/api/admin/standbyreports?cursor=' + cursor_pre_pending,'GET', headers, body)).then(function(response) {
+            var table = document.getElementById("orgs_pending_table");
+
+            if (response.status === 200) {
+                index_reports--;
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
+
+                document.getElementById("previous_reports_pending").style.display = "block";
+
+                if (response.headers.get("Cursor") !== null) {
+
+                    cursor_next_pendingrep = cursor_current_pendingrep;
+                    cursor_current_pendingrep = cursor_pre_pendingrep;
+                    cursor_pre_pendingrep = reports_cursors[index_reports - 1];
+
+                    if (document.getElementById("next_reports_pending").style.display === "none")
+                        document.getElementById("next_reports_pending").style.display = "block";
+
+                } else {
+                    if (document.getElementById("next_reports_pending").style.display === "block")
+                        document.getElementById("next_reports_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            standby_rep.push(data[i].report);
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            cell1.innerHTML = data[i].title;
+                            cell2.innerHTML = data[i].address;
+                            cell3.innerHTML = data[i].gravity;
+                            cell4.innerHTML = data[i].username;
+                            cell5.innerHTML = data[i].lat;
+                            cell6.innerHTML = data[i].lng;
+                            cell7.innerHTML = data[i].creationtime;
+                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 function getPendingReportsFirst(){
-	reports_cursors = [""];
-	standby_rep = [];
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    standby_rep = [];
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/admin/standbyreports?cursor=','GET', headers, body)).then(function(response) {
-		var table = document.getElementById("reports_pending_table");
+    fetch(restRequest('/api/admin/standbyreports?cursor=','GET', headers, body)).then(function(response) {
+            var table = document.getElementById("reports_pending_table");
 
-		if (response.status === 200) {
-			index_reports = 0;
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
+            if (response.status === 200) {
+                index_reports = 0;
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
 
-			document.getElementById("previous_reports_pending").style.display = "none";
+                document.getElementById("previous_reports_pending").style.display = "none";
 
-			if(response.headers.get("Cursor") !== null) {
+                if(response.headers.get("Cursor") !== null) {
 
-				cursor_pre_pendingrep = "";
-				cursor_current_pendingrep = "";
-				cursor_next_pendingrep = response.headers.get("Cursor");
+                    cursor_pre_pendingrep = "";
+                    cursor_current_pendingrep = "";
+                    cursor_next_pendingrep = response.headers.get("Cursor");
 
-				if(document.getElementById("next_reports_pending").style.display === "none")
-					document.getElementById("next_reports_pending").style.display = "block";
-				if(document.getElementById("previous_reports_pending").style.display === "block")
-					document.getElementById("previous_reports_pending").style.display = "none";
-			} else{
-				if(document.getElementById("next_reports_pending").style.display === "block")
-					document.getElementById("next_reports_pending").style.display = "none";
-				if(document.getElementById("previous_reports_pending").style.display === "block")
-					document.getElementById("previous_reports_pending").style.display = "none";
-			}
-			response.json().then(function(data) {
-				console.log(JSON.stringify(data));
-				if(data != null){
-					var i;
-					for(i = 0; i < data.length; i++){
-						standby_rep.push(data[i].report);
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						var cell6 = row.insertCell(5);
-						var cell7 = row.insertCell(6);
-						var cell8 = row.insertCell(7);
-						cell1.innerHTML = data[i].title;
-						cell2.innerHTML = data[i].address;
-						cell3.innerHTML = data[i].gravity;
-						cell4.innerHTML = data[i].username;
-						cell5.innerHTML = data[i].lat;
-						cell6.innerHTML = data[i].lng;
-						cell7.innerHTML = data[i].creationtime;
-						cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
-					}
+                    if(document.getElementById("next_reports_pending").style.display === "none")
+                        document.getElementById("next_reports_pending").style.display = "block";
+                    if(document.getElementById("previous_reports_pending").style.display === "block")
+                        document.getElementById("previous_reports_pending").style.display = "none";
+                } else{
+                    if(document.getElementById("next_reports_pending").style.display === "block")
+                        document.getElementById("next_reports_pending").style.display = "none";
+                    if(document.getElementById("previous_reports_pending").style.display === "block")
+                        document.getElementById("previous_reports_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            standby_rep.push(data[i].report);
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            cell1.innerHTML = data[i].title;
+                            cell2.innerHTML = data[i].address;
+                            cell3.innerHTML = data[i].gravity;
+                            cell4.innerHTML = data[i].username;
+                            cell5.innerHTML = data[i].lat;
+                            cell6.innerHTML = data[i].lng;
+                            cell7.innerHTML = data[i].creationtime;
+                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                        }
 
-				}else{
-					alert("Não deu 200.")
-				}
-			});
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
 
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+            }else{
+                console.log("Tratar do Forbidden");
+            }
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 function activateReport(row){
-	var reportId = standby_rep[row];
+    var reportId = standby_rep[row];
 
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/admin/confirmreport/' + reportId,'POST', headers, body)).then(function(response) {
+    fetch(restRequest('/api/admin/confirmreport/' + reportId,'POST', headers, body)).then(function(response) {
 
-		if (response.status === 200 || response.status === 204) {
-			alert("Report ativado com sucesso.")
-		}else{
-			alert("Falha ao ativar reporte.")
-		}
+            if (response.status === 200 || response.status === 204) {
+                alert("Report ativado com sucesso.")
+            }else{
+                alert("Falha ao ativar reporte.")
+            }
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 
 }
 
-function drawChart(){
+function drawPieChart(){
 
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest("/api/admin/stats/org/applications",'GET', headers, body)).then(function(response) {
+    fetch(restRequest("/api/admin/stats/org/applications",'GET', headers, body)).then(function(response) {
 
-		if (response.status === 200 || response.status === 204) {
-			response.json().then(function(data){
-				console.log(data);
-				var dados = google.visualization.arrayToDataTable(data);
+            if (response.status === 200 || response.status === 204) {
+                response.json().then(function(data){
+                    console.log(data);
+                    var dados = google.visualization.arrayToDataTable(data);
 
-				var options = {
-						title: 'Eficácia por organização'
+                    var options = {
+                        title: 'Eficácia por organização',
+                        width:500,
+                        height:500
+                    };
 
-				};
+                    var chart = new google.visualization.PieChart(document.getElementById('piechart'));
 
-				var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+                    chart.draw(dados, options);
+                });
 
-				chart.draw(dados, options);
-			});
+            }else{
+                alert("Falha ao apagar utilizador.")
+            }
 
-		}else{
-			alert("Falha ao apagar utilizador.")
-		}
-
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 function getPublicNext(){
-	public_reports = [];
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    public_reports = [];
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/admin/publicreports?cursor=' + cursor_next_public,'GET', headers, body)).then(function(response) {
-		var table = document.getElementById("public_reports_pending_table");
+    fetch(restRequest('/api/admin/publicreports?cursor=' + cursor_next_public,'GET', headers, body)).then(function(response) {
+            var table = document.getElementById("public_reports_pending_table");
 
-		if (response.status === 200) {
-			index_public++;
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
+            if (response.status === 200) {
+                index_public++;
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
 
-			document.getElementById("previous_public_reports_pending").style.display = "block";
+                document.getElementById("previous_public_reports_pending").style.display = "block";
 
-			if(response.headers.get("Cursor") !== null) {
-				public_reports.push(response.headers.get("Cursor"));
-				cursor_pre_public = cursor_current_public;
-				cursor_current_public = cursor_next_public;
-				cursor_next_public = response.headers.get("Cursor");
+                if(response.headers.get("Cursor") !== null) {
+                    public_reports.push(response.headers.get("Cursor"));
+                    cursor_pre_public = cursor_current_public;
+                    cursor_current_public = cursor_next_public;
+                    cursor_next_public = response.headers.get("Cursor");
 
-				if(document.getElementById("next_public_reports_pending").style.display === "none")
-					document.getElementById("next_public_reports_pending").style.display = "block";
+                    if(document.getElementById("next_public_reports_pending").style.display === "none")
+                        document.getElementById("next_public_reports_pending").style.display = "block";
 
-			} else{
-				cursor_pre_public = cursor_current_public;
-				cursor_current_public = cursor_next_public;
-				if(document.getElementById("next_public reports_pending").style.display === "block")
-					document.getElementById("next_public_reports_pending").style.display = "none";
-			}
-			response.json().then(function(data) {
-				console.log(JSON.stringify(data));
-				if(data != null){
-					var i;
-					for(i = 0; i < data.length; i++){
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						var cell6 = row.insertCell(5);
-						var cell7 = row.insertCell(6);
-						var cell8 = row.insertCell(7);
-						var cell9 = row.insertCell(8);
-						cell1.innerHTML = data[i].title;
-						cell2.innerHTML = data[i].address;
-						cell3.innerHTML = data[i].gravity;
-						cell4.innerHTML = data[i].username;
-						cell5.innerHTML = data[i].lat;
-						cell6.innerHTML = data[i].lng;
-						var orgs = data[i].applications;
-						if(orgs !== undefined) {
-							var options = "<option value='' disabled selected>Selecione a Organização</option>";
-							for (var j = 0; j < orgs.length; j++) {
-								options += "<option>" + orgs[j].name + "</option>"
-							}
+                } else{
+                    cursor_pre_public = cursor_current_public;
+                    cursor_current_public = cursor_next_public;
+                    if(document.getElementById("next_public reports_pending").style.display === "block")
+                        document.getElementById("next_public_reports_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            cell1.innerHTML = data[i].title;
+                            cell2.innerHTML = data[i].address;
+                            cell3.innerHTML = data[i].gravity;
+                            cell4.innerHTML = data[i].username;
+                            cell5.innerHTML = data[i].lat;
+                            cell6.innerHTML = data[i].lng;
+                            var orgs = data[i].applications;
+                            if(orgs !== undefined) {
+                                var options = "<option value='' disabled selected>Selecione a Organização</option>";
+                                for (var j = 0; j < orgs.length; j++) {
+                                    options += "<option>" + orgs[j].name + "</option>"
+                                }
 
-							cell7.innerHTML = "<select className='dropdown-m' id='drop'" + i + ">" + options +
+                                cell7.innerHTML = "<select className='dropdown-m' id='drop'" + i + ">" + options +
 
-							"</select>";
+                                    "</select>";
 
-							public_reports.push({report: data[i].report, applications: data[i].applications});
+                                public_reports.push({report: data[i].report, applications: data[i].applications});
 
-							cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
-
-
-						} else if(data[i].org !== undefined){
-							cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
-							public_reports.push({});
-						} else{
-							cell7.innerHTML = "-";
-							public_reports.push({});
-						}
-						cell8.innerHTML = data[i].creationtime;
-					}
-
-				}else{
-					alert("Não deu 200.")
-				}
-			});
-
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+                            } else if(data[i].org !== undefined){
+                                cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
+                                public_reports.push({});
+                            } else{
+                                cell7.innerHTML = "-";
+                                public_reports.push({});
+                            }
+                            cell8.innerHTML = data[i].creationtime;
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 function getPublicPre(){
-	public_reports = [];
-	if( index_public- 1 === 0) getPublicFirst();
+    public_reports = [];
+    if( index_public- 1 === 0) getPublicFirst();
 
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
-
-
-	fetch(restRequest('/api/admin/publicreports?cursor=' + cursor_pre_public,'GET', headers, body)).then(function(response) {
-		var table = document.getElementById("public_reports_pending_table");
-
-		if (response.status === 200) {
-			index_public--;
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
-
-			document.getElementById("previous_public_reports_pending").style.display = "block";
-
-			if (response.headers.get("Cursor") !== null) {
-
-				cursor_next_public= cursor_current_public;
-				cursor_current_public = cursor_pre_public;
-				cursor_pre_public = public_cursors[index_public - 1];
-
-				if (document.getElementById("next_public_reports_pending").style.display === "none")
-					document.getElementById("next_public_reports_pending").style.display = "block";
-
-			} else {
-
-				if (document.getElementById("next_public_reports_pending").style.display === "block")
-					document.getElementById("next_public_reports_pending").style.display = "none";
-			}
-			response.json().then(function(data) {
-				console.log(JSON.stringify(data));
-				if(data != null){
-					var i;
-					for(i = 0; i < data.length; i++){
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						var cell6 = row.insertCell(5);
-						var cell7 = row.insertCell(6);
-						var cell8 = row.insertCell(7);
-						var cell9 = row.insertCell(8);
-						cell1.innerHTML = data[i].title;
-						cell2.innerHTML = data[i].address;
-						cell3.innerHTML = data[i].gravity;
-						cell4.innerHTML = data[i].username;
-						cell5.innerHTML = data[i].lat;
-						cell6.innerHTML = data[i].lng;
-						var orgs = data[i].applications;
-						if(orgs !== undefined) {
-							var options = "<option value='' disabled selected>Select your option</option>";
-							for (var j = 0; j < orgs.length; j++) {
-								options += "<option>" + orgs[j].name + "</option>"
-							}
-
-							cell7.innerHTML = "<select className='dropdown-m' id='drop'" + i + ">" + options +
-
-							"</select>";
-
-							public_reports.push({report: data[i].report, applications: data[i].applications});
-
-							cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-						} else if(data[i].org !== undefined){
-							cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
-							public_reports.push({});
-						} else{
-							cell7.innerHTML = "-";
-							public_reports.push({});
-						}
-						cell8.innerHTML = data[i].creationtime;
-					}
+    fetch(restRequest('/api/admin/publicreports?cursor=' + cursor_pre_public,'GET', headers, body)).then(function(response) {
+            var table = document.getElementById("public_reports_pending_table");
 
-				}else{
-					alert("Não deu 200.")
-				}
-			});
+            if (response.status === 200) {
+                if(table.rows.length > 1) {
+                    index_public--;
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
 
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+                document.getElementById("previous_public_reports_pending").style.display = "block";
+
+                if (response.headers.get("Cursor") !== null) {
+
+                    cursor_next_public= cursor_current_public;
+                    cursor_current_public = cursor_pre_public;
+                    cursor_pre_public = public_cursors[index_public - 1];
+
+                    if (document.getElementById("next_public_reports_pending").style.display === "none")
+                        document.getElementById("next_public_reports_pending").style.display = "block";
+
+                } else {
+
+                    if (document.getElementById("next_public_reports_pending").style.display === "block")
+                        document.getElementById("next_public_reports_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            cell1.innerHTML = data[i].title;
+                            cell2.innerHTML = data[i].address;
+                            cell3.innerHTML = data[i].gravity;
+                            cell4.innerHTML = data[i].username;
+                            cell5.innerHTML = data[i].lat;
+                            cell6.innerHTML = data[i].lng;
+                            var orgs = data[i].applications;
+                            if(orgs !== undefined) {
+                                var options = "<option value='' disabled selected>Select your option</option>";
+                                for (var j = 0; j < orgs.length; j++) {
+                                    options += "<option>" + orgs[j].name + "</option>"
+                                }
+
+                                cell7.innerHTML = "<select className='dropdown-m' id='drop'" + i + ">" + options +
+
+                                    "</select>";
+
+                                public_reports.push({report: data[i].report, applications: data[i].applications});
+
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+                            } else if(data[i].org !== undefined){
+                                cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
+                                public_reports.push({});
+                            } else{
+                                cell7.innerHTML = "-";
+                                public_reports.push({});
+                            }
+                            cell8.innerHTML = data[i].creationtime;
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 function getPublicFirst(){
-	public_cursor = [""];
-	public_reports = [];
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    public_reports = [];
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-	fetch(restRequest('/api/admin/publicreports?cursor=','GET', headers, body)).then(function(response) {
-		var table = document.getElementById("public_reports_pending_table");
+    fetch(restRequest('/api/admin/publicreports?cursor=','GET', headers, body)).then(function(response) {
+            var table = document.getElementById("public_reports_pending_table");
 
-		if (response.status === 200) {
-			index_public = 0;
-			if(table.rows.length > 1) {
-				table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-			}
-			
-			document.getElementById("previous_public_reports_pending").style.display = "none";
-			if(response.headers.get("Cursor") !== null) {
-				public_cursors.push(response.headers.get("Cursor"));
-				cursor_pre_public = "";
-				cursor_current_public = "";
-				cursor_next_public = response.headers.get("Cursor");
+            if (response.status === 200) {
+                index_public = 0;
+                if(table.rows.length > 1) {
+                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                }
 
-				if(document.getElementById("next_public_reports_pending").style.display === "none")
-					document.getElementById("next_public_reports_pending").style.display = "block";
-				
-			} else{
-				if(document.getElementById("next_public_reports_pending").style.display === "block")
-					document.getElementById("next_public_reports_pending").style.display = "none";
-				
-			}
-			response.json().then(function(data) {
-				console.log(JSON.stringify(data));
-				if(data != null){
-					var i;
-					for(i = 0; i < data.length; i++){
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						var cell4 = row.insertCell(3);
-						var cell5 = row.insertCell(4);
-						var cell6 = row.insertCell(5);
-						var cell7 = row.insertCell(6);
-						var cell8 = row.insertCell(7);
-						var cell9 = row.insertCell(8);
-						cell1.innerHTML = data[i].title;
-						cell2.innerHTML = data[i].address;
-						cell3.innerHTML = data[i].gravity;
-						cell4.innerHTML = data[i].username;
-						cell5.innerHTML = data[i].lat;
-						cell6.innerHTML = data[i].lng;
-						var orgs = data[i].applications;
-						if(orgs !== undefined) {
-							var options = "<option value='' disabled selected>Select your option</option>";
-							for (var j = 0; j < orgs.length; j++) {
-								options += "<option>" + orgs[j].name + "</option>"
-							}
+                document.getElementById("previous_public_reports_pending").style.display = "none";
+                if(response.headers.get("Cursor") !== null) {
 
-							cell7.innerHTML = "<select className='dropdown-m' id='drop'" + i + ">" + options +
+                    cursor_pre_public = "";
+                    cursor_current_public = "";
+                    cursor_next_public = response.headers.get("Cursor");
 
-							"</select>";
+                    if(document.getElementById("next_public_reports_pending").style.display === "none")
+                        document.getElementById("next_public_reports_pending").style.display = "block";
+                    if(document.getElementById("previous_public_reports_pending").style.display === "block")
+                        document.getElementById("previous_public_reports_pending").style.display = "none";
+                } else{
+                    if(document.getElementById("next_public_reports_pending").style.display === "block")
+                        document.getElementById("next_public_reports_pending").style.display = "none";
+                    if(document.getElementById("previous_public_reports_pending").style.display === "block")
+                        document.getElementById("previous_public_reports_pending").style.display = "none";
+                }
+                response.json().then(function(data) {
+                    console.log(JSON.stringify(data));
+                    if(data != null){
+                        var i;
+                        for(i = 0; i < data.length; i++){
+                            var row = table.insertRow(-1);
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            var cell4 = row.insertCell(3);
+                            var cell5 = row.insertCell(4);
+                            var cell6 = row.insertCell(5);
+                            var cell7 = row.insertCell(6);
+                            var cell8 = row.insertCell(7);
+                            var cell9 = row.insertCell(8);
+                            cell1.innerHTML = data[i].title;
+                            cell2.innerHTML = data[i].address;
+                            cell3.innerHTML = data[i].gravity;
+                            cell4.innerHTML = data[i].username;
+                            cell5.innerHTML = data[i].lat;
+                            cell6.innerHTML = data[i].lng;
+                            var orgs = data[i].applications;
+                            if(orgs !== undefined) {
+                                var options = "<option value='' disabled selected>Select your option</option>";
+                                for (var j = 0; j < orgs.length; j++) {
+                                    options += "<option>" + orgs[j].name + "</option>"
+                                }
 
-							public_reports.push({report: data[i].report, applications: data[i].applications});
+                                cell7.innerHTML = "<select className='dropdown-m' id='drop'" + i + ">" + options +
 
-							cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                                    "</select>";
 
+                                public_reports.push({report: data[i].report, applications: data[i].applications});
 
-						} else if(data[i].org !== undefined){
-							cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
-							public_reports.push({});
-						} else{
-							cell7.innerHTML = "-";
-							public_reports.push({});
-						}
-						cell8.innerHTML = data[i].creationtime;
-					}
-
-				}else{
-					alert("Não deu 200.")
-				}
-			});
-
-		}else{
-			console.log("Tratar do Forbidden");
-		}
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
 
 
-	}
-	)
-	.catch(function(err) {
-		console.log('Fetch Error', err);
-	});
+                            } else if(data[i].org !== undefined){
+                                cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
+                                public_reports.push({});
+                            } else{
+                                cell7.innerHTML = "-";
+                                public_reports.push({});
+                            }
+                            cell8.innerHTML = data[i].creationtime;
+                        }
+
+                    }else{
+                        alert("Não deu 200.")
+                    }
+                });
+
+            }else{
+                console.log("Tratar do Forbidden");
+            }
+
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }
 
 function activatePublicReport(row){
 
-	var table = document.getElementById("public_reports_pending_table");
+    var table = document.getElementById("public_reports_pending_table");
 
 
 
-	var report = public_reports[row - 1];
-	var reportId = report.report;
+    var report = public_reports[row - 1];
+    var reportId = report.report;
 
-	var org = report.applications[table.rows[row].cells[6].firstChild.selectedIndex - 1];
+    var org = report.applications[table.rows[row].cells[6].firstChild.selectedIndex - 1];
 
-	var yes = prompt("Budget: " + org.budget + "Info: " + org.info, "Pressione 's' se sim ou 'n' se não pretende aceitar este candidato:" );
+    var yes = prompt("Budget: " + org.budget + "Info: " + org.info, "Pressione 's' se sim ou 'n' se não pretende aceitar este candidato:" );
 
-	if(yes === "s") {
+    if(yes === "s") {
 
-		var headers = new Headers();
-		var body = JSON.stringify({
-			report: reportId,
-			nif: org.nif
-		});
-		headers.append('Authorization', localStorage.getItem('token'));
-		headers.append('Device-Id', localStorage.getItem('fingerprint'));
-		headers.append('Device-App', localStorage.getItem('app'));
-		headers.append('Device-Info', localStorage.getItem('browser'));
+        var headers = new Headers();
+        var body = JSON.stringify({
+            report: reportId,
+            nif: org.nif
+        });
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
 
 
-		fetch(restRequest('/api/report/acceptapplication', 'POST', headers, body)).then(function (response) {
+        fetch(restRequest('/api/report/acceptapplication', 'POST', headers, body)).then(function (response) {
 
-			if (response.status === 200 || response.status === 204) {
-				alert("Organização atribuida com sucesso.")
-			} else {
-				alert("Falha ao atribuir organização.")
-			}
+                if (response.status === 200 || response.status === 204) {
+                    alert("Organização atribuida com sucesso.")
+                } else {
+                    alert("Falha ao atribuir organização.")
+                }
 
-		}
-		)
-		.catch(function (err) {
-			console.log('Fetch Error', err);
-		});
-	}
+            }
+        )
+            .catch(function (err) {
+                console.log('Fetch Error', err);
+            });
+    }
 }
 
 function translate(category){
-	var cat= "";
-	switch (category) {
-	case "LIXO":
-		cat = "Limpeza de Lixo Geral";
-		break;
-	case "PESADOS":
-		cat = "Transportes Pesados";
-		break;
-	case "PERIGOSOS":
-		cat = "Transportes Perigosos";
-		break;
-	case "PESSOAS":
-		cat = "Transportes de Pessoas";
-		break;
-	case "TRANSPORTE":
-		cat = "Transportes Gerais";
-		break;
-	case "MADEIRAS":
-		cat = "Madeiras";
-		break;
-	case "CARCACAS":
-		cat = "Carcaças";
-		break;
-	case "BIOLOGICO":
-		cat = "Outros resíduos biológicos";
-		break;
-	case "JARDINAGEM":
-		cat = "Jardinagem";
-		break;
-	case "MATAS":
-		cat = "Limpeza de Matas/Florestas";
+    var cat= "";
+    switch (category) {
+        case "LIXO":
+            cat = "Limpeza de Lixo Geral";
+            break;
+        case "PESADOS":
+            cat = "Transportes Pesados";
+            break;
+        case "PERIGOSOS":
+            cat = "Transportes Perigosos";
+            break;
+        case "PESSOAS":
+            cat = "Transportes de Pessoas";
+            break;
+        case "TRANSPORTE":
+            cat = "Transportes Gerais";
+            break;
+        case "MADEIRAS":
+            cat = "Madeiras";
+            break;
+        case "CARCACAS":
+            cat = "Carcaças";
+            break;
+        case "BIOLOGICO":
+            cat = "Outros resíduos biológicos";
+            break;
+        case "JARDINAGEM":
+            cat = "Jardinagem";
+            break;
+        case "MATAS":
+            cat = "Limpeza de Matas/Florestas";
 
-	}
-	return cat;
+    }
+    return cat;
 }
 
 function getTopUsers(){
-	var headers = new Headers();
-	var body = "";
-	headers.append('Authorization', localStorage.getItem('token'));
-	headers.append('Device-Id', localStorage.getItem('fingerprint'));
-	headers.append('Device-App', localStorage.getItem('app'));
-	headers.append('Device-Info', localStorage.getItem('browser'));
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
 
-	fetch(restRequest('api/profile/usertop','GET', headers, body)).then(function (response){
-		if (response.status === 200) {
-			response.json().then(function(data) {
-				var table = document.getElementById("top_table");
-				if(data !== null){
-					var i;
-					for(i = 0; i < data.length; i++){
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(0);
-						var cell2 = row.insertCell(1);
-						var cell3 = row.insertCell(2);
-						cell1.innerHTML = data[i].place;
-						cell2.innerHTML = data[i].username;
-						cell3.innerHTML = data[i].points;
-					}
-				}
-			});
+    fetch(restRequest('/api/profile/usertop','GET', headers, body)).then(function (response){
+        if (response.status === 200) {
+            response.json().then(function(data) {
+                var table = document.getElementById("top_table");
+                if(data != null){
+                    var i;
+                    for(i = 0; i < data.length; i++){
+                        var row = table.insertRow(-1);
+                        var cell1 = row.insertCell(0);
+                        var cell2 = row.insertCell(1);
+                        var cell3 = row.insertCell(2);
+                        cell1.innerHTML = data[i].place;
+                        cell2.innerHTML = data[i].username;
+                        cell3.innerHTML = data[i].points;
+                    }
+                }
+            });
 
-				alert("Organização atribuida com sucesso.")
-			} else {
-				alert("Falha ao pedir top utilizadores.")
-			}
-	})
-	.catch(function (err) {
-		console.log('Fetch Error', err);
-	});
+        } else {
+            alert("Falha ao pedir top utilizadores.")
+        }
+    })
+        .catch(function (err) {
+            console.log('Fetch Error', err);
+        });
+}
+
+function drawGeoChart(){
+
+    var headers = new Headers();
+    var body = "";
+    headers.append('Authorization', localStorage.getItem('token'));
+    headers.append('Device-Id', localStorage.getItem('fingerprint'));
+    headers.append('Device-App', localStorage.getItem('app'));
+    headers.append('Device-Info', localStorage.getItem('browser'));
+
+
+    fetch(restRequest("/api/admin/stats/reports/map",'GET', headers, body)).then(function(response) {
+
+            if (response.status === 200 || response.status === 204) {
+                response.json().then(function(data){
+                    console.log(data);
+                    var dados = google.visualization.arrayToDataTable(data);
+
+                    var options = {
+                        region: 'PT'
+                    };
+
+                    var chart = new google.visualization.GeoChart(document.getElementById('geomap'));
+
+                    chart.draw(dados, options);
+                });
+
+            }else{
+                alert("Falha ao apagar utilizador.")
+            }
+
+        }
+    )
+        .catch(function(err) {
+            console.log('Fetch Error', err);
+        });
 }

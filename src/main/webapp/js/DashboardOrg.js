@@ -1491,6 +1491,7 @@ function onNotes(task) {
                 '</div>';
 
             $(".inner_notes").append(contentNotes);
+            document.getElementById("overlay_notes").style.display = "block";
         }
         else{
             console.log("Não deu 200 ao pedir o thumbnail");
