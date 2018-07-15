@@ -597,7 +597,10 @@ function getPendingNext(){
 }
 
 function getPendingPre(){
-    if(index_pending- 1 === 0) getPendingFirst();
+    if(index_pending- 1 === 0) {
+    	getPendingFirst();
+    	return;
+    }
 
     var headers = new Headers();
     var body = "";
@@ -862,7 +865,10 @@ function getPendingReportsNext(){
 
 function getPendingReportsPre(){
     standby_rep = [];
-    if(index_reports -1 === 0) getPendingReportsFirst();
+    if(index_reports -1 === 0) {
+    	getPendingReportsFirst();
+    	return;
+    }
 
     var headers = new Headers();
     var body = "";
@@ -1117,8 +1123,7 @@ function getPublicNext(){
                 } else{
                     cursor_pre_public = cursor_current_public;
                     cursor_current_public = cursor_next_public;
-                    if(document.getElementById("next_public reports_pending").style.display === "block")
-                        document.getElementById("next_public_reports_pending").style.display = "none";
+                    document.getElementById("next_public_reports_pending").style.display = "none";
                 }
                 response.json().then(function(data) {
                     console.log(JSON.stringify(data));
@@ -1186,7 +1191,11 @@ function getPublicNext(){
 
 function getPublicPre(){
     public_reports = [];
-    if( index_public- 1 === 0) getPublicFirst();
+    if( index_public- 1 === 0) {
+    	getPublicFirst();
+    	return;
+    }
+    
 
     var headers = new Headers();
     var body = "";

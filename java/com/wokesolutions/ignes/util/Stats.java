@@ -48,6 +48,7 @@ public class Stats {
 	public static final String REPORTNUM = "# de Ocorrências";
 	public static final String ORG = "Organização";
 	public static final String APPLICATIONNUM = "# de candidaturas";
+	public static final String MONTH = "Mês";
 
 	public static final String JANUARY = "janeiro";
 	public static final String FEBRUARY = "fevereiro";

@@ -46,6 +46,21 @@ public class Storage {
 
 	private static ImagesService imagesService = ImagesServiceFactory.getImagesService();
 
+	public static void put(String svg) {
+		String path = "img/stats/portugal.svg";
+		GcsFilename fileName = new GcsFilename(BUCKET, path);
+		GcsFileOptions options = new GcsFileOptions.Builder()
+				.mimeType("image/svg+xml")
+				.acl("public-read")
+				.build();
+		GcsOutputChannel outputChannel;
+		try {
+			outputChannel = gcsService.createOrReplace(fileName, options);
+			copy(new ByteArrayInputStream(Base64.encode(svg.getBytes())),
+					Channels.newOutputStream(outputChannel));
+		} catch(IOException e) {}
+	}
+	
 	public static boolean deleteImage(StoragePath path, boolean withTn) {
 		GcsFilename fileName = new GcsFilename(BUCKET, path.makePath());
 

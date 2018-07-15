@@ -1081,21 +1081,75 @@ public class Admin {
 					}
 				}
 				
-				JSONObject object = new JSONObject();
-				object.put(Stats.JANUARY, counts[0]);
-				object.put(Stats.FEBRUARY, counts[1]);
-				object.put(Stats.MARCH, counts[2]);
-				object.put(Stats.APRIL, counts[3]);
-				object.put(Stats.MAY, counts[4]);
-				object.put(Stats.JUNE, counts[5]);
-				object.put(Stats.JULY, counts[6]);
-				object.put(Stats.AUGUST, counts[7]);
-				object.put(Stats.SEPTEMBER, counts[8]);
-				object.put(Stats.OCTOBER, counts[9]);
-				object.put(Stats.NOVEMBER, counts[10]);
-				object.put(Stats.DECEMBER, counts[11]);
+				JSONArray array = new JSONArray();
+				JSONArray curr = new JSONArray();
+				curr.put(Stats.MONTH); curr.put(Stats.REPORTNUM);
+				JSONObject random = new JSONObject();
+				random.put("role", "style");
+				curr.put(random);
+				array.put(curr);
 				
-				return Response.ok(object.toString()).build();
+				curr = new JSONArray();
+				curr.put(Stats.JANUARY);
+				curr.put(counts[0]);
+				array.put(curr);
+				
+				curr = new JSONArray();
+				curr.put(Stats.FEBRUARY);
+				curr.put(counts[1]);
+				array.put(curr);
+				
+				curr = new JSONArray();
+				curr.put(Stats.MARCH);
+				curr.put(counts[2]);
+				array.put(curr);
+				
+				curr = new JSONArray();
+				curr.put(Stats.APRIL);
+				curr.put(counts[3]);
+				array.put(curr);
+				
+				curr = new JSONArray();
+				curr.put(Stats.MAY);
+				curr.put(counts[4]);
+				array.put(curr);
+				
+				curr = new JSONArray();
+				curr.put(Stats.JUNE);
+				curr.put(counts[5]);
+				array.put(curr);
+			
+				curr = new JSONArray();
+				curr.put(Stats.JULY);
+				curr.put(counts[6]);
+				array.put(curr);
+				
+				curr = new JSONArray();
+				curr.put(Stats.AUGUST);
+				curr.put(counts[7]);
+				array.put(curr);
+				
+				curr = new JSONArray();
+				curr.put(Stats.SEPTEMBER);
+				curr.put(counts[8]);
+				array.put(curr);
+				
+				curr = new JSONArray();
+				curr.put(Stats.OCTOBER);
+				curr.put(counts[9]);
+				array.put(curr);
+				
+				curr = new JSONArray();
+				curr.put(Stats.NOVEMBER);
+				curr.put(counts[10]);
+				array.put(curr);
+				
+				curr = new JSONArray();
+				curr.put(Stats.DECEMBER);
+				curr.put(counts[11]);
+				array.put(curr);
+				
+				return Response.ok(array.toString()).build();
 			} catch(DatastoreException e) {
 				if(retries == 0) {
 					LOG.warning(Log.TOO_MANY_RETRIES);
