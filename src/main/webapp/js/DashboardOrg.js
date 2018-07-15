@@ -5,6 +5,7 @@ var reportID;
 var tasks = [];
 var commentsCursor;
 var tasksCursor;
+var notesCursor;
 var email_worker;
 var currentfeed = 10;
 var current_position = "map_variable";
@@ -365,7 +366,7 @@ function fillMap(reports, cursor){
         var gravity = reports[index_report].gravity;
         var color;
 
-        if(gravity === 1) {
+        if(gravity === 2) {
             color = '#5dcb21';
             if(status === "standby") {
                 marker_color = "../marcadores/g1-standby.png";
@@ -381,7 +382,7 @@ function fillMap(reports, cursor){
             else
                 marker_color = "../marcadores/g1-open.png";
         }
-        else if(gravity === 2) {
+        else if(gravity === 1) {
             color = '#b9ff2a';
             if(status === "standby")
                 marker_color = "../marcadores/g2-standby.png";
@@ -610,35 +611,15 @@ function getInfo(idReport, i){
 function translate(category){
     var cat= "";
     switch (category) {
-        case "LIXO":
-            cat = "Limpeza de Lixo Geral";
+        case "LIMPEZA":
+            cat = "Limpeza de terrenos";
             break;
-        case "PESADOS":
-            cat = "Transportes Pesados";
+        case "COMBUSTIVEL":
+            cat = "Transportes combustível";
             break;
-        case "PERIGOSOS":
-            cat = "Transportes Perigosos";
+        case "ELETRICIDADE":
+            cat = "Material elétrico";
             break;
-        case "PESSOAS":
-            cat = "Transportes de Pessoas";
-            break;
-        case "TRANSPORTE":
-            cat = "Transportes Gerais";
-            break;
-        case "MADEIRAS":
-            cat = "Madeiras";
-            break;
-        case "CARCACAS":
-            cat = "Carcaças";
-            break;
-        case "BIOLOGICO":
-            cat = "Outros resíduos biológicos";
-            break;
-        case "JARDINAGEM":
-            cat = "Jardinagem";
-            break;
-        case "MATAS":
-            cat = "Limpeza de Matas/Florestas";
 
     }
     return cat;
@@ -1282,7 +1263,6 @@ var loadMoreTasks = function(email,cursor){
 
                     document.getElementById("num_report").innerHTML = data.length;
                     var i;
-                    var argument;
                     for(i = 0; i<data.length; i++){
 
                         var type_private = "";
@@ -1408,7 +1388,8 @@ var loadMoreTasks = function(email,cursor){
 
                     for (var j = 0; j < itemLists.length; j++ ) (function(j){
                         itemLists[j].onclick = function() {
-                            onNotes(arraytasks[j]);
+                            $(".notes_remove").remove();
+                            onNotes(arraytasks[j], "");
                         }
                     })(j);
 
@@ -1452,64 +1433,69 @@ function getThumbnailTask(reportId, i){
     );
 }
 
-function onNotes(task) {
-    $(".notes_remove").remove();
-    var body = "";
-    var headers = new Headers();
-    headers.append('Authorization', localStorage.getItem('token'));
-    headers.append('Device-Id', localStorage.getItem('fingerprint'));
-    headers.append('Device-App', localStorage.getItem('app'));
-    headers.append('Device-Info', localStorage.getItem('browser'));
-    fetch(restRequest('/api/task/notes/' + task, 'GET', headers, body)).then(function(response) {
-        if(response.status === 200){
-            response.json().then(function(data) {
-                console.log(data);
-                for(var i = 0; i< data.length; i++) {
-                    var contentNotes = '<div class="notes_remove"><div id="content" style="margin-left:10rem;margin-bottom:1rem; background:#f8f9fa; width:500px">' +
-                        '<div class="row">' +
-                        '<div class="col-lg-12 text-left">' +
-                        '<p style="font-family:Quicksand Bold; color:#AD363B; margin-left:0.5rem; margin-top:0.5rem;  font-size:15px;">' + data[i].worker + '</p></div></div>' +
-                        '<div class="row"><div class="col-lg-12 text-left">' +
-                        '<p style="margin-left:0.5rem; color:#212529; font-family:Quicksand; font-size:14px;">' + data[i].text + '</p>' +
-                        '</div>' +
-                        '</div>' +
-                        '<hr style="margin-top:0;">' +
-                        '<div class="row">' +
-                        '<div class="col-lg-6"></div>' +
-                        '<div class="col-lg-6 text-right">' +
-                        '<p style="margin-right: 0.5rem; font-family:Quicksand Bold; color:#212529; font-size:12px; margin-bottom:0;">' + data[i].creationtime +
-                        '</p></div></div></div></div>';
+function onNotes(task, cursor) {
 
-                    $(".inner_notes").append(contentNotes);
-                }
+    if(cursor !== null) {
+        var body = "";
+        var headers = new Headers();
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
+        fetch(restRequest('/api/task/notes/' + task + "?cursor=" + cursor, 'GET', headers, body)).then(function (response) {
+            if (response.status === 200) {
+                notesCursor = response.headers.get("Cursor");
+                response.json().then(function (data) {
+                    console.log(data);
+                    for (var i = 0; i < data.length; i++) {
+                        var contentNotes = '<div class="notes_remove"><div id="content" style="margin-left:10rem;margin-bottom:1rem; background:#f8f9fa; width:500px">' +
+                            '<div class="row">' +
+                            '<div class="col-lg-12 text-left">' +
+                            '<p style="font-family:Quicksand Bold; color:#AD363B; margin-left:0.5rem; margin-top:0.5rem;  font-size:15px;">' + data[i].worker + '</p></div></div>' +
+                            '<div class="row"><div class="col-lg-12 text-left">' +
+                            '<p style="margin-left:0.5rem; color:#212529; font-family:Quicksand; font-size:14px;">' + data[i].text + '</p>' +
+                            '</div>' +
+                            '</div>' +
+                            '<hr style="margin-top:0;">' +
+                            '<div class="row">' +
+                            '<div class="col-lg-6"></div>' +
+                            '<div class="col-lg-6 text-right">' +
+                            '<p style="margin-right: 0.5rem; font-family:Quicksand Bold; color:#212529; font-size:12px; margin-bottom:0;">' + data[i].creationtime +
+                            '</p></div></div></div></div>';
+
+                        $(".inner_notes").append(contentNotes);
+                    }
+                    document.getElementById("overlay_notes").style.display = "block";
+
+                    onNotes(task, notesCursor);
+
+                });
+            } else if (response.status === 204) {
+                var contentNotes = '<div class="notes_remove"><div id="content" style="margin-left:10rem;margin-bottom:1rem; background:#f8f9fa; width:500px">' +
+                    '<div class="row">' +
+                    '<div class="col-lg-12 text-left">' +
+                    '</div></div>' +
+                    '<div class="row"><div class="col-lg-12 text-left">' +
+                    '<p class="text-center" style="margin-top:1rem; color:#212529; font-family:Quicksand Bold; font-size:14px;">Esta tarefa não tem notas.</p>' +
+                    '</div>' +
+                    '</div>' +
+                    '<hr style="margin-top:0;">' +
+                    '<div class="row">' +
+                    '<div class="col-lg-6"></div>' +
+                    '<div class="col-lg-6 text-right">' +
+                    '</div></div></div></div>';
+
+                $(".inner_notes").append(contentNotes);
                 document.getElementById("overlay_notes").style.display = "block";
-
-            });
-        } else if(response.status === 204){
-            var contentNotes = '<div class="notes_remove"><div id="content" style="margin-left:10rem;margin-bottom:1rem; background:#f8f9fa; width:500px">' +
-                '<div class="row">' +
-                '<div class="col-lg-12 text-left">' +
-                '</div></div>' +
-                '<div class="row"><div class="col-lg-12 text-left">' +
-                '<p class="text-center" style="margin-left:0.5rem; color:#212529; font-family:Quicksand; font-size:14px;">Esta tarefa não tem notas.</p>' +
-                '</div>' +
-                '</div>' +
-                '<hr style="margin-top:0;">' +
-                '<div class="row">' +
-                '<div class="col-lg-6"></div>' +
-                '<div class="col-lg-6 text-right">' +
-                '</div></div></div></div>';
-
-            $(".inner_notes").append(contentNotes);
-            document.getElementById("overlay_notes").style.display = "block";
-        }
-        else{
-            console.log("Não deu 200 ao pedir o thumbnail");
-        }
-    }).catch(function(err) {
-            console.log('Fetch Error', err);
-        }
-    );
+            }
+            else {
+                console.log("Não deu 200 ao pedir o thumbnail");
+            }
+        }).catch(function (err) {
+                console.log('Fetch Error', err);
+            }
+        );
+    }
 
 }
 
