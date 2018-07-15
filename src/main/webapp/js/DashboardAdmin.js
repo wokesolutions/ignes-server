@@ -12,8 +12,19 @@ var cursor_current_public;
 var cursor_pre_public;
 var standby_rep= [];
 var public_reports = [];
+
 var user_cursors = [""];
 var index_user;
+
+var reports_cursors = [""];
+var index_reports;
+
+var pending_cursors = [""];
+var index_pending;
+
+var public_cursors = [""];
+var index_public;
+
 var current_position = "list_users_variable";
 
 var URL_BASE = 'https://mimetic-encoder-209111.appspot.com';
@@ -495,15 +506,15 @@ function getPendingNext(){
             var table = document.getElementById("orgs_pending_table");
 
             if (response.status === 200) {
+                index_pending++;
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
 
-                if(document.getElementById("previous_list_pending").style.display === "none")
-                    document.getElementById("previous_list_pending").style.display = "block";
+                document.getElementById("previous_list_pending").style.display = "block";
 
                 if(response.headers.get("Cursor") !== null) {
-
+                    pending_cursors.push(response.headers.get("Cursor"));
                     cursor_pre_pending = cursor_current_pending;
                     cursor_current_pending = cursor_next_pending;
                     cursor_next_pending = response.headers.get("Cursor");
@@ -512,6 +523,8 @@ function getPendingNext(){
                         document.getElementById("next_list_pending").style.display = "block";
 
                 } else{
+                    cursor_pre_pending = cursor_current_pending;
+                    cursor_current_pending = cursor_next_pending;
                     if(document.getElementById("next_list_pending").style.display === "block")
                         document.getElementById("next_list_pending").style.display = "none";
                 }
@@ -562,7 +575,7 @@ function getPendingNext(){
                             else
                                 type= "Pública";
 
-                            cell9.innerHTML = type;
+                            cell9.innerHTML = data[i].isfirestation;
                             cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
@@ -584,7 +597,7 @@ function getPendingNext(){
 }
 
 function getPendingPre(){
-    if(cursor_pre_pending === "") getPendingFirst();
+    if(index_pending- 1 === 0) getPendingFirst();
 
     var headers = new Headers();
     var body = "";
@@ -598,18 +611,18 @@ function getPendingPre(){
             var table = document.getElementById("orgs_pending_table");
 
             if (response.status === 200) {
+                index_pending--;
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
 
-                if (document.getElementById("previous_list_pending").style.display === "none")
-                    document.getElementById("previous_list_pending").style.display = "block";
+                document.getElementById("previous_list_pending").style.display = "block";
 
                 if (response.headers.get("Cursor") !== null) {
 
                     cursor_next_pending= cursor_current_pending;
                     cursor_current_pending = cursor_pre_pending;
-                    cursor_pre_pending = response.headers.get("Cursor");
+                    cursor_pre_pending = pending_cursors[index_pending -1];
 
                     if (document.getElementById("next_list_pending").style.display === "none")
                         document.getElementById("next_list_pending").style.display = "block";
@@ -640,32 +653,9 @@ function getPendingPre(){
                             cell4.innerHTML = data[i].address;
                             cell5.innerHTML = data[i].locality;
                             cell6.innerHTML = data[i].phone;
-                            var service = JSON.parse(data[i].services);
-                            var show_service ="";
-
-                            for(var i = 0; i< service.length; i++) {
-                                if (i !== service.length - 1) {
-                                    var service_temp= translate(service[i]);
-
-                                    show_service += service_temp + "/";
-                                }
-                                else {
-                                    var service_temp= translate(service[i]);
-                                    show_service += service_temp;
-                                }
-                            }
-
-                            cell7.innerHTML = show_service;
+                            cell7.innerHTML = data[i].services;
                             cell8.innerHTML = data[i].creationtime;
-
-                            var type= "";
-
-                            if(data[i].isfirestation)
-                                type= "Privada";
-                            else
-                                type= "Pública";
-
-                            cell9.innerHTML = type;
+                            cell9.innerHTML = data[i].isfirestation;
                             cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
@@ -699,6 +689,7 @@ function getPendingFirst(){
             var table = document.getElementById("orgs_pending_table");
 
             if (response.status === 200) {
+                index_pending = 0;
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
@@ -721,32 +712,8 @@ function getPendingFirst(){
                 response.json().then(function(data) {
                     console.log(JSON.stringify(data));
                     if(data != null){
-                        console.log(data);
                         var i;
                         for(i = 0; i < data.length; i++){
-
-                            var show_service ="";
-                            var service = JSON.parse(data[i].services);
-
-                            for(var j = 0; j< service.length; j++) {
-                                if (j !== service.length - 1) {
-                                    var service_temp= translate(service[j]);
-
-                                    show_service += service_temp + "/";
-                                }
-                                else {
-                                    var service_temp= translate(service[j]);
-                                    show_service += service_temp;
-                                }
-                            }
-
-                            var type="";
-
-                            if(data[i].isfirestation)
-                                type="Privada";
-                            else
-                                type="Pública";
-
                             var row = table.insertRow(-1);
                             var cell1 = row.insertCell(0);
                             var cell2 = row.insertCell(1);
@@ -764,9 +731,9 @@ function getPendingFirst(){
                             cell4.innerHTML = data[i].address;
                             cell5.innerHTML = data[i].locality;
                             cell6.innerHTML = data[i].phone;
-                            cell7.innerHTML = show_service;
+                            cell7.innerHTML = data[i].services;
                             cell8.innerHTML = data[i].creationtime;
-                            cell9.innerHTML = type;
+                            cell9.innerHTML = data[i].isfirestation;
                             cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
@@ -828,15 +795,16 @@ function getPendingReportsNext(){
             var table = document.getElementById("reports_pending_table");
 
             if (response.status === 200) {
+                index_reports++;
+
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
 
-                if(document.getElementById("previous_reports_pending").style.display === "none")
-                    document.getElementById("previous_reports_pending").style.display = "block";
+                document.getElementById("previous_reports_pending").style.display = "block";
 
                 if(response.headers.get("Cursor") !== null) {
-
+                    reports_reports.push(response.headers.get("Cursor"));
                     cursor_pre_pendingrep = cursor_current_pendingrep;
                     cursor_current_pendingrep = cursor_next_pendingrep;
                     cursor_next_pendingrep = response.headers.get("Cursor");
@@ -845,8 +813,9 @@ function getPendingReportsNext(){
                         document.getElementById("next_reports_pending").style.display = "block";
 
                 } else{
-                    if(document.getElementById("next_reports_pending").style.display === "block")
-                        document.getElementById("next_reports_pending").style.display = "none";
+                    cursor_pre_pendingrep = cursor_current_pendingrep;
+                    cursor_current_pendingrep = cursor_next_pendingrep;
+                    document.getElementById("next_reports_pending").style.display = "none";
                 }
                 response.json().then(function(data) {
                     console.log(JSON.stringify(data));
@@ -863,7 +832,6 @@ function getPendingReportsNext(){
                             var cell6 = row.insertCell(5);
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
-                            standby_rep.push(data[i].report);
                             cell1.innerHTML = data[i].title;
                             cell2.innerHTML = data[i].address;
                             cell3.innerHTML = data[i].gravity;
@@ -871,7 +839,7 @@ function getPendingReportsNext(){
                             cell5.innerHTML = data[i].lat;
                             cell6.innerHTML = data[i].lng;
                             cell7.innerHTML = data[i].creationtime;
-                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check-square-o'></button>";
+                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -893,7 +861,7 @@ function getPendingReportsNext(){
 
 function getPendingReportsPre(){
     standby_rep = [];
-    if(cursor_pre_pendingrep === "") getPendingReportsFirst();
+    if(index_reports -1 === 0) getPendingReportsFirst();
 
     var headers = new Headers();
     var body = "";
@@ -907,18 +875,18 @@ function getPendingReportsPre(){
             var table = document.getElementById("orgs_pending_table");
 
             if (response.status === 200) {
+                index_reports--;
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
 
-                if (document.getElementById("previous_reports_pending").style.display === "none")
-                    document.getElementById("previous_reports_pending").style.display = "block";
+                document.getElementById("previous_reports_pending").style.display = "block";
 
                 if (response.headers.get("Cursor") !== null) {
 
                     cursor_next_pendingrep = cursor_current_pendingrep;
                     cursor_current_pendingrep = cursor_pre_pendingrep;
-                    cursor_pre_pendingrep = response.headers.get("Cursor");
+                    cursor_pre_pendingrep = reports_cursors[index_reports - 1];
 
                     if (document.getElementById("next_reports_pending").style.display === "none")
                         document.getElementById("next_reports_pending").style.display = "block";
@@ -942,7 +910,6 @@ function getPendingReportsPre(){
                             var cell6 = row.insertCell(5);
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
-                            standby_rep.push(data[i].report);
                             cell1.innerHTML = data[i].title;
                             cell2.innerHTML = data[i].address;
                             cell3.innerHTML = data[i].gravity;
@@ -950,7 +917,7 @@ function getPendingReportsPre(){
                             cell5.innerHTML = data[i].lat;
                             cell6.innerHTML = data[i].lng;
                             cell7.innerHTML = data[i].creationtime;
-                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check-square-o'></button>";
+                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -970,7 +937,7 @@ function getPendingReportsPre(){
         });
 }
 
-function getPendingReportsFirst() {
+function getPendingReportsFirst(){
     standby_rep = [];
     var headers = new Headers();
     var body = "";
@@ -984,12 +951,12 @@ function getPendingReportsFirst() {
             var table = document.getElementById("reports_pending_table");
 
             if (response.status === 200) {
+                index_reports = 0;
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
 
-                if(document.getElementById("previous_reports_pending").style.display === "block")
-                    document.getElementById("previous_reports_pending").style.display = "none";
+                document.getElementById("previous_reports_pending").style.display = "none";
 
                 if(response.headers.get("Cursor") !== null) {
 
@@ -1022,7 +989,6 @@ function getPendingReportsFirst() {
                             var cell6 = row.insertCell(5);
                             var cell7 = row.insertCell(6);
                             var cell8 = row.insertCell(7);
-                            standby_rep.push(data[i].report);
                             cell1.innerHTML = data[i].title;
                             cell2.innerHTML = data[i].address;
                             cell3.innerHTML = data[i].gravity;
@@ -1030,7 +996,7 @@ function getPendingReportsFirst() {
                             cell5.innerHTML = data[i].lat;
                             cell6.innerHTML = data[i].lng;
                             cell7.innerHTML = data[i].creationtime;
-                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check-square-o'></button>";
+                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
                         }
 
                     }else{
@@ -1130,15 +1096,15 @@ function getPublicNext(){
             var table = document.getElementById("public_reports_pending_table");
 
             if (response.status === 200) {
+                index_public++;
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
 
-                if(document.getElementById("previous_public_reports_pending").style.display === "none")
-                    document.getElementById("previous_public_reports_pending").style.display = "block";
+                document.getElementById("previous_public_reports_pending").style.display = "block";
 
                 if(response.headers.get("Cursor") !== null) {
-
+                    public_reports.push(response.headers.get("Cursor"));
                     cursor_pre_public = cursor_current_public;
                     cursor_current_public = cursor_next_public;
                     cursor_next_public = response.headers.get("Cursor");
@@ -1147,7 +1113,9 @@ function getPublicNext(){
                         document.getElementById("next_public_reports_pending").style.display = "block";
 
                 } else{
-                    if(document.getElementById("next_public_reports_pending").style.display === "block")
+                    cursor_pre_public = cursor_current_public;
+                    cursor_current_public = cursor_next_public;
+                    if(document.getElementById("next_public reports_pending").style.display === "block")
                         document.getElementById("next_public_reports_pending").style.display = "none";
                 }
                 response.json().then(function(data) {
@@ -1184,7 +1152,7 @@ function getPublicNext(){
 
                                 public_reports.push({report: data[i].report, applications: data[i].applications});
 
-                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
 
 
                             } else if(data[i].org !== undefined){
@@ -1216,7 +1184,7 @@ function getPublicNext(){
 
 function getPublicPre(){
     public_reports = [];
-    if(cursor_pre_public === "") getPublicFirst();
+    if( index_public- 1 === 0) getPublicFirst();
 
     var headers = new Headers();
     var body = "";
@@ -1231,22 +1199,23 @@ function getPublicPre(){
 
             if (response.status === 200) {
                 if(table.rows.length > 1) {
+                    index_public--;
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
 
-                if (document.getElementById("previous_public_reports_pending").style.display === "none")
-                    document.getElementById("previous_public_reports_pending").style.display = "block";
+                document.getElementById("previous_public_reports_pending").style.display = "block";
 
                 if (response.headers.get("Cursor") !== null) {
 
                     cursor_next_public= cursor_current_public;
                     cursor_current_public = cursor_pre_public;
-                    cursor_pre_public = response.headers.get("Cursor");
+                    cursor_pre_public = public_cursors[index_public - 1];
 
                     if (document.getElementById("next_public_reports_pending").style.display === "none")
                         document.getElementById("next_public_reports_pending").style.display = "block";
 
                 } else {
+
                     if (document.getElementById("next_public_reports_pending").style.display === "block")
                         document.getElementById("next_public_reports_pending").style.display = "none";
                 }
@@ -1273,7 +1242,7 @@ function getPublicPre(){
                             cell6.innerHTML = data[i].lng;
                             var orgs = data[i].applications;
                             if(orgs !== undefined) {
-                                var options = "<option value='' disabled selected>Selecione a Organização</option>";
+                                var options = "<option value='' disabled selected>Select your option</option>";
                                 for (var j = 0; j < orgs.length; j++) {
                                     options += "<option>" + orgs[j].name + "</option>"
                                 }
@@ -1284,7 +1253,7 @@ function getPublicPre(){
 
                                 public_reports.push({report: data[i].report, applications: data[i].applications});
 
-                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
 
 
                             } else if(data[i].org !== undefined){
@@ -1328,11 +1297,12 @@ function getPublicFirst(){
             var table = document.getElementById("public_reports_pending_table");
 
             if (response.status === 200) {
+                index_public = 0;
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
-                if(document.getElementById("previous_public_reports_pending").style.display === "block")
-                    document.getElementById("previous_public_reports_pending").style.display = "none";
+
+                document.getElementById("previous_public_reports_pending").style.display = "none";
                 if(response.headers.get("Cursor") !== null) {
 
                     cursor_pre_public = "";
@@ -1372,7 +1342,7 @@ function getPublicFirst(){
                             cell6.innerHTML = data[i].lng;
                             var orgs = data[i].applications;
                             if(orgs !== undefined) {
-                                var options = "<option value='' disabled selected>Selecione a Organização</option>";
+                                var options = "<option value='' disabled selected>Select your option</option>";
                                 for (var j = 0; j < orgs.length; j++) {
                                     options += "<option>" + orgs[j].name + "</option>"
                                 }
@@ -1383,7 +1353,7 @@ function getPublicFirst(){
 
                                 public_reports.push({report: data[i].report, applications: data[i].applications});
 
-                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
 
 
                             } else if(data[i].org !== undefined){

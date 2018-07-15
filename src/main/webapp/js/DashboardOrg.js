@@ -15,6 +15,8 @@ var currentLoc ={
     zoom: 18
 };
 
+var arraytasks = [];
+
 var index_report = 0;
 var to_show;
 var emailsarr;
@@ -486,9 +488,6 @@ function fillMap(reports, cursor){
                 }
                 else
                     to_show= 2;
-
-
-
 
                 reportID = reports[index_report].report;
                 $(".remove_work").remove();
@@ -1283,6 +1282,7 @@ var loadMoreTasks = function(email,cursor){
 
                     document.getElementById("num_report").innerHTML = data.length;
                     var i;
+                    var argument;
                     for(i = 0; i<data.length; i++){
 
                         var type_private = "";
@@ -1389,7 +1389,7 @@ var loadMoreTasks = function(email,cursor){
                             '</div>'+
                             '</div>'+
                             '<div class="col-lg-6 text-left">' +
-                            '<button onclick="'+ onNotes(data[i].task) +'" type="button" id="see_notes" style="background:#f8f9fa;" class="btn btn-default"><i class="fa fa-sticky-note-o"></i></button>'+
+                            '<button value="' + data[i].task + '" type="button" id="see_notes_'+i+'" style="background:#f8f9fa;" class="variable btn btn-default"><i class="fa fa-sticky-note-o"></i></button>'+
                             '</div>' +
                             '<div class="col-lg-6 text-right">' +
                             '<p style="margin-right:3rem;font-family:Quicksand Bold; font-size:15px; color:#3b4956">' + data[i].creationtime + ' </p>' +
@@ -1397,11 +1397,20 @@ var loadMoreTasks = function(email,cursor){
                             '</div>' +
                             '</div>';
 
-
                         $(".tasks_worker").append(contentString);
+
+                        arraytasks.push(data[i].task);
 
                         getThumbnailTask(data[i].task, i);
                     }
+
+                    var itemLists = document.getElementsByClassName("variable");
+
+                    for (var j = 0; j < itemLists.length; j++ ) (function(i){
+                        itemLists[j].onclick = function() {
+                            onNotes(arraytasks[j]);
+                        }
+                    })(j);
 
                 });
             }
@@ -1444,6 +1453,7 @@ function getThumbnailTask(reportId, i){
 }
 
 function onNotes(task) {
+
     console.log(task);
     $(".notes_remove").remove();
     var body = "";
@@ -1455,21 +1465,19 @@ function onNotes(task) {
     fetch(restRequest('/api/task/notes/' + task, 'GET', headers, body)).then(function(response) {
         if(response.status === 200){
             response.json().then(function(data) {
-                console.log(data);
-
                 var contentNotes = '<div class="notes_remove"><div id="content" style="margin-left:10rem;margin-bottom:1rem; background:#f8f9fa; width:500px">' +
                     '<div class="row">' +
                     '<div class="col-lg-12 text-left">' +
-                    '<p style="font-family:Quicksand Bold; color:#AD363B; margin-left:0.5rem; margin-top:0.5rem;  font-size:15px;">' + "utilizadorignes@hotmail.com" + '</p></div></div>' +
+                    '<p style="font-family:Quicksand Bold; color:#AD363B; margin-left:0.5rem; margin-top:0.5rem;  font-size:15px;">' + data[i].worker + '</p></div></div>' +
                     '<div class="row"><div class="col-lg-12 text-left">' +
-                    '<p style="margin-left:0.5rem; color:#212529; font-family:Quicksand; font-size:14px;">' + "Já terminaram os trabalhos?" + '</p>' +
+                    '<p style="margin-left:0.5rem; color:#212529; font-family:Quicksand; font-size:14px;">' + data[i].text + '</p>' +
                     '</div>' +
                     '</div>' +
                     '<hr style="margin-top:0;">' +
                     '<div class="row">' +
                     '<div class="col-lg-6"></div>' +
                     '<div class="col-lg-6 text-right">' +
-                    '<p style="margin-right: 0.5rem; font-family:Quicksand Bold; color:#212529; font-size:12px; margin-bottom:0;">' + "12-07-2018 12:56:07"+
+                    '<p style="margin-right: 0.5rem; font-family:Quicksand Bold; color:#212529; font-size:12px; margin-bottom:0;">' + data[i].creationtime+
                     '</p></div></div></div></div>';
 
                 $(".inner_notes").append(contentNotes);
