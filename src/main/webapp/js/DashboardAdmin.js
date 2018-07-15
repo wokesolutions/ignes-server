@@ -598,82 +598,83 @@ function getPendingNext(){
 
 function getPendingPre(){
     if(index_pending- 1 === 0) getPendingFirst();
+    else {
+        var headers = new Headers();
+        var body = "";
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
 
-    var headers = new Headers();
-    var body = "";
-    headers.append('Authorization', localStorage.getItem('token'));
-    headers.append('Device-Id', localStorage.getItem('fingerprint'));
-    headers.append('Device-App', localStorage.getItem('app'));
-    headers.append('Device-Info', localStorage.getItem('browser'));
 
+        fetch(restRequest('/api/admin/orgstoconfirm?cursor=' + cursor_pre_pending, 'GET', headers, body)).then(function (response) {
+                var table = document.getElementById("orgs_pending_table");
 
-    fetch(restRequest('/api/admin/orgstoconfirm?cursor=' + cursor_pre_pending,'GET', headers, body)).then(function(response) {
-            var table = document.getElementById("orgs_pending_table");
+                if (response.status === 200) {
+                    index_pending--;
+                    if (table.rows.length > 1) {
+                        table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                    }
 
-            if (response.status === 200) {
-                index_pending--;
-                if(table.rows.length > 1) {
-                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-                }
+                    document.getElementById("previous_list_pending").style.display = "block";
 
-                document.getElementById("previous_list_pending").style.display = "block";
+                    if (response.headers.get("Cursor") !== null) {
 
-                if (response.headers.get("Cursor") !== null) {
+                        cursor_next_pending = cursor_current_pending;
+                        cursor_current_pending = cursor_pre_pending;
+                        cursor_pre_pending = pending_cursors[index_pending - 1];
 
-                    cursor_next_pending= cursor_current_pending;
-                    cursor_current_pending = cursor_pre_pending;
-                    cursor_pre_pending = pending_cursors[index_pending -1];
+                        if (document.getElementById("next_list_pending").style.display === "none")
+                            document.getElementById("next_list_pending").style.display = "block";
 
-                    if (document.getElementById("next_list_pending").style.display === "none")
-                        document.getElementById("next_list_pending").style.display = "block";
+                    } else {
+                        if (document.getElementById("next_list_pending").style.display === "block")
+                            document.getElementById("next_list_pending").style.display = "none";
+                    }
+                    response.json().then(function (data) {
+                        console.log(JSON.stringify(data));
+                        if (data != null) {
+                            var i;
+                            for (i = 0; i < data.length; i++) {
+                                var row = table.insertRow(-1);
+                                var cell1 = row.insertCell(0);
+                                var cell2 = row.insertCell(1);
+                                var cell3 = row.insertCell(2);
+                                var cell4 = row.insertCell(3);
+                                var cell5 = row.insertCell(4);
+                                var cell6 = row.insertCell(5);
+                                var cell7 = row.insertCell(6);
+                                var cell8 = row.insertCell(7);
+                                var cell9 = row.insertCell(8);
+                                var cell10 = row.insertCell(9);
+                                cell1.innerHTML = data[i].nif;
+                                cell2.innerHTML = data[i].name;
+                                cell3.innerHTML = data[i].email;
+                                cell4.innerHTML = data[i].address;
+                                cell5.innerHTML = data[i].locality;
+                                cell6.innerHTML = data[i].phone;
+                                cell7.innerHTML = data[i].services;
+                                cell8.innerHTML = data[i].creationtime;
+                                cell9.innerHTML = data[i].isfirestation;
+                                cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                            }
+
+                        } else {
+                            alert("Não deu 200.")
+                        }
+                    });
 
                 } else {
-                    if (document.getElementById("next_list_pending").style.display === "block")
-                        document.getElementById("next_list_pending").style.display = "none";
+                    console.log("Tratar do Forbidden");
                 }
-                response.json().then(function(data) {
-                    console.log(JSON.stringify(data));
-                    if(data != null){
-                        var i;
-                        for(i = 0; i < data.length; i++){
-                            var row = table.insertRow(-1);
-                            var cell1 = row.insertCell(0);
-                            var cell2 = row.insertCell(1);
-                            var cell3 = row.insertCell(2);
-                            var cell4 = row.insertCell(3);
-                            var cell5 = row.insertCell(4);
-                            var cell6 = row.insertCell(5);
-                            var cell7 = row.insertCell(6);
-                            var cell8 = row.insertCell(7);
-                            var cell9 = row.insertCell(8);
-                            var cell10 = row.insertCell(9);
-                            cell1.innerHTML = data[i].nif;
-                            cell2.innerHTML = data[i].name;
-                            cell3.innerHTML = data[i].email;
-                            cell4.innerHTML = data[i].address;
-                            cell5.innerHTML = data[i].locality;
-                            cell6.innerHTML = data[i].phone;
-                            cell7.innerHTML = data[i].services;
-                            cell8.innerHTML = data[i].creationtime;
-                            cell9.innerHTML = data[i].isfirestation;
-                            cell10.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activateOrg(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
-                        }
 
-                    }else{
-                        alert("Não deu 200.")
-                    }
-                });
 
-            }else{
-                console.log("Tratar do Forbidden");
             }
-
-
-        }
-    )
-        .catch(function(err) {
-            console.log('Fetch Error', err);
-        });
+        )
+            .catch(function (err) {
+                console.log('Fetch Error', err);
+            });
+    }
 }
 
 function getPendingFirst(){
@@ -863,79 +864,80 @@ function getPendingReportsNext(){
 function getPendingReportsPre(){
     standby_rep = [];
     if(index_reports -1 === 0) getPendingReportsFirst();
+    else {
+        var headers = new Headers();
+        var body = "";
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
 
-    var headers = new Headers();
-    var body = "";
-    headers.append('Authorization', localStorage.getItem('token'));
-    headers.append('Device-Id', localStorage.getItem('fingerprint'));
-    headers.append('Device-App', localStorage.getItem('app'));
-    headers.append('Device-Info', localStorage.getItem('browser'));
 
+        fetch(restRequest('/api/admin/standbyreports?cursor=' + cursor_pre_pending, 'GET', headers, body)).then(function (response) {
+                var table = document.getElementById("orgs_pending_table");
 
-    fetch(restRequest('/api/admin/standbyreports?cursor=' + cursor_pre_pending,'GET', headers, body)).then(function(response) {
-            var table = document.getElementById("orgs_pending_table");
+                if (response.status === 200) {
+                    index_reports--;
+                    if (table.rows.length > 1) {
+                        table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                    }
 
-            if (response.status === 200) {
-                index_reports--;
-                if(table.rows.length > 1) {
-                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-                }
+                    document.getElementById("previous_reports_pending").style.display = "block";
 
-                document.getElementById("previous_reports_pending").style.display = "block";
+                    if (response.headers.get("Cursor") !== null) {
 
-                if (response.headers.get("Cursor") !== null) {
+                        cursor_next_pendingrep = cursor_current_pendingrep;
+                        cursor_current_pendingrep = cursor_pre_pendingrep;
+                        cursor_pre_pendingrep = reports_cursors[index_reports - 1];
 
-                    cursor_next_pendingrep = cursor_current_pendingrep;
-                    cursor_current_pendingrep = cursor_pre_pendingrep;
-                    cursor_pre_pendingrep = reports_cursors[index_reports - 1];
+                        if (document.getElementById("next_reports_pending").style.display === "none")
+                            document.getElementById("next_reports_pending").style.display = "block";
 
-                    if (document.getElementById("next_reports_pending").style.display === "none")
-                        document.getElementById("next_reports_pending").style.display = "block";
+                    } else {
+                        if (document.getElementById("next_reports_pending").style.display === "block")
+                            document.getElementById("next_reports_pending").style.display = "none";
+                    }
+                    response.json().then(function (data) {
+                        console.log(JSON.stringify(data));
+                        if (data != null) {
+                            var i;
+                            for (i = 0; i < data.length; i++) {
+                                standby_rep.push(data[i].report);
+                                var row = table.insertRow(-1);
+                                var cell1 = row.insertCell(0);
+                                var cell2 = row.insertCell(1);
+                                var cell3 = row.insertCell(2);
+                                var cell4 = row.insertCell(3);
+                                var cell5 = row.insertCell(4);
+                                var cell6 = row.insertCell(5);
+                                var cell7 = row.insertCell(6);
+                                var cell8 = row.insertCell(7);
+                                cell1.innerHTML = data[i].title;
+                                cell2.innerHTML = data[i].address;
+                                cell3.innerHTML = data[i].gravity;
+                                cell4.innerHTML = data[i].username;
+                                cell5.innerHTML = data[i].lat;
+                                cell6.innerHTML = data[i].lng;
+                                cell7.innerHTML = data[i].creationtime;
+                                cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
+                            }
+
+                        } else {
+                            alert("Não deu 200.")
+                        }
+                    });
 
                 } else {
-                    if (document.getElementById("next_reports_pending").style.display === "block")
-                        document.getElementById("next_reports_pending").style.display = "none";
+                    console.log("Tratar do Forbidden");
                 }
-                response.json().then(function(data) {
-                    console.log(JSON.stringify(data));
-                    if(data != null){
-                        var i;
-                        for(i = 0; i < data.length; i++){
-                            standby_rep.push(data[i].report);
-                            var row = table.insertRow(-1);
-                            var cell1 = row.insertCell(0);
-                            var cell2 = row.insertCell(1);
-                            var cell3 = row.insertCell(2);
-                            var cell4 = row.insertCell(3);
-                            var cell5 = row.insertCell(4);
-                            var cell6 = row.insertCell(5);
-                            var cell7 = row.insertCell(6);
-                            var cell8 = row.insertCell(7);
-                            cell1.innerHTML = data[i].title;
-                            cell2.innerHTML = data[i].address;
-                            cell3.innerHTML = data[i].gravity;
-                            cell4.innerHTML = data[i].username;
-                            cell5.innerHTML = data[i].lat;
-                            cell6.innerHTML = data[i].lng;
-                            cell7.innerHTML = data[i].creationtime;
-                            cell8.outerHTML = "<button type='submit' class='btn-circle btn-primary-style-pend' onclick='activateReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
-                        }
 
-                    }else{
-                        alert("Não deu 200.")
-                    }
-                });
 
-            }else{
-                console.log("Tratar do Forbidden");
             }
-
-
-        }
-    )
-        .catch(function(err) {
-            console.log('Fetch Error', err);
-        });
+        )
+            .catch(function (err) {
+                console.log('Fetch Error', err);
+            });
+    }
 }
 
 function getPendingReportsFirst(){
@@ -1117,8 +1119,7 @@ function getPublicNext(){
                 } else{
                     cursor_pre_public = cursor_current_public;
                     cursor_current_public = cursor_next_public;
-                    if(document.getElementById("next_public reports_pending").style.display === "block")
-                        document.getElementById("next_public_reports_pending").style.display = "none";
+                    document.getElementById("next_public_reports_pending").style.display = "none";
                 }
                 response.json().then(function(data) {
                     console.log(JSON.stringify(data));
@@ -1187,103 +1188,104 @@ function getPublicNext(){
 function getPublicPre(){
     public_reports = [];
     if( index_public- 1 === 0) getPublicFirst();
+    else {
+        var headers = new Headers();
+        var body = "";
+        headers.append('Authorization', localStorage.getItem('token'));
+        headers.append('Device-Id', localStorage.getItem('fingerprint'));
+        headers.append('Device-App', localStorage.getItem('app'));
+        headers.append('Device-Info', localStorage.getItem('browser'));
 
-    var headers = new Headers();
-    var body = "";
-    headers.append('Authorization', localStorage.getItem('token'));
-    headers.append('Device-Id', localStorage.getItem('fingerprint'));
-    headers.append('Device-App', localStorage.getItem('app'));
-    headers.append('Device-Info', localStorage.getItem('browser'));
+
+        fetch(restRequest('/api/admin/publicreports?cursor=' + cursor_pre_public, 'GET', headers, body)).then(function (response) {
+                var table = document.getElementById("public_reports_pending_table");
+
+                if (response.status === 200) {
+                    index_public--;
+                    if (table.rows.length > 1) {
+
+                        table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
+                    }
+
+                    document.getElementById("previous_public_reports_pending").style.display = "block";
+
+                    if (response.headers.get("Cursor") !== null) {
+
+                        cursor_next_public = cursor_current_public;
+                        cursor_current_public = cursor_pre_public;
+                        cursor_pre_public = public_cursors[index_public - 1];
+
+                        if (document.getElementById("next_public_reports_pending").style.display === "none")
+                            document.getElementById("next_public_reports_pending").style.display = "block";
+
+                    } else {
+
+                        if (document.getElementById("next_public_reports_pending").style.display === "block")
+                            document.getElementById("next_public_reports_pending").style.display = "none";
+                    }
+                    response.json().then(function (data) {
+                        console.log(JSON.stringify(data));
+                        if (data != null) {
+                            var i;
+                            for (i = 0; i < data.length; i++) {
+                                var row = table.insertRow(-1);
+                                var cell1 = row.insertCell(0);
+                                var cell2 = row.insertCell(1);
+                                var cell3 = row.insertCell(2);
+                                var cell4 = row.insertCell(3);
+                                var cell5 = row.insertCell(4);
+                                var cell6 = row.insertCell(5);
+                                var cell7 = row.insertCell(6);
+                                var cell8 = row.insertCell(7);
+                                var cell9 = row.insertCell(8);
+                                cell1.innerHTML = data[i].title;
+                                cell2.innerHTML = data[i].address;
+                                cell3.innerHTML = data[i].gravity;
+                                cell4.innerHTML = data[i].username;
+                                cell5.innerHTML = data[i].lat;
+                                cell6.innerHTML = data[i].lng;
+                                var orgs = data[i].applications;
+                                if (orgs !== undefined) {
+                                    var options = "<option value='' disabled selected>Select your option</option>";
+                                    for (var j = 0; j < orgs.length; j++) {
+                                        options += "<option>" + orgs[j].name + "</option>"
+                                    }
+
+                                    cell7.innerHTML = "<select className='dropdown-m' id='drop'" + i + ">" + options +
+
+                                        "</select>";
+
+                                    public_reports.push({report: data[i].report, applications: data[i].applications});
+
+                                    cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
 
 
-    fetch(restRequest('/api/admin/publicreports?cursor=' + cursor_pre_public,'GET', headers, body)).then(function(response) {
-            var table = document.getElementById("public_reports_pending_table");
+                                } else if (data[i].org !== undefined) {
+                                    cell7.innerHTML = "<p>" + data[i].org.nif + "-" + data[i].org.name + "</p>";
+                                    public_reports.push({});
+                                } else {
+                                    cell7.innerHTML = "-";
+                                    public_reports.push({});
+                                }
+                                cell8.innerHTML = data[i].creationtime;
+                            }
 
-            if (response.status === 200) {
-                index_public--;
-                if(table.rows.length > 1) {
-
-                    table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
-                }
-
-                document.getElementById("previous_public_reports_pending").style.display = "block";
-
-                if (response.headers.get("Cursor") !== null) {
-
-                    cursor_next_public= cursor_current_public;
-                    cursor_current_public = cursor_pre_public;
-                    cursor_pre_public = public_cursors[index_public - 1];
-
-                    if (document.getElementById("next_public_reports_pending").style.display === "none")
-                        document.getElementById("next_public_reports_pending").style.display = "block";
+                        } else {
+                            alert("Não deu 200.")
+                        }
+                    });
 
                 } else {
-
-                    if (document.getElementById("next_public_reports_pending").style.display === "block")
-                        document.getElementById("next_public_reports_pending").style.display = "none";
+                    console.log("Tratar do Forbidden");
                 }
-                response.json().then(function(data) {
-                    console.log(JSON.stringify(data));
-                    if(data != null){
-                        var i;
-                        for(i = 0; i < data.length; i++){
-                            var row = table.insertRow(-1);
-                            var cell1 = row.insertCell(0);
-                            var cell2 = row.insertCell(1);
-                            var cell3 = row.insertCell(2);
-                            var cell4 = row.insertCell(3);
-                            var cell5 = row.insertCell(4);
-                            var cell6 = row.insertCell(5);
-                            var cell7 = row.insertCell(6);
-                            var cell8 = row.insertCell(7);
-                            var cell9 = row.insertCell(8);
-                            cell1.innerHTML = data[i].title;
-                            cell2.innerHTML = data[i].address;
-                            cell3.innerHTML = data[i].gravity;
-                            cell4.innerHTML = data[i].username;
-                            cell5.innerHTML = data[i].lat;
-                            cell6.innerHTML = data[i].lng;
-                            var orgs = data[i].applications;
-                            if(orgs !== undefined) {
-                                var options = "<option value='' disabled selected>Select your option</option>";
-                                for (var j = 0; j < orgs.length; j++) {
-                                    options += "<option>" + orgs[j].name + "</option>"
-                                }
-
-                                cell7.innerHTML = "<select className='dropdown-m' id='drop'" + i + ">" + options +
-
-                                    "</select>";
-
-                                public_reports.push({report: data[i].report, applications: data[i].applications});
-
-                                cell9.outerHTML = "<button type='submit' class='btn-circle btn-primary-style' onclick='activatePublicReport(this.parentNode.rowIndex)'><a class='fa fa-check'></button>";
 
 
-                            } else if(data[i].org !== undefined){
-                                cell7.innerHTML = "<p>" + data[i].org.nif +"-"+ data[i].org.name + "</p>";
-                                public_reports.push({});
-                            } else{
-                                cell7.innerHTML = "-";
-                                public_reports.push({});
-                            }
-                            cell8.innerHTML = data[i].creationtime;
-                        }
-
-                    }else{
-                        alert("Não deu 200.")
-                    }
-                });
-
-            }else{
-                console.log("Tratar do Forbidden");
             }
-
-
-        }
-    )
-        .catch(function(err) {
-            console.log('Fetch Error', err);
-        });
+        )
+            .catch(function (err) {
+                console.log('Fetch Error', err);
+            });
+    }
 }
 
 function getPublicFirst(){
@@ -1432,35 +1434,15 @@ function activatePublicReport(row){
 function translate(category){
     var cat= "";
     switch (category) {
-        case "LIXO":
-            cat = "Limpeza de Lixo Geral";
+        case "LIMPEZA":
+            cat = "Limpeza de terrenos";
             break;
-        case "PESADOS":
-            cat = "Transportes Pesados";
+        case "COMBUSTIVEL":
+            cat = "Transportes combustível";
             break;
-        case "PERIGOSOS":
-            cat = "Transportes Perigosos";
+        case "ELETRICIDADE":
+            cat = "Material elétrico";
             break;
-        case "PESSOAS":
-            cat = "Transportes de Pessoas";
-            break;
-        case "TRANSPORTE":
-            cat = "Transportes Gerais";
-            break;
-        case "MADEIRAS":
-            cat = "Madeiras";
-            break;
-        case "CARCACAS":
-            cat = "Carcaças";
-            break;
-        case "BIOLOGICO":
-            cat = "Outros resíduos biológicos";
-            break;
-        case "JARDINAGEM":
-            cat = "Jardinagem";
-            break;
-        case "MATAS":
-            cat = "Limpeza de Matas/Florestas";
 
     }
     return cat;
