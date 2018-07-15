@@ -561,7 +561,7 @@ function getInfo(idReport, i){
                     status = "Fechado";
                 else if (reports[i].status === "wip")
                     status = "Em resolução";
-                else if(reports[i].status === "wip")
+                else if(reports[i].status === "standby")
                     status = "Em espera";
 
                 document.getElementById('report_state_id').innerHTML= status;
