@@ -1486,9 +1486,19 @@ function onNotes(task) {
 
             });
         } else if(response.status === 204){
-            var contentNotes = '<div class="notes_remove">' +
-                '<p class="text-center" style="font-family:Quicksand Bold; color:#212529; font-size:12px;">Esta tarefa não tem notas.</p>' +
-                '</div>';
+            var contentNotes = '<div class="notes_remove"><div id="content" style="margin-left:10rem;margin-bottom:1rem; background:#f8f9fa; width:500px">' +
+                '<div class="row">' +
+                '<div class="col-lg-12 text-left">' +
+                '</div></div>' +
+                '<div class="row"><div class="col-lg-12 text-left">' +
+                '<p class="text-center" style="margin-left:0.5rem; color:#212529; font-family:Quicksand; font-size:14px;">Esta tarefa não tem notas.</p>' +
+                '</div>' +
+                '</div>' +
+                '<hr style="margin-top:0;">' +
+                '<div class="row">' +
+                '<div class="col-lg-6"></div>' +
+                '<div class="col-lg-6 text-right">' +
+                '</div></div></div></div>';
 
             $(".inner_notes").append(contentNotes);
             document.getElementById("overlay_notes").style.display = "block";

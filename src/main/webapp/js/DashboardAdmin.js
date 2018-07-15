@@ -218,6 +218,7 @@ function verifyIsLoggedIn(){
 
 }
 
+
 function getFirstUsers(){
     user_cursors = [""];
     console.log(user_cursors);
@@ -676,6 +677,7 @@ function getPendingPre(){
 }
 
 function getPendingFirst(){
+    pending_cursors = [""];
     var headers = new Headers();
     var body = "";
     headers.append('Authorization', localStorage.getItem('token'));
@@ -693,7 +695,7 @@ function getPendingFirst(){
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
                 if(response.headers.get("Cursor") !== null) {
-
+                    pending_cursors.push(response.headers.get("Cursor"));
                     cursor_pre_pending = "";
                     cursor_current_pending = "";
                     cursor_next_pending = response.headers.get("Cursor");
@@ -937,6 +939,7 @@ function getPendingReportsPre(){
 }
 
 function getPendingReportsFirst(){
+    reports_cursors = [""];
     standby_rep = [];
     var headers = new Headers();
     var body = "";
@@ -958,7 +961,7 @@ function getPendingReportsFirst(){
                 document.getElementById("previous_reports_pending").style.display = "none";
 
                 if(response.headers.get("Cursor") !== null) {
-
+                    reports_cursors.push(response.headers.get("Cursor"));
                     cursor_pre_pendingrep = "";
                     cursor_current_pendingrep = "";
                     cursor_next_pendingrep = response.headers.get("Cursor");
@@ -1197,8 +1200,9 @@ function getPublicPre(){
             var table = document.getElementById("public_reports_pending_table");
 
             if (response.status === 200) {
+                index_public--;
                 if(table.rows.length > 1) {
-                    index_public--;
+
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
 
@@ -1283,6 +1287,7 @@ function getPublicPre(){
 }
 
 function getPublicFirst(){
+    public_cursors = [""];
     public_reports = [];
     var headers = new Headers();
     var body = "";
@@ -1303,7 +1308,7 @@ function getPublicFirst(){
 
                 document.getElementById("previous_public_reports_pending").style.display = "none";
                 if(response.headers.get("Cursor") !== null) {
-
+                    public_cursors.push(response.headers.get("Cursor"));
                     cursor_pre_public = "";
                     cursor_current_public = "";
                     cursor_next_public = response.headers.get("Cursor");
