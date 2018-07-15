@@ -32,6 +32,8 @@ var URL_BASE = 'https://mimetic-encoder-209111.appspot.com';
 init();
 
 function init() {
+
+
     verifyIsLoggedIn();
 
     google.charts.load('current', {'packages':['corechart', 'bar']});
@@ -1535,7 +1537,6 @@ function monthStat(){
 }
 
 function getProfile(row){
-<<<<<<< HEAD
     var table = document.getElementById("user_table");
     var type = table.rows[row].cells[2].innerHTML;
     if(type === 'ORG'){
@@ -1587,10 +1588,6 @@ function getProfileUser(id){
                 response.json().then(function(data){
                     
                 });
-=======
-    console.log(row);
-}
->>>>>>> 1e8e4f2e5b0275e60fcc3ddb43d6bf36f7d90ef6
 
             }
 
