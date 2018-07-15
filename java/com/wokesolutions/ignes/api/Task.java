@@ -37,6 +37,7 @@ import com.wokesolutions.ignes.util.Log;
 import com.wokesolutions.ignes.util.ParamName;
 import com.wokesolutions.ignes.util.ProfanityFilter;
 import com.wokesolutions.ignes.util.Prop;
+import com.wokesolutions.ignes.util.UserLevel;
 
 @Path("/task")
 public class Task {
@@ -157,8 +158,34 @@ public class Task {
 			return Response.status(Status.NOT_FOUND).build();
 		}
 		
-		Key orgK;
-		
+		Key userK = KeyFactory.createKey(DSUtils.USER, username);
+		Entity user;
+		try {
+			user = datastore.get(userK);
+			
+			String level = user.getProperty(DSUtils.USER_LEVEL).toString();
+			
+			if(level.equals(UserLevel.WORKER)) {
+				Key workerK = KeyFactory.createKey(userK, DSUtils.WORKER, username);
+				Entity worker = datastore.get(workerK);
+				Key orgK = (Key) worker.getProperty(DSUtils.WORKER_ORG);
+				
+				if(!orgK.equals(orgTask.getProperty(DSUtils.ORGTASK_ORG))) {
+					LOG.info(Log.FORBIDDEN);
+					return Response.status(Status.FORBIDDEN).build();
+				}
+			} else if(level.equals(UserLevel.ORG)) {
+				Key orgK = KeyFactory.createKey(userK, DSUtils.ORG, username);
+				
+				if(!orgK.equals(orgTask.getProperty(DSUtils.ORGTASK_ORG))) {
+					LOG.info(Log.FORBIDDEN);
+					return Response.status(Status.FORBIDDEN).build();
+				}
+			}
+		} catch(EntityNotFoundException e) {
+			LOG.info(Log.FORBIDDEN);
+			return Response.status(Status.NOT_FOUND).build();
+		}
 		
 		Query query2 = new Query(DSUtils.NOTE).setAncestor(orgtaskK);
 		

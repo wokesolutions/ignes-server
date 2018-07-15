@@ -13,6 +13,8 @@ public class Category {
 	public static final String JARDINAGEM = "JARDINAGEM";
 	public static final String MATAS = "MATAS";
 	
+	public static final String okom = "iub";
+	
 	public static boolean isEq(String category) {
 		return category.equals(LIXO) || category.equals(PESADOS)
 				|| category.equals(PERIGOSOS) || category.equals(PESSOAS)

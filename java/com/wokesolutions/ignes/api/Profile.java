@@ -997,6 +997,8 @@ public class Profile {
 					userPlace.put(Prop.PLACE, 0);
 					userPlace.put(Prop.USERNAME, username);
 					userPlace.put(Prop.POINTS, userPoints.getProperty(DSUtils.USERPOINTS_POINTS));
+					
+					array.put(userPlace);
 				}
 				
 				return Response.ok(array.toString()).build();
