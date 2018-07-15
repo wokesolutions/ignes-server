@@ -16,6 +16,9 @@ var currentLoc ={
     zoom: 18
 };
 
+var worker_cursors = [""];
+var index_worker;
+
 var arraytasks = [];
 
 var index_report = 0;
@@ -684,6 +687,7 @@ function createWorker(){
 }
 
 function getFirstWorkers(){
+    worker_cursors = [""];
     var body = "";
     var headers = new Headers();
     headers.append('Authorization', localStorage.getItem('token'));
@@ -695,22 +699,21 @@ function getFirstWorkers(){
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
+                index_worker = 0;
+
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
+                document.getElementById("previous_list").style.display = "none";
                 if(response.headers.get("Cursor") !== null) {
                     cursor_pre_workers = "";
                     cursor_current_workers = "";
                     cursor_next_workers = response.headers.get("Cursor");
                     if(document.getElementById("next_list").style.display === "none")
-                        document.getElementById("next_list").style.display = "block";
-                    if(document.getElementById("previous_list").style.display === "block")
-                        document.getElementById("previous_list").style.display = "none";
+                        document.getElementById("next_list").style.display = "block";                        
                 } else{
                     if(document.getElementById("next_list").style.display === "block")
                         document.getElementById("next_list").style.display = "none";
-                    if(document.getElementById("previous_list").style.display === "block")
-                        document.getElementById("previous_list").style.display = "none";
                 }
                 response.json().then(function(data) {
                     if(data != null){
@@ -760,13 +763,13 @@ function getNextWorkers(){
             var table = document.getElementById("user_table");
 
             if (response.status === 200) {
+                index_worker++;
                 if(table.rows.length > 1) {
                     table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                 }
-                if(document.getElementById("previous_list").style.display === "none")
-                    document.getElementById("previous_list").style.display = "block";
+                document.getElementById("previous_list").style.display = "block";
                 if(response.headers.get("Cursor") !== null) {
-
+                    worker_cursors.push(response.headers.get("Cursor"));
                     cursor_pre_workers = cursor_current_workers;
                     cursor_current_workers = cursor_next_workers;
                     cursor_next_workers = response.headers.get("Cursor");
@@ -775,6 +778,8 @@ function getNextWorkers(){
                         document.getElementById("next_list").style.display = "block";
 
                 } else{
+                    cursor_pre_workers = cursor_current_workers;
+                    cursor_current_workers = cursor_next_workers;
                     if(document.getElementById("next_list").style.display === "block")
                         document.getElementById("next_list").style.display = "none";
                 }
@@ -816,7 +821,7 @@ function getNextWorkers(){
 }
 
 function getPreWorkers(){
-    if(cursor_pre_workers === "") getFirstWorkers();
+    if(index_worker - 1 === 0) getFirstWorkers();
     else{
         var body = "";
         var headers = new Headers();
@@ -829,16 +834,16 @@ function getPreWorkers(){
                 var table = document.getElementById("user_table");
 
                 if (response.status === 200) {
+                    index_worker--;
                     if(table.rows.length > 1) {
                         table.getElementsByTagName("tbody")[0].innerHTML = table.rows[0].innerHTML;
                     }
-                    if(document.getElementById("previous_list").style.display === "none")
-                        document.getElementById("previous_list").style.display = "block";
+                    document.getElementById("previous_list").style.display = "block";
                     if(response.headers.get("Cursor") !== null) {
 
                         cursor_next_workers = cursor_current_workers;
                         cursor_current_workers = cursor_pre_workers;
-                        cursor_pre_workers = response.headers.get("Cursor");
+                        cursor_pre_workers = worker_cursors[index_worker - 1];
 
                         if(document.getElementById("next_list").style.display === "none")
                             document.getElementById("next_list").style.display = "block";
