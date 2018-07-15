@@ -1453,7 +1453,6 @@ function getThumbnailTask(reportId, i){
 }
 
 function onNotes(task) {
-    console.log(task);
     $(".notes_remove").remove();
     var body = "";
     var headers = new Headers();
@@ -1464,24 +1463,27 @@ function onNotes(task) {
     fetch(restRequest('/api/task/notes/' + task, 'GET', headers, body)).then(function(response) {
         if(response.status === 200){
             response.json().then(function(data) {
-                var contentNotes = '<div class="notes_remove"><div id="content" style="margin-left:10rem;margin-bottom:1rem; background:#f8f9fa; width:500px">' +
-                    '<div class="row">' +
-                    '<div class="col-lg-12 text-left">' +
-                    '<p style="font-family:Quicksand Bold; color:#AD363B; margin-left:0.5rem; margin-top:0.5rem;  font-size:15px;">' + data[i].worker + '</p></div></div>' +
-                    '<div class="row"><div class="col-lg-12 text-left">' +
-                    '<p style="margin-left:0.5rem; color:#212529; font-family:Quicksand; font-size:14px;">' + data[i].text + '</p>' +
-                    '</div>' +
-                    '</div>' +
-                    '<hr style="margin-top:0;">' +
-                    '<div class="row">' +
-                    '<div class="col-lg-6"></div>' +
-                    '<div class="col-lg-6 text-right">' +
-                    '<p style="margin-right: 0.5rem; font-family:Quicksand Bold; color:#212529; font-size:12px; margin-bottom:0;">' + data[i].creationtime+
-                    '</p></div></div></div></div>';
+                console.log(data);
+                for(var i = 0; i< data.length; i++) {
+                    var contentNotes = '<div class="notes_remove"><div id="content" style="margin-left:10rem;margin-bottom:1rem; background:#f8f9fa; width:500px">' +
+                        '<div class="row">' +
+                        '<div class="col-lg-12 text-left">' +
+                        '<p style="font-family:Quicksand Bold; color:#AD363B; margin-left:0.5rem; margin-top:0.5rem;  font-size:15px;">' + data[i].worker + '</p></div></div>' +
+                        '<div class="row"><div class="col-lg-12 text-left">' +
+                        '<p style="margin-left:0.5rem; color:#212529; font-family:Quicksand; font-size:14px;">' + data[i].text + '</p>' +
+                        '</div>' +
+                        '</div>' +
+                        '<hr style="margin-top:0;">' +
+                        '<div class="row">' +
+                        '<div class="col-lg-6"></div>' +
+                        '<div class="col-lg-6 text-right">' +
+                        '<p style="margin-right: 0.5rem; font-family:Quicksand Bold; color:#212529; font-size:12px; margin-bottom:0;">' + data[i].creationtime +
+                        '</p></div></div></div></div>';
 
-                $(".inner_notes").append(contentNotes);
-
+                    $(".inner_notes").append(contentNotes);
+                }
                 document.getElementById("overlay_notes").style.display = "block";
+
             });
         } else{
             console.log("Não deu 200 ao pedir o thumbnail");
